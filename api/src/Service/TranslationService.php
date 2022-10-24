@@ -43,7 +43,7 @@ class TranslationService
     }
 
     /**
-     * Decides wether or not an array is associative
+     * Decides wether or not an array is associative.
      *
      * @param array $array The array to check
      *
@@ -59,10 +59,11 @@ class TranslationService
     }
 
     /**
-     * Update mapping for numeric arrays. Replaces .$ by the keys in a numeric array, or removes it in the case of an associative array
+     * Update mapping for numeric arrays. Replaces .$ by the keys in a numeric array, or removes it in the case of an associative array.
      *
      * @param array $mapping The mapping to update
-     * @param Dot $source    The source data
+     * @param Dot   $source  The source data
+     *
      * @return array
      */
     public function iterateNumericArrays(array $mapping, Dot $source): array
@@ -85,9 +86,10 @@ class TranslationService
     }
 
     /**
-     * Finds an uuid for an url, returns the uuid in the url if there is no equivalent found in the synchronisations of the gateway
+     * Finds an uuid for an url, returns the uuid in the url if there is no equivalent found in the synchronisations of the gateway.
      *
      * @param string|null $url The url to scan
+     *
      * @return false|mixed|string The uuid of the object the url refers to
      */
     public function getUuidFromUrl(?string $url)
@@ -96,11 +98,11 @@ class TranslationService
         /* @todo we might want to validate against uuid and id here */
         $sourceId = end($array);
         $synchronizations = $this->entityManager->getRepository(Synchronization::class)->findBy(['sourceId' => $sourceId]);
-        if(count($synchronizations) > 0 && $synchronizations[0] instanceof Synchronization) {
+        if (count($synchronizations) > 0 && $synchronizations[0] instanceof Synchronization) {
             return $synchronizations[0]->getObject()->getId()->toString();
         }
-        return $sourceId;
 
+        return $sourceId;
     }
 
     /**
@@ -156,9 +158,9 @@ class TranslationService
                 $datum = new DateTime(isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null);
                 $destination[$replace] = $datum->format('Y-m-d');
             } elseif ($format == 'datetimeutc') {
-                $datum = new DateTime(isset($source[$search]) ? (string)$source[$search] : ((string)$destination[$replace]) ?? null);
+                $datum = new DateTime(isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null);
                 $destination[$replace] = $datum->format('Y-m-d\TH:i:s');
-            } elseif($format == 'uuidFromUrl') {
+            } elseif ($format == 'uuidFromUrl') {
                 $destination[$replace] = $this->getUuidFromUrl($source[$search]) ?? ($destination[$replace]) ?? null;
             } elseif (strpos($format, 'concatenation') !== false) {
                 $separator = substr($format, strlen('concatenation') + 1);

@@ -660,14 +660,14 @@ class ZdsZaakService
     }
 
     /**
-     * Creates the Heeft subarray of a ZDS object
+     * Creates the Heeft subarray of a ZDS object.
      *
      * @param ObjectEntity $zdsObject The ZDS object to create the subarray for
      * @param ObjectEntity $zaak      The case related to the ZDS object
      *
-     * @return array The resulting Heeft subarray
-     *
      * @throws Exception
+     *
+     * @return array The resulting Heeft subarray
      */
     public function getHeeft(ObjectEntity $zdsObject, ObjectEntity $zaak): array
     {
@@ -675,21 +675,21 @@ class ZdsZaakService
         $statussen = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($statusEntity, ['zaak.id' => $zaak->getId()->toString()]); //, ['datumStatusGezet' => 'desc']
 
         $heeft = [];
-        foreach($statussen as $status) {
+        foreach ($statussen as $status) {
             $dateSet = new DateTime($status->getValue('datumStatusGezet'));
             $gerelateerde = new ObjectEntity($zdsObject->getEntity()->getAttributeByName('heeft')->getObject());
             $gerelateerde->setValue('omschrijving', $status->getValue('statustoelichting'));
             $gerelateerde->setValue('omschrijvingGeneriek', strtolower($status->getValue('statustoelichting')));
             $gerelateerde->setValue('toelichting', $status->getValue('statustoelichting'));
-            $gerelateerde->setValue('datumStatusGezet',$dateSet->format('YmdHisv'));
+            $gerelateerde->setValue('datumStatusGezet', $dateSet->format('YmdHisv'));
             $heeft[] = $gerelateerde;
         }
-        return $heeft;
 
+        return $heeft;
     }
 
     /**
-     * Finds the enkelvoudigInformatieObject for a zaakInformatieObject
+     * Finds the enkelvoudigInformatieObject for a zaakInformatieObject.
      *
      * @param ObjectEntity $document The zaakInformatieObject to find the enkelvoudigInformatieObject for
      *
@@ -698,35 +698,36 @@ class ZdsZaakService
     private function getInformatieObject(ObjectEntity $document): ?ObjectEntity
     {
         $values = $this->entityManager->getRepository(Value::class)->findBy(['stringValue' => $document->getValue('informatieobject')]);
-        foreach($values as $value) {
-            if($value instanceof Value && $value->getAttribute()->getName() == 'url') {
+        foreach ($values as $value) {
+            if ($value instanceof Value && $value->getAttribute()->getName() == 'url') {
                 $enkelvoudigInformatieObject = $value->getObjectEntity();
+
                 return $enkelvoudigInformatieObject;
             }
         }
+
         return null;
     }
 
     /**
-     * Creates the HeeftRelevant subarray of a ZDS object
+     * Creates the HeeftRelevant subarray of a ZDS object.
      *
      * @param ObjectEntity $zdsObject The ZDS object to create the subarray for
      * @param ObjectEntity $zaak      The zaak related to the ZDS object
      *
-     * @return array The HeeftRelevant subarray
-     *
      * @throws Exception
+     *
+     * @return array The HeeftRelevant subarray
      */
     public function getHeeftRelevant(ObjectEntity $zdsObject, ObjectEntity $zaak): array
     {
         $documentEntity = $zaak->getEntity()->getAttributeByName('zaakinformatieobjecten')->getObject();
         $documenten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($documentEntity, ['zaak.id' => $zaak->getId()->toString()]);
 
-
         $heeftRelevant = [];
-        foreach($documenten as $document) {
+        foreach ($documenten as $document) {
             $enkelvoudigInformatieObject = $this->getInformatieObject($document);
-            if(!$enkelvoudigInformatieObject) {
+            if (!$enkelvoudigInformatieObject) {
                 continue;
             }
             $createDate = new DateTime($enkelvoudigInformatieObject->getValue('creatiedatum'));
