@@ -70,7 +70,7 @@ class ActionSubscriber implements EventSubscriberInterface
             $this->io->text("Run ActionHandlerInterface \"{$action->getClass()}\"");
             $this->io->newLine();
         }
-        $data = $object->run($data, $action->getConfiguration());
+        $data = $object->run($data, array_merge($action->getConfiguration(), ["actionConditions" => $action->getConditions()]));
         // timer stoppen
         $stopTimer = microtime(true);
 

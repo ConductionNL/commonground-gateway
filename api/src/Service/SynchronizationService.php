@@ -897,7 +897,9 @@ class SynchronizationService
     private function storeSynchronization(Synchronization $synchronization, array $body): Synchronization
     {
         try {
-            $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
+            if (!$this->checkActionConditionsEntity($synchronization->getObject()->getEntity()->getId()->toString())) {
+                $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
+            }
         } catch (Exception $exception) {
             return $synchronization;
         }
@@ -914,6 +916,24 @@ class SynchronizationService
         $synchronization->setHash(hash('sha384', serialize($body->jsonSerialize())));
 
         return $synchronization;
+    }
+
+    /**
+     * Check if the Action triggers on a specific entity and if so check if the given $entityId matches the entity from the Action conditions.
+     *
+     * @param string $entityId The entity id to compare to the action configuration entity id
+     * @return bool True if the entities match and false if they don't
+     */
+    private function checkActionConditionsEntity(string $entityId): bool
+    {
+        if (isset($this->configuration['actionConditions']['=='][0]['var']) &&
+            isset($this->configuration['actionConditions']['=='][1]) &&
+            $this->configuration['actionConditions']['=='][0]['var'] === 'entity' &&
+            $this->configuration['actionConditions']['=='][1] === $entityId
+        ) {
+            return true;
+        }
+        return false;
     }
 
     /**
