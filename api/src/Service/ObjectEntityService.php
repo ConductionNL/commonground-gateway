@@ -130,6 +130,7 @@ class ObjectEntityService
             $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $data['entity']]);
             if ($entity instanceof Entity) {
                 $this->checkTriggerParentEvents($entity, $data);
+
                 return;
             }
             if (isset($this->io)) {
@@ -145,7 +146,7 @@ class ObjectEntityService
      * And will dispatch put events for each parent object found for these parent attributes.
      *
      * @param Entity $entity
-     * @param array $data
+     * @param array  $data
      *
      * @return void
      */
@@ -175,9 +176,9 @@ class ObjectEntityService
     /**
      * Follow-up function of checkTriggerParentEvents() function, that actually dispatches the put events for parent objects.
      *
-     * @param ObjectEntity $object
+     * @param ObjectEntity    $object
      * @param ArrayCollection $triggerParentAttributes
-     * @param array $data
+     * @param array           $data
      *
      * @return void
      */
@@ -191,16 +192,17 @@ class ObjectEntityService
                 // Create a data array for the parent Object data. (Also add entity) & dispatch event.
                 if (isset($this->io)) {
                     $this->io->text("Trigger event for parent object ({$parentObject->getId()->toString()}) of object with id = {$data['response']['id']}");
-                    $this->io->text("Dispatch ActionEvent for Throw: commongateway.object.update");
+                    $this->io->text('Dispatch ActionEvent for Throw: commongateway.object.update');
                     $this->io->newLine();
                 }
                 // Make sure we set dateModified of the parent object before dispatching an event so the synchronization actually happens.
                 $now = new DateTime();
                 $parentObject->setDateModified($now);
-                $this->dispatchEvent('commongateway.object.update',
+                $this->dispatchEvent(
+                    'commongateway.object.update',
                     [
                         'response' => $parentObject->toArray(),
-                        'entity' => $parentObject->getEntity()->getId()->toString()
+                        'entity'   => $parentObject->getEntity()->getId()->toString(),
                     ]
                 );
             }
