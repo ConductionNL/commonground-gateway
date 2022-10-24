@@ -102,7 +102,7 @@ class HandelsRegisterSearchService
         }
 
         // Lets always extend all by default
-        if (!isset($queryParameters['extend'])) {
+        if (!isset($queryParameters['extend']) && !isset($queryParameters['_extend'])) {
             $queryParameters['extend'] = ['all'];
         }
 

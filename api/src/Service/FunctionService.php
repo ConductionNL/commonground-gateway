@@ -189,7 +189,8 @@ class FunctionService
     public function removeResultFromCache(ObjectEntity $objectEntity, ?SymfonyStyle $io = null): bool
     {
         if (!in_array($objectEntity->getId()->toString(), $this->removeResultFromCache)) {
-            if (!$objectEntity->getSubresourceOf()->isEmpty()) {
+            if (!$objectEntity->getSubresourceOf()->isEmpty() ||
+                !$objectEntity->getAllSubresources(new ArrayCollection())->isEmpty()) {
                 $this->removeResultFromCache[] = $objectEntity->getId()->toString();
                 $this->removeParentResultsFromCache($objectEntity, $io);
                 $this->removeChildResultsFromCache($objectEntity, $io);

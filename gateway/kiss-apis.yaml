@@ -89,6 +89,13 @@
 #        testDataLocation: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/data/referentielijsten.json
 #        loadTestData: true
 #        autoLoad: true
+#    pubReferentielijstenCollection:
+#        name: pubReferentielijsten collection
+#        sourceType: GitHub
+#        locationOAS: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/KissPubOas.yaml
+#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/data/KissPubData.json
+#        loadTestData: true
+#        autoLoad: true
 #    agendaserviceCollection:
 #        name: AgendaService collection
 #        sourceType: GitHub
@@ -112,6 +119,14 @@
 #        testDataLocation: https://raw.githubusercontent.com/Huwelijksplanner/OverigeObjecten/main/data/data.json
 #        loadTestData: true
 #        autoLoad: true
+#        
+##    overigeObjectenSDGCollection:
+##        name: overigeObjectenSDG collection
+##        sourceType: GitHub
+##        locationOAS: https://raw.githubusercontent.com/Huwelijksplanner/OverigeObjecten/main/OAS-SDG.yaml
+##        testDataLocation: https://raw.githubusercontent.com/Huwelijksplanner/OverigeObjecten/main/data/data-SDG.json
+##        loadTestData: true
+##        autoLoad: true
 #
 ## Entities
 #App\Entity\Entity:
