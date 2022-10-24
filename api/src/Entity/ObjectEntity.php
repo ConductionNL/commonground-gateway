@@ -859,6 +859,7 @@ class ObjectEntity
      * Try to find a Value this ObjectEntity is a child of. Searching/filtering these values by a specific Attribute.
      *
      * @param Attribute $attribute
+     *
      * @return ArrayCollection
      */
     public function findSubresourceOf(Attribute $attribute): ArrayCollection
