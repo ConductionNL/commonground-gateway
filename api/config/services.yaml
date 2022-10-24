@@ -162,8 +162,13 @@ services:
         public: true
         arguments:
             $zgwToVrijbrpService: '@App\Service\ZgwToVrijbrpService'
-            
 
+    App\ActionHandler\VrijbrpToZgwHandler:
+        public: true
+        arguments:
+            $zgwToVrijbrpService: '@App\Service\ZgwToVrijbrpService'
+
+    
     App\ActionHandler\ZaakInformatieObjectHandler:
         public: true
         arguments:
