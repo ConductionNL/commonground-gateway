@@ -897,7 +897,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         ];
 
         foreach ($Entity->getAttributes() as $attribute) {
-            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'float', 'number']) && $attribute->getSearchable()) {
+            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'float', 'number', 'boolean']) && $attribute->getSearchable()) {
                 $filters[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
                 $attribute->getSearchable() && $filters[] = $prefix.$attribute->getName();

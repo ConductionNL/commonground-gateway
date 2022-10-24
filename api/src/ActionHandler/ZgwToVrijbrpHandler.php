@@ -3,16 +3,18 @@
 namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
-use App\Service\ZdsZaakService;
-use Exception;
+use App\Service\ZgwToVrijbrpService;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
+use Respect\Validation\Exceptions\ComponentException;
 
-class ZaakInformatieObjectHandler
+class ZgwToVrijbrpHandler
 {
-    private ZdsZaakService $zdsZaakService;
+    private ZgwToVrijbrpService $zgwToVrijbrpService;
 
-    public function __construct(ZdsZaakService $zdsZaakService)
+    public function __construct(ZgwToVrijbrpService $zgwToVrijbrpService)
     {
-        $this->zdsZaakService = $zdsZaakService;
+        $this->zgwToVrijbrpService = $zgwToVrijbrpService;
     }
 
     /**
@@ -43,18 +45,20 @@ class ZaakInformatieObjectHandler
     }
 
     /**
-     * This function runs the zaakeigenschappen plugin.
+     * This function runs the zgw zaaktype plugin.
      *
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
      * @throws GatewayException
-     * @throws Exception
+     * @throws CacheException
+     * @throws InvalidArgumentException
+     * @throws ComponentException
      *
      * @return array
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->zdsZaakService->zaakInformatieObjectHandler($data, $configuration);
+        return $this->zgwToVrijbrpService->zgwToVrijbrpHandler($data, $configuration);
     }
 }

@@ -13,18 +13,15 @@ class PubliccodeService
 {
     private EntityManagerInterface $entityManager;
     private GithubApiService $githubService;
-    private GitlabApiService $gitlabService;
     private array $configuration;
     private array $data;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        GithubApiService $githubService,
-        GitlabApiService $gitlabService
+        GithubApiService $githubService
     ) {
         $this->entityManager = $entityManager;
         $this->githubService = $githubService;
-        $this->gitlabService = $gitlabService;
         $this->configuration = [];
         $this->data = [];
     }

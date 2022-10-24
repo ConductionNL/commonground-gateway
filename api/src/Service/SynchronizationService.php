@@ -727,7 +727,9 @@ class SynchronizationService
 
         $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'application/ld+json');
         // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
-        $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()]);
+        if (!$this->checkActionConditionsEntity($objectEntity->getEntity()->getId()->toString())) {
+            $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()]);
+        }
 
         return $objectEntity;
     }
@@ -917,6 +919,26 @@ class SynchronizationService
     }
 
     /**
+     * Check if the Action triggers on a specific entity and if so check if the given $entityId matches the entity from the Action conditions.
+     *
+     * @param string $entityId The entity id to compare to the action configuration entity id
+     *
+     * @return bool True if the entities match and false if they don't
+     */
+    private function checkActionConditionsEntity(string $entityId): bool
+    {
+        if (isset($this->configuration['actionConditions']['=='][0]['var']) &&
+            isset($this->configuration['actionConditions']['=='][1]) &&
+            $this->configuration['actionConditions']['=='][0]['var'] === 'entity' &&
+            $this->configuration['actionConditions']['=='][1] === $entityId
+        ) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Encodes the object dependent on the settings for the synchronisation action.
      *
      * @param array $objectArray The object array to encode
@@ -983,7 +1005,7 @@ class SynchronizationService
             $this->io->text("syncToSource for Synchronization with id = {$synchronization->getId()->toString()}");
         }
         $object = $synchronization->getObject();
-        $objectArray = $object->toArray();
+        $objectArray = $object->toArray(1, $this->configuration['apiSource']['extend'] ?? ['id']);
 
         //        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
         // todo: maybe move this to foreach in getAllFromSource() (nice to have)

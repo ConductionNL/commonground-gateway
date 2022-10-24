@@ -2,17 +2,16 @@
 
 namespace App\ActionHandler;
 
-use App\Exception\GatewayException;
-use App\Service\ZdsZaakService;
-use Exception;
+use App\Service\SimXMLZaakService;
+use ErrorException;
 
-class ZaakInformatieObjectHandler
+class SimXMLToZGWHandler
 {
-    private ZdsZaakService $zdsZaakService;
+    private SimXMLZaakService $simXMLZaakService;
 
-    public function __construct(ZdsZaakService $zdsZaakService)
+    public function __construct(SimXMLZaakService $simXMLZaakService)
     {
-        $this->zdsZaakService = $zdsZaakService;
+        $this->simXMLZaakService = $simXMLZaakService;
     }
 
     /**
@@ -48,13 +47,12 @@ class ZaakInformatieObjectHandler
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
-     * @throws GatewayException
-     * @throws Exception
+     * @throws ErrorException
      *
      * @return array
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->zdsZaakService->zaakInformatieObjectHandler($data, $configuration);
+        return $this->simXMLZaakService->simXMLToZGWHandler($data, $configuration);
     }
 }
