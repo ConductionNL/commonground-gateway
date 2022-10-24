@@ -855,6 +855,24 @@ class ObjectEntity
         return $this->subresourceOf;
     }
 
+    /**
+     * Try to find a Value this ObjectEntity is a child of. Searching/filtering these values by a specific Attribute.
+     *
+     * @param Attribute $attribute
+     * @return ArrayCollection
+     */
+    public function findSubresourceOf(Attribute $attribute): ArrayCollection
+    {
+        $subresourceOfFound = $this->subresourceOf->filter(function ($subresourceOf) use ($attribute) {
+            return $subresourceOf->getAttribute() === $attribute;
+        });
+        if (count($subresourceOfFound) > 0) {
+            return $subresourceOfFound;
+        }
+
+        return new ArrayCollection();
+    }
+
     public function addSubresourceOf(Value $subresourceOf): self
     {
         // let add this
