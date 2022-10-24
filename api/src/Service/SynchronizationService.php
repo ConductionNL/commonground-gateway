@@ -901,7 +901,7 @@ class SynchronizationService
         try {
             $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
         } catch (Exception $exception) {
-            return $synchronization;
+//            return $synchronization;
         }
 
         $body = new Dot($body);

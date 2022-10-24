@@ -41,6 +41,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "entity.id": "exact",
  *     "gateway.id": "exact",
  *     "object.id": "exact",
+ *     "sourceId": "exact"
  * })
  */
 class Synchronization

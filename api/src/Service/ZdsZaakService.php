@@ -8,6 +8,7 @@ use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use ErrorException;
 use Exception;
@@ -367,7 +368,8 @@ class ZdsZaakService
             $roltypen = $zaaktypeObjectEntity->getValue('roltypen');
             $rollen = [];
             foreach ($roltypen as $roltype) {
-                $rollen[] = $this->createZgwRollen($zdsObject, $zaak, $roltype);
+                $rol = $this->createZgwRollen($zdsObject, $zaak, $roltype);
+                !$rol ?: $rollen[] = $rol;
             }
             $zaak->setValue('rollen', $rollen);
         } elseif (
@@ -676,6 +678,95 @@ class ZdsZaakService
     }
 
     /**
+     * Creates the Heeft subarray of a ZDS object.
+     *
+     * @param ObjectEntity $zdsObject The ZDS object to create the subarray for
+     * @param ObjectEntity $zaak      The case related to the ZDS object
+     *
+     * @throws Exception
+     *
+     * @return array The resulting Heeft subarray
+     */
+    public function getHeeft(ObjectEntity $zdsObject, ObjectEntity $zaak): array
+    {
+        $statusEntity = $zaak->getEntity()->getAttributeByName('status')->getObject();
+        $statussen = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($statusEntity, ['zaak.id' => $zaak->getId()->toString()]); //, ['datumStatusGezet' => 'desc']
+
+        $heeft = [];
+        foreach ($statussen as $status) {
+            $dateSet = new DateTime($status->getValue('datumStatusGezet'));
+            $gerelateerde = new ObjectEntity($zdsObject->getEntity()->getAttributeByName('heeft')->getObject());
+            $gerelateerde->setValue('omschrijving', $status->getValue('statustoelichting'));
+            $gerelateerde->setValue('omschrijvingGeneriek', strtolower($status->getValue('statustoelichting')));
+            $gerelateerde->setValue('toelichting', $status->getValue('statustoelichting'));
+            $gerelateerde->setValue('datumStatusGezet', $dateSet->format('YmdHisv'));
+            $heeft[] = $gerelateerde;
+        }
+
+        return $heeft;
+    }
+
+    /**
+     * Finds the enkelvoudigInformatieObject for a zaakInformatieObject.
+     *
+     * @param ObjectEntity $document The zaakInformatieObject to find the enkelvoudigInformatieObject for
+     *
+     * @return ObjectEntity|null
+     */
+    private function getInformatieObject(ObjectEntity $document): ?ObjectEntity
+    {
+        $values = $this->entityManager->getRepository(Value::class)->findBy(['stringValue' => $document->getValue('informatieobject')]);
+        foreach ($values as $value) {
+            if ($value instanceof Value && $value->getAttribute()->getName() == 'url') {
+                $enkelvoudigInformatieObject = $value->getObjectEntity();
+
+                return $enkelvoudigInformatieObject;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Creates the HeeftRelevant subarray of a ZDS object.
+     *
+     * @param ObjectEntity $zdsObject The ZDS object to create the subarray for
+     * @param ObjectEntity $zaak      The zaak related to the ZDS object
+     *
+     * @throws Exception
+     *
+     * @return array The HeeftRelevant subarray
+     */
+    public function getHeeftRelevant(ObjectEntity $zdsObject, ObjectEntity $zaak): array
+    {
+        $documentEntity = $zaak->getEntity()->getAttributeByName('zaakinformatieobjecten')->getObject();
+        $documenten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($documentEntity, ['zaak.id' => $zaak->getId()->toString()]);
+
+        $heeftRelevant = [];
+        foreach ($documenten as $document) {
+            $enkelvoudigInformatieObject = $this->getInformatieObject($document);
+            if (!$enkelvoudigInformatieObject) {
+                continue;
+            }
+            $createDate = new DateTime($enkelvoudigInformatieObject->getValue('creatiedatum'));
+            $gerelateerde = new ObjectEntity($zdsObject->getEntity()->getAttributeByName('heeftRelevant')->getObject());
+            $gerelateerde->setValue('identificatie', $enkelvoudigInformatieObject->getValue('identificatie'));
+            $gerelateerde->setValue('creatiedatum', $createDate->format('Ymd'));
+            $gerelateerde->setValue('titel', $enkelvoudigInformatieObject->getValue('titel'));
+            $gerelateerde->setValue('formaat', $enkelvoudigInformatieObject->getValue('formaat'));
+            $gerelateerde->setValue('taal', $enkelvoudigInformatieObject->getValue('taal'));
+            $gerelateerde->setValue('status', $enkelvoudigInformatieObject->getValue('status'));
+            $gerelateerde->setValue('vertrouwelijkAanduiding', $enkelvoudigInformatieObject->getValue('vertrouwelijkAanduiding'));
+            $gerelateerde->setValue('auteur', $enkelvoudigInformatieObject->getValue('auteur'));
+            $gerelateerde->setValue('link', $enkelvoudigInformatieObject->getValue('inhoud'));
+
+            $heeftRelevant[] = $gerelateerde;
+        }
+
+        return $heeftRelevant;
+    }
+
+    /**
      * Creates a ZDS zaak-object.
      *
      * @param ObjectEntity $zds  The ZDS object to write the object to
@@ -700,6 +791,8 @@ class ZdsZaakService
         $zdsObject->setValue('startdatum', $zaak->getValue('startdatum'));
         $zdsObject->setValue('isVan', $this->getIsVan($zdsObject, $zaak));
         $zdsObject->setValue('heeftAlsInitiator', $this->getHeeftAlsInitiator($zdsObject, $rol));
+        $zdsObject->setValue('heeft', $this->getHeeft($zdsObject, $zaak));
+        $zdsObject->setValue('heeftRelevant', $this->getHeeftRelevant($zdsObject, $zaak));
         $this->entityManager->persist($zdsObject);
         $this->entityManager->flush();
 
