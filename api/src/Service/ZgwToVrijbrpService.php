@@ -676,6 +676,44 @@ class ZgwToVrijbrpService
         return $this->data;
     }
 
+    /**
+     * Maps dossier status to ztc statustype
+     *
+     * @param array $dossierArrayObject Dossier array object.
+     *
+     * @return array StatusType array
+     */
+    private function mapStatusType($dossierArrayObject): array
+    {
+        return [
+            'omschrijving' => $dossierArrayObject['embedded']['status']['code'],
+            'omschrijvingGeneriek' => $dossierArrayObject['embedded']['status']['description'],
+            'isEindstatus' => $dossierArrayObject['embedded']['status']['endStatus'] ?? false
+        ];
+    }
+
+
+    /**
+     * Finds ZaakType statustype and if found creates a status
+     *
+     * @param array $zaakTypeArrayObject ZaakType array object.
+     * @param array $dossierArrayObject Dossier array object.
+     *
+     * @return ?array Status array
+     */
+    private function findAndCreateStatus($zaakTypeArrayObject, $dossierArrayObject): ?array
+    {
+        foreach ($zaakTypeArrayObject['statustypen'] as $statusType) {
+            if ($statusType['omschrijving'] == $dossierArrayObject['embedded']['status']['code']) {
+                return [
+                    'statustype' => $this->entityManager->find('App:ObjectEntity', $statusType['id']),
+                    'datumStatusGezet' => $dossierArrayObject['embedded']['status']['entryDateTime']
+                ];
+            }
+        }
+        return null;
+    }
+
 
     /**
      * Creates or updates a ZGW Zaak from a VrijBRP dossier with the use of mapping.
@@ -692,10 +730,8 @@ class ZgwToVrijbrpService
         $this->data = $data;
         $this->configuration = $configuration;
 
-        var_dump('VrijbrpToZgw triggered');
         isset($this->configuration['entities']['Zaak']) && $zaakEntity = $this->entityRepo->find($this->configuration['entities']['Zaak']);
         isset($this->configuration['entities']['ZaakType']) && $zaakTypeEntity = $this->entityRepo->find($this->configuration['entities']['ZaakType']);
-
 
         if (!isset($zaakEntity)) {
             throw new Exception('Zaak entity could not be found, check VrijbrpToZgwAction config');
@@ -704,39 +740,60 @@ class ZgwToVrijbrpService
         $dossierArrayObject = $this->data['response'];
 
         $zaakObjectEntity = $this->objectEntityRepo->findOneBy(['entity' => $zaakEntity, 'externalId' => $dossierArrayObject['dossierId']]);
-        $zaaktypeValues = $this->entityManager->getRepository('App:Value')->findBy(['stringValue' => $dossierArrayObject['type']['code']]);
+        $zaaktypeValues = $this->entityManager->getRepository('App:Value')->findBy(['stringValue' => $dossierArrayObject['embedded']['type']['code']]);
         foreach ($zaaktypeValues as $zaaktypeValue) {
             if ($zaaktypeValue->getObjectEntity()->getEntity()->getId()->toString() == $this->configuration['entities']['ZaakType']) {
                 $zaakTypeObjectEntity = $zaaktypeValue->getObjectEntity();
             }
         }
-        if (!$zaakObjectEntity instanceof ObjectEntity) {
-            $zaakObjectEntity = new ObjectEntity($zaakEntity);
-            // $zaakArrayObject = [
-            //     'zaaktype' => '',
-            //     'omschrijving' => ''
-            // ];
-        } else {
-            // Update zaak
-            var_dump('update zaak');
-        }
 
-        if (!$zaakTypeObjectEntity instanceof ObjectEntity) {
+        if (!isset($zaakTypeObjectEntity) || !$zaakTypeObjectEntity instanceof ObjectEntity) {
             // Create zaakType
             $zaakTypeObjectEntity = new ObjectEntity($zaakTypeEntity);
-            // $zaakTypeArray = [
-            //     ''
-            // ]
+            $zaakTypeArray = [
+                'identificatie' => $dossierArrayObject['embedded']['type']['code'],
+                'omschrijving' => $dossierArrayObject['embedded']['type']['description'],
+                'statustypen' => [
+                    $this->mapStatusType($dossierArrayObject)
+                ]
+            ];
+            $zaakTypeObjectEntity->hydrate($zaakTypeArray);
+            $this->entityManager->persist($zaakTypeObjectEntity);
+            $this->entityManager->flush();
+            $zaakTypeObjectEntity = $this->entityManager->find('App:ObjectEntity', $zaakTypeObjectEntity->getId()->toString());
         }
 
-        $zaakArrayObject['zaaktype'] = $zaakTypeObjectEntity;
-        $zaakTypeObjectEntity->hydrate($zaakArrayObject);
+        $zaakTypeArrayObject = $zaakTypeObjectEntity->toArray();
 
-        $this->entityManager->persist($zaakTypeObjectEntity);
+        !$zaakObjectEntity instanceof ObjectEntity && $zaakObjectEntity = new ObjectEntity($zaakEntity);
+        $zaakArrayObject = [
+            'zaaktype' => $zaakTypeObjectEntity,
+            'identificatie' => $dossierArrayObject['dossierId'],
+            'registratiedatum' => $dossierArrayObject['entryDateTime'],
+            'startdatum' => $dossierArrayObject['startDate']
+        ];
+
+        $status = $this->findAndCreateStatus($zaakTypeArrayObject, $dossierArrayObject);
+
+        if (!isset($status)) {
+            $zaakTypeArrayObject['statustypen'][] = $this->mapStatusType($dossierArrayObject);
+            $zaakTypeObjectEntity->hydrate($zaakTypeArrayObject);
+            $this->entityManager->persist($zaakTypeObjectEntity);
+            $this->entityManager->flush();
+            $zaakTypeObjectEntity = $this->entityManager->find('App:ObjectEntity', $zaakTypeObjectEntity->getId()->toString());
+            $zaakTypeArrayObject = $zaakTypeObjectEntity->toArray();
+            $status = $this->findAndCreateStatus($zaakTypeArrayObject, $dossierArrayObject);
+        }
+
+        $zaakArrayObject['status'] = $status;
+        $zaakObjectEntity->hydrate($zaakArrayObject);
+
+        $this->entityManager->persist($zaakObjectEntity);
         $this->entityManager->flush();
 
-        var_dump(json_encode($this->data));
-        die;
+        $zaakArrayObject = $zaakObjectEntity->toArray();
+
+        $this->data['response'] = $zaakArrayObject;
 
         return $this->data;
     }
