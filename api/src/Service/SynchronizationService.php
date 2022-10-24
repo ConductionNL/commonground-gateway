@@ -727,7 +727,9 @@ class SynchronizationService
 
         $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'application/ld+json');
         // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
-        $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()]);
+        if (!$this->checkActionConditionsEntity($objectEntity->getEntity()->getId()->toString())) {
+            $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()]);
+        }
 
         return $objectEntity;
     }
@@ -897,9 +899,7 @@ class SynchronizationService
     private function storeSynchronization(Synchronization $synchronization, array $body): Synchronization
     {
         try {
-            if (!$this->checkActionConditionsEntity($synchronization->getObject()->getEntity()->getId()->toString())) {
-                $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
-            }
+            $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
         } catch (Exception $exception) {
             return $synchronization;
         }
