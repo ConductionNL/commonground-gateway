@@ -922,6 +922,7 @@ class SynchronizationService
      * Check if the Action triggers on a specific entity and if so check if the given $entityId matches the entity from the Action conditions.
      *
      * @param string $entityId The entity id to compare to the action configuration entity id
+     *
      * @return bool True if the entities match and false if they don't
      */
     private function checkActionConditionsEntity(string $entityId): bool
@@ -933,6 +934,7 @@ class SynchronizationService
         ) {
             return true;
         }
+
         return false;
     }
 
