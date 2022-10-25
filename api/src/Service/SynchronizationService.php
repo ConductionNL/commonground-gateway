@@ -9,6 +9,7 @@ use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Exception\GatewayException;
+//use CommonGateway\CoreBundle\Service\CallService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -39,6 +40,7 @@ class SynchronizationService
     private TranslationService $translationService;
     private ObjectEntityService $objectEntityService;
     private ValidatorService $validatorService;
+//    private CallService $callService;
     private array $configuration;
     private array $data;
     private SymfonyStyle $io;
@@ -58,7 +60,7 @@ class SynchronizationService
      * @param EavService             $eavService
      * @param Environment            $twig
      */
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig)
+    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig) //, CallService $callService
     {
         $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
@@ -74,6 +76,7 @@ class SynchronizationService
         $this->configuration = [];
         $this->data = [];
         $this->twig = $twig;
+//        $this->callService = $callService;
     }
 
     /**
@@ -296,7 +299,7 @@ class SynchronizationService
     {
         return [
             'component' => $this->gatewayService->gatewayToArray($gateway),
-            'url'       => $this->getUrlForSource($gateway, $id, $objectArray),
+            'url'       => $this->getUrlForSource($id, $objectArray),
             'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService($id), //todo maybe array_merge instead of ??
             'headers'   => $this->getCallServiceOverwrite('headers') ?? $gateway->getHeaders(), //todo maybe array_merge instead of ??
             'method'    => $this->getCallServiceOverwrite('method'),
@@ -331,7 +334,7 @@ class SynchronizationService
      *
      * @return string The resulting URL
      */
-    private function getUrlForSource(Gateway $gateway, string $id = null, ?array $objectArray = []): string
+    private function getUrlForSource(string $id = null, ?array $objectArray = []): string
     {
         $renderData = array_key_exists('replaceTwigLocation', $this->configuration) && $this->configuration['replaceTwigLocation'] === 'objectEntityData' ? $objectArray : $this->data;
         $location = $this->twig->createTemplate($this->configuration['location'])->render($renderData);
@@ -340,7 +343,7 @@ class SynchronizationService
             $id = null;
         }
 
-        return $gateway->getLocation().$location.($id ? '/'.$id : '');
+        return $location.($id ? '/'.$id : '');
     }
 
     /**
@@ -427,6 +430,15 @@ class SynchronizationService
                 false,
                 $callServiceConfig['method'] ?? 'GET'
             );
+/*            $response = $this->callService->handleCall(
+                $source,
+                $this->getUrlForSource(),
+                'GET',
+                [
+                    'query' => $query,
+                    'headers'   => $this->getCallServiceOverwrite('headers') ?? $source->getHeaders()
+                ]
+            );*/
 
             if (is_array($response)) {
                 throw new Exception('Callservice error while doing fetchObjectsFromSource');
@@ -1009,7 +1021,7 @@ class SynchronizationService
 
         //        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
         // todo: maybe move this to foreach in getAllFromSource() (nice to have)
-        $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway(), null, $objectArray);
+//        $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway(), null, $objectArray);
         $objectArray = $this->mapOutput($objectArray);
 
         $objectString = $this->getObjectString($objectArray);
@@ -1024,6 +1036,18 @@ class SynchronizationService
                 false,
                 $callServiceConfig['method'] ?? ($existsInSource ? 'PUT' : 'POST')
             );
+
+//            $result = $this->callService->handleCall(
+//                $synchronization->getGateway(),
+//                $this->getUrlForSource(null, $objectArray),
+//                $this->getCallServiceOverwrite('method') ?? ($existsInSource ? 'PUT' : 'POST'),
+//                [
+//                    'body'      => $objectString,
+//                    'headers'   => $this->getCallServiceOverwrite('headers') ?? $synchronization->getGateway()->getHeaders(),
+//                    'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService(),
+//                ]
+//            );
+
 
             if (is_array($result)) {
                 throw new Exception('Callservice error while doing syncToSource');
