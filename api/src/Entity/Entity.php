@@ -8,6 +8,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Exception\GatewayException;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -1029,6 +1030,9 @@ class Entity
         return $this;
     }
 
+    /**
+     * @throws GatewayException
+     */
     public function toSchema(?ObjectEntity $objectEntity): array
     {
         $schema = [
@@ -1039,8 +1043,8 @@ class Entity
             'properties'   => [],
         ];
 
-        if($objectEntity && $objectEntity->getEntity() != $this){
-            // gooi error
+        if($objectEntity && $objectEntity->getEntity() !== $this){
+            throw new GatewayException('The given objectEntity has not have the same entity as this entity');
         }
 
         foreach($this->getAttributes() as $attribute){
@@ -1051,12 +1055,10 @@ class Entity
 
             // Aanmaken property
             // @todo ik laad dit nu in als array maar eigenlijk wil je testen en alleen zetten als er waardes in zitten
-            $property = [
-                "type" => $attribute->getType(),
-                "format" =>$attribute->getFormat(),
-                "description" => $attribute->getDescription(),
-                "example" => $attribute->getExample(),
-            ];
+            $attribute->getType() && $property['type'] = $attribute->getType();
+            $attribute->getFormat() && $property['format'] = $attribute->getFormat();
+            $attribute->getDescription() && $property['description'] = $attribute->getDescription();
+            $attribute->getExample() && $property['example'] = $attribute->getExample();
 
             // What if we have an $object entity
             if($objectEntity){
