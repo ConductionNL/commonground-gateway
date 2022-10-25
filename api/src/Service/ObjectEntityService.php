@@ -144,8 +144,8 @@ class ObjectEntityService
      * And will dispatch put events for each parent object found for these parent attributes.
      *
      * @param Entity $entity
-     * @param array $data
-     * @param array $triggeredParentEvents An array used to keep track of objects we already triggered parent events for. To prevent endless loops.
+     * @param array  $data
+     * @param array  $triggeredParentEvents An array used to keep track of objects we already triggered parent events for. To prevent endless loops.
      *
      * @return void
      */
@@ -175,10 +175,10 @@ class ObjectEntityService
     /**
      * Follow-up function of checkTriggerParentEvents() function, that actually dispatches the put events for parent objects.
      *
-     * @param ObjectEntity $object
+     * @param ObjectEntity    $object
      * @param ArrayCollection $triggerParentAttributes
-     * @param array $data
-     * @param array $triggeredParentEvents An array used to keep track of objects we already triggered parent events for. To prevent endless loops.
+     * @param array           $data
+     * @param array           $triggeredParentEvents   An array used to keep track of objects we already triggered parent events for. To prevent endless loops.
      *
      * @return void
      */
