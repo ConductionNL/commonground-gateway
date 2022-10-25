@@ -77,11 +77,6 @@ services:
         arguments:
             $zdsZaakService: '@App\Service\ZdsZaakService'
             
-    App\ActionHandler\LarpingHandler:
-        public: true
-        arguments:
-            $larpingService: '@App\Service\LarpingService'
-            
     App\ActionHandler\MapSimXMLHandler:
         public: true
         arguments:
