@@ -22,8 +22,7 @@ class LarpingService
      */
     public function __construct(
         ObjectEntityService $objectEntityService
-    )
-    {
+    ) {
         $this->objectEntityService = $objectEntityService;
     }
 
@@ -33,9 +32,9 @@ class LarpingService
      * @param array $data
      * @param array $configuration
      *
-     * @return array
      * @throws LoaderError|RuntimeError|SyntaxError|TransportExceptionInterface
      *
+     * @return array
      */
     public function LarpingHandler(array $data, array $configuration): array
     {
