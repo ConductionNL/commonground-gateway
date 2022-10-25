@@ -22,6 +22,7 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Entity\ObjectEntity;
 
 /**
  * An entity that functions a an object template for objects that might be stored in the EAV database.
@@ -1026,5 +1027,46 @@ class Entity
         $this->schema = $schema;
 
         return $this;
+    }
+
+    public function toSchema(?ObjectEntity $objectEntity): array
+    {
+        $schema = [
+            '$id'        => 'https://example.com/person.schema.json', //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+            'title'      => $this->getName(),
+            'required'   => [],
+            'properties'   => [],
+        ];
+
+        if($objectEntity && $objectEntity->getEntity() != $this){
+            // gooi error
+        }
+
+        foreach($this->getAttributes() as $attribute){
+            // Zetten van required
+            if($attribute->getRequired()){
+                $schema['required'][] = $attribute->getName();
+            }
+
+            // Aanmaken property
+            // @todo ik laad dit nu in als array maar eigenlijk wil je testen en alleen zetten als er waardes in zitten
+            $property = [
+                "type" => $attribute->getType(),
+                "format" =>$attribute->getFormat(),
+                "description" => $attribute->getDescription(),
+                "example" => $attribute->getExample(),
+            ];
+
+            // What if we have an $object entity
+            if($objectEntity){
+                $property['value'] = $objectEntity->getValue($attribute);
+            }
+
+            // Zetten van de property
+            $schema['properties'][$attribute->getName()] = $property;
+        }
+
+        return $schema;
     }
 }
