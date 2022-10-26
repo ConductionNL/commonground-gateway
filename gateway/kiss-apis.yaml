@@ -873,7 +873,7 @@
 #                sourceLeading: false
 #                mappingIn: {}
 #                mappingOut: 
-#                    body_content: "object | array"
+##                    body_content: "object | array"
 ##                    todo:
 ##                    title: "user.firstName+user.prefixLastname+user.lastName | concatenation &nbsp;"
 #                    title: "contact.voornaam+contact.voorvoegselAchternaam+contact.achternaam | concatenation &nbsp;"
@@ -927,7 +927,7 @@
 #                sourceLeading: false
 #                mappingIn: { }
 #                mappingOut:
-#                    body_content: "object | array"
+##                    body_content: "object | array"
 #                    title: "vertalingen.0.productTitelDecentraal | concatenation &nbsp;"
 #                    object: "object | array"
 #                    object_meta: "vertalingen.0.specifiekeTekst | concatenation <identity('<br/>')>"
