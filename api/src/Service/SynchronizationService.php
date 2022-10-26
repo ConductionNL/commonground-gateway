@@ -669,6 +669,8 @@ class SynchronizationService
             return $synchronization;
         }
 
+        $now = new DateTime();
+        $synchronization->setLastChecked($now);
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
 
         //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
@@ -677,6 +679,11 @@ class SynchronizationService
         } elseif ((!$synchronization->getLastSynced() || $synchronization->getLastSynced() < $synchronization->getObject()->getDateModified()) && $synchronization->getSourceLastChanged() < $synchronization->getObject()->getDateModified()) {
             $synchronization = $this->syncToSource($synchronization, true);
         } else {
+            if (isset($this->io)) {
+                //todo: temp, maybe put something else here later
+                $this->io->text("Nothing to sync because source and gateway haven't changed");
+                $this->io->newLine();
+            }
             $synchronization = $this->syncThroughComparing($synchronization);
         }
 
@@ -901,6 +908,7 @@ class SynchronizationService
         try {
             $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
         } catch (Exception $exception) {
+            // todo: logging
 //            return $synchronization;
         }
 
@@ -909,7 +917,7 @@ class SynchronizationService
 
         $synchronization->setLastSynced($now);
         $synchronization->setSourceLastChanged($now);
-        $synchronization->setLastChecked($now);
+        $synchronization->setLastChecked($now); //todo this should not be here but only in the handleSync function. But this needs to be here because we call the syncToSource function instead of handleSync function
         if ($body->has($this->configuration['apiSource']['location']['idField'])) {
             $synchronization->setSourceId($body->get($this->configuration['apiSource']['location']['idField']));
         }
@@ -1119,6 +1127,9 @@ class SynchronizationService
         if (isset($this->configuration['apiSource']['location']['dateChangedField'])) {
             $object->setDateModified(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateChangedField'])));
         }
+
+        $now = new DateTime();
+        $synchronization->setLastSynced($now);
 
         return $synchronization->setObject($object);
     }
