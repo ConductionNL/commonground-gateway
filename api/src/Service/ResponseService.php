@@ -523,23 +523,25 @@ class ResponseService
             $synchronizations = [];
             foreach ($object->getSynchronizations() as $synchronization) {
                 $synchronizations[] = [
-                    'id' => $synchronization->getId()->toString(),
+                    'id'      => $synchronization->getId()->toString(),
                     'gateway' => [
-                        'id' => $synchronization->getGateway()->getId()->toString(),
-                        'name' => $synchronization->getGateway()->getName(),
-                        'location' => $synchronization->getGateway()->getLocation()
+                        'id'       => $synchronization->getGateway()->getId()->toString(),
+                        'name'     => $synchronization->getGateway()->getName(),
+                        'location' => $synchronization->getGateway()->getLocation(),
                     ],
-                    'endpoint' => $synchronization->getEndpoint(),
-                    'sourceId' => $synchronization->getSourceId(),
-                    'dateCreated' => $synchronization->getDateCreated(),
-                    'dateModified' => $synchronization->getDateModified(),
-                    'lastChecked' => $synchronization->getLastChecked(),
-                    'lastSynced' => $synchronization->getLastSynced(),
+                    'endpoint'          => $synchronization->getEndpoint(),
+                    'sourceId'          => $synchronization->getSourceId(),
+                    'dateCreated'       => $synchronization->getDateCreated(),
+                    'dateModified'      => $synchronization->getDateModified(),
+                    'lastChecked'       => $synchronization->getLastChecked(),
+                    'lastSynced'        => $synchronization->getLastSynced(),
                     'sourceLastChanged' => $synchronization->getSourceLastChanged(),
                 ];
             }
+
             return $synchronizations;
         }
+
         return null;
     }
 
