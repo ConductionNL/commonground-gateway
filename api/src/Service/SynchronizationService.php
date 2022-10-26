@@ -383,8 +383,8 @@ class SynchronizationService
                 new TableSeparator(),
                 ['Component' => "Data of Source/Gateway \"{$gateway->getName()}\" ({$gateway->getId()->toString()}) as array"],
                 ['Url'       => $callServiceConfig['url']],
-                ['Query'     => "[{$this->objectEntityService->implodeMultiArray($callServiceConfig['query'])}]"],
-                ['Headers'   => "[{$this->objectEntityService->implodeMultiArray($callServiceConfig['headers'])}]"],
+                ['Query'     => is_array($callServiceConfig['query']) ? "[{$this->objectEntityService->implodeMultiArray($callServiceConfig['query'])}]" : $callServiceConfig['query']],
+                ['Headers'   => is_array($callServiceConfig['headers']) ? "[{$this->objectEntityService->implodeMultiArray($callServiceConfig['headers'])}]" : $callServiceConfig['headers']],
                 ['Method'    => $callServiceConfig['method'] ?? 'GET'],
             );
         }
