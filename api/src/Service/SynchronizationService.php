@@ -178,9 +178,6 @@ class SynchronizationService
         // Lets sync (returns the Synchronization object), will do a get on the source if $sourceObject = []
         $synchronization = $this->handleSync($synchronization, $sourceObject);
 
-        $this->entityManager->persist($synchronization);
-        $this->entityManager->flush();
-
         return $responseData;
     }
 
@@ -236,9 +233,6 @@ class SynchronizationService
                 $result = [];
             }
             $synchronization = $this->handleSync($synchronization, $result);
-
-            $this->entityManager->persist($synchronization);
-            $this->entityManager->flush();
         }
 
         return $results;
@@ -659,6 +653,7 @@ class SynchronizationService
      *
      * @param Synchronization $synchronization The synchronisation object before synchronisation
      * @param array           $sourceObject    The object in the source
+     * @param ?array          $configuration   Configuration if not entered code from action
      *
      *@throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      *
@@ -691,6 +686,9 @@ class SynchronizationService
         } else {
             $synchronization = $this->syncThroughComparing($synchronization);
         }
+
+        $this->entityManager->persist($synchronization);
+        $this->entityManager->flush();
 
         return $synchronization;
     }

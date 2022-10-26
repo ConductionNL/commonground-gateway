@@ -564,6 +564,9 @@ class Value
                     // Catch Array input (for hydrator)
                     if (is_array($value)) {
                         $valueObject = new ObjectEntity($this->getAttribute()->getObject());
+                        $valueObject->setOwner($this->getObjectEntity()->getOwner());
+                        $valueObject->setApplication($this->getObjectEntity()->getApplication());
+                        $valueObject->setOrganization($this->getObjectEntity()->getOrganization());
                         $valueObject->hydrate($value);
                         $value = $valueObject;
                     }
@@ -628,6 +631,9 @@ class Value
                     // Catch Array input (for hydrator)
                     if (is_array($value)) {
                         $valueObject = new ObjectEntity($this->getAttribute()->getObject());
+                        $valueObject->setOwner($this->getObjectEntity()->getOwner());
+                        $valueObject->setApplication($this->getObjectEntity()->getApplication());
+                        $valueObject->setOrganization($this->getObjectEntity()->getOrganization());
                         $valueObject->hydrate($value);
                         $value = $valueObject;
                     }
