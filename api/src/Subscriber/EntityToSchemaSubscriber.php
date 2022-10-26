@@ -6,17 +6,11 @@ use ApiPlatform\Core\EventListener\EventPriorities;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
-use App\Service\ObjectEntityService;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\Mime\Email;
 
 final class EntityToSchemaSubscriber implements EventSubscriberInterface
 {
@@ -36,7 +30,7 @@ final class EntityToSchemaSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * This function returns the schema of an objectEntity or entity
+     * This function returns the schema of an objectEntity or entity.
      *
      * @throws GatewayException
      */
@@ -44,12 +38,12 @@ final class EntityToSchemaSubscriber implements EventSubscriberInterface
     {
         $request = $event->getRequest();
 
-        if($request->headers->get('Accept') != 'application/json+schema') {
+        if ($request->headers->get('Accept') != 'application/json+schema') {
             return;
         }
 
-        $objectType = $request->attributes->get("_route_params") ? $request->attributes->get("_route_params")['_api_resource_class'] : null; //The class of the requested entity
-        $objectId = $request->attributes->get("_route_params") ? $request->attributes->get("_route_params")['id'] : null; //The id of the resource
+        $objectType = $request->attributes->get('_route_params') ? $request->attributes->get('_route_params')['_api_resource_class'] : null; //The class of the requested entity
+        $objectId = $request->attributes->get('_route_params') ? $request->attributes->get('_route_params')['id'] : null; //The id of the resource
 
         if (!$objectId) {
             throw new GatewayException('Cannot give a schema if no entity is given');

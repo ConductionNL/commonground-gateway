@@ -23,7 +23,6 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
-use App\Entity\ObjectEntity;
 
 /**
  * An entity that functions a an object template for objects that might be stored in the EAV database.
@@ -1036,20 +1035,20 @@ class Entity
     public function toSchema(?ObjectEntity $objectEntity): array
     {
         $schema = [
-            '$id'        => 'https://example.com/person.schema.json', //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
-            'title'      => $this->getName(),
-            'required'   => [],
+            '$id'          => 'https://example.com/person.schema.json', //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'      => 'https://json-schema.org/draft/2020-12/schema',
+            'title'        => $this->getName(),
+            'required'     => [],
             'properties'   => [],
         ];
 
-        if($objectEntity && $objectEntity->getEntity() !== $this){
+        if ($objectEntity && $objectEntity->getEntity() !== $this) {
             throw new GatewayException('The given objectEntity has not have the same entity as this entity');
         }
 
-        foreach($this->getAttributes() as $attribute){
+        foreach ($this->getAttributes() as $attribute) {
             // Zetten van required
-            if($attribute->getRequired()){
+            if ($attribute->getRequired()) {
                 $schema['required'][] = $attribute->getName();
             }
 
@@ -1063,7 +1062,7 @@ class Entity
             $attribute->getExample() && $property['example'] = $attribute->getExample();
 
             // What if we have an $object entity
-            if($objectEntity){
+            if ($objectEntity) {
                 $property['value'] = $objectEntity->getValue($attribute);
             }
 
