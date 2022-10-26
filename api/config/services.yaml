@@ -52,6 +52,11 @@ services:
         arguments:
             $bijlagenArrayService: '@App\Service\BijlagenArrayService'
             
+    App\ActionHandler\CatalogiHandler:
+        public: true
+        arguments:
+            $catalogiService: '@App\Service\CatalogiService'
+            
     App\ActionHandler\EmailHandler:
         public: true
         arguments:
