@@ -669,6 +669,8 @@ class SynchronizationService
             return $synchronization;
         }
 
+        $now = new DateTime();
+        $synchronization->setLastChecked($now);
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
 
         //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
@@ -1120,6 +1122,9 @@ class SynchronizationService
         if (isset($this->configuration['apiSource']['location']['dateChangedField'])) {
             $object->setDateModified(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateChangedField'])));
         }
+
+        $now = new DateTime();
+        $synchronization->setLastSynced($now);
 
         return $synchronization->setObject($object);
     }
