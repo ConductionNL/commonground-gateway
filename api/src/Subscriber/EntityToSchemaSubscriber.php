@@ -5,52 +5,62 @@ namespace App\Subscriber;
 use ApiPlatform\Core\EventListener\EventPriorities;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
+use App\Exception\GatewayException;
+use App\Service\ObjectEntityService;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Mime\Email;
 
 final class EntityToSchemaSubscriber implements EventSubscriberInterface
 {
-//    private $mailer;
+    private EntityManagerInterface $entityManager;
 
-    public function __construct()
-    {
-//        $this->mailer = $mailer;
+    public function __construct(
+        EntityManagerInterface $entityManager
+    ) {
+        $this->entityManager = $entityManager;
     }
 
     public static function getSubscribedEvents()
     {
         return [
-            KernelEvents::VIEW => ['toSchema', EventPriorities::PRE_VALIDATE],
+            KernelEvents::REQUEST => ['toSchema', EventPriorities::PRE_DESERIALIZE],
         ];
     }
 
-    public function toSchema(ViewEvent $event): void
+    /**
+     * This function returns the schema of an objectEntity or entity
+     *
+     * @throws GatewayException
+     */
+    public function toSchema(RequestEvent $event)
     {
-        $entityType = $event->getControllerResult();
-        $method = $event->getRequest()->getMethod();
-        $headers = $event->getRequest()->headers->get('accept');
+        $request = $event->getRequest();
 
-        var_dump($headers);
-
-        if ($entityType instanceof ObjectEntity && Request::METHOD_GET == $method) {
-            $objectEntity = $entityType;
-
-            var_dump($objectEntity->getEntity()->toSchema($objectEntity));
-
-            $objectEntity->getEntity()->toSchema($objectEntity);
-
+        if($request->headers->get('Accept') != 'application/json+schema') {
             return;
         }
 
-        if (!$entityType instanceof Entity && Request::METHOD_GET !== $method) {
-            return;
+        $objectType = $request->attributes->get("_route_params") ? $request->attributes->get("_route_params")['_api_resource_class'] : null; //The class of the requested entity
+        $objectId = $request->attributes->get("_route_params") ? $request->attributes->get("_route_params")['id'] : null; //The id of the resource
+
+        if (!$objectId) {
+            throw new GatewayException('Cannot give a schema if no entity is given');
         }
 
-        var_dump($entityType->toSchema(null));die();
+        if ($objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($objectId)) {
+            $event->setResponse(new Response(json_encode($objectEntity->getEntity()->toSchema($objectEntity)), Response::HTTP_OK, ['content-type' => 'application/json+schema']));
+        }
 
-        $entity->toSchema(null);
+        if ($entity = $this->entityManager->getRepository('App:Entity')->find($objectId)) {
+            $event->setResponse(new Response(json_encode($entity->toSchema(null)), Response::HTTP_OK, ['content-type' => 'application/json+schema']));
+        }
     }
 }

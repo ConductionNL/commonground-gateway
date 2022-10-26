@@ -1053,6 +1053,8 @@ class Entity
                 $schema['required'][] = $attribute->getName();
             }
 
+            $property = [];
+
             // Aanmaken property
             // @todo ik laad dit nu in als array maar eigenlijk wil je testen en alleen zetten als er waardes in zitten
             $attribute->getType() && $property['type'] = $attribute->getType();
