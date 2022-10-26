@@ -21,17 +21,17 @@ class LarpingHandler
     public function getConfiguration(): array
     {
         return [
-            '$id' => 'https://example.com/person.schema.json',
-            '$schema' => 'https://json-schema.org/draft/2020-12/schema',
-            'title' => 'Notification Action',
-            'required' => ['characterEntityId', 'effectEntityId'],
+            '$id'        => 'https://example.com/person.schema.json',
+            '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
+            'title'      => 'Notification Action',
+            'required'   => ['characterEntityId', 'effectEntityId'],
             'properties' => [
                 'characterEntityId' => [
-                    'type' => 'string',
+                    'type'        => 'string',
                     'description' => 'The id of the character entity',
                 ],
                 'effectEntityId' => [
-                    'type' => 'string',
+                    'type'        => 'string',
                     'description' => 'The id of the effect entity',
                 ],
             ],
@@ -41,15 +41,15 @@ class LarpingHandler
     /**
      * This function runs the zaak type plugin.
      *
-     * @param array $data The data from the call
+     * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
-     * @return array
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
      * @throws \Respect\Validation\Exceptions\ComponentException
-     *
      * @throws \App\Exception\GatewayException
+     *
+     * @return array
      */
     public function run(array $data, array $configuration): array
     {
