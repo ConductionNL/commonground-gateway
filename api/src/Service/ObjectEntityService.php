@@ -63,8 +63,6 @@ class ObjectEntityService
     public array $notifications;
     private Environment $twig;
     private SymfonyStyle $io;
-
-    // todo: we need convertToGatewayService in this service for the saveObject function, add them somehow, see FunctionService...
     private TranslationService $translationService;
 
     public function __construct(
@@ -111,7 +109,7 @@ class ObjectEntityService
      * @param string $type The type of event to dispatch
      * @param array  $data The data that should in the event
      */
-    public function dispatchEvent(string $type, array $data, $subType = null): void
+    public function dispatchEvent(string $type, array $data, $subType = null, array $triggeredParentEvents = []): void
     {
         if ($this->session->get('io')) {
             $this->io = $this->session->get('io');
@@ -129,7 +127,7 @@ class ObjectEntityService
         ) {
             $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $data['entity']]);
             if ($entity instanceof Entity) {
-                $this->checkTriggerParentEvents($entity, $data);
+                $this->checkTriggerParentEvents($entity, $data, $triggeredParentEvents);
 
                 return;
             }
@@ -147,13 +145,12 @@ class ObjectEntityService
      *
      * @param Entity $entity
      * @param array  $data
+     * @param array  $triggeredParentEvents An array used to keep track of objects we already triggered parent events for. To prevent endless loops.
      *
      * @return void
      */
-    private function checkTriggerParentEvents(Entity $entity, array $data): void
+    private function checkTriggerParentEvents(Entity $entity, array $data, array $triggeredParentEvents): void
     {
-        //todo: prevent forever loop of dispatching events?
-
         $parentAttributes = $entity->getUsedIn();
         $triggerParentAttributes = $parentAttributes->filter(function ($parentAttribute) {
             return $parentAttribute->getTriggerParentEvents();
@@ -167,8 +164,10 @@ class ObjectEntityService
         if (isset($data['response']['id'])) {
             // Get the object that triggered the initial PUT dispatchEvent.
             $object = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
-            if ($object instanceof ObjectEntity) {
-                $this->dispatchTriggerParentEvents($object, $triggerParentAttributes, $data);
+            if ($object instanceof ObjectEntity and !in_array($data['response']['id'], $triggeredParentEvents)) {
+                // Prevent endless loop of dispatching events.
+                $triggeredParentEvents[] = $data['response']['id'];
+                $this->dispatchTriggerParentEvents($object, $triggerParentAttributes, $data, $triggeredParentEvents);
             }
         }
     }
@@ -179,10 +178,11 @@ class ObjectEntityService
      * @param ObjectEntity    $object
      * @param ArrayCollection $triggerParentAttributes
      * @param array           $data
+     * @param array           $triggeredParentEvents   An array used to keep track of objects we already triggered parent events for. To prevent endless loops.
      *
      * @return void
      */
-    private function dispatchTriggerParentEvents(ObjectEntity $object, ArrayCollection $triggerParentAttributes, array $data): void
+    private function dispatchTriggerParentEvents(ObjectEntity $object, ArrayCollection $triggerParentAttributes, array $data, array $triggeredParentEvents): void
     {
         foreach ($triggerParentAttributes as $triggerParentAttribute) {
             // Get the parent value & parent object using the attribute with triggerParentEvents = true.
@@ -203,7 +203,9 @@ class ObjectEntityService
                     [
                         'response' => $parentObject->toArray(),
                         'entity'   => $parentObject->getEntity()->getId()->toString(),
-                    ]
+                    ],
+                    null,
+                    $triggeredParentEvents
                 );
             }
         }
