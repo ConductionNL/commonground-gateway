@@ -901,6 +901,7 @@ class SynchronizationService
         try {
             $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
         } catch (Exception $exception) {
+            // todo: logging
 //            return $synchronization;
         }
 
