@@ -679,6 +679,11 @@ class SynchronizationService
         } elseif ((!$synchronization->getLastSynced() || $synchronization->getLastSynced() < $synchronization->getObject()->getDateModified()) && $synchronization->getSourceLastChanged() < $synchronization->getObject()->getDateModified()) {
             $synchronization = $this->syncToSource($synchronization, true);
         } else {
+            if (isset($this->io)) {
+                //todo: temp, maybe put something else here later
+                $this->io->text("Nothing to sync because source and gateway haven't changed");
+                $this->io->newLine();
+            }
             $synchronization = $this->syncThroughComparing($synchronization);
         }
 
