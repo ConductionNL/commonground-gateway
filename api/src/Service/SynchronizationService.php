@@ -917,7 +917,7 @@ class SynchronizationService
 
         $synchronization->setLastSynced($now);
         $synchronization->setSourceLastChanged($now);
-        $synchronization->setLastChecked($now);
+        $synchronization->setLastChecked($now); //todo this should not be here but only in the handleSync function. But this needs to be here because we call the syncToSource function instead of handleSync function
         if ($body->has($this->configuration['apiSource']['location']['idField'])) {
             $synchronization->setSourceId($body->get($this->configuration['apiSource']['location']['idField']));
         }
