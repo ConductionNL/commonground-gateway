@@ -87,7 +87,7 @@ class CatalogiService
 
         // Get the Catalogi of all the Catalogi we know of
         foreach ($knownCatalogi as $catalogi) {
-            $url = $catalogi['source']['location'];
+            $url = $catalogi['source']['location'].$this->configuration['location'];
             $externCatalogi = []; //todo: callService on the source of these $catalogi
 
             // Check if these Catalogi know any Catalogi we don't know yet
