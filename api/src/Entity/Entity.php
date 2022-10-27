@@ -1080,7 +1080,6 @@ class Entity
             // Aanmaken property
             // @todo ik laad dit nu in als array maar eigenlijk wil je testen en alleen zetten als er waardes in zitten
 
-
             $attribute->getType() && $property['type'] = $attribute->getType();
             $attribute->getFormat() && $property['format'] = $attribute->getFormat();
             $attribute->getDescription() && $property['description'] = $attribute->getDescription();
