@@ -95,6 +95,7 @@ class CronjobCommand extends Command
                 $io->newLine();
             }
             $io->newLine();
+            $this->session->remove('currentCronJobThrow');
         }
         $throwProgressBar->setMessage('Finished looping through all Throws of this Cronjob');
         $throwProgressBar->finish();

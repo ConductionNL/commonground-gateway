@@ -2,22 +2,37 @@
 
 namespace App\Service;
 
+use App\Entity\ObjectEntity;
+use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
+use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class CatalogiService
 {
     private EntityManagerInterface $entityManager;
+    private SessionInterface $session;
+    private CommonGroundService $commonGroundService;
+    private SynchronizationService $synchronizationService;
     private array $data;
     private array $configuration;
+    private SymfonyStyle $io;
 
     public function __construct(
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        SessionInterface $session,
+        CommonGroundService $commonGroundService,
+        SynchronizationService $synchronizationService
     ) {
         $this->entityManager = $entityManager;
+        $this->session = $session;
+        $this->commonGroundService = $commonGroundService;
+        $this->synchronizationService = $synchronizationService;
     }
 
     /**
-     * Handles the sending of an email based on an event.
+     * Handles finding and adding new Catalogi.
      *
      * @param array $data
      * @param array $configuration
@@ -28,6 +43,11 @@ class CatalogiService
     {
         $this->data = $data;
         $this->configuration = $configuration;
+        $this->synchronizationService->configuration = $configuration;
+        if ($this->session->get('io')) {
+            $this->io = $this->session->get('io');
+            $this->io->note('CatalogiService->catalogiHandler()');
+        }
 
         $newCatalogi = $this->pullCatalogi();
 
@@ -38,11 +58,11 @@ class CatalogiService
     }
 
     /**
-     * @todo
+     * Checks all known Catalogi (or one newly added Catalogi) for unknown/new Catalogi.
      *
-     * @param array|null $newCatalogi
+     * @param array|null $newCatalogi A newly added Catalogi, default to null in this case we get all Catalogi we know.
      *
-     * @return array
+     * @return array An array of all newly added Catalogi or an empty array.
      */
     private function pullCatalogi(array $newCatalogi = null): array
     {
@@ -50,21 +70,25 @@ class CatalogiService
         $knownCatalogi = $newCatalogi ? [$newCatalogi] : $this->getAllKnownCatalogi();
 
         // Check for new unknown Catalogi
-        $unknownCatalogi = $this->checkForUnknownCatalogi($knownCatalogi);
+        $unknownCatalogi = $this->getUnknownCatalogi($knownCatalogi);
 
         // Add any unknown Catalogi so we know them as well
         return $this->addNewCatalogi($unknownCatalogi);
     }
 
     /**
-     * @todo
+     * Get all the Catalogi we know of in this Commonground-Gateway.
      *
-     * @return array knownCatalogi
+     * @return array An array of all Catalogi we know.
      */
     private function getAllKnownCatalogi(): array
     {
-        //todo: do this in a different way?
         $knownCatalogi = $this->entityManager->getRepository('App:ObjectEntity')->findBy(['entity' => $this->configuration['entity']]);
+
+        if (isset($this->io)) {
+            $totalKnownCatalogi = is_countable($knownCatalogi) ? count($knownCatalogi) : 0;
+            $this->io->section("Found $totalKnownCatalogi known Catalogi");
+        }
 
         // Convert ObjectEntities to useable arrays
         foreach ($knownCatalogi as &$catalogi) {
@@ -75,39 +99,119 @@ class CatalogiService
     }
 
     /**
-     * @todo
+     * Get all unknown Catalogi from the Catalogi we do know.
      *
-     * @param array $knownCatalogi
+     * @param array $knownCatalogi An array of all Catalogi we know.
      *
-     * @return array unknownCatalogi
+     * @return array An array of all Catalogi we do not know yet.
      */
-    private function checkForUnknownCatalogi(array $knownCatalogi): array
+    private function getUnknownCatalogi(array $knownCatalogi): array
     {
         $unknownCatalogi = [];
 
+        if (isset($this->io)) {
+            $this->io->block("Start looping through known Catalogi...");
+        }
+
         // Get the Catalogi of all the Catalogi we know of
         foreach ($knownCatalogi as $catalogi) {
-            $url = $catalogi['source']['location'].$this->configuration['location'];
-            $externCatalogi = []; //todo: callService on the source of these $catalogi
-
-            // Check if these Catalogi know any Catalogi we don't know yet
-            foreach ($externCatalogi as $checkCatalogi) {
-                if (!$this->checkIfCatalogiExists($knownCatalogi, $checkCatalogi)) {
-                    $unknownCatalogi[] = $checkCatalogi;
+            try {
+                $url = $catalogi['source']['location'].$this->configuration['location'];
+                if (isset($this->io)) {
+                    $this->io->text("Get Catalogi from ({$catalogi['source']['name']}) \"$url\"");
                 }
+                $response = $this->commonGroundService->callService($this->generateCallServiceComponent($catalogi), $url, '');
+
+                if (is_array($response)) {
+                    throw new Exception("callService returned an array".(isset($response['error']) ? " with error: {$response['error']}" : ''));
+                }
+            } catch (Exception $exception) {
+                // If no next page with this $page exists...
+                if (isset($this->io)) {
+                    $this->io->error("Error while doing getUnknownCatalogi for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": {$exception->getMessage()}");
+                    $this->io->block("File: {$exception->getFile()}");
+                    $this->io->block("Line: {$exception->getLine()}");
+                    $this->io->block("Trace: {$exception->getTraceAsString()}");
+                }
+
+                //todo: error, log this
+                continue;
             }
+
+            $externCatalogi = json_decode($response->getBody()->getContents(), true);
+            $unknownCatalogi = $this->checkForUnknownCatalogi($externCatalogi, $knownCatalogi, $unknownCatalogi);
+
+            if (isset($this->io)) {
+                $this->io->newLine();
+            }
+        }
+
+        if (isset($this->io)) {
+            $this->io->block("Finished looping through known Catalogi");
         }
 
         return $unknownCatalogi;
     }
 
     /**
-     * @todo
+     * Generates a component array used by the callService when we are going to get all Catalogi of an extern Catalogi.
      *
-     * @param array $knownCatalog
-     * @param array $checkCatalogi
+     * @param array $catalogi A single known Catalogi.
      *
-     * @return bool
+     * @return array An array with data used by the callService.
+     */
+    private function generateCallServiceComponent(array $catalogi): array
+    {
+        return [
+//            'auth' => 'apikey',
+//            'authorizationHeader' => 'Authorization',
+//            'passthroughMethod' => 'header',
+            'location' => $catalogi['source']['location'],
+            'apikey' => null,
+//            'jwt' => null,
+//            'secret' => null,
+//            'id' => null,
+//            'locale' => null,
+            'accept' => 'application/json',
+//            'username' => null,
+//            'password' => null,
+        ];
+    }
+
+    /**
+     * Check for new/unknown Catalogi in the Catalogi of an extern Catalogi.
+     *
+     * @param array $externCatalogi An array of all Catalogi of an extern Catalogi we know.
+     * @param array $knownCatalogi An array of all Catalogi we know.
+     * @param array $unknownCatalogi An array of all Catalogi we do not know yet.
+     *
+     * @return array An array of all Catalogi we do not know yet.
+     */
+    private function checkForUnknownCatalogi(array $externCatalogi, array $knownCatalogi, array $unknownCatalogi): array
+    {
+        if (isset($this->io)) {
+            $this->io->text("Check for unknown Catalogi...");
+        }
+
+        // Check if these extern Catalogi know any Catalogi we don't know yet
+        foreach ($externCatalogi as $checkCatalogi) {
+            if (!$this->checkIfCatalogiExists($knownCatalogi, $checkCatalogi)) {
+                $unknownCatalogi[] = $checkCatalogi;
+                if (isset($this->io)) {
+                    $this->io->text("Found an unknown Catalogi: ({$checkCatalogi['source']['name']}) \"{$checkCatalogi['source']['location']}\"");
+                }
+            }
+        }
+        return $unknownCatalogi;
+    }
+
+    /**
+     * Check if a Catalogi exists in this Commonground-Gateway.
+     *
+     * @param array $knownCatalog An array of all Catalogi we know.
+     * @param array $checkCatalogi A single Catalogi we are going to check.
+     *
+     * @return bool True if we already know this Catalogi, false if not.
      */
     private function checkIfCatalogiExists(array $knownCatalog, array $checkCatalogi): bool
     {
@@ -124,21 +228,36 @@ class CatalogiService
     }
 
     /**
-     * @todo
+     * Adds a new Catalogi and does a pull on this Catalogi to check for more unknown Catalogi.
      *
-     * @param array $unknownCatalogi
+     * @param array $unknownCatalogi An array of all Catalogi we do not know yet.
      *
-     * @return array addedCatalogi
+     * @return array An array of all newly added Catalogi.
      */
     private function addNewCatalogi(array $unknownCatalogi): array
     {
+        $totalUnknownCatalogi = is_countable($unknownCatalogi) ? count($unknownCatalogi) : 0;
+        if (isset($this->io) && $totalUnknownCatalogi > 0) {
+            $this->io->block("Found $totalUnknownCatalogi unknown Catalogi, start adding them...");
+        }
+
         $addedCatalogi = [];
         // Add unknown Catalogi
         foreach ($unknownCatalogi as $addCatalogi) {
-            $newCatalogi = $addCatalogi; //todo actually add Catalogi
+            $object = new ObjectEntity();
+            $object->setEntity($this->synchronizationService->getEntityFromConfig());
+            $newCatalogi = $this->synchronizationService->populateObject($addCatalogi, $object);
 
             // Repeat pull for newly added Catalogi (recursion)
-            $addedCatalogi = array_merge($addedCatalogi, $this->pullCatalogi($newCatalogi));
+            if (isset($this->io)) {
+                $this->io->text("Added Catalogi ({$addCatalogi['source']['name']}) \"{$addCatalogi['source']['location']}\"");
+                $this->io->section("Check for new Catalogi in this newly added Catalogi: ({$addCatalogi['source']['name']}) \"{$addCatalogi['source']['location']}\"");
+            }
+            $addedCatalogi = array_merge($addedCatalogi, $this->pullCatalogi($addCatalogi));
+        }
+
+        if (isset($this->io) && $totalUnknownCatalogi > 0) {
+            $this->io->block("Finished adding all new Catalogi");
         }
 
         return $addedCatalogi;

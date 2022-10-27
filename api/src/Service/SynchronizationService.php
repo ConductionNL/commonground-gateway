@@ -39,7 +39,7 @@ class SynchronizationService
     private TranslationService $translationService;
     private ObjectEntityService $objectEntityService;
     private ValidatorService $validatorService;
-    private array $configuration;
+    public array $configuration;
     private array $data;
     private SymfonyStyle $io;
     private Environment $twig;
@@ -266,7 +266,7 @@ class SynchronizationService
      *
      * @return Entity|null The found entity for the configuration
      */
-    private function getEntityFromConfig(): ?Entity
+    public function getEntityFromConfig(): ?Entity
     {
         if (isset($this->configuration['entity'])) {
             $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->configuration['entity']]);
@@ -429,25 +429,19 @@ class SynchronizationService
             );
 
             if (is_array($response)) {
-                throw new Exception('Callservice error while doing fetchObjectsFromSource');
+                throw new Exception("callService returned an array".(isset($response['error']) ? " with error: {$response['error']}" : ''));
             }
         } catch (Exception $exception) {
             // If no next page with this $page exists...
             if (isset($this->io)) {
-                $this->io->warning("(This might just be the final page!) - {$exception->getMessage()}");
+                $this->io->warning("(This might just be the final page!) - Error while doing fetchObjectsFromSource: {$exception->getMessage()}");
+                $this->io->block("File: {$exception->getFile()}");
+                $this->io->block("Line: {$exception->getLine()}");
+//                $this->io->block("Trace: {$exception->getTraceAsString()}");
             }
 
+            //todo: error, log this
             return [];
-            //todo: error, user feedback and log this?
-//            throw new GatewayException('Callservice error while doing fetchObjectsFromSource', null, null, [
-//                'data' => [
-//                    'message'           => $exception->getMessage(),
-//                    'code'              => $exception->getCode(),
-//                    'response'          => $response ?? null,
-//                    'trace'             => $exception->getTraceAsString()
-//                ],
-//                'path' => $callServiceConfig['url'], 'responseType' => Response::HTTP_BAD_REQUEST
-//            ]);
         }
 
         $pageResult = json_decode($response->getBody()->getContents(), true);
@@ -493,23 +487,18 @@ class SynchronizationService
             );
 
             if (is_array($response)) {
-                throw new Exception('Callservice error while doing getSingleFromSource');
+                throw new Exception("callService returned an array".(isset($response['error']) ? " with error: {$response['error']}" : ''));
             }
         } catch (Exception $exception) {
             if (isset($this->io)) {
-                $this->io->warning("{$exception->getMessage()}");
+                $this->io->warning("Error while doing getSingleFromSource: {$exception->getMessage()}");
+                $this->io->block("File: {$exception->getFile()}");
+                $this->io->block("Line: {$exception->getLine()}");
+//                $this->io->block("Trace: {$exception->getTraceAsString()}");
             }
 
+            //todo: error, log this
             return null;
-//            //todo: error, user feedback and log this?
-//            throw new GatewayException('Callservice error while doing getSingleFromSource', null, null, [
-//                'data' => [
-//                    'message'           => $exception->getMessage(),
-//                    'code'              => $exception->getCode(),
-//                    'trace'             => $exception->getTraceAsString()
-//                ],
-//                'path' => $callServiceConfig['url'], 'responseType' => Response::HTTP_BAD_REQUEST
-//            ]);
         }
         $result = json_decode($response->getBody()->getContents(), true);
         $dot = new Dot($result);
@@ -908,7 +897,14 @@ class SynchronizationService
         try {
             $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
         } catch (Exception $exception) {
-            // todo: logging
+            if (isset($this->io)) {
+                $this->io->warning("Error while doing syncToSource: {$exception->getMessage()}");
+                $this->io->block("File: {$exception->getFile()}");
+                $this->io->block("Line: {$exception->getLine()}");
+//                $this->io->block("Trace: {$exception->getTraceAsString()}");
+            }
+
+            // todo: error, log this
 //            return $synchronization;
         }
 
@@ -1034,19 +1030,18 @@ class SynchronizationService
             );
 
             if (is_array($result)) {
-                throw new Exception('Callservice error while doing syncToSource');
+                throw new Exception("callService returned an array".(isset($response['error']) ? " with error: {$response['error']}" : ''));
             }
         } catch (Exception $exception) {
+            if (isset($this->io)) {
+                $this->io->warning("Error while doing syncToSource: {$exception->getMessage()}");
+                $this->io->block("File: {$exception->getFile()}");
+                $this->io->block("Line: {$exception->getLine()}");
+//                $this->io->block("Trace: {$exception->getTraceAsString()}");
+            }
+
+            //todo: error, log this
             return $synchronization;
-            //todo: error, user feedback and log this?
-//            throw new GatewayException('Callservice error while doing syncToSource', null, null, [
-//                'data' => [
-//                    'message'           => $exception->getMessage(),
-//                    'code'              => $exception->getCode(),
-//                    'trace'             => $exception->getTraceAsString()
-//                ],
-//                'path' => $callServiceConfig['url'], 'responseType' => Response::HTTP_BAD_REQUEST
-//            ]);
         }
         $contentType = $result->getHeader('content-type')[0];
         if (!$contentType) {
