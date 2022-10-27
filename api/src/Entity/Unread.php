@@ -20,9 +20,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * When an object + userId of the current user is present in this table the value dateRead in the response will be null.
  *
  * @ApiResource(
- *  paginationClientItemsPerPage=true,
- *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/unreads/{id}"},
  *      "put"={"path"="/admin/unreads/{id}"},
@@ -32,6 +31,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get"={"path"="/admin/unreads"},
  *      "post"={"path"="/admin/unreads"}
  *  })
+ * )
  * @ORM\Entity(repositoryClass="App\Repository\UnreadRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *

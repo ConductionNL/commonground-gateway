@@ -27,9 +27,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * This entity holds the information about a Collections.
  *
  * @ApiResource(
- *  paginationClientItemsPerPage=true,
- *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/collections/{id}"},
  *      "put"={"path"="/admin/collections/{id}"},

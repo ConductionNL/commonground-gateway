@@ -25,9 +25,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * This entity holds a Contract between a User and a Application.
  *
  * @ApiResource(
- *  paginationClientItemsPerPage=true,
- *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/contracts/{id}"},
  *      "put"={"path"="/admin/contracts/{id}"},

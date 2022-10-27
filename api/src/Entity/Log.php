@@ -24,9 +24,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * This entity holds the information about a Logs.
  *
  * @ApiResource(
- *  paginationClientItemsPerPage=true,
- *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/logs/{id}"},
  *      "put"={"path"="/admin/logs/{id}"},
