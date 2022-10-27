@@ -6,6 +6,7 @@ use App\Entity\Action;
 use App\Event\ActionEvent;
 use App\Service\ObjectEntityService;
 use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
 use Symfony\Component\Console\Helper\TableSeparator;
@@ -104,7 +105,7 @@ class ActionSubscriber implements EventSubscriberInterface
 
             if ($action->getLocked()) {
                 if (isset($this->io)) {
-                    $this->io->info("Action {$action->getName()} is lockable and locked = {$action->getLocked()}");
+                    $this->io->info("Action {$action->getName()} is lockable and locked = {$action->getLocked()->format(DateTimeInterface::ISO8601)}");
                 }
 
                 return $event;
