@@ -898,9 +898,10 @@ class SynchronizationService
      */
     private function storeSynchronization(Synchronization $synchronization, array $body): Synchronization
     {
-        if(isset($this->configuration['apiSource']['mappingIn'])) {
+        if (isset($this->configuration['apiSource']['mappingIn'])) {
             $body = $this->translationService->dotHydrator($body, $body, $this->configuration['apiSource']['mappingIn']);
         }
+
         try {
             $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
         } catch (Exception $exception) {
@@ -930,7 +931,6 @@ class SynchronizationService
      */
     private function checkActionConditionsEntity(string $entityId): bool
     {
-
         if (!isset($this->configuration['actionConditions']) ||
             (isset($this->configuration['actionConditions']['=='][0]['var']) &&
             isset($this->configuration['actionConditions']['=='][1]) &&
