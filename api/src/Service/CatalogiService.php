@@ -247,13 +247,14 @@ class CatalogiService
             $object = new ObjectEntity();
             $object->setEntity($this->synchronizationService->getEntityFromConfig());
             $newCatalogi = $this->synchronizationService->populateObject($addCatalogi, $object);
+            $newCatalogi = $newCatalogi->toArray();
 
             // Repeat pull for newly added Catalogi (recursion)
             if (isset($this->io)) {
-                $this->io->text("Added Catalogi ({$addCatalogi['source']['name']}) \"{$addCatalogi['source']['location']}\"");
-                $this->io->section("Check for new Catalogi in this newly added Catalogi: ({$addCatalogi['source']['name']}) \"{$addCatalogi['source']['location']}\"");
+                $this->io->text("Added Catalogi ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
+                $this->io->section("Check for new Catalogi in this newly added Catalogi: ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
             }
-            $addedCatalogi = array_merge($addedCatalogi, $this->pullCatalogi($addCatalogi));
+            $addedCatalogi = array_merge($addedCatalogi, $this->pullCatalogi($newCatalogi));
         }
 
         if (isset($this->io) && $totalUnknownCatalogi > 0) {
