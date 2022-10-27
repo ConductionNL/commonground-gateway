@@ -488,19 +488,29 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->text("getSingleFromSource with Synchronization->sourceId = {$synchronization->getSourceId()}");
             }
-            $response = $this->commonGroundService->callService(
-                $callServiceConfig['component'],
-                $synchronization->getEndpoint() ?? $callServiceConfig['url'],
-                '',
-                $callServiceConfig['query'],
-                $callServiceConfig['headers'],
-                false,
-                $callServiceConfig['method'] ?? 'GET'
+//            $response = $this->commonGroundService->callService(
+//                $callServiceConfig['component'],
+//                $synchronization->getEndpoint() ?? $callServiceConfig['url'],
+//                '',
+//                $callServiceConfig['query'],
+//                $callServiceConfig['headers'],
+//                false,
+//                $callServiceConfig['method'] ?? 'GET'
+//            );
+
+            $response = $this->callService->call(
+                $synchronization->getGateway(),
+                $synchronization->getEndpoint() ?? $this->getUrlForSource($synchronization->getSourceId()),
+                'GET',
+                [
+                    'headers'   => $this->getCallServiceOverwrite('headers') ?? $synchronization->getGateway()->getHeaders(),
+                    'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService(),
+                ]
             );
 
-            if (is_array($response)) {
-                throw new Exception('Callservice error while doing getSingleFromSource');
-            }
+//            if (is_array($response)) {
+//                throw new Exception('Callservice error while doing getSingleFromSource');
+//            }
         } catch (Exception $exception) {
             if (isset($this->io)) {
                 $this->io->warning("{$exception->getMessage()}");
@@ -517,7 +527,7 @@ class SynchronizationService
 //                'path' => $callServiceConfig['url'], 'responseType' => Response::HTTP_BAD_REQUEST
 //            ]);
         }
-        $result = json_decode($response->getBody()->getContents(), true);
+        $result = $this->callService->decodeResponse($synchronization->getGateway(), $response);
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
 //        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
@@ -659,8 +669,11 @@ class SynchronizationService
      *
      * @return Synchronization The updated synchronisation object
      */
-    public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
+    public function handleSync(Synchronization $synchronization, array $sourceObject = [], array $configuration = []): Synchronization
     {
+        if($configuration) {
+            $this->configuration = $configuration;
+        }
         if (isset($this->io)) {
             $this->io->text("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
         }

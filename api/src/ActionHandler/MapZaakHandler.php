@@ -9,18 +9,13 @@ use Psr\Cache\InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 use Respect\Validation\Exceptions\ComponentException;
 
-class MapZaakHandler implements ActionHandlerInterface
+class MapZaakHandler
 {
     private mapZaakService $mapZaakService;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(MapZaakService $mapZaakService)
     {
-        $mapZaakService = $container->get('mapZaakService');
-        if ($mapZaakService instanceof MapZaakService) {
-            $this->mapZaakService = $mapZaakService;
-        } else {
-            throw new GatewayException('The service container does not contain the required services for this handler');
-        }
+        $this->mapZaakService = $mapZaakService;
     }
 
     /**
@@ -59,7 +54,7 @@ class MapZaakHandler implements ActionHandlerInterface
      *
      * @return array
      */
-    public function __run(array $data, array $configuration): array
+    public function run(array $data, array $configuration): array
     {
         return $this->mapZaakService->mapZaakHandler($data, $configuration);
     }

@@ -62,7 +62,6 @@ class HandlerService
         RequestStack $requestStack,
         ValidationService $validationService,
         TranslationService $translationService,
-        SOAPService $soapService,
         EavService $eavService,
         SerializerInterface $serializer,
         LogService $logService,
@@ -81,7 +80,6 @@ class HandlerService
         $this->request = $requestStack->getCurrentRequest();
         $this->validationService = $validationService;
         $this->translationService = $translationService;
-        $this->soapService = $soapService;
         $this->eavService = $eavService;
         $this->serializer = $serializer;
         $this->logService = $logService;

@@ -542,6 +542,7 @@ class Value
      */
     public function setValue($value): self
     {
+
         if ($this->getAttribute()) {
 
             // For files and objects it quicker to just return the collection (no mapping and aditional query's invollved)
