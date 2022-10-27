@@ -22,8 +22,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  * This entity holds the information about a ResponseLog.
  *
  * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  paginationClientItemsPerPage=true,
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/response_logs/{id}"},
  *      "put"={"path"="/admin/response_logs/{id}"},
@@ -33,7 +34,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get"={"path"="/admin/response_logs"},
  *      "post"={"path"="/admin/response_logs"}
  *  })
- * )
  * @ORM\Entity(repositoryClass="App\Repository\GatewayResponseLogRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *

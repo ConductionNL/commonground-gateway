@@ -28,6 +28,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * An entity that functions a an object template for objects that might be stored in the EAV database.
  *
  * @ApiResource(
+ *  paginationClientItemsPerPage=true,
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={

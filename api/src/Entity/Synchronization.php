@@ -20,8 +20,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  * This entity holds the information about the Synchronization.
  *
  * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  paginationClientItemsPerPage=true,
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/synchronizations/{id}"},
  *      "put"={"path"="/admin/synchronizations/{id}"},

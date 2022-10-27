@@ -19,11 +19,12 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * An subscriber checks JSON conditions and executes translating and mapping on a outgoing call.
+ * A subscriber checks JSON conditions and executes translating and mapping on a outgoing call.
  *
  * @category Entity
  *
  * @ApiResource(
+ *  paginationClientItemsPerPage=true,
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={

@@ -23,8 +23,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  * This entity holds the information about a document.
  *
  * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *     paginationClientItemsPerPage=true,
+ *     normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *     denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *     collectionOperations={
  *          "post"={"path"="/admin/documents"},
  *     		"get"={"path"="/admin/documents"},
