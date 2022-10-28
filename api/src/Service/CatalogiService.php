@@ -163,7 +163,7 @@ class CatalogiService
      *
      * @param array $catalogi A single known Catalogi.
      *
-     * @return array An array with data used by the callService.
+     * @return Gateway A Gateway/Source object with data used by the callService.
      */
     private function generateCallServiceComponent(array $catalogi): Gateway
     {
@@ -172,20 +172,6 @@ class CatalogiService
         $source->setAccept('application/json');
         $source->setAuth('none');
         $source->setName('temp source for CatalogiService');
-//        return [
-        ////            'auth' => 'none',
-        ////            'authorizationHeader' => 'Authorization',
-        ////            'passthroughMethod' => 'header',
-//            'location' => $catalogi['source']['location'],
-        ////            'apikey' => null,
-        ////            'jwt' => null,
-        ////            'secret' => null,
-        ////            'id' => null,
-        ////            'locale' => null,
-//            'accept' => 'application/json',
-        ////            'username' => null,
-        ////            'password' => null,
-//        ];
         return $source;
     }
 
