@@ -30,7 +30,7 @@ class CatalogiHandler
                     'type'        => 'string',
                     'description' => 'todo',
                     'example'     => 'todo',
-                ]
+                ],
             ],
         ];
     }
