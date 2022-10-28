@@ -317,23 +317,35 @@ class PubliccodeService
      */
     public function enrichRepositoryWithOrganisationRepos(ObjectEntity $organisation, Entity $repositoryEntity): ?ObjectEntity
     {
+        $ownsRepositories = [];
         if ($owns = $organisation->getValue('owns')) {
             foreach ($owns as $repositoryUrl) {
-                $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+                $repository = $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+                $ownsRepositories[] = $repository->getId()->toString();
             }
         }
+        $organisation->setValue('owns', $ownsRepositories);
 
+        $usesRepositories = [];
         if ($uses = $organisation->getValue('uses')) {
             foreach ($uses as $repositoryUrl) {
-                $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+                $repository = $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+                $usesRepositories[] = $repository->getId()->toString();
             }
         }
+        $organisation->setValue('uses', $usesRepositories);
 
+        $supportsRepositories = [];
         if ($supports = $organisation->getValue('supports')) {
             foreach ($supports as $repositoryUrl) {
-                $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+                $repository = $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+                $supportsRepositories[] = $repository->getId()->toString();
             }
         }
+        $organisation->setValue('supports', $supportsRepositories);
+
+        $this->entityManager->persist($organisation);
+        $this->entityManager->flush();
 
         return $organisation;
     }
