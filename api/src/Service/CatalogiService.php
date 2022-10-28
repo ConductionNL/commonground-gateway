@@ -56,6 +56,8 @@ class CatalogiService
         }
 
         $newCatalogi = $this->pullCatalogi();
+        // todo: new function for OC-246 here? To get all components from all known Catalogi and compare them to our known components.
+        // todo: If we want to do this on an hourly basis as well^ else, create a new cronjob/action for a new handler function in this service?
 
         // todo: how do we ever remove a Catalogi? If the existing Catalogi keep adding the removed Catalogi?
 
