@@ -3,6 +3,7 @@
 namespace App\Subscriber;
 
 use ApiPlatform\Core\EventListener\EventPriorities;
+use App\Entity\DashboardCard;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ViewEvent;
@@ -27,10 +28,23 @@ class DashboardCardDoctrineSubscriber implements EventSubscriberInterface
 
     public function postLoad(ViewEvent $event)
     {
-        $this->addActionHandlerConfig($event);
+        $this->updateDashboardCard($event);
     }
 
-    private function addActionHandlerConfig(ViewEvent $event)
+    private function addObject(DashboardCard $dashboardCard): ?DashboardCard
+    {
+        if(!$entity = $dashboardCard->getEntity()){
+            return null;
+        }
+
+        $className = 'App:'.$entity;
+        $object = $this->entityManager->find($className, $dashboardCard->getEntityId());
+
+        return $dashboardCard->setObject($object);
+
+    }
+
+    private function updateDashboardCard(ViewEvent $event)
     {
         $route = $event->getRequest()->attributes->get('_route');
 
@@ -39,18 +53,18 @@ class DashboardCardDoctrineSubscriber implements EventSubscriberInterface
 
             $response = [];
             foreach ($dashboardCards as $dashboardCard) {
-                if(!$entity = $dashboardCard->getEntity()){
-                    return;
-                }
-
-                $className = 'App:'.$entity;
-                $object = $this->entityManager->find($className, $dashboardCard->getEntityId());
-
-                $dashboardCard->setObject($object);
-
+                $dashboardCard = $this->addObject($dashboardCard);
                 $response[] = $dashboardCard;
             }
             $event->setControllerResult($response);
+        }
+
+        if ($route == 'api_dashboard_cards_get_item') {
+            $objectId = $event->getRequest()->attributes->get('_route_params') ? $event->getRequest()->attributes->get('_route_params')['id'] : null; //The id of the resource
+
+            $dashboardCard = $this->entityManager->getRepository('App:DashboardCard')->find($objectId);
+            $dashboardCard = $this->addObject($dashboardCard);
+            $event->setControllerResult($dashboardCard);
         }
     }
 }
