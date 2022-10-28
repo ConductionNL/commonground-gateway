@@ -429,7 +429,7 @@ class SynchronizationService
             );
 
             if (is_array($response)) {
-                throw new Exception("callService returned an array".(isset($response['error']) ? " with error: {$response['error']}" : ''));
+                throw new Exception('callService returned an array'.(isset($response['error']) ? " with error: {$response['error']}" : ''));
             }
         } catch (Exception $exception) {
             // If no next page with this $page exists...
@@ -487,7 +487,7 @@ class SynchronizationService
             );
 
             if (is_array($response)) {
-                throw new Exception("callService returned an array".(isset($response['error']) ? " with error: {$response['error']}" : ''));
+                throw new Exception('callService returned an array'.(isset($response['error']) ? " with error: {$response['error']}" : ''));
             }
         } catch (Exception $exception) {
             if (isset($this->io)) {
@@ -1030,7 +1030,7 @@ class SynchronizationService
             );
 
             if (is_array($result)) {
-                throw new Exception("callService returned an array".(isset($response['error']) ? " with error: {$response['error']}" : ''));
+                throw new Exception('callService returned an array'.(isset($response['error']) ? " with error: {$response['error']}" : ''));
             }
         } catch (Exception $exception) {
             if (isset($this->io)) {

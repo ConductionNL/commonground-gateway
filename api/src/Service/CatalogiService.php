@@ -116,7 +116,7 @@ class CatalogiService
         $unknownCatalogi = [];
 
         if (isset($this->io)) {
-            $this->io->block("Start looping through known Catalogi...");
+            $this->io->block('Start looping through known Catalogi...');
         }
 
         // Get the Catalogi of all the Catalogi we know of
@@ -130,8 +130,6 @@ class CatalogiService
                 $response = $this->callService->call($source, $this->configuration['location']);
 
                 $this->entityManager->remove($source);
-
-
             } catch (Exception|GuzzleException $exception) {
                 // If no next page with this $page exists...
                 if (isset($this->io)) {
@@ -154,7 +152,7 @@ class CatalogiService
         }
 
         if (isset($this->io)) {
-            $this->io->block("Finished looping through known Catalogi");
+            $this->io->block('Finished looping through known Catalogi');
         }
 
         return $unknownCatalogi;
@@ -175,18 +173,18 @@ class CatalogiService
         $source->setAuth('none');
         $source->setName('temp source from data');
 //        return [
-////            'auth' => 'none',
-////            'authorizationHeader' => 'Authorization',
-////            'passthroughMethod' => 'header',
+        ////            'auth' => 'none',
+        ////            'authorizationHeader' => 'Authorization',
+        ////            'passthroughMethod' => 'header',
 //            'location' => $catalogi['source']['location'],
-////            'apikey' => null,
-////            'jwt' => null,
-////            'secret' => null,
-////            'id' => null,
-////            'locale' => null,
+        ////            'apikey' => null,
+        ////            'jwt' => null,
+        ////            'secret' => null,
+        ////            'id' => null,
+        ////            'locale' => null,
 //            'accept' => 'application/json',
-////            'username' => null,
-////            'password' => null,
+        ////            'username' => null,
+        ////            'password' => null,
 //        ];
         return $source;
     }
@@ -194,8 +192,8 @@ class CatalogiService
     /**
      * Check for new/unknown Catalogi in the Catalogi of an extern Catalogi.
      *
-     * @param array $externCatalogi An array of all Catalogi of an extern Catalogi we know.
-     * @param array $knownCatalogi An array of all Catalogi we know.
+     * @param array $externCatalogi  An array of all Catalogi of an extern Catalogi we know.
+     * @param array $knownCatalogi   An array of all Catalogi we know.
      * @param array $unknownCatalogi An array of all Catalogi we do not know yet.
      *
      * @return array An array of all Catalogi we do not know yet.
@@ -203,7 +201,7 @@ class CatalogiService
     private function checkForUnknownCatalogi(array $externCatalogi, array $knownCatalogi, array $unknownCatalogi): array
     {
         if (isset($this->io)) {
-            $this->io->text("Check for unknown Catalogi...");
+            $this->io->text('Check for unknown Catalogi...');
         }
 
         // Check if these extern Catalogi know any Catalogi we don't know yet
@@ -216,13 +214,14 @@ class CatalogiService
                 }
             }
         }
+
         return $unknownCatalogi;
     }
 
     /**
      * Check if a Catalogi exists in this Commonground-Gateway.
      *
-     * @param array $knownCatalog An array of all Catalogi we know.
+     * @param array $knownCatalog  An array of all Catalogi we know.
      * @param array $checkCatalogi A single Catalogi we are going to check.
      *
      * @return bool True if we already know this Catalogi, false if not.
@@ -273,7 +272,7 @@ class CatalogiService
         }
 
         if (isset($this->io) && $totalUnknownCatalogi > 0) {
-            $this->io->block("Finished adding all new Catalogi");
+            $this->io->block('Finished adding all new Catalogi');
         }
 
         return $addedCatalogi;
