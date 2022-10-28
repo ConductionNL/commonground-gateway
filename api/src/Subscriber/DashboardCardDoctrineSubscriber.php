@@ -33,7 +33,7 @@ class DashboardCardDoctrineSubscriber implements EventSubscriberInterface
 
     private function addObject(DashboardCard $dashboardCard): ?DashboardCard
     {
-        if(!$entity = $dashboardCard->getEntity()){
+        if (!$entity = $dashboardCard->getEntity()) {
             return null;
         }
 
@@ -41,7 +41,6 @@ class DashboardCardDoctrineSubscriber implements EventSubscriberInterface
         $object = $this->entityManager->find($className, $dashboardCard->getEntityId());
 
         return $dashboardCard->setObject($object);
-
     }
 
     private function updateDashboardCard(ViewEvent $event)
