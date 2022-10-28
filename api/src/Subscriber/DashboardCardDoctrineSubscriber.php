@@ -39,7 +39,7 @@ class DashboardCardDoctrineSubscriber implements EventSubscriberInterface
 
             $response = [];
             foreach ($dashboardCards as $dashboardCard) {
-                if(!$entity = $dashboardCard->getEntity()){
+                if (!$entity = $dashboardCard->getEntity()) {
                     return;
                 }
 
