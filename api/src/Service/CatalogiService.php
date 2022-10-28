@@ -131,7 +131,6 @@ class CatalogiService
 
                 $this->entityManager->remove($source);
             } catch (Exception|GuzzleException $exception) {
-                // If no next page with this $page exists...
                 if (isset($this->io)) {
                     $this->io->error("Error while doing getUnknownCatalogi for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": {$exception->getMessage()}");
                     $this->io->block("File: {$exception->getFile()}");
@@ -139,6 +138,7 @@ class CatalogiService
                     $this->io->block("Trace: {$exception->getTraceAsString()}");
                 }
 
+                //todo: try to remove $source on error? Or maybe just actually create a Source and re-use it instead of creating and deleting it all the time?
                 //todo: error, log this
                 continue;
             }
@@ -171,7 +171,7 @@ class CatalogiService
         $source->setLocation($catalogi['source']['location']);
         $source->setAccept('application/json');
         $source->setAuth('none');
-        $source->setName('temp source from data');
+        $source->setName('temp source for CatalogiService');
 //        return [
         ////            'auth' => 'none',
         ////            'authorizationHeader' => 'Authorization',
@@ -208,7 +208,6 @@ class CatalogiService
         foreach ($externCatalogi as $checkCatalogi) {
             if (!$this->checkIfCatalogiExists($knownCatalogi, $checkCatalogi)) {
                 $unknownCatalogi[] = $checkCatalogi;
-                var_dump($checkCatalogi);
                 if (isset($this->io)) {
                     $this->io->text("Found an unknown Catalogus: ({$checkCatalogi['embedded']['source']['name']}) \"{$checkCatalogi['embedded']['source']['location']}\"");
                 }
