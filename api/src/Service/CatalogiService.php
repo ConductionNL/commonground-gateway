@@ -2,10 +2,13 @@
 
 namespace App\Service;
 
+use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
+use CommonGateway\CoreBundle\Service\CallService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
@@ -14,6 +17,7 @@ class CatalogiService
     private EntityManagerInterface $entityManager;
     private SessionInterface $session;
     private CommonGroundService $commonGroundService;
+    private CallService $callService;
     private SynchronizationService $synchronizationService;
     private array $data;
     private array $configuration;
@@ -23,11 +27,13 @@ class CatalogiService
         EntityManagerInterface $entityManager,
         SessionInterface $session,
         CommonGroundService $commonGroundService,
+        CallService $callService,
         SynchronizationService $synchronizationService
     ) {
         $this->entityManager = $entityManager;
         $this->session = $session;
         $this->commonGroundService = $commonGroundService;
+        $this->callService = $callService;
         $this->synchronizationService = $synchronizationService;
     }
 
@@ -120,12 +126,13 @@ class CatalogiService
                 if (isset($this->io)) {
                     $this->io->text("Get Catalogi from ({$catalogi['source']['name']}) \"$url\"");
                 }
-                $response = $this->commonGroundService->callService($this->generateCallServiceComponent($catalogi), $url, '');
+                $source = $this->generateCallServiceComponent($catalogi);
+                $response = $this->callService->call($source, $this->configuration['location']);
 
-                if (is_array($response)) {
-                    throw new Exception("callService returned an array".(isset($response['error']) ? " with error: {$response['error']}" : ''));
-                }
-            } catch (Exception $exception) {
+                $this->entityManager->remove($source);
+
+
+            } catch (Exception|GuzzleException $exception) {
                 // If no next page with this $page exists...
                 if (isset($this->io)) {
                     $this->io->error("Error while doing getUnknownCatalogi for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": {$exception->getMessage()}");
@@ -139,7 +146,7 @@ class CatalogiService
             }
 
             $externCatalogi = json_decode($response->getBody()->getContents(), true);
-            $unknownCatalogi = $this->checkForUnknownCatalogi($externCatalogi, $knownCatalogi, $unknownCatalogi);
+            $unknownCatalogi = $this->checkForUnknownCatalogi($externCatalogi['results'], $knownCatalogi, $unknownCatalogi);
 
             if (isset($this->io)) {
                 $this->io->newLine();
@@ -160,22 +167,28 @@ class CatalogiService
      *
      * @return array An array with data used by the callService.
      */
-    private function generateCallServiceComponent(array $catalogi): array
+    private function generateCallServiceComponent(array $catalogi): Gateway
     {
-        return [
-//            'auth' => 'apikey',
-//            'authorizationHeader' => 'Authorization',
-//            'passthroughMethod' => 'header',
-            'location' => $catalogi['source']['location'],
-            'apikey' => null,
-//            'jwt' => null,
-//            'secret' => null,
-//            'id' => null,
-//            'locale' => null,
-            'accept' => 'application/json',
-//            'username' => null,
-//            'password' => null,
-        ];
+        $source = new Gateway();
+        $source->setLocation($catalogi['source']['location']);
+        $source->setAccept('application/json');
+        $source->setAuth('none');
+        $source->setName('temp source from data');
+//        return [
+////            'auth' => 'none',
+////            'authorizationHeader' => 'Authorization',
+////            'passthroughMethod' => 'header',
+//            'location' => $catalogi['source']['location'],
+////            'apikey' => null,
+////            'jwt' => null,
+////            'secret' => null,
+////            'id' => null,
+////            'locale' => null,
+//            'accept' => 'application/json',
+////            'username' => null,
+////            'password' => null,
+//        ];
+        return $source;
     }
 
     /**
@@ -197,8 +210,9 @@ class CatalogiService
         foreach ($externCatalogi as $checkCatalogi) {
             if (!$this->checkIfCatalogiExists($knownCatalogi, $checkCatalogi)) {
                 $unknownCatalogi[] = $checkCatalogi;
+                var_dump($checkCatalogi);
                 if (isset($this->io)) {
-                    $this->io->text("Found an unknown Catalogi: ({$checkCatalogi['source']['name']}) \"{$checkCatalogi['source']['location']}\"");
+                    $this->io->text("Found an unknown Catalogus: ({$checkCatalogi['embedded']['source']['name']}) \"{$checkCatalogi['embedded']['source']['location']}\"");
                 }
             }
         }
@@ -217,7 +231,7 @@ class CatalogiService
     {
         $catalogiIsKnown = array_filter($knownCatalog, function ($catalogi) use ($checkCatalogi) {
             //todo can we use break here? or do we need a foreach for that?
-            return $catalogi['source']['location'] === $checkCatalogi['source']['location'];
+            return $catalogi['source']['location'] === $checkCatalogi['embedded']['source']['location'];
         });
 
         if (is_countable($catalogiIsKnown) and count($catalogiIsKnown) > 0) {
@@ -246,6 +260,7 @@ class CatalogiService
         foreach ($unknownCatalogi as $addCatalogi) {
             $object = new ObjectEntity();
             $object->setEntity($this->synchronizationService->getEntityFromConfig());
+            $addCatalogi['source'] = $addCatalogi['embedded']['source'];
             $newCatalogi = $this->synchronizationService->populateObject($addCatalogi, $object);
             $newCatalogi = $newCatalogi->toArray();
 
