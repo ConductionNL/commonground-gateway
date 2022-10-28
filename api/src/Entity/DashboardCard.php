@@ -2,9 +2,21 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\DashboardCardRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
+use phpDocumentor\Reflection\Types\Integer;
+use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ApiResource(
@@ -20,47 +32,69 @@ use Doctrine\ORM\Mapping as ORM;
  *     "post"={"path"="/admin/dashboardCards"}
  *  })
  * @ORM\Entity(repositoryClass=DashboardCardRepository::class)
+ * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ *
+ * @ApiFilter(BooleanFilter::class)
+ * @ApiFilter(OrderFilter::class)
+ * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
+ * @ApiFilter(SearchFilter::class)
  */
 class DashboardCard
 {
     /**
+     * @var UuidInterface The UUID identifier of this Entity.
+     *
+     * @Groups({"read"})
      * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
 
     /**
+     * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private string $name;
 
     /**
+     * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $description;
+    private ?string $description;
 
     /**
+     * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
-    private $type;
+    private string $type;
 
     /**
+     * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
-    private $entity;
+    private string $entity;
 
     /**
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", length=255)
+     */
+    private $object;
+
+    /**
+     * @Groups({"read","write"})
      * @ORM\Column(type="uuid")
      */
-    private $uuid;
+    private Uuid $entityId;
 
     /**
+     * @Groups({"read","write"})
      * @ORM\Column(type="integer")
      */
-    private $ordering;
+    private int $ordering;
 
-    public function getId(): ?int
+    public function getId()
     {
         return $this->id;
     }
@@ -113,14 +147,26 @@ class DashboardCard
         return $this;
     }
 
-    public function getUuid()
+    public function getObject()
     {
-        return $this->uuid;
+        return $this->object;
     }
 
-    public function setUuid($uuid): self
+    public function setObject($object): self
     {
-        $this->uuid = $uuid;
+        $this->object = $object;
+
+        return $this;
+    }
+
+    public function getEntityId(): Uuid
+    {
+        return $this->entityId;
+    }
+
+    public function setEntityId($entityId): self
+    {
+        $this->entityId = $entityId;
 
         return $this;
     }
