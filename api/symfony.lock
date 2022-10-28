@@ -34,6 +34,9 @@
     "brick/reflection": {
         "version": "0.4.1"
     },
+    "commongateway/corebundle": {
+        "version": "dev-master"
+    },
     "composer/ca-bundle": {
         "version": "1.2.10"
     },

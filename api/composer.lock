@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c77ef64af8839ecb154db045b50d17ab",
+    "content-hash": "dcf700f8fd17723cb640f95fc5208323",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -535,6 +535,77 @@
                 "source": "https://github.com/brick/reflection/tree/0.4.1"
             },
             "time": "2020-10-24T20:01:03+00:00"
+        },
+        {
+            "name": "commongateway/corebundle",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/CoreBundle.git",
+                "reference": "b55e18a0e094c98610b9e48aaa85cdb5b124dfb7"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/b55e18a0e094c98610b9e48aaa85cdb5b124dfb7",
+                "reference": "b55e18a0e094c98610b9e48aaa85cdb5b124dfb7",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4.0"
+            },
+            "conflict": {
+                "doctrine/dbal": "<2.5",
+                "symfony/dependency-injection": "<3.4",
+                "symfony/var-dumper": "<3.4"
+            },
+            "require-dev": {
+                "cache/integration-tests": "dev-master",
+                "doctrine/cache": "~1.6",
+                "doctrine/dbal": "~2.5",
+                "predis/predis": "~1.1",
+                "symfony/config": "^5.1",
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0",
+                "symfony/var-dumper": "^4.1.1|^5.1"
+            },
+            "default-branch": true,
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\CoreBundle\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ruben van der Linde",
+                    "email": "ruben@conduction.nl"
+                },
+                {
+                    "name": "Conduction",
+                    "homepage": "https://conduction.nl"
+                }
+            ],
+            "description": "Symfony Bundle for dutch common ground functionality",
+            "homepage": "https://commongatway.nl",
+            "keywords": [
+                "common",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "symfony"
+            ],
+            "support": {
+                "email": "ruben@conduction.nl",
+                "issues": "https://github.com/CommonGateway/CoreBundle/issues",
+                "source": "https://github.com/CommonGateway/CoreBundle"
+            },
+            "time": "2022-10-26T11:25:19+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -13732,6 +13803,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "commongateway/corebundle": 20,
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,
         "conduction/samlbundle": 20
