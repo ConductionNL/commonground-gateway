@@ -74,7 +74,7 @@ class MapZaakService
     {
         var_dump('trololol');
         // Manually map properties to eigenschappen
-        if(!isset($zaakTypeArray['eigenschappen'])) {
+        if (!isset($zaakTypeArray['eigenschappen'])) {
             $eigenschappen = [];
             foreach ($attributes as $attributeName => $attributeValue) {
                 $eigenschappen[] = [
@@ -86,7 +86,7 @@ class MapZaakService
             $this->entityManager->persist($zaakTypeObjectEntity);
             $this->entityManager->flush();
         }
-//        var_dump($zaakTypeArray['eigenschappen']);
+        //        var_dump($zaakTypeArray['eigenschappen']);
 
         $zaakTypeArray = $zaakTypeObjectEntity->toArray();
 
@@ -183,6 +183,114 @@ class MapZaakService
 
         return $zaakObjectEntity;
     }
+
+    /**
+     * Creates or updates a ZGW Zaak from a xxllnc casetype with the use of mapping.
+     *
+     * @param array $data          Data from the handler where the xxllnc casetype is in.
+     * @param array $configuration Configuration from the Action where the Zaak entity id is stored in.
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function zgwToXxllncHandler(array $data, array $configuration): array
+    {
+        $this->entityManager->clear();
+        $this->data = $data['response'];
+        $this->configuration = $configuration;
+
+        isset($this->configuration['entities']['XxllncZaakPost']) && $xxllncZaakPostEntity = $this->entityRepo->find($this->configuration['entities']['XxllncZaakPost']);
+
+        if (!isset($xxllncZaakPostEntity)) {
+            throw new \Exception('Xxllnc zaak entity not found, check ZgwToXxllncHandler conngi');
+        }
+
+        var_dump('mapZgwToZaakHandler triggered');
+        if (isset($this->data['zaaktype'])) {
+            $zaakTypeId = isset($this->data['zaaktype']['id']) ? $this->data['zaaktype']['id'] : $this->data['zaaktype'];
+            $array = explode('/', $zaakTypeId);
+            /* @todo we might want to validate against uuid and id here */
+            $zaakTypeId = end($array);
+        } else {
+            throw new \Exception('No zaaktype set on zaak');
+        }
+        if (isset($this->data['id'])) {
+            $zaakArrayObject = $this->entityManager->find('App:ObjectEntity', $this->data['id'])->toArray();
+        } else {
+            throw new \Exception('No id on zaak');
+        }
+
+        $xxllncZaakArray = ['casetype' => $zaakTypeId];
+        $xxllncZaakArray['confidentiality'] = "public";
+
+        // eigenschappen to values
+        foreach ($zaakArrayObject['eigenschappen'] as $zaakEigenschap) {
+            $xxllncZaakArray['values'][] = [
+                'name' => $zaakEigenschap['eigenschap']['definitie'],
+                'value' => $zaakEigenschap['waarde']
+            ];
+        }
+
+        // zaakinformatieobjecten to files
+        foreach ($zaakArrayObject['zaakinformatieobjecten'] as $infoObject) {
+            isset($infoObject['informatieobject']) && $xxllncZaakArray['files'][] = [
+                // 'reference' => $infoObject['id'],
+                'type' => 'metadata',
+                'naam' => $infoObject['titel'],
+                'metadata' => [
+                    // 'reference' =>  null,
+                    'type' => 'metadata',
+                    'instance' => [
+                        'appearance' => $infoObject['informatieobject']['bestandsnaam'],
+                        'category' => null,
+                        'description' => $infoObject['informatieobject']['beschrijving'],
+                        'origin' => 'Inkomend',
+                        'origin_date' => $infoObject['informatieobject']['creatiedatum'],
+                        'pronom_format' => $infoObject['informatieobject']['formaat'],
+                        'structure' => 'text',
+                        'trust_level' => $infoObject['integriteit']['waarde'] ?? 'Openbaar',
+                        'status' => 'original',
+                        'creation_date' => $infoObject['informatieobject']['creatiedatum']
+                    ]
+                ]
+            ];
+        }
+
+        // rollen to subjects
+        foreach ($zaakArrayObject['rollen'] as $rol) {
+            $xxllncZaakArray['subjects'][] = [
+                'subject' => [
+                    'type' => 'subject',
+                    // 'referene' => $rol['id']
+                ],
+                'role' => $rol['roltoelichting'],
+                'magic_string_prefix' => $rol['roltoelichting'],
+                'pip_authorized' => true,
+                'send_auth_notification' => false
+            ];
+        }
+
+        // DONT COMMIT
+        $objectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findBy(['entity' => $xxllncZaakPostEntity]);
+        foreach ($objectEntities as $object) {
+            $this->entityManager->remove($object);
+        }
+
+        $xxllncZaakObjectEntity = new ObjectEntity();
+        $xxllncZaakObjectEntity->setEntity($xxllncZaakPostEntity);
+
+        $xxllncZaakObjectEntity->hydrate($xxllncZaakArray);
+
+        $this->entityManager->persist($xxllncZaakObjectEntity);
+        $this->entityManager->flush();
+
+        $xxllncZaakArrayObject = $xxllncZaakObjectEntity->toArray();
+
+
+        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $xxllncZaakPostEntity->getId()->toString(), 'response' => $xxllncZaakArrayObject]);
+
+        return $this->data;
+    }
+
 
     /**
      * Creates or updates a ZGW Zaak from a xxllnc casetype with the use of mapping.
