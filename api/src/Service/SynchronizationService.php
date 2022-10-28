@@ -111,6 +111,7 @@ class SynchronizationService
      */
     public function synchronisationPushHandler(array $data, array $configuration): array
     {
+        var_dump('synchronisationPushHandler triggered');
         $this->configuration = $configuration;
         $this->data = $data;
         if ($this->session->get('io')) {
@@ -122,9 +123,11 @@ class SynchronizationService
         $entity = $this->getEntityFromConfig();
 
         if (!($entity instanceof Entity)) {
+            var_dump('returns cuz no entity');
             return $this->data;
         }
 
+        var_dump('we have object entities', $entity->getObjectEntities() !== null);
         foreach ($entity->getObjectEntities() as $object) {
             $synchronisation = $this->findSyncByObject($object, $source, $entity);
             if (!$synchronisation->getLastSynced()) {
@@ -226,7 +229,7 @@ class SynchronizationService
             $synchronization = $this->findSyncBySource($gateway, $entity, $id);
             // todo: Another search function for sync object. If no sync object is found, look for matching properties in $result and an ObjectEntity in db. And then create sync for an ObjectEntity if we find one this way. (nice to have)
             // Other option to find a sync object, currently not used:
-//            $synchronization = $this->findSyncByObject($object, $gateway, $entity);
+            //            $synchronization = $this->findSyncByObject($object, $gateway, $entity);
 
             // Lets sync (returns the Synchronization object)
             if (array_key_exists('useDataFromCollection', $this->configuration) and !$this->configuration['useDataFromCollection']) {
@@ -337,7 +340,7 @@ class SynchronizationService
             $id = null;
         }
 
-        return $location.($id ? '/'.$id : '');
+        return $location . ($id ? '/' . $id : '');
     }
 
     /**
@@ -408,22 +411,22 @@ class SynchronizationService
         if (is_array($callServiceConfig['query'])) {
             $query = array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []);
         } else {
-            $query = $callServiceConfig['query'].'&page='.$page;
+            $query = $callServiceConfig['query'] . '&page=' . $page;
         }
 
         try {
             if (isset($this->io)) {
                 $this->io->text("fetchObjectsFromSource with \$page = $page");
             }
-//            $response = $this->commonGroundService->callService(
-//                $callServiceConfig['component'],
-//                $callServiceConfig['url'],
-//                '',
-//                $query,
-//                $callServiceConfig['headers'],
-//                false,
-//                $callServiceConfig['method'] ?? 'GET'
-//            );
+            //            $response = $this->commonGroundService->callService(
+            //                $callServiceConfig['component'],
+            //                $callServiceConfig['url'],
+            //                '',
+            //                $query,
+            //                $callServiceConfig['headers'],
+            //                false,
+            //                $callServiceConfig['method'] ?? 'GET'
+            //            );
             $response = $this->callService->call(
                 $source,
                 $this->getUrlForSource(),
@@ -434,9 +437,9 @@ class SynchronizationService
                 ]
             );
 
-//            if (is_array($response)) {
-//                throw new Exception('Callservice error while doing fetchObjectsFromSource');
-//            }
+            //            if (is_array($response)) {
+            //                throw new Exception('Callservice error while doing fetchObjectsFromSource');
+            //            }
         } catch (Exception $exception) {
             // If no next page with this $page exists...
             if (isset($this->io)) {
@@ -445,15 +448,15 @@ class SynchronizationService
 
             return [];
             //todo: error, user feedback and log this?
-//            throw new GatewayException('Callservice error while doing fetchObjectsFromSource', null, null, [
-//                'data' => [
-//                    'message'           => $exception->getMessage(),
-//                    'code'              => $exception->getCode(),
-//                    'response'          => $response ?? null,
-//                    'trace'             => $exception->getTraceAsString()
-//                ],
-//                'path' => $callServiceConfig['url'], 'responseType' => Response::HTTP_BAD_REQUEST
-//            ]);
+            //            throw new GatewayException('Callservice error while doing fetchObjectsFromSource', null, null, [
+            //                'data' => [
+            //                    'message'           => $exception->getMessage(),
+            //                    'code'              => $exception->getCode(),
+            //                    'response'          => $response ?? null,
+            //                    'trace'             => $exception->getTraceAsString()
+            //                ],
+            //                'path' => $callServiceConfig['url'], 'responseType' => Response::HTTP_BAD_REQUEST
+            //            ]);
         }
 
         $pageResult = $this->callService->decodeResponse($source, $response);
@@ -488,15 +491,15 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->text("getSingleFromSource with Synchronization->sourceId = {$synchronization->getSourceId()}");
             }
-//            $response = $this->commonGroundService->callService(
-//                $callServiceConfig['component'],
-//                $synchronization->getEndpoint() ?? $callServiceConfig['url'],
-//                '',
-//                $callServiceConfig['query'],
-//                $callServiceConfig['headers'],
-//                false,
-//                $callServiceConfig['method'] ?? 'GET'
-//            );
+            //            $response = $this->commonGroundService->callService(
+            //                $callServiceConfig['component'],
+            //                $synchronization->getEndpoint() ?? $callServiceConfig['url'],
+            //                '',
+            //                $callServiceConfig['query'],
+            //                $callServiceConfig['headers'],
+            //                false,
+            //                $callServiceConfig['method'] ?? 'GET'
+            //            );
 
             $response = $this->callService->call(
                 $synchronization->getGateway(),
@@ -508,29 +511,29 @@ class SynchronizationService
                 ]
             );
 
-//            if (is_array($response)) {
-//                throw new Exception('Callservice error while doing getSingleFromSource');
-//            }
+            //            if (is_array($response)) {
+            //                throw new Exception('Callservice error while doing getSingleFromSource');
+            //            }
         } catch (Exception $exception) {
             if (isset($this->io)) {
                 $this->io->warning("{$exception->getMessage()}");
             }
 
             return null;
-//            //todo: error, user feedback and log this?
-//            throw new GatewayException('Callservice error while doing getSingleFromSource', null, null, [
-//                'data' => [
-//                    'message'           => $exception->getMessage(),
-//                    'code'              => $exception->getCode(),
-//                    'trace'             => $exception->getTraceAsString()
-//                ],
-//                'path' => $callServiceConfig['url'], 'responseType' => Response::HTTP_BAD_REQUEST
-//            ]);
+            //            //todo: error, user feedback and log this?
+            //            throw new GatewayException('Callservice error while doing getSingleFromSource', null, null, [
+            //                'data' => [
+            //                    'message'           => $exception->getMessage(),
+            //                    'code'              => $exception->getCode(),
+            //                    'trace'             => $exception->getTraceAsString()
+            //                ],
+            //                'path' => $callServiceConfig['url'], 'responseType' => Response::HTTP_BAD_REQUEST
+            //            ]);
         }
         $result = $this->callService->decodeResponse($synchronization->getGateway(), $response);
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
-//        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
+        //        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
 
         // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
         return $dot->get($this->configuration['apiSource']['location']['object'], $result);
@@ -671,7 +674,7 @@ class SynchronizationService
      */
     public function handleSync(Synchronization $synchronization, array $sourceObject = [], array $configuration = []): Synchronization
     {
-        if($configuration) {
+        if ($configuration) {
             $this->configuration = $configuration;
         }
         if (isset($this->io)) {
@@ -833,7 +836,7 @@ class SynchronizationService
         // The prefixes to add in the format 'field' => 'prefix'
         $prefixes = $this->configuration['apiSource']['prefixFieldsOut'];
         foreach ($prefixes as $id => $prefix) {
-            $objectArray[$id] = $prefix.$objectArray[$id];
+            $objectArray[$id] = $prefix . $objectArray[$id];
         }
 
         return $objectArray;
@@ -924,7 +927,7 @@ class SynchronizationService
         try {
             $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
         } catch (Exception $exception) {
-//            return $synchronization;
+            //            return $synchronization;
         }
 
         $body = new Dot($body);
@@ -950,7 +953,8 @@ class SynchronizationService
      */
     private function checkActionConditionsEntity(string $entityId): bool
     {
-        if (isset($this->configuration['actionConditions']['=='][0]['var']) &&
+        if (
+            isset($this->configuration['actionConditions']['=='][0]['var']) &&
             isset($this->configuration['actionConditions']['=='][1]) &&
             $this->configuration['actionConditions']['=='][0]['var'] === 'entity' &&
             $this->configuration['actionConditions']['=='][1] === $entityId
@@ -1013,6 +1017,21 @@ class SynchronizationService
     }
 
     /**
+     * Code for testing DONT COMMIT
+     */
+    private function unsetNullables($object)
+    {
+        foreach ($object as $key => $property) {
+            if (is_array($property)) {
+                $object[$key] = $this->unsetNullables($property);
+            } elseif (empty($property)) {
+                unset($object[$key]);
+            }
+        }
+        return $object;
+    }
+
+    /**
      * Synchronises a new object in the gateway to it source, or an object updated in the gateway.
      *
      * @param Synchronization $synchronization The synchronisation object for the created or updated object
@@ -1032,50 +1051,60 @@ class SynchronizationService
 
         //        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
         // todo: maybe move this to foreach in getAllFromSource() (nice to have)
-//        $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway(), null, $objectArray);
+        //        $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway(), null, $objectArray);
         $objectArray = $this->mapOutput($objectArray);
+
+        // Code for testing
+        $objectArray = $this->unsetNullables($objectArray);
 
         $objectString = $this->getObjectString($objectArray);
 
-        try {
-//            $result = $this->commonGroundService->callService(
-//                $callServiceConfig['component'],
-//                $synchronization->getEndpoint() ?? $callServiceConfig['url'],
-//                $objectString,
-//                $callServiceConfig['query'],
-//                $callServiceConfig['headers'],
-//                false,
-//                $callServiceConfig['method'] ?? ($existsInSource ? 'PUT' : 'POST')
-//            );
+        var_dump('syncToSource triggered');
 
-            $result = $this->callService->call(
-                $synchronization->getGateway(),
-                $this->getUrlForSource(null, $objectArray),
-                $this->getCallServiceOverwrite('method') ?? ($existsInSource ? 'PUT' : 'POST'),
-                [
-                    'body'      => $objectString,
-                    'headers'   => $this->getCallServiceOverwrite('headers') ?? $synchronization->getGateway()->getHeaders(),
-                    'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService(),
-                ]
-            );
+        // try {
+        //            $result = $this->commonGroundService->callService(
+        //                $callServiceConfig['component'],
+        //                $synchronization->getEndpoint() ?? $callServiceConfig['url'],
+        //                $objectString,
+        //                $callServiceConfig['query'],
+        //                $callServiceConfig['headers'],
+        //                false,
+        //                $callServiceConfig['method'] ?? ($existsInSource ? 'PUT' : 'POST')
+        //            );
+        var_dump('OBJECT STRING: ' . $objectString);
+        // die;
 
-//
-//            if (is_array($result)) {
-//                throw new Exception('Callservice error while doing syncToSource');
-//            }
-        } catch (Exception $exception) {
-            return $synchronization;
-            //todo: error, user feedback and log this?
-//            throw new GatewayException('Callservice error while doing syncToSource', null, null, [
-//                'data' => [
-//                    'message'           => $exception->getMessage(),
-//                    'code'              => $exception->getCode(),
-//                    'trace'             => $exception->getTraceAsString()
-//                ],
-//                'path' => $callServiceConfig['url'], 'responseType' => Response::HTTP_BAD_REQUEST
-//            ]);
-        }
+        $result = $this->callService->call(
+            $synchronization->getGateway(),
+            $this->getUrlForSource(null, $objectArray),
+            $this->getCallServiceOverwrite('method') ?? ($existsInSource ? 'PUT' : 'POST'),
+            [
+                'body'      => $objectString,
+                'headers'   => $this->getCallServiceOverwrite('headers') ?? $synchronization->getGateway()->getHeaders(),
+                'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService(),
+            ]
+        );
+
+        //
+        //            if (is_array($result)) {
+        //                throw new Exception('Callservice error while doing syncToSource');
+        //            }
+        // } catch (Exception $exception) {
+        //     // var_dump('EXCEPTION: ', $exception->getMessage());
+        //     return $synchronization;
+        //     //todo: error, user feedback and log this?
+        //     //            throw new GatewayException('Callservice error while doing syncToSource', null, null, [
+        //     //                'data' => [
+        //     //                    'message'           => $exception->getMessage(),
+        //     //                    'code'              => $exception->getCode(),
+        //     //                    'trace'             => $exception->getTraceAsString()
+        //     //                ],
+        //     //                'path' => $callServiceConfig['url'], 'responseType' => Response::HTTP_BAD_REQUEST
+        //     //            ]);
+        // }
         $body = $this->callService->decodeResponse($result, $synchronization->getGateway());
+        var_dump('BODY: ', $body);
+        die;
 
         return $this->storeSynchronization($synchronization, $body);
     }
@@ -1143,7 +1172,7 @@ class SynchronizationService
         $sourceObjectDot = new Dot($sourceObject);
 
         $object = $this->populateObject($sourceObject, $object, $method);
-        $object->setUri($synchronization->getGateway()->getLocation().$this->getUrlForSource($synchronization->getSourceId()));
+        $object->setUri($synchronization->getGateway()->getLocation() . $this->getUrlForSource($synchronization->getSourceId()));
         if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
             $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
         }
