@@ -173,7 +173,7 @@ class Action
     private ?bool $status = null;
 
     /**
-     * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="action", orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="action", orphanRemoval=true, fetch="EXTRA_LAZY", cascade={"persist"})
      */
     private $actionLogs;
 

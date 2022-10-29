@@ -3,6 +3,7 @@
 namespace App\Subscriber;
 
 use App\Entity\Action;
+use App\Entity\ActionLog;
 use App\Event\ActionEvent;
 use App\Service\ObjectEntityService;
 use DateTime;
@@ -71,9 +72,19 @@ class ActionSubscriber implements EventSubscriberInterface
             $this->io->text("Run ActionHandlerInterface \"{$action->getClass()}\"");
             $this->io->newLine();
         }
+
+        //  Create log
+        $log = new ActionLog();
+        $log->setAction($action);
+        $log->setDataIn($data);
+
         $data = $object->run($data, array_merge($action->getConfiguration(), ['actionConditions' => $action->getConditions()]));
         // timer stoppen
         $stopTimer = microtime(true);
+
+        // Update and save log
+        $log->setDataOut($data);
+        $action->addActionLog($log);
 
         // Is the action is lockable we need to unlock it
         if ($action->getIsLockable()) {

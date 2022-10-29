@@ -21,7 +21,7 @@ class ActionLog
 
     /**
      * @ORM\ManyToOne(targetEntity=Log::class, inversedBy="actionLogs")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
     private $log;
 
@@ -45,6 +45,17 @@ class ActionLog
      * @ORM\Column(type="string", length=255)
      */
     private $class;
+
+    /**
+     * @ORM\Column(type="array")
+     */
+    private $configuration = [];
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private $report;
+
 
     public function getId(): ?int
     {
@@ -71,6 +82,14 @@ class ActionLog
     public function setAction(?Action $action): self
     {
         $this->action = $action;
+
+        // Lets auto fill some data
+        if(!$this->getConfiguration()){
+            $this->setConfiguration($action->getConfiguration());
+        }
+        if(!$this->getClass()){
+            $this->setClass($action->getClass());
+        }
 
         return $this;
     }
@@ -107,6 +126,30 @@ class ActionLog
     public function setClass(string $class): self
     {
         $this->class = $class;
+
+        return $this;
+    }
+
+    public function getConfiguration(): ?array
+    {
+        return $this->configuration;
+    }
+
+    public function setConfiguration(array $configuration): self
+    {
+        $this->configuration = $configuration;
+
+        return $this;
+    }
+
+    public function getReport(): ?string
+    {
+        return $this->report;
+    }
+
+    public function setReport(?string $report): self
+    {
+        $this->report = $report;
 
         return $this;
     }
