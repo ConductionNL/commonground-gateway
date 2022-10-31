@@ -112,7 +112,7 @@ class CatalogiService
     private function pullCatalogi(array $newCatalogi = null): array
     {
         // Get all the Catalogi we know of or just use a single Catalogi if $newCatalogi is given.
-        $knownCatalogiToCheck = $newCatalogi ? [$newCatalogi] : $this->getAllKnownCatalogi();
+        $knownCatalogiToCheck = $newCatalogi ? [$newCatalogi] : $this->getAllKnownCatalogi('section');
 
         // Check for new unknown Catalogi
         $unknownCatalogi = $this->getUnknownCatalogi($knownCatalogiToCheck);
@@ -126,13 +126,14 @@ class CatalogiService
      *
      * @return array An array of all Catalogi we know.
      */
-    private function getAllKnownCatalogi(): array
+    private function getAllKnownCatalogi(?string $ioType = null): array
     {
         $knownCatalogi = $this->entityManager->getRepository('App:ObjectEntity')->findBy(['entity' => $this->configuration['entity']]);
 
-        if (isset($this->io)) {
+        if (isset($this->io) && $ioType !== null) {
             $totalKnownCatalogi = is_countable($knownCatalogi) ? count($knownCatalogi) : 0;
-            $this->io->section("Found $totalKnownCatalogi known Catalogi");
+            $ioMessage = "Found $totalKnownCatalogi known Catalogi";
+            $ioType === 'section' ? $this->io->section($ioMessage) : $this->io->text($ioMessage);
         }
 
         // Convert ObjectEntities to useable arrays
@@ -153,7 +154,7 @@ class CatalogiService
     private function getUnknownCatalogi(array $knownCatalogiToCheck): array
     {
         // Get all known Catalogi, so we can check if a Catalogi already exists.
-        $knownCatalogi = $this->getAllKnownCatalogi();
+        $knownCatalogi = $this->getAllKnownCatalogi((count($knownCatalogiToCheck) > 0) ? null : 'text');
         $unknownCatalogi = [];
 
         if (isset($this->io)) {
@@ -219,7 +220,7 @@ class CatalogiService
         $name = 'temp source for CatalogiService';
 
         // Just in case, first try to find an existing Gateway/Source with this data. Even though we should always delete this after this function.
-        $sources = $this->entityManager->getRepository('App:Gateways')->findBy(['location' => $location, 'accept' => $accept, 'auth' => $auth, 'name' => $name]);
+        $sources = $this->entityManager->getRepository('App:Gateway')->findBy(['location' => $location, 'accept' => $accept, 'auth' => $auth, 'name' => $name]);
 
         if (is_countable($sources) && count($sources) > 0) {
             $source = $sources[0];
@@ -251,8 +252,11 @@ class CatalogiService
 
         // Check if these extern Catalogi know any Catalogi we don't know yet
         foreach ($externCatalogi as $checkCatalogi) {
+            $unknownCatalogiLocations = array_column(array_column($unknownCatalogi, 'source'), 'location');
+            var_dump('unknownCatalogiLocations',$unknownCatalogiLocations);
+            var_dump('checkCatalogi: '.$checkCatalogi['embedded']['source']['location']);
             // todo: make sure this array_column works, we dont want to add to $unknownCatalogi if it is already in there. If this works, delete this todo!
-            if (!in_array($checkCatalogi['embedded']['source']['location'], array_column($unknownCatalogi, 'source.location')) &&
+            if (!in_array($checkCatalogi['embedded']['source']['location'], $unknownCatalogiLocations) &&
                 !$this->checkIfCatalogiExists($knownCatalogi, $checkCatalogi)) {
                 $unknownCatalogi[] = $checkCatalogi;
                 if (isset($this->io)) {
@@ -302,20 +306,20 @@ class CatalogiService
 
         $addedCatalogi = [];
         // Add unknown Catalogi
-        foreach ($unknownCatalogi as $addCatalogi) {
-            $object = new ObjectEntity();
-            $object->setEntity($this->synchronizationService->getEntityFromConfig());
-            $addCatalogi['source'] = $addCatalogi['embedded']['source'];
-            $newCatalogi = $this->synchronizationService->populateObject($addCatalogi, $object);
-            $newCatalogi = $newCatalogi->toArray();
-
-            // Repeat pull for newly added Catalogi (recursion)
-            if (isset($this->io)) {
-                $this->io->text("Added Catalogi ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
-                $this->io->section("Check for new Catalogi in this newly added Catalogi: ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
-            }
-            $addedCatalogi = array_merge($addedCatalogi, $this->pullCatalogi($newCatalogi));
-        }
+//        foreach ($unknownCatalogi as $addCatalogi) {
+//            $object = new ObjectEntity();
+//            $object->setEntity($this->synchronizationService->getEntityFromConfig());
+//            $addCatalogi['source'] = $addCatalogi['embedded']['source'];
+//            $newCatalogi = $this->synchronizationService->populateObject($addCatalogi, $object);
+//            $newCatalogi = $newCatalogi->toArray();
+//
+//            // Repeat pull for newly added Catalogi (recursion)
+//            if (isset($this->io)) {
+//                $this->io->text("Added Catalogi ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
+//                $this->io->section("Check for new Catalogi in this newly added Catalogi: ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
+//            }
+//            $addedCatalogi = array_merge($addedCatalogi, $this->pullCatalogi($newCatalogi));
+//        }
 
         if (isset($this->io) && $totalUnknownCatalogi > 0) {
             $this->io->block('Finished adding all new Catalogi');
@@ -357,7 +361,7 @@ class CatalogiService
 
         // Convert ObjectEntities to useable arrays
         foreach ($knownComponents as &$component) {
-            $component = $component->toArray(['id', 'synchronizations']);
+            $component = $component->toArray(1, ['id', 'synchronizations']);
         }
 
         return $knownComponents;
@@ -373,7 +377,7 @@ class CatalogiService
     private function getUnknownComponents(array $knownComponents): array
     {
         // Get known Catalogi, so we can loop through them and get & check their components + synchronizations.
-        $knownCatalogi = $this->getAllKnownCatalogi();
+        $knownCatalogi = $this->getAllKnownCatalogi('text');
         $unknownComponents = [];
 
         if (isset($this->io)) {
