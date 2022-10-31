@@ -477,14 +477,12 @@ class ZdsZaakService
                 throw new ErrorException('The informatieobjecttypen with omschrijving: '.$zdsObject->getValue('dctOmschrijving').' can\'t be found');
             }
         } else {
-            foreach($informatieobjecttypenObjectEntity as $informatieObjectType) {
-            	if($this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakTypeInformatieObjectTypeEntity, ['zaaktype' => $zdsZaakObjectEntity->getValue('zgwZaak')->getValue('zaaktype')->getValue('url'), 'informatieobjecttype' => $informatieObjectType->getValue('url')])) {
-            		$informatieobjecttypenObjectEntity = $informatieObjectType;
-            		break;
-            	}
-            	
+            foreach ($informatieobjecttypenObjectEntity as $informatieObjectType) {
+                if ($this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakTypeInformatieObjectTypeEntity, ['zaaktype' => $zdsZaakObjectEntity->getValue('zgwZaak')->getValue('zaaktype')->getValue('url'), 'informatieobjecttype' => $informatieObjectType->getValue('url')])) {
+                    $informatieobjecttypenObjectEntity = $informatieObjectType;
+                    break;
+                }
             }
-        
         }
 
         // Lets start by setting up the document
