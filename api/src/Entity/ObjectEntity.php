@@ -828,6 +828,7 @@ class ObjectEntity
     {
         $array = [];
         in_array('id', $extend) && $array['id'] = (string) $this->getId();
+        in_array('synchronizations', $extend) && $array['x-commongateway-metadata']['synchronizations'] = $this->getReadableSyncDataArray();
         foreach ($this->getEntity()->getAttributes() as $attribute) {
             $valueObject = $this->getValueByAttribute($attribute);
             if ($attribute->getType() == 'object') {
@@ -846,6 +847,39 @@ class ObjectEntity
         }
 
         return $array;
+    }
+
+    /**
+     * Adds the most important data of all synchronizations this Object has to an array and returns this array or null if this Object has no Synchronizations.
+     *
+     * @return array|null
+     */
+    public function getReadableSyncDataArray(): ?array
+    {
+        if (!empty($this->getSynchronizations()) && is_countable($this->getSynchronizations()) && count($this->getSynchronizations()) > 0) {
+            $synchronizations = [];
+            foreach ($this->getSynchronizations() as $synchronization) {
+                $synchronizations[] = [
+                    'id'      => $synchronization->getId()->toString(),
+                    'gateway' => [
+                        'id'       => $synchronization->getGateway()->getId()->toString(),
+                        'name'     => $synchronization->getGateway()->getName(),
+                        'location' => $synchronization->getGateway()->getLocation(),
+                    ],
+                    'endpoint'          => $synchronization->getEndpoint(),
+                    'sourceId'          => $synchronization->getSourceId(),
+                    'dateCreated'       => $synchronization->getDateCreated(),
+                    'dateModified'      => $synchronization->getDateModified(),
+                    'lastChecked'       => $synchronization->getLastChecked(),
+                    'lastSynced'        => $synchronization->getLastSynced(),
+                    'sourceLastChanged' => $synchronization->getSourceLastChanged(),
+                ];
+            }
+
+            return $synchronizations;
+        }
+
+        return null;
     }
 
     /**
