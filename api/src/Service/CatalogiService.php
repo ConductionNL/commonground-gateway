@@ -104,11 +104,11 @@ class CatalogiService
      */
     private function pullCatalogi(array $newCatalogi = null): array
     {
-        // Get all the Catalogi we know of
-        $knownCatalogi = $newCatalogi ? [$newCatalogi] : $this->getAllKnownCatalogi();
+        // Get all the Catalogi we know of or just use a single Catalogi if $newCatalogi is given.
+        $knownCatalogiToCheck = $newCatalogi ? [$newCatalogi] : $this->getAllKnownCatalogi();
 
         // Check for new unknown Catalogi
-        $unknownCatalogi = $this->getUnknownCatalogi($knownCatalogi);
+        $unknownCatalogi = $this->getUnknownCatalogi($knownCatalogiToCheck);
 
         // Add any unknown Catalogi so we know them as well
         return $this->addNewCatalogi($unknownCatalogi);
@@ -139,12 +139,14 @@ class CatalogiService
     /**
      * Get all unknown Catalogi from the Catalogi we do know.
      *
-     * @param array $knownCatalogi An array of all Catalogi we know.
+     * @param array $knownCatalogiToCheck An array of Catalogi we know and want to check for new Catalogi.
      *
      * @return array An array of all Catalogi we do not know yet.
      */
-    private function getUnknownCatalogi(array $knownCatalogi): array
+    private function getUnknownCatalogi(array $knownCatalogiToCheck): array
     {
+        // Get all known Catalogi, so we can check if a Catalogi already exists.
+        $knownCatalogi = $this->getAllKnownCatalogi();
         $unknownCatalogi = [];
 
         if (isset($this->io)) {
@@ -152,7 +154,7 @@ class CatalogiService
         }
 
         // Get the Catalogi of all the Catalogi we know of
-        foreach ($knownCatalogi as $catalogi) {
+        foreach ($knownCatalogiToCheck as $catalogi) {
             try {
                 $url = $catalogi['source']['location'].$this->configuration['location'];
                 if (isset($this->io)) {
