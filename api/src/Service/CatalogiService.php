@@ -4,11 +4,15 @@ namespace App\Service;
 
 use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
+use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
+use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
@@ -44,6 +48,7 @@ class CatalogiService
      * @param array $configuration
      *
      * @return array
+     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
      */
     public function catalogiHandler(array $data, array $configuration): array
     {
@@ -55,13 +60,37 @@ class CatalogiService
             $this->io->note('CatalogiService->catalogiHandler()');
         }
 
+        // Get all Catalogi for new Catalogi.
         $newCatalogi = $this->pullCatalogi();
-        // todo: new function for OC-246 here? To get all components from all known Catalogi and compare them to our known components.
-        // todo: If we want to do this on an hourly basis as well^ else, create a new cronjob/action for a new handler function in this service?
-
         // todo: how do we ever remove a Catalogi? If the existing Catalogi keep adding the removed Catalogi?
 
-        // todo: return $newCatalogi?
+        // Get all Components from all known Catalogi and compare them to our known Components. Add unknown ones.
+        $newComponents = $this->pullComponents();
+
+        return $data;
+    }
+
+    /**
+     * @todo For now we don't use this, we could if we wanted to use a different cronjob/action to handle components than the CatalogiHandler.
+     *
+     * @param array $data
+     * @param array $configuration
+     *
+     * @return array
+     */
+    private function componentsHandler(array $data, array $configuration): array
+    {
+        $this->data = $data;
+        $this->configuration = $configuration;
+        $this->synchronizationService->configuration = $configuration;
+        if ($this->session->get('io')) {
+            $this->io = $this->session->get('io');
+            $this->io->note('CatalogiService->componentsHandler()');
+        }
+
+        // Get all Components from all known Catalogi and compare them to our known Components. Add unknown ones.
+        $newComponents = $this->pullComponents();
+
         return $data;
     }
 
@@ -71,6 +100,7 @@ class CatalogiService
      * @param array|null $newCatalogi A newly added Catalogi, default to null in this case we get all Catalogi we know.
      *
      * @return array An array of all newly added Catalogi or an empty array.
+     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
      */
     private function pullCatalogi(array $newCatalogi = null): array
     {
@@ -232,7 +262,7 @@ class CatalogiService
      *
      * @param array $unknownCatalogi An array of all Catalogi we do not know yet.
      *
-     * @return array An array of all newly added Catalogi.
+     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
      */
     private function addNewCatalogi(array $unknownCatalogi): array
     {
@@ -263,5 +293,142 @@ class CatalogiService
         }
 
         return $addedCatalogi;
+    }
+
+    /**
+     * @todo
+     *
+     * @return array
+     */
+    private function pullComponents(): array
+    {
+        // Get all the Components we know of
+        $knownComponents = $this->getAllKnownComponents();
+
+        // Check for new unknown Components
+        $unknownComponents = $this->getUnknownComponents($knownComponents);
+
+        // Add any unknown Component so we know them as well
+        return $this->addNewComponent($unknownComponents);
+    }
+
+    /**
+     * @todo
+     *
+     * @return array
+     */
+    private function getAllKnownComponents(): array
+    {
+        // todo:
+//        $knownCatalogi = $this->entityManager->getRepository('App:ObjectEntity')->findBy(['entity' => $this->configuration['entity']]);
+//
+//        if (isset($this->io)) {
+//            $totalKnownCatalogi = is_countable($knownCatalogi) ? count($knownCatalogi) : 0;
+//            $this->io->section("Found $totalKnownCatalogi known Catalogi");
+//        }
+//
+//        // Convert ObjectEntities to useable arrays
+//        foreach ($knownCatalogi as &$catalogi) {
+//            $catalogi = $catalogi->toArray();
+//        }
+//
+//        return $knownCatalogi;
+        return [];
+    }
+
+    /**
+     * @todo
+     *
+     * @param array $knownComponents
+     *
+     * @return array
+     */
+    private function getUnknownComponents(array $knownComponents): array
+    {
+        //todo:
+//        $unknownCatalogi = [];
+//
+//        if (isset($this->io)) {
+//            $this->io->block('Start looping through known Catalogi...');
+//        }
+//
+//        // Get the Catalogi of all the Catalogi we know of
+//        foreach ($knownCatalogi as $catalogi) {
+//            try {
+//                $url = $catalogi['source']['location'].$this->configuration['location'];
+//                if (isset($this->io)) {
+//                    $this->io->text("Get Catalogi from ({$catalogi['source']['name']}) \"$url\"");
+//                }
+//                $source = $this->generateCallServiceComponent($catalogi);
+//                $response = $this->callService->call($source, $this->configuration['location']);
+//
+//                $this->entityManager->remove($source);
+//            } catch (Exception|GuzzleException $exception) {
+//                if (isset($this->io)) {
+//                    $this->io->error("Error while doing getUnknownCatalogi for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": {$exception->getMessage()}");
+//                    $this->io->block("File: {$exception->getFile()}");
+//                    $this->io->block("Line: {$exception->getLine()}");
+//                    $this->io->block("Trace: {$exception->getTraceAsString()}");
+//                }
+//
+//                //todo: try to remove $source on error? Or maybe just actually create a Source and re-use it instead of creating and deleting it all the time?
+//                //todo: error, log this
+//                continue;
+//            }
+//
+//            $externCatalogi = json_decode($response->getBody()->getContents(), true);
+//            $unknownCatalogi = $this->checkForUnknownCatalogi($externCatalogi['results'], $knownCatalogi, $unknownCatalogi);
+//
+//            if (isset($this->io)) {
+//                $this->io->newLine();
+//            }
+//        }
+//
+//        if (isset($this->io)) {
+//            $this->io->block('Finished looping through known Catalogi');
+//        }
+//
+//        return $unknownCatalogi;
+        return [];
+    }
+
+    /**
+     * @todo
+     *
+     * @param array $unknownComponents
+     *
+     * @return array
+     */
+    private function addNewComponent(array $unknownComponents): array
+    {
+        //todo:
+//        $totalUnknownCatalogi = is_countable($unknownCatalogi) ? count($unknownCatalogi) : 0;
+//        if (isset($this->io) && $totalUnknownCatalogi > 0) {
+//            $this->io->block("Found $totalUnknownCatalogi unknown Catalogi, start adding them...");
+//        }
+//
+//        $addedCatalogi = [];
+//        // Add unknown Catalogi
+//        foreach ($unknownCatalogi as $addCatalogi) {
+//            $object = new ObjectEntity();
+//            $object->setEntity($this->synchronizationService->getEntityFromConfig());
+//            $addCatalogi['source'] = $addCatalogi['embedded']['source'];
+//            $newCatalogi = $this->synchronizationService->populateObject($addCatalogi, $object);
+//            $newCatalogi = $newCatalogi->toArray();
+//
+//            // Repeat pull for newly added Catalogi (recursion)
+//            if (isset($this->io)) {
+//                $this->io->text("Added Catalogi ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
+//                $this->io->section("Check for new Catalogi in this newly added Catalogi: ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
+//            }
+//            $addedCatalogi = array_merge($addedCatalogi, $this->pullCatalogi($newCatalogi));
+//        }
+//
+//        if (isset($this->io) && $totalUnknownCatalogi > 0) {
+//            $this->io->block('Finished adding all new Catalogi');
+//        }
+//
+//        return $addedCatalogi;
+        return [];
     }
 }
