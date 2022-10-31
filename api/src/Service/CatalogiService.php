@@ -47,8 +47,9 @@ class CatalogiService
      * @param array $data
      * @param array $configuration
      *
-     * @return array
      * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
+     *
+     * @return array
      */
     public function catalogiHandler(array $data, array $configuration): array
     {
@@ -99,8 +100,9 @@ class CatalogiService
      *
      * @param array|null $newCatalogi A newly added Catalogi, default to null in this case we get all Catalogi we know.
      *
-     * @return array An array of all newly added Catalogi or an empty array.
      * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
+     *
+     * @return array An array of all newly added Catalogi or an empty array.
      */
     private function pullCatalogi(array $newCatalogi = null): array
     {
@@ -206,6 +208,7 @@ class CatalogiService
         $source->setAccept('application/json');
         $source->setAuth('none');
         $source->setName('temp source for CatalogiService');
+
         return $source;
     }
 
