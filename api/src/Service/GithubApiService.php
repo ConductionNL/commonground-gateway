@@ -121,11 +121,6 @@ class GithubApiService
         return $this->getGithubRepositoryInfo($response);
     }
 
-    public function getRepositoryFileFromUrl(string $url): array
-    {
-        return [];
-    }
-
     /**
      * This function gets the content of the given url.
      *
@@ -231,6 +226,16 @@ class GithubApiService
             return null;
         }
 
+        if ($response == null) {
+            try {
+                $response = $this->githubusercontent->request('GET', $organizationName.'/.github/main/openCatalogi.yml');
+            } catch (ClientException $exception) {
+                var_dump($exception->getMessage());
+
+                return null;
+            }
+        }
+
         return Yaml::parse($response->getBody()->getContents());
     }
 
@@ -257,6 +262,26 @@ class GithubApiService
         if ($response == null) {
             try {
                 $response = $this->githubusercontent->request('GET', $organizationName.'/'.$repositoryName.'/master/publiccode.yaml');
+            } catch (ClientException $exception) {
+                var_dump($exception->getMessage());
+
+                return null;
+            }
+        }
+
+        if ($response == null) {
+            try {
+                $response = $this->githubusercontent->request('GET', $organizationName.'/'.$repositoryName.'/main/publiccode.yml');
+            } catch (ClientException $exception) {
+                var_dump($exception->getMessage());
+
+                return null;
+            }
+        }
+
+        if ($response == null) {
+            try {
+                $response = $this->githubusercontent->request('GET', $organizationName.'/'.$repositoryName.'/master/publiccode.yml');
             } catch (ClientException $exception) {
                 var_dump($exception->getMessage());
 
