@@ -101,6 +101,7 @@ class CronjobCommand extends Command
         $throwProgressBar->finish();
         $io->newLine();
         $io->newLine();
+        $this->entityManager->clear();
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
