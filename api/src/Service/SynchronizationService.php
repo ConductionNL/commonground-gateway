@@ -266,16 +266,16 @@ class SynchronizationService
      *
      * @return Entity|null The found entity for the configuration
      */
-    public function getEntityFromConfig(): ?Entity
+    public function getEntityFromConfig(string $configKey = 'entity'): ?Entity
     {
-        if (isset($this->configuration['entity'])) {
-            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->configuration['entity']]);
+        if (isset($this->configuration[$configKey])) {
+            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->configuration[$configKey]]);
             if ($entity instanceof Entity) {
                 return $entity;
             }
         }
         if (isset($this->io)) {
-            $this->io->error('Could not get an Entity with current Action->Configuration');
+            $this->io->error("Could not get an Entity with current Action->Configuration[\'$configKey\']");
         }
 
         return null;
@@ -657,7 +657,7 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronisation object before synchronisation
      * @param array           $sourceObject    The object in the source
      *
-     *@throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|LoaderError|SyntaxError
      *
      * @return Synchronization The updated synchronisation object
      */

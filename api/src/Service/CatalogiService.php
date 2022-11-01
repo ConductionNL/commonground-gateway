@@ -4,9 +4,11 @@ namespace App\Service;
 
 use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
+use App\Entity\Synchronization;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
@@ -89,6 +91,8 @@ class CatalogiService
      * @param array $configuration
      *
      * @return array
+     *
+     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
      */
     private function componentsHandler(array $data, array $configuration): array
     {
@@ -323,13 +327,16 @@ class CatalogiService
         }
 
         $addedCatalogi = [];
+        if ($totalUnknownCatalogi > 0) {
+            $entity = $this->synchronizationService->getEntityFromConfig();
+        }
         // Add unknown Catalogi
         foreach ($unknownCatalogi as $addCatalogi) {
             if (isset($this->io)) {
                 $this->io->text("Start adding Catalogi ({$addCatalogi['embedded']['source']['name']}) \"{$addCatalogi['embedded']['source']['location']}\"");
             }
             $object = new ObjectEntity();
-            $object->setEntity($this->synchronizationService->getEntityFromConfig());
+            $object->setEntity($entity);
             $addCatalogi['source'] = $addCatalogi['embedded']['source'];
             $newCatalogi = $this->synchronizationService->populateObject($addCatalogi, $object);
             $newCatalogi = $newCatalogi->toArray();
@@ -339,6 +346,7 @@ class CatalogiService
                 $this->io->text("Added Catalogi ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
                 $this->io->section("Check for new Catalogi in this newly added Catalogi: ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
             }
+            $addedCatalogi[] = $newCatalogi;
             $addedCatalogi = array_merge($addedCatalogi, $this->pullCatalogi($newCatalogi));
         }
 
@@ -353,6 +361,8 @@ class CatalogiService
      * @todo
      *
      * @return array
+     *
+     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
      */
     private function pullComponents(): array
     {
@@ -363,7 +373,7 @@ class CatalogiService
         $unknownComponents = $this->getUnknownComponents($knownComponentLocations);
 
         // Add any unknown Component so we know them as well
-        $newComponents = $this->addNewComponent($unknownComponents);
+        $newComponents = $this->addNewComponents($unknownComponents);
 
         // todo: update/sync all existing components with the SynchronizationService->handleSync() function?
         // todo: Async^ ?
@@ -382,7 +392,7 @@ class CatalogiService
 
         if (isset($this->io)) {
             $totalKnownComponents = is_countable($knownComponents) ? count($knownComponents) : 0;
-            $this->io->section("Found $totalKnownComponents known Components");
+            $this->io->section("Found $totalKnownComponents known Component".($totalKnownComponents !== 1 ? 's' : ''));
         }
 
         // Convert ObjectEntities to useable arrays
@@ -444,7 +454,7 @@ class CatalogiService
                 }
                 $source = $this->getOrCreateSourceForCatalogi($catalogi);
                 $response = $this->callService->call($source, $this->configuration['componentsLocation'], 'GET', ['query' => [
-                    'extend' => ['x-commongateway-metadata.synchronizations', 'x-commongateway-metadata.self']
+                    'extend' => ['x-commongateway-metadata.synchronizations', 'x-commongateway-metadata.self', 'x-commongateway-metadata.dateModified']
                 ]]);
             } catch (Exception|GuzzleException $exception) {
                 $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => ['type' => 'error',
@@ -529,43 +539,85 @@ class CatalogiService
      * @param array $unknownComponents
      *
      * @return array
+     *
+     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
      */
-    private function addNewComponent(array $unknownComponents): array
+    private function addNewComponents(array $unknownComponents): array
     {
-        // todo: check for ['x-commongateway-metadata']['synchronizations'][0]['gateway']['location'] + [-][-][0]['endpoint'] + [-][-][0]['sourceId']
-        // todo: if ^ not set, always create a new Component with a sync to the Catalogi as source
+        $totalUnknownComponents = is_countable($unknownComponents) ? count($unknownComponents) : 0;
+        if (isset($this->io) && $totalUnknownComponents > 0) {
+            $this->io->block("Found $totalUnknownComponents unknown Component".($totalUnknownComponents !== 1 ? 's' : '').", start adding them...");
+        }
 
-        //todo:
-//        $totalUnknownCatalogi = is_countable($unknownCatalogi) ? count($unknownCatalogi) : 0;
-//        if (isset($this->io) && $totalUnknownCatalogi > 0) {
-//            $this->io->block("Found $totalUnknownCatalogi unknown Catalogi, start adding them...");
-//        }
-//
-//        $addedCatalogi = [];
-//        // Add unknown Catalogi
-//        foreach ($unknownCatalogi as $addCatalogi) {
-//            if (isset($this->io)) {
-//                $this->io->text("Start adding Catalogi ({$addCatalogi['embedded']['source']['name']}) \"{$addCatalogi['embedded']['source']['location']}\"");
-//            }
-//            $object = new ObjectEntity();
-//            $object->setEntity($this->synchronizationService->getEntityFromConfig());
-//            $addCatalogi['source'] = $addCatalogi['embedded']['source'];
-//            $newCatalogi = $this->synchronizationService->populateObject($addCatalogi, $object);
-//            $newCatalogi = $newCatalogi->toArray();
-//
-//            // Repeat pull for newly added Catalogi (recursion)
-//            if (isset($this->io)) {
-//                $this->io->text("Added Catalogi ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
-//                $this->io->section("Check for new Catalogi in this newly added Catalogi: ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
-//            }
-//            $addedCatalogi = array_merge($addedCatalogi, $this->pullCatalogi($newCatalogi));
-//        }
-//
-//        if (isset($this->io) && $totalUnknownCatalogi > 0) {
-//            $this->io->block('Finished adding all new Catalogi');
-//        }
-//
-//        return $addedCatalogi;
-        return [];
+        $addedComponents = [];
+        if ($totalUnknownComponents > 0) {
+            $entity = $this->synchronizationService->getEntityFromConfig('componentsEntity');
+        }
+        // Add unknown Components
+        foreach ($unknownComponents as $addComponent) {
+            if (isset($this->io)) {
+                $url = $this->getComponentLocation($addComponent, '...');
+                $this->io->text("Start adding Component ({$addComponent['name']}) \"$url\"");
+            }
+            $object = new ObjectEntity();
+            $object->setEntity($entity);
+            $addComponentWithMetadata = $addComponent;
+            unset($addComponent['x-commongateway-metadata']); // todo: not sure if this is needed before populateObject
+//            $addComponent = $someService->replaceEmbedded($addComponent); // todo: remove/replace embedded before populateObject...
+            $newComponent = $this->synchronizationService->populateObject($addComponent, $object);
+            // todo: get correct source for createSyncForComponent function. Will be a Catalogi source or a other/new source we need to create here ?
+            $synchronization = $this->createSyncForComponent(['object' => $newComponent, 'source' => 'todo', 'entity' => $entity], $addComponentWithMetadata);
+            $newComponent = $newComponent->toArray();
+
+            if (isset($this->io)) {
+                $this->io->text("Added Component ({$addComponent['name']}) \"$url\"");
+            }
+            $addedComponents[] = $newComponent;
+        }
+
+        if (isset($this->io) && $totalUnknownComponents > 0) {
+            $this->io->block('Finished adding all new Components');
+        }
+
+        return $addedComponents;
+    }
+
+    /**
+     * @todo
+     *
+     * @param array $data An array containing an 'object' => ObjectEntity, 'source' => Gateway & 'entity' => Entity.
+     * @param array $addComponent
+     *
+     * @return Synchronization
+     *
+     * @throws Exception
+     */
+    private function createSyncForComponent(array $data, array $addComponent): Synchronization
+    {
+        $componentMetaData = $addComponent['x-commongateway-metadata'];
+        $componentSync = $componentMetaData['synchronizations'][0] ?? null; // todo: always key=0?
+
+        $synchronization = new Synchronization();
+        $synchronization->setObject($data['object']);
+        $synchronization->setGateway($data['source']);
+        $synchronization->setEntity($data['entity']);
+        $synchronization->setEndpoint($componentSync ? $componentSync['endpoint'] : $this->configuration['componentsLocation']);
+        $synchronization->setSourceId($componentSync ? $componentSync['sourceId'] : $addComponent['id']);
+        $now = new DateTime();
+        $synchronization->setLastChecked($now);
+        $synchronization->setLastSynced($now);
+        $synchronization->setSourcelastChanged($componentSync ?
+            new DateTime($componentSync['sourceLastChanged']) :
+            ($componentMetaData['dateModified'] ?
+                new DateTime($componentMetaData['dateModified']) :
+                $now
+            )
+        );
+        unset($addComponent['x-commongateway-metadata']); // todo: not sure if this is needed before we hash?
+        $synchronization->setHash(hash('sha384', serialize($addComponent)));
+        $this->entityManager->persist($synchronization);
+        $this->entityManager->flush();
+
+        return $synchronization;
     }
 }
