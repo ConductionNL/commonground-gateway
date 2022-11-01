@@ -8,7 +8,7 @@ use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 
-class IdentificationHandler
+class IdentificationHandler implements ActionHandlerInterface
 {
     private ZdsZaakService $zdsZaakService;
 

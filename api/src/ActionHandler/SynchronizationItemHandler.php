@@ -5,7 +5,7 @@ namespace App\ActionHandler;
 use App\Exception\GatewayException;
 use App\Service\SynchronizationService;
 
-class SynchronizationItemHandler
+class SynchronizationItemHandler implements ActionHandlerInterface
 {
     private SynchronizationService $synchronizationService;
 

@@ -4,7 +4,7 @@ namespace App\ActionHandler;
 
 use App\Service\HuwelijksplannerService;
 
-class HuwelijksplannerHandler
+class HuwelijksplannerHandler implements ActionHandlerInterface
 {
     private huwelijksplannerService $huwelijksplannerService;
 
