@@ -12,6 +12,7 @@ use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
+use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -53,6 +54,11 @@ class CatalogiService
      */
     public function catalogiHandler(array $data, array $configuration): array
     {
+        // Failsafe
+        if (!Uuid::isValid($configuration['entity']) || !Uuid::isValid($configuration['componentsEntity'])) {
+            return $data;
+        }
+
         $this->data = $data;
         $this->configuration = $configuration;
         $this->synchronizationService->configuration = $configuration;
@@ -86,6 +92,11 @@ class CatalogiService
      */
     private function componentsHandler(array $data, array $configuration): array
     {
+        // Failsafe
+        if (!Uuid::isValid($configuration['componentsEntity'])) {
+            return $data;
+        }
+
         $this->data = $data;
         $this->configuration = $configuration;
         $this->synchronizationService->configuration = $configuration;
@@ -159,7 +170,7 @@ class CatalogiService
 
         if (isset($this->io)) {
             $knownCatalogiToCheckCount = count($knownCatalogiToCheck);
-            $this->io->block("Start looping through $knownCatalogiToCheckCount known Catalogi to check...");
+            $this->io->block("Start looping through $knownCatalogiToCheckCount known Catalogi to check for unknown Catalogi...");
         }
 
         // Get the Catalogi of all the Catalogi we know of
@@ -200,7 +211,7 @@ class CatalogiService
         }
 
         if (isset($this->io)) {
-            $this->io->block("Finished looping through $knownCatalogiToCheckCount known Catalogi to check");
+            $this->io->block("Finished looping through $knownCatalogiToCheckCount known Catalogi to check for unknown Catalogi");
         }
 
         return $unknownCatalogi;
@@ -252,7 +263,7 @@ class CatalogiService
     private function checkForUnknownCatalogi(array $externCatalogi, array $knownCatalogi, array $unknownCatalogi): array
     {
         if (isset($this->io)) {
-            $this->io->text('Check for unknown Catalogi...');
+            $this->io->text('Checking for unknown Catalogi...');
         }
 
         // Keep track of locations we already are going to add new Catalogi for.
@@ -345,16 +356,16 @@ class CatalogiService
      */
     private function pullComponents(): array
     {
-        // Get all the Components we know of
-        $knownComponents = $this->getAllKnownComponents();
+        // Get the locations of all the Components we know of
+        $knownComponentLocations = $this->getAllKnownComponentLocations();
 
         // Check for new unknown Components
-        $unknownComponents = $this->getUnknownComponents($knownComponents);
+        $unknownComponents = $this->getUnknownComponents($knownComponentLocations);
 
         // Add any unknown Component so we know them as well
         $newComponents = $this->addNewComponent($unknownComponents);
 
-        // todo: update/sync all existing components with the SynchronizationService->handleSync() function
+        // todo: update/sync all existing components with the SynchronizationService->handleSync() function?
         // todo: Async^ ?
 
         return $newComponents;
@@ -365,7 +376,7 @@ class CatalogiService
      *
      * @return array
      */
-    private function getAllKnownComponents(): array
+    private function getAllKnownComponentLocations(): array
     {
         $knownComponents = $this->entityManager->getRepository('App:ObjectEntity')->findBy(['entity' => $this->configuration['componentsEntity']]);
 
@@ -375,8 +386,10 @@ class CatalogiService
         }
 
         // Convert ObjectEntities to useable arrays
+        $domain = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== 'localhost' ? 'https://'.$_SERVER['HTTP_HOST'] : 'http://localhost';
         foreach ($knownComponents as &$component) {
-            $component = $component->toArray(1, ['id', 'synchronizations']);
+            $component = $component->toArray(1, ['id', 'synchronizations', 'self']);
+            $component = $this->getComponentLocation($component, $domain);
         }
 
         return $knownComponents;
@@ -385,18 +398,39 @@ class CatalogiService
     /**
      * @todo
      *
-     * @param array $knownComponents
+     * @param array $component
+     * @param string $catalogiLocation
+     *
+     * @return string
+     */
+    private function getComponentLocation(array $component, string $catalogiLocation): string
+    {
+        // todo: always key=0?
+        if (isset($component['x-commongateway-metadata']['synchronizations'][0])) {
+            $componentSync = $component['x-commongateway-metadata']['synchronizations'][0];
+            return $componentSync['gateway']['location'].$componentSync['endpoint'].$componentSync['sourceId'];
+        } elseif (isset($component['x-commongateway-metadata']['self']) &&
+            str_contains($component['x-commongateway-metadata']['self'], $this->configuration['componentsLocation'])) {
+            return $catalogiLocation.$component['x-commongateway-metadata']['self'];
+        }
+        return $catalogiLocation.$this->configuration['componentsLocation'].$component['id'];
+    }
+
+    /**
+     * @todo
+     *
+     * @param array $knownComponentLocations
      *
      * @return array
      */
-    private function getUnknownComponents(array $knownComponents): array
+    private function getUnknownComponents(array $knownComponentLocations): array
     {
         // Get known Catalogi, so we can loop through them and get & check their components + synchronizations.
         $knownCatalogi = $this->getAllKnownCatalogi('text');
         $unknownComponents = [];
 
         if (isset($this->io)) {
-            $this->io->block('Start looping through known Catalogi to get their known Components...');
+            $this->io->block('Start looping through known Catalogi to get and check their known Components...');
         }
 
         // Get the Components of all the Catalogi we know of
@@ -409,7 +443,9 @@ class CatalogiService
                     $this->io->text("Get Components from (known Catalogi: {$catalogi['source']['name']}) \"$url\"");
                 }
                 $source = $this->getOrCreateSourceForCatalogi($catalogi);
-                $response = $this->callService->call($source, $this->configuration['componentsLocation'], 'GET', ['query' => ['extend[]' => 'x-commongateway-metadata.synchronizations']]);
+                $response = $this->callService->call($source, $this->configuration['componentsLocation'], 'GET', ['query' => [
+                    'extend' => ['x-commongateway-metadata.synchronizations', 'x-commongateway-metadata.self']
+                ]]);
             } catch (Exception|GuzzleException $exception) {
                 $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => ['type' => 'error',
                     'preMessage' => "Error while doing getUnknownComponents for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": "
@@ -430,7 +466,7 @@ class CatalogiService
                 $externComponentsCount = count($externComponents['results']);
                 $this->io->text("Found $externComponentsCount Components in Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\"");
             }
-            $unknownComponents = $this->checkForUnknownComponents($externComponents['results'], $knownComponents, $unknownComponents);
+            $unknownComponents = $this->checkForUnknownComponents($externComponents['results'], $knownComponentLocations, $unknownComponents, $catalogi['source']['location']);
 
             if (isset($this->io)) {
                 $this->io->newLine();
@@ -438,7 +474,7 @@ class CatalogiService
         }
 
         if (isset($this->io)) {
-            $this->io->block('Finished looping through known Catalogi to get their known Components');
+            $this->io->block('Finished looping through known Catalogi to get and check their known Components');
         }
 
         return $unknownComponents;
@@ -448,35 +484,41 @@ class CatalogiService
      * @todo
      *
      * @param array $externComponents
-     * @param array $knownComponents
+     * @param array $knownComponentLocations
      * @param array $unknownComponents
+     * @param string $catalogiLocation
      *
      * @return array
      */
-    private function checkForUnknownComponents(array $externComponents, array $knownComponents, array $unknownComponents): array
+    private function checkForUnknownComponents(array $externComponents, array $knownComponentLocations, array $unknownComponents, string $catalogiLocation): array
     {
         if (isset($this->io)) {
-            $this->io->text('Check for unknown Components...');
+            $this->io->text('Checking for unknown Components...');
         }
 
-        // todo: check for ['x-commongateway-metadata']['synchronizations'][0]['gateway']['location'] + [-][-][0]['endpoint'] + [-][-][0]['sourceId']
-        // todo: if ^ not set, always create a new Component with a sync to the Catalogi as source
-//        // Keep track of locations we already are going to add new Components for.
-//        $unknownComponentsLocations = array_column(array_column(array_column($unknownComponents, 'embedded'), 'source'),'location');
-//
-//        // Check if these extern Catalogi know any Components we don't know yet
-//        foreach ($externComponents as $checkComponent) {
-//            // We dont want to add to $unknownComponents if it is already in there. Use $unknownComponentsLocations to check for this.
-//            if (!in_array($checkComponent['embedded']['source']['location'], array_column($unknownComponents, 'source.location')) &&
-//                !$this->checkIfComponentExists($knownComponents, $checkComponent)) {
-//                $unknownComponents[] = $checkComponent;
-//                // Make sure to also add this to $unknownComponentsLocations
-//                $unknownComponentsLocations[] = $checkComponent['embedded']['source']['location'];
-//                if (isset($this->io)) {
-//                    $this->io->text("Found an unknown Catalogi: ({$checkComponent['embedded']['source']['name']}) \"{$checkComponent['embedded']['source']['location']}\"");
-//                }
+        // Keep track of locations we already are going to add new Components for.
+        $unknownComponentsLocations = [];
+        foreach ($unknownComponents as $unknownComponent) {
+            $unknownComponentsLocations[] = $this->getComponentLocation($unknownComponent, $catalogiLocation);
+        }
+
+        // Check if these extern Catalogi know any Components we don't know yet
+        foreach ($externComponents as $checkComponent) {
+            // We dont want to add to $unknownComponents if it is already in there. Use $unknownComponentsLocations to check for this.
+            $checkComponentLocation = $this->getComponentLocation($checkComponent, $catalogiLocation);
+            if (!in_array($checkComponentLocation, $unknownComponentsLocations) &&
+                !in_array($checkComponentLocation, $knownComponentLocations)) {
+                $unknownComponents[] = $checkComponent;
+                // Make sure to also add this to $unknownComponentsLocations
+                $unknownComponentsLocations[] = $checkComponentLocation;
+                if (isset($this->io)) {
+                    $this->io->text("Found an unknown Component: ({$checkComponent['name']}) \"$checkComponentLocation\"");
+                }
+            }
+//            elseif (isset($this->io)) {
+//                $this->io->text("Already known Component: ({$checkComponent['name']}) \"$checkComponentLocation\"");
 //            }
-//        }
+        }
 
         return $unknownComponents;
     }
@@ -490,6 +532,9 @@ class CatalogiService
      */
     private function addNewComponent(array $unknownComponents): array
     {
+        // todo: check for ['x-commongateway-metadata']['synchronizations'][0]['gateway']['location'] + [-][-][0]['endpoint'] + [-][-][0]['sourceId']
+        // todo: if ^ not set, always create a new Component with a sync to the Catalogi as source
+
         //todo:
 //        $totalUnknownCatalogi = is_countable($unknownCatalogi) ? count($unknownCatalogi) : 0;
 //        if (isset($this->io) && $totalUnknownCatalogi > 0) {

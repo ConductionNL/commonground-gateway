@@ -828,6 +828,7 @@ class ObjectEntity
     {
         $array = [];
         in_array('id', $extend) && $array['id'] = (string) $this->getId();
+        in_array('self', $extend) && $array['x-commongateway-metadata']['self'] = $this->getSelf(); //todo? $this->getSelf() ?? $this->setSelf(???->createSelf($this))->getSelf()
         in_array('synchronizations', $extend) && $array['x-commongateway-metadata']['synchronizations'] = $this->getReadableSyncDataArray();
         foreach ($this->getEntity()->getAttributes() as $attribute) {
             $valueObject = $this->getValueByAttribute($attribute);
