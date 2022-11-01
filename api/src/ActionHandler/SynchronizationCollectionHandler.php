@@ -8,7 +8,7 @@ use Cassandra\Exception\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Cache\Exception\CacheException;
 
-class SynchronizationCollectionHandler
+class SynchronizationCollectionHandler implements ActionHandlerInterface
 {
     private SynchronizationService $synchronizationService;
 
@@ -37,6 +37,7 @@ class SynchronizationCollectionHandler
                     'type'        => 'string',
                     'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
                     'example'     => 'native://default',
+                    'multiple' => true
                 ],
             ],
         ];

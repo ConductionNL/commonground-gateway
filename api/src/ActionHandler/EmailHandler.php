@@ -8,7 +8,7 @@ use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
-class EmailHandler
+class EmailHandler implements ActionHandlerInterface
 {
     private EmailService $emailService;
 
