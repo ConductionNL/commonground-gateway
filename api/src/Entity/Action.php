@@ -393,6 +393,7 @@ class Action
 
         return $this;
     }
+
     public function getActionHandlerConfiguration(): ?array
     {
         return $this->actionHandlerConfiguration;
@@ -404,5 +405,4 @@ class Action
 
         return $this;
     }
-
 }
