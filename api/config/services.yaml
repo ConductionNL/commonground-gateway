@@ -161,6 +161,11 @@ services:
         public: true
         arguments:
             $simXMLZaakService: '@App\Service\SimXMLZaakService'
+            
+    App\ActionHandler\ZgwToXxllncHandler:
+        public: true
+        arguments:
+            $mapZaakService: '@App\Service\MapZaakService'
 
     App\ActionHandler\ZgwObjectInformatieObjectToZdsDocumentHandler:
         public: true
