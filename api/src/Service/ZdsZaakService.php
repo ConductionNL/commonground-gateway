@@ -239,6 +239,7 @@ class ZdsZaakService
         $betrokkeneIdentificatie->setValue('identificatie', $vestiging->getValue('vestigingsNummer'));
         $betrokkeneIdentificatie->setValue('naam', $vestiging->getValue('handelsnaam'));
         $betrokkeneIdentificatie->setValue('isGehuisvestIn', $vestiging->getValue('verblijfsadres')->getValue('wplWoonplaatsNaam'));
+        $this->entityManager->persist($betrokkeneIdentificatie);
 
         return $betrokkeneIdentificatie;
     }
