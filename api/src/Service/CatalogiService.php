@@ -158,39 +158,40 @@ class CatalogiService
         $unknownCatalogi = [];
 
         if (isset($this->io)) {
-            $this->io->block('Start looping through known Catalogi...');
+            $knownCatalogiToCheckCount = count($knownCatalogiToCheck);
+            $this->io->block("Start looping through $knownCatalogiToCheckCount known Catalogi to check...");
         }
 
-        // todo: make this a function? to decrease line breaks and prevent duplicate code, see getUnknownComponents()
         // Get the Catalogi of all the Catalogi we know of
         foreach ($knownCatalogiToCheck as $catalogi) {
+            // todo: make this a function? to decrease line breaks and prevent duplicate code, see getUnknownComponents()
+            // todo: also use recursion to deal with pages on GET $url!
             try {
                 $url = $catalogi['source']['location'].$this->configuration['location'];
                 if (isset($this->io)) {
                     $this->io->text("Get Catalogi from ({$catalogi['source']['name']}) \"$url\"");
                 }
-                $source = $this->generateCallServiceComponent($catalogi);
+                $source = $this->getOrCreateSourceForCatalogi($catalogi);
                 $response = $this->callService->call($source, $this->configuration['location']);
-
-                $this->entityManager->remove($source);
             } catch (Exception|GuzzleException $exception) {
-                //todo: make this a function (maybe re-use it in the SynchronizationService as well?)
-                if (isset($this->io)) {
-                    $this->io->error("Error while doing getUnknownCatalogi for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": {$exception->getMessage()}");
-                    $this->io->block("File: {$exception->getFile()}");
-                    $this->io->block("Line: {$exception->getLine()}");
-                    $this->io->block("Trace: {$exception->getTraceAsString()}");
-                }
-
-                // Make sure we delete the Source on error
-                if (isset($source) && $source instanceof Gateway) {
-                    $this->entityManager->remove($source);
-                }
+                $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => ['type' => 'error',
+                    'preMessage' => "Error while doing getUnknownCatalogi for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": "
+                ]]);
                 //todo: error, log this
                 continue;
             }
 
             $externCatalogi = json_decode($response->getBody()->getContents(), true);
+            if (!isset($externCatalogi['results'])) {
+                if (isset($this->io)) {
+                    $this->io->warning("No \'results\' found in response from \"$url\"");
+                }
+                continue;
+            }
+            if (isset($this->io) && is_countable($externCatalogi['results'])) {
+                $externCatalogiCount = count($externCatalogi['results']);
+                $this->io->text("Found $externCatalogiCount Catalogi in Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\"");
+            }
             $unknownCatalogi = $this->checkForUnknownCatalogi($externCatalogi['results'], $knownCatalogi, $unknownCatalogi);
 
             if (isset($this->io)) {
@@ -199,37 +200,41 @@ class CatalogiService
         }
 
         if (isset($this->io)) {
-            $this->io->block('Finished looping through known Catalogi');
+            $this->io->block("Finished looping through $knownCatalogiToCheckCount known Catalogi to check");
         }
 
         return $unknownCatalogi;
     }
 
     /**
-     * Generates a component array used by the callService when we are going to get all Catalogi of an extern Catalogi.
+     * Tries to find an existing Source for the given Catalogi and if it can't be found creates a new one.
+     * Used by the callService when we are going to get all Catalogi of an extern Catalogi.
      *
      * @param array $catalogi A single known Catalogi.
      *
      * @return Gateway A Gateway/Source object with data used by the callService.
      */
-    private function generateCallServiceComponent(array $catalogi): Gateway
+    private function getOrCreateSourceForCatalogi(array $catalogi): Gateway
     {
         $location = $catalogi['source']['location'];
         $accept = 'application/json';
         $auth = 'none';
-        $name = 'temp source for CatalogiService';
+        $name = "Source for Catalogi {$catalogi['source']['name']}";
 
-        // Just in case, first try to find an existing Gateway/Source with this data. Even though we should always delete this after this function.
-        $sources = $this->entityManager->getRepository('App:Gateway')->findBy(['location' => $location, 'accept' => $accept, 'auth' => $auth, 'name' => $name]);
+        // First try to find an existing Gateway/Source with this location.
+        $sources = $this->entityManager->getRepository('App:Gateway')->findBy(['location' => $location]);
 
         if (is_countable($sources) && count($sources) > 0) {
             $source = $sources[0];
         } else {
+            // Create a new Source for this Catalogi
             $source = new Gateway();
             $source->setLocation($location);
             $source->setAccept($accept);
             $source->setAuth($auth);
             $source->setName($name);
+            $this->entityManager->persist($source);
+            $this->entityManager->flush();
         }
 
         return $source;
@@ -250,17 +255,19 @@ class CatalogiService
             $this->io->text('Check for unknown Catalogi...');
         }
 
+        // Keep track of locations we already are going to add new Catalogi for.
+        $unknownCatalogiLocations = array_column(array_column(array_column($unknownCatalogi, 'embedded'), 'source'),'location');
+
         // Check if these extern Catalogi know any Catalogi we don't know yet
         foreach ($externCatalogi as $checkCatalogi) {
-            $unknownCatalogiLocations = array_column(array_column($unknownCatalogi, 'source'), 'location');
-            var_dump('unknownCatalogiLocations',$unknownCatalogiLocations);
-            var_dump('checkCatalogi: '.$checkCatalogi['embedded']['source']['location']);
-            // todo: make sure this array_column works, we dont want to add to $unknownCatalogi if it is already in there. If this works, delete this todo!
+            // We dont want to add to $unknownCatalogi if it is already in there. Use $unknownCatalogiLocations to check for this.
             if (!in_array($checkCatalogi['embedded']['source']['location'], $unknownCatalogiLocations) &&
                 !$this->checkIfCatalogiExists($knownCatalogi, $checkCatalogi)) {
                 $unknownCatalogi[] = $checkCatalogi;
+                // Make sure to also add this to $unknownCatalogiLocations
+                $unknownCatalogiLocations[] = $checkCatalogi['embedded']['source']['location'];
                 if (isset($this->io)) {
-                    $this->io->text("Found an unknown Catalogus: ({$checkCatalogi['embedded']['source']['name']}) \"{$checkCatalogi['embedded']['source']['location']}\"");
+                    $this->io->text("Found an unknown Catalogi: ({$checkCatalogi['embedded']['source']['name']}) \"{$checkCatalogi['embedded']['source']['location']}\"");
                 }
             }
         }
@@ -306,20 +313,23 @@ class CatalogiService
 
         $addedCatalogi = [];
         // Add unknown Catalogi
-//        foreach ($unknownCatalogi as $addCatalogi) {
-//            $object = new ObjectEntity();
-//            $object->setEntity($this->synchronizationService->getEntityFromConfig());
-//            $addCatalogi['source'] = $addCatalogi['embedded']['source'];
-//            $newCatalogi = $this->synchronizationService->populateObject($addCatalogi, $object);
-//            $newCatalogi = $newCatalogi->toArray();
-//
-//            // Repeat pull for newly added Catalogi (recursion)
-//            if (isset($this->io)) {
-//                $this->io->text("Added Catalogi ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
-//                $this->io->section("Check for new Catalogi in this newly added Catalogi: ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
-//            }
-//            $addedCatalogi = array_merge($addedCatalogi, $this->pullCatalogi($newCatalogi));
-//        }
+        foreach ($unknownCatalogi as $addCatalogi) {
+            if (isset($this->io)) {
+                $this->io->text("Start adding Catalogi ({$addCatalogi['embedded']['source']['name']}) \"{$addCatalogi['embedded']['source']['location']}\"");
+            }
+            $object = new ObjectEntity();
+            $object->setEntity($this->synchronizationService->getEntityFromConfig());
+            $addCatalogi['source'] = $addCatalogi['embedded']['source'];
+            $newCatalogi = $this->synchronizationService->populateObject($addCatalogi, $object);
+            $newCatalogi = $newCatalogi->toArray();
+
+            // Repeat pull for newly added Catalogi (recursion)
+            if (isset($this->io)) {
+                $this->io->text("Added Catalogi ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
+                $this->io->section("Check for new Catalogi in this newly added Catalogi: ({$newCatalogi['source']['name']}) \"{$newCatalogi['source']['location']}\"");
+            }
+            $addedCatalogi = array_merge($addedCatalogi, $this->pullCatalogi($newCatalogi));
+        }
 
         if (isset($this->io) && $totalUnknownCatalogi > 0) {
             $this->io->block('Finished adding all new Catalogi');
@@ -342,7 +352,12 @@ class CatalogiService
         $unknownComponents = $this->getUnknownComponents($knownComponents);
 
         // Add any unknown Component so we know them as well
-        return $this->addNewComponent($unknownComponents);
+        $newComponents = $this->addNewComponent($unknownComponents);
+
+        // todo: update/sync all existing components with the SynchronizationService->handleSync() function
+        // todo: Async^ ?
+
+        return $newComponents;
     }
 
     /**
@@ -384,32 +399,37 @@ class CatalogiService
             $this->io->block('Start looping through known Catalogi to get their known Components...');
         }
 
-        // todo: make this a function? to decrease line breaks and prevent duplicate code, see getUnknownCatalogi()
         // Get the Components of all the Catalogi we know of
         foreach ($knownCatalogi as $catalogi) {
+            // todo: make this a function? to decrease line breaks and prevent duplicate code, see getUnknownCatalogi()
+            // todo: also use recursion to deal with pages on GET $url!
             try {
                 $url = $catalogi['source']['location'].$this->configuration['componentsLocation'];
                 if (isset($this->io)) {
                     $this->io->text("Get Components from (known Catalogi: {$catalogi['source']['name']}) \"$url\"");
                 }
-                $source = $this->generateCallServiceComponent($catalogi);
+                $source = $this->getOrCreateSourceForCatalogi($catalogi);
                 $response = $this->callService->call($source, $this->configuration['componentsLocation'], 'GET', ['query' => ['extend[]' => 'x-commongateway-metadata.synchronizations']]);
-
-                $this->entityManager->remove($source);
             } catch (Exception|GuzzleException $exception) {
-                //todo: make this a function (maybe re-use it in the SynchronizationService as well?)
-                if (isset($this->io)) {
-                    $this->io->error("Error while doing getUnknownComponents for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": {$exception->getMessage()}");
-                    $this->io->block("File: {$exception->getFile()}");
-                    $this->io->block("Line: {$exception->getLine()}");
-                    $this->io->block("Trace: {$exception->getTraceAsString()}");
-                }
+                $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => ['type' => 'error',
+                    'preMessage' => "Error while doing getUnknownComponents for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": "
+                ]]);
 
                 //todo: error, log this
                 continue;
             }
 
             $externComponents = json_decode($response->getBody()->getContents(), true);
+            if (!isset($externComponents['results'])) {
+                if (isset($this->io)) {
+                    $this->io->warning("No \'results\' found in response from \"$url\"");
+                }
+                continue;
+            }
+            if (isset($this->io) && is_countable($externComponents['results'])) {
+                $externComponentsCount = count($externComponents['results']);
+                $this->io->text("Found $externComponentsCount Components in Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\"");
+            }
             $unknownComponents = $this->checkForUnknownComponents($externComponents['results'], $knownComponents, $unknownComponents);
 
             if (isset($this->io)) {
@@ -439,17 +459,24 @@ class CatalogiService
             $this->io->text('Check for unknown Components...');
         }
 
-        // Check if these extern Catalogi know any Components we don't know yet
-        foreach ($externComponents as $checkComponent) {
-            // todo: ... make sure we don't add to $unknownComponents if it is already in there
+        // todo: check for ['x-commongateway-metadata']['synchronizations'][0]['gateway']['location'] + [-][-][0]['endpoint'] + [-][-][0]['sourceId']
+        // todo: if ^ not set, always create a new Component with a sync to the Catalogi as source
+//        // Keep track of locations we already are going to add new Components for.
+//        $unknownComponentsLocations = array_column(array_column(array_column($unknownComponents, 'embedded'), 'source'),'location');
+//
+//        // Check if these extern Catalogi know any Components we don't know yet
+//        foreach ($externComponents as $checkComponent) {
+//            // We dont want to add to $unknownComponents if it is already in there. Use $unknownComponentsLocations to check for this.
 //            if (!in_array($checkComponent['embedded']['source']['location'], array_column($unknownComponents, 'source.location')) &&
 //                !$this->checkIfComponentExists($knownComponents, $checkComponent)) {
 //                $unknownComponents[] = $checkComponent;
+//                // Make sure to also add this to $unknownComponentsLocations
+//                $unknownComponentsLocations[] = $checkComponent['embedded']['source']['location'];
 //                if (isset($this->io)) {
-//                    $this->io->text("Found an unknown Catalogus: ({$checkComponent['embedded']['source']['name']}) \"{$checkComponent['embedded']['source']['location']}\"");
+//                    $this->io->text("Found an unknown Catalogi: ({$checkComponent['embedded']['source']['name']}) \"{$checkComponent['embedded']['source']['location']}\"");
 //                }
 //            }
-        }
+//        }
 
         return $unknownComponents;
     }
@@ -472,6 +499,9 @@ class CatalogiService
 //        $addedCatalogi = [];
 //        // Add unknown Catalogi
 //        foreach ($unknownCatalogi as $addCatalogi) {
+//            if (isset($this->io)) {
+//                $this->io->text("Start adding Catalogi ({$addCatalogi['embedded']['source']['name']}) \"{$addCatalogi['embedded']['source']['location']}\"");
+//            }
 //            $object = new ObjectEntity();
 //            $object->setEntity($this->synchronizationService->getEntityFromConfig());
 //            $addCatalogi['source'] = $addCatalogi['embedded']['source'];

@@ -398,6 +398,27 @@ class SynchronizationService
     }
 
     /**
+     * A function used to send userFeedback with SymfonyStyle $io when an Exception is caught during a try-catch.
+     *
+     * @param Exception $exception
+     * @param array $config
+     *
+     * @return void
+     */
+    public function ioCatchException(Exception $exception, array $config) {
+        if (!isset($this->io) && $this->session->get('io')) {
+            $this->io = $this->session->get('io');
+        }
+        if (isset($this->io)) {
+            $errorMessage = ($config['message']['preMessage'] ?? '').$exception->getMessage().($config['message']['postMessage'] ?? '');
+            (isset($config['message']['type']) && $config['message']['type'] === 'error') ? $this->io->error($errorMessage) : $this->io->warning($errorMessage);
+            isset($config['file']) && $this->io->block("File: {$exception->getFile()}");
+            isset($config['line']) && $this->io->block("Line: {$exception->getLine()}");
+            isset($config['trace']) && $this->io->block("Trace: {$exception->getTraceAsString()}");
+        }
+    }
+
+    /**
      * Fetches the objects stored on the source.
      *
      * @param array $callServiceConfig The configuration for the source
@@ -433,12 +454,9 @@ class SynchronizationService
             }
         } catch (Exception $exception) {
             // If no next page with this $page exists...
-            if (isset($this->io)) {
-                $this->io->warning("(This might just be the final page!) - Error while doing fetchObjectsFromSource: {$exception->getMessage()}");
-                $this->io->block("File: {$exception->getFile()}");
-                $this->io->block("Line: {$exception->getLine()}");
-//                $this->io->block("Trace: {$exception->getTraceAsString()}");
-            }
+            $this->ioCatchException($exception, ['line', 'file', 'message' =>
+                ['preMessage' => "(This might just be the final page!) - Error while doing fetchObjectsFromSource: "]
+            ]);
 
             //todo: error, log this
             return [];
@@ -490,12 +508,9 @@ class SynchronizationService
                 throw new Exception('callService returned an array'.(isset($response['error']) ? " with error: {$response['error']}" : ''));
             }
         } catch (Exception $exception) {
-            if (isset($this->io)) {
-                $this->io->warning("Error while doing getSingleFromSource: {$exception->getMessage()}");
-                $this->io->block("File: {$exception->getFile()}");
-                $this->io->block("Line: {$exception->getLine()}");
-//                $this->io->block("Trace: {$exception->getTraceAsString()}");
-            }
+            $this->ioCatchException($exception, ['line', 'file', 'message' =>
+                ['preMessage' => "Error while doing getSingleFromSource: "]
+            ]);
 
             //todo: error, log this
             return null;
@@ -897,12 +912,9 @@ class SynchronizationService
         try {
             $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
         } catch (Exception $exception) {
-            if (isset($this->io)) {
-                $this->io->warning("Error while doing syncToSource: {$exception->getMessage()}");
-                $this->io->block("File: {$exception->getFile()}");
-                $this->io->block("Line: {$exception->getLine()}");
-//                $this->io->block("Trace: {$exception->getTraceAsString()}");
-            }
+            $this->ioCatchException($exception, ['line', 'file', 'message' =>
+                ['preMessage' => "Error while doing syncToSource: "]
+            ]);
 
             // todo: error, log this
 //            return $synchronization;
@@ -1033,12 +1045,9 @@ class SynchronizationService
                 throw new Exception('callService returned an array'.(isset($response['error']) ? " with error: {$response['error']}" : ''));
             }
         } catch (Exception $exception) {
-            if (isset($this->io)) {
-                $this->io->warning("Error while doing syncToSource: {$exception->getMessage()}");
-                $this->io->block("File: {$exception->getFile()}");
-                $this->io->block("Line: {$exception->getLine()}");
-//                $this->io->block("Trace: {$exception->getTraceAsString()}");
-            }
+            $this->ioCatchException($exception, ['line', 'file', 'message' =>
+                ['preMessage' => "Error while doing syncToSource: "]
+            ]);
 
             //todo: error, log this
             return $synchronization;
