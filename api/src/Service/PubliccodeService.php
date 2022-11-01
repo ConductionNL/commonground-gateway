@@ -387,7 +387,7 @@ class PubliccodeService
     {
         if ($this->githubService->getGithubRepoFromOrganization($organization->getValue('name'))) {
             if ($catalogi = $this->githubService->getOpenCatalogiFromGithubRepo($organization->getValue('name'))) {
-                try{
+                try {
                     $organization->setValue('name', $catalogi['name']);
                     $organization->setValue('description', $catalogi['description']);
                     $organization->setValue('type', $catalogi['type']);
