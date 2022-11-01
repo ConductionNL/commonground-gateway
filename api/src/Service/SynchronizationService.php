@@ -400,8 +400,12 @@ class SynchronizationService
     /**
      * A function used to send userFeedback with SymfonyStyle $io when an Exception is caught during a try-catch.
      *
-     * @param Exception $exception
-     * @param array $config
+     * @param Exception $exception The Exception we caught.
+     * @param array $config A configuration array for this function, if one of the keys 'file', 'line' or 'trace' is present
+     * this function will show that data of the Exception with $this->io->block. It is also possible to configure the message
+     * with this array through the key 'message' => [Here you have the options to add the keys 'preMessage' & 'postMessage'
+     * to expend on the Exception message and choose the type of the io message, io->error or io->warning with the key
+     * 'type' => 'error', default = warning].
      *
      * @return void
      */
@@ -411,7 +415,8 @@ class SynchronizationService
         }
         if (isset($this->io)) {
             $errorMessage = ($config['message']['preMessage'] ?? '').$exception->getMessage().($config['message']['postMessage'] ?? '');
-            (isset($config['message']['type']) && $config['message']['type'] === 'error') ? $this->io->error($errorMessage) : $this->io->warning($errorMessage);
+            (isset($config['message']['type']) && $config['message']['type'] === 'error') ?
+                $this->io->error($errorMessage) : $this->io->warning($errorMessage);
             isset($config['file']) && $this->io->block("File: {$exception->getFile()}");
             isset($config['line']) && $this->io->block("Line: {$exception->getLine()}");
             isset($config['trace']) && $this->io->block("Trace: {$exception->getTraceAsString()}");
