@@ -275,8 +275,6 @@ class ZdsZaakService
                 $rol->setValue('betrokkeneType', 'organisatorische_eenheid');
             }
 
-            var_dump($rol->toArray());
-
             $this->entityManager->persist($rol);
             $this->synchronizationService->setApplicationAndOrganization($rol);
 
