@@ -241,7 +241,6 @@ class ZdsZaakService
         $betrokkeneIdentificatie->setValue('isGehuisvestIn', $vestiging->getValue('verblijfsadres')->getValue('wplWoonplaatsNaam'));
 
         return $betrokkeneIdentificatie;
-
     }
 
     /**
