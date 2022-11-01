@@ -223,6 +223,7 @@ class ObjectEntity
         $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
+        $this->synchronizations = new ArrayCollection();
 
         if ($entity) {
             $this->setEntity($entity);
@@ -934,6 +935,36 @@ class ObjectEntity
             // set the owning side to null (unless already changed)
             if ($requestLog->getObjectEntity() === $this) {
                 $requestLog->setObjectEntity(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Synchronization[]
+     */
+    public function getSynchronizations(): Collection
+    {
+        return $this->synchronizations;
+    }
+
+    public function addSynchronization(Synchronization $synchronization): self
+    {
+        if (!$this->synchronizations->contains($synchronization)) {
+            $this->synchronizations[] = $synchronization;
+            $synchronization->setObject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSynchronization(Synchronization $synchronization): self
+    {
+        if ($this->synchronizations->removeElement($synchronization)) {
+            // set the owning side to null (unless already changed)
+            if ($synchronization->getObject() === $this) {
+                $synchronization->setObject(null);
             }
         }
 

@@ -42,7 +42,8 @@ final class EntityToSchemaSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $objectType = $request->attributes->get('_route_params') ? $request->attributes->get('_route_params')['_api_resource_class'] : null; //The class of the requested entity
+        // @todo Get endpoint with prefix does not work
+//        $objectType = $request->attributes->get('_route_params') ? $request->attributes->get('_route_params')['_api_resource_class'] : null; //The class of the requested entity
         $objectId = $request->attributes->get('_route_params') ? $request->attributes->get('_route_params')['id'] : null; //The id of the resource
 
         if (!$objectId) {
