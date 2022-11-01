@@ -236,6 +236,7 @@ class SynchronizationService
 
             $this->entityManager->persist($synchronization);
             $this->entityManager->flush();
+            $this->entityManager->clear(Synchronization::class);
         }
 
         return $results;
