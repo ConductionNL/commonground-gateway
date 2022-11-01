@@ -2,19 +2,25 @@
 
 namespace App\ActionHandler;
 
+use App\Entity\ActionLog;
+use App\ActionHandler\ActionHandlerInterface;
 use App\Service\EmailService;
 use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
-class EmailHandler
+class EmailHandler implements ActionHandlerInterface
 {
-    private EmailService $emailService;
 
-    public function __construct(EmailService $emailService)
+    /**
+     *  A non constructor way of getting the service trough auto wiring
+     *
+     * @return EmailService
+     */
+    public function getEmailService(EmailService $emailService): EmailService
     {
-        $this->emailService = $emailService;
+        return $emailService;
     }
 
     /**
@@ -87,13 +93,14 @@ class EmailHandler
      *
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
+     * @param ActionLog $actionLog The action log where a report can be logged to
      *
      * @throws TransportExceptionInterface|LoaderError|RuntimeError|SyntaxError
      *
      * @return array
      */
-    public function run(array $data, array $configuration): array
+    public function run(array $data, array $configuration, ActionLog $actionLog): array
     {
-        return $this->emailService->emailHandler($data, $configuration);
+        return $this->getEmailService()->emailHandler($data, $configuration, $actionLog);
     }
 }
