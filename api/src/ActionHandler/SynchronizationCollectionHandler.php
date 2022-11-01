@@ -37,7 +37,7 @@ class SynchronizationCollectionHandler implements ActionHandlerInterface
                     'type'        => 'string',
                     'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
                     'example'     => 'native://default',
-                    'multiple' => true
+                    'multiple'    => true,
                 ],
             ],
         ];
