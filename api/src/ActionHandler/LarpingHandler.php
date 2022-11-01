@@ -4,7 +4,7 @@ namespace App\ActionHandler;
 
 use App\Service\LarpingService;
 
-class LarpingHandler
+class LarpingHandler implements ActionHandlerInterface
 {
     private LarpingService $larpingService;
 

@@ -4,7 +4,7 @@ namespace App\ActionHandler;
 
 use App\Service\NotificationService;
 
-class NotificationHandler
+class NotificationHandler implements ActionHandlerInterface
 {
     private NotificationService $notificationService;
 

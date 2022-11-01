@@ -177,6 +177,15 @@ class Action
      */
     private $actionLogs;
 
+    /**
+     * @var array|null The configuration of the action handler
+     *
+     * @Groups({"read","write"})
+     *
+     * @ORM\Column(type="array", length=255, nullable=true)
+     */
+    private ?array $actionHandlerConfiguration;
+
     public function __construct()
     {
         $this->actionLogs = new ArrayCollection();
@@ -381,6 +390,18 @@ class Action
                 $actionLog->setAction(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getActionHandlerConfiguration(): ?array
+    {
+        return $this->actionHandlerConfiguration;
+    }
+
+    public function setActionHandlerConfiguration(?array $actionHandlerConfiguration): self
+    {
+        $this->actionHandlerConfiguration = $actionHandlerConfiguration;
 
         return $this;
     }
