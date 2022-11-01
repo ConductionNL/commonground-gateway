@@ -3,7 +3,6 @@
 namespace App\Subscriber;
 
 use ApiPlatform\Core\EventListener\EventPriorities;
-use App\Entity\DashboardCard;
 use App\Service\ActionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;

@@ -3,14 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Action;
-use App\Entity\Application;
-use App\Exception\GatewayException;
-use Doctrine\ORM\EntityManagerInterface;
-use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 class ActionService
 {
@@ -23,15 +16,16 @@ class ActionService
     }
 
     /**
-     * Get the action handler for an action
+     * Get the action handler for an action.
      *
      * @param Action $action
+     *
      * @return object|null
      */
     public function getHandlerForAction(Action $action): ?object
     {
         // If the action has a class
-        if($class = $action->getClass()){
+        if ($class = $action->getClass()) {
             return $this->container->get($class);
         }
 
@@ -40,13 +34,13 @@ class ActionService
     }
 
     /**
-     * Generates a list of all action handlers
+     * Generates a list of all action handlers.
      *
      * @return array
      */
     public function getAllHandler(): array
     {
-        $handlers  = $this->container->findTaggedServiceIds('commongateway.action_handlers');
+        $handlers = $this->container->findTaggedServiceIds('commongateway.action_handlers');
 
         return $handlers;
     }
