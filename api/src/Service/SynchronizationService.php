@@ -341,7 +341,7 @@ class SynchronizationService
             $id = null;
         }
 
-        return $gateway->getLocation() . $location . ($id ? '/' . $id : '');
+        return $gateway->getLocation().$location.($id ? '/'.$id : '');
     }
 
     /**
@@ -412,7 +412,7 @@ class SynchronizationService
         if (is_array($callServiceConfig['query'])) {
             $query = array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []);
         } else {
-            $query = $callServiceConfig['query'] . '&page=' . $page;
+            $query = $callServiceConfig['query'].'&page='.$page;
         }
 
         try {
@@ -430,7 +430,7 @@ class SynchronizationService
             );
 
             if (is_array($response)) {
-                throw new Exception('callService returned an array' . (isset($response['error']) ? " with error: {$response['error']}" : ''));
+                throw new Exception('callService returned an array'.(isset($response['error']) ? " with error: {$response['error']}" : ''));
             }
         } catch (Exception $exception) {
             // If no next page with this $page exists...
@@ -488,7 +488,7 @@ class SynchronizationService
             );
 
             if (is_array($response)) {
-                throw new Exception('callService returned an array' . (isset($response['error']) ? " with error: {$response['error']}" : ''));
+                throw new Exception('callService returned an array'.(isset($response['error']) ? " with error: {$response['error']}" : ''));
             }
         } catch (Exception $exception) {
             if (isset($this->io)) {
@@ -807,7 +807,7 @@ class SynchronizationService
         // The prefixes to add in the format 'field' => 'prefix'
         $prefixes = $this->configuration['apiSource']['prefixFieldsOut'];
         foreach ($prefixes as $id => $prefix) {
-            $objectArray[$id] = $prefix . $objectArray[$id];
+            $objectArray[$id] = $prefix.$objectArray[$id];
         }
 
         return $objectArray;
@@ -1037,7 +1037,7 @@ class SynchronizationService
             );
 
             if (is_array($result)) {
-                throw new Exception('callService returned an array' . (isset($response['error']) ? " with error: {$response['error']}" : ''));
+                throw new Exception('callService returned an array'.(isset($response['error']) ? " with error: {$response['error']}" : ''));
             }
         } catch (Exception $exception) {
             if (isset($this->io)) {

@@ -358,7 +358,7 @@ class Value
                     //@todo get object from uuid
                     break;
                 default:
-                    throw new \UnexpectedValueException('Could not parse to array the attribute type of: ' . $this->getAttribute()->getType());
+                    throw new \UnexpectedValueException('Could not parse to array the attribute type of: '.$this->getAttribute()->getType());
             }
         }
 
@@ -380,7 +380,7 @@ class Value
             $this->simpleArrayValue = $outputArray;
 
             $newStringValue = !empty($this->simpleArrayValue) ? implode(',', $this->simpleArrayValue) : null;
-            $this->stringValue = is_string($newStringValue) ? ',' . $newStringValue : null;
+            $this->stringValue = is_string($newStringValue) ? ','.$newStringValue : null;
         }
 
         return $this;
@@ -573,7 +573,7 @@ class Value
                 }
 
                 // Set a string reprecentation of the object
-                $this->stringValue = ',' . implode(',', $idArray);
+                $this->stringValue = ','.implode(',', $idArray);
 
                 return $this;
             }
@@ -642,7 +642,7 @@ class Value
                 case 'array':
                     return $this->setArrayValue($value);
                 default:
-                    throw new \UnexpectedValueException('Could not create a value for the attribute type of: ' . $this->getAttribute()->getType());
+                    throw new \UnexpectedValueException('Could not create a value for the attribute type of: '.$this->getAttribute()->getType());
             }
         } else {
             //TODO: correct error handling
@@ -717,7 +717,7 @@ class Value
 
                     return $objects;
                 default:
-                    throw new \UnexpectedValueException('Could not return a value for the attribute type of: ' . $this->getAttribute()->getType());
+                    throw new \UnexpectedValueException('Could not return a value for the attribute type of: '.$this->getAttribute()->getType());
             }
         } else {
             //TODO: correct error handling
