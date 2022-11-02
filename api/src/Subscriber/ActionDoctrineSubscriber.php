@@ -53,7 +53,7 @@ class ActionDoctrineSubscriber implements EventSubscriberInterface
         }
 
         if ($route == 'api_actions_get_collection') {
-            if($event->getRequest()->query->count() > 0) {
+            if ($event->getRequest()->query->count() > 0) {
                 $actions = $this->entityManager->getRepository('App:Action')->findBy($event->getRequest()->query->all());
             } else {
                 $actions = $this->entityManager->getRepository('App:Action')->findAll();
