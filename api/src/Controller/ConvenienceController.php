@@ -225,7 +225,7 @@ class ConvenienceController extends AbstractController
         $contentType = $this->handlerService->getRequestType('content-type');
         $data = $this->handlerService->getDataFromRequest();
 
-        $data = $this->actionSubscriber->runFunction($action, $data);
+        $data = $this->actionSubscriber->runFunction($action, $data, $action->getListens()[0]);
 
         // throw events
         foreach ($action->getThrows() as $throw) {
