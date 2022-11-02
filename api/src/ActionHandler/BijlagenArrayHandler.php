@@ -8,7 +8,7 @@ use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 
-class BijlagenArrayHandler
+class BijlagenArrayHandler implements ActionHandlerInterface
 {
     private BijlagenArrayService $bijlagenArrayService;
 

@@ -233,6 +233,10 @@ class SynchronizationService
                 $result = [];
             }
             $synchronization = $this->handleSync($synchronization, $result);
+
+            $this->entityManager->persist($synchronization);
+            $this->entityManager->flush();
+            $this->entityManager->clear(Synchronization::class);
         }
 
         return $results;
@@ -1065,6 +1069,7 @@ class SynchronizationService
                 $this->io->block("Line: {$exception->getLine()}");
 //                $this->io->block("Trace: {$exception->getTraceAsString()}");
             }
+            $synchronization->setLastSynced(new DateTime());
 
             //todo: error, log this
             return $synchronization;

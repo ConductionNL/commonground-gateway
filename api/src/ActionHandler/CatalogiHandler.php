@@ -4,7 +4,7 @@ namespace App\ActionHandler;
 
 use App\Service\CatalogiService;
 
-class CatalogiHandler
+class CatalogiHandler implements ActionHandlerInterface
 {
     private CatalogiService $catalogiService;
 

@@ -6,7 +6,7 @@ use App\Exception\GatewayException;
 use App\Service\ZdsZaakService;
 use Exception;
 
-class ZaakInformatieObjectHandler
+class ZaakInformatieObjectHandler implements ActionHandlerInterface
 {
     private ZdsZaakService $zdsZaakService;
 

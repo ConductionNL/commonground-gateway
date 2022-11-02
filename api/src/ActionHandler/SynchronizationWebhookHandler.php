@@ -8,7 +8,7 @@ use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 
-class SynchronizationWebhookHandler
+class SynchronizationWebhookHandler implements ActionHandlerInterface
 {
     private SynchronizationService $synchronizationService;
 
