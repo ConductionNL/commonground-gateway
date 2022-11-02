@@ -57,11 +57,11 @@ class ActionSubscriber implements EventSubscriberInterface
         $this->container = $container;
         $this->objectEntityService = $objectEntityService;
         $this->session = $session;
+        $this->messageBus = $messageBus;
     }
 
     public function runFunction(Action $action, array $data, string $currentThrow): array
     {
-        $originalData = $data;
         // Is the action is lockable we need to lock it
         if ($action->getIsLockable()) {
             $action->setLocked(new DateTime());
@@ -130,7 +130,7 @@ class ActionSubscriber implements EventSubscriberInterface
             if(!$action->getAsync()) {
                 $event->setData($this->runFunction($action, $event->getData(), $currentCronJobThrow));
             } else {
-                $this->messageBus->dispatch(new ActionMessage($action->getId(), $event->getData(), $currentThrow));
+                $this->messageBus->dispatch(new ActionMessage($action->getId(), $event->getData(), $currentCronJobThrow));
             }
 
             $this->handleActionIoFinish($action, $currentCronJobThrow);
