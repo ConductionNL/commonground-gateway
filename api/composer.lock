@@ -596,12 +596,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/WaardepapierenBundle.git",
-                "reference": "05438e5c72cf35709d01981043e325b1973b9f51"
+                "reference": "189702ed9954d7d96083697295e8c8f201bf6d44"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/WaardepapierenBundle/zipball/05438e5c72cf35709d01981043e325b1973b9f51",
-                "reference": "05438e5c72cf35709d01981043e325b1973b9f51",
+                "url": "https://api.github.com/repos/CommonGateway/WaardepapierenBundle/zipball/189702ed9954d7d96083697295e8c8f201bf6d44",
+                "reference": "189702ed9954d7d96083697295e8c8f201bf6d44",
                 "shasum": ""
             },
             "require": {
@@ -627,7 +627,7 @@
                 "issues": "https://github.com/CommonGateway/WaardepapierenBundle/issues",
                 "source": "https://github.com/CommonGateway/WaardepapierenBundle/tree/main"
             },
-            "time": "2022-10-26T18:09:10+00:00"
+            "time": "2022-11-02T13:47:27+00:00"
         },
         {
             "name": "commongateway/corebundle",
