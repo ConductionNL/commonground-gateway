@@ -452,16 +452,13 @@ class ZgwToVrijbrpService
                 case 'lnd.landcode':
                     !empty($eigenschap['waarde']) && $event = 'commongateway.vrijbrp.foundbody.created';
                     continue 2;
+                case 'contact.inp.bsn':
+                    $deathArrayObject['declarant']['bsn'] = $eigenschap['waarde'];
+                    continue 2;
             }
         }
 
         isset($deathArrayObject['extracts']) && $deathArrayObject['extracts'] = array_values($deathArrayObject['extracts']);
-
-        if ((isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'])
-            || (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['vestigingsNummer']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['vestigingsNummer'])
-        ) {
-            $deathArrayObject['declarant']['bsn'] = $bsn;
-        }
 
         $deathArrayObject['funeralServices']['causeOfDeathType'] = $deathArrayObject['deathByNaturalCauses'] == true ? 'NATURAL_CAUSES' : 'NON_CONTAGIOUS_DISEASE';
 
