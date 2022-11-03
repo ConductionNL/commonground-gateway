@@ -690,7 +690,7 @@ class EavService
      */
     public function getRequestFields(Request $request): ?array
     {
-        $fields = $request->query->get('fields');
+        $fields = $request->query->has('fields') ? $request->query->get('fields') : $request->query->get('_fields');
 
         if ($fields) {
             // Lets deal with a comma seperated list
@@ -719,7 +719,7 @@ class EavService
      */
     public function getRequestExtend(Request $request): ?array
     {
-        $extend = $request->query->get('extend');
+        $extend = $request->query->has('extend') ? $request->query->get('extend') : $request->query->get('_extend');
 
         if ($extend) {
             // Lets deal with a comma seperated list
@@ -1073,12 +1073,10 @@ class EavService
         $filterCheck = $this->em->getRepository('App:ObjectEntity')->getFilterParameters($entity);
 
         // Lets add generic filters
-        $filterCheck[] = 'fields';
-        $filterCheck[] = 'extend';
+        $filterCheck = array_merge($filterCheck, ['fields', '_fields', 'extend', '_extend']);
         if (!empty($entity->getSearchPartial())) {
-            $filterCheck[] = 'search';
+            $filterCheck = array_merge($filterCheck, ['search', '_search']);
         }
-        $filterCheck[] = '_dateRead';
 
         foreach ($query as $param => $value) {
             if (!in_array($param, $filterCheck)) {

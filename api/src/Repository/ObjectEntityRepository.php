@@ -129,9 +129,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
             ->andWhere('o.entity = :entity')
             ->setParameters(['entity' => $entity]);
 
-        if (array_key_exists('search', $filters)) {
-            $search = $filters['search'];
+        if (array_key_exists('search', $filters) || array_key_exists('_search', $filters)) {
+            $search = array_key_exists('search', $filters) ? $filters['search'] : $filters['_search'];
             unset($filters['search']);
+            unset($filters['_search']);
             $this->addSearchQuery($query, $entity, $search)->distinct();
         }
 

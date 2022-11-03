@@ -15,9 +15,11 @@ use App\Exception\GatewayException;
 use App\Message\PromiseMessage;
 use App\Security\User\AuthenticationUser;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
+use EasyRdf\Literal\Date;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\Utils;
@@ -27,6 +29,7 @@ use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
@@ -59,8 +62,7 @@ class ObjectEntityService
     private EventDispatcherInterface $eventDispatcher;
     public array $notifications;
     private Environment $twig;
-
-    // todo: we need convertToGatewayService in this service for the saveObject function, add them somehow, see FunctionService...
+    private SymfonyStyle $io;
     private TranslationService $translationService;
 
     public function __construct(
@@ -107,18 +109,106 @@ class ObjectEntityService
      * @param string $type The type of event to dispatch
      * @param array  $data The data that should in the event
      */
-    public function dispatchEvent(string $type, array $data, $subType = null): void
+    public function dispatchEvent(string $type, array $data, $subType = null, array $triggeredParentEvents = []): void
     {
         if ($this->session->get('io')) {
-            $io = $this->session->get('io');
-            $io->text("Dispatch ActionEvent for Throw: \"$type\"".($subType ? " and SubType: \"$subType\"" : ''));
-            $io->newLine();
+            $this->io = $this->session->get('io');
+            $this->io->text("Dispatch ActionEvent for Throw: \"$type\"".($subType ? " and SubType: \"$subType\"" : ''));
+            $this->io->newLine();
         }
         $event = new ActionEvent($type, $data, null);
         if ($subType) {
             $event->setSubType($subType);
         }
         $this->eventDispatcher->dispatch($event, $type);
+
+        if (array_key_exists('entity', $data) &&
+            ($type === 'commongateway.object.update' || $subType === 'commongateway.object.update')
+        ) {
+            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $data['entity']]);
+            if ($entity instanceof Entity) {
+                $this->checkTriggerParentEvents($entity, $data, $triggeredParentEvents);
+
+                return;
+            }
+            if (isset($this->io)) {
+                $this->io->warning("Trying to look if we need to trigger parent events for Throw: \"$type\""
+                    .($subType ? " and SubType: \"$subType\"" : '')
+                    ." But couldn't find an Entity with id: \"{$data['entity']}\"");
+            }
+        }
+    }
+
+    /**
+     * Checks if the given Entity has parent attributes with TriggerParentEvents = true.
+     * And will dispatch put events for each parent object found for these parent attributes.
+     *
+     * @param Entity $entity
+     * @param array  $data
+     * @param array  $triggeredParentEvents An array used to keep track of objects we already triggered parent events for. To prevent endless loops.
+     *
+     * @return void
+     */
+    private function checkTriggerParentEvents(Entity $entity, array $data, array $triggeredParentEvents): void
+    {
+        $parentAttributes = $entity->getUsedIn();
+        $triggerParentAttributes = $parentAttributes->filter(function ($parentAttribute) {
+            return $parentAttribute->getTriggerParentEvents();
+        });
+        if (isset($this->io) && count($triggerParentAttributes) > 0) {
+            $count = count($triggerParentAttributes);
+            $this->io->text("Found $count attributes with triggerParentEvents = true for this entity: {$entity->getName()} ({$entity->getId()->toString()})");
+            $this->io->newLine();
+        }
+
+        if (isset($data['response']['id'])) {
+            // Get the object that triggered the initial PUT dispatchEvent.
+            $object = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
+            if ($object instanceof ObjectEntity and !in_array($data['response']['id'], $triggeredParentEvents)) {
+                // Prevent endless loop of dispatching events.
+                $triggeredParentEvents[] = $data['response']['id'];
+                $this->dispatchTriggerParentEvents($object, $triggerParentAttributes, $data, $triggeredParentEvents);
+            }
+        }
+    }
+
+    /**
+     * Follow-up function of checkTriggerParentEvents() function, that actually dispatches the put events for parent objects.
+     *
+     * @param ObjectEntity    $object
+     * @param ArrayCollection $triggerParentAttributes
+     * @param array           $data
+     * @param array           $triggeredParentEvents   An array used to keep track of objects we already triggered parent events for. To prevent endless loops.
+     *
+     * @return void
+     */
+    private function dispatchTriggerParentEvents(ObjectEntity $object, ArrayCollection $triggerParentAttributes, array $data, array $triggeredParentEvents): void
+    {
+        foreach ($triggerParentAttributes as $triggerParentAttribute) {
+            // Get the parent value & parent object using the attribute with triggerParentEvents = true.
+            $parentValues = $object->findSubresourceOf($triggerParentAttribute);
+            foreach ($parentValues as $parentValue) {
+                $parentObject = $parentValue->getObjectEntity();
+                // Create a data array for the parent Object data. (Also add entity) & dispatch event.
+                if (isset($this->io)) {
+                    $this->io->text("Trigger event for parent object ({$parentObject->getId()->toString()}) of object with id = {$data['response']['id']}");
+                    $this->io->text('Dispatch ActionEvent for Throw: commongateway.object.update');
+                    $this->io->newLine();
+                }
+                // Make sure we set dateModified of the parent object before dispatching an event so the synchronization actually happens.
+                $now = new DateTime();
+                $parentObject->setDateModified($now);
+                $this->dispatchEvent(
+                    'commongateway.object.update',
+                    [
+                        'response' => $parentObject->toArray(),
+                        'entity'   => $parentObject->getEntity()->getId()->toString(),
+                    ],
+                    null,
+                    $triggeredParentEvents
+                );
+            }
+        }
     }
 
     /**
@@ -555,7 +645,7 @@ class ObjectEntityService
         ]);
 
         $this->handleOwner($object, $owner); // note: $owner is allowed to be null!
-        $object->setDateModified(new \DateTime());
+        $object->setDateModified(new DateTime());
 
         $this->entityManager->persist($object);
         $this->entityManager->flush();

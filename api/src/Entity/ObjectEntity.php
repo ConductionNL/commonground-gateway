@@ -223,6 +223,7 @@ class ObjectEntity
         $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
+        $this->synchronizations = new ArrayCollection();
 
         if ($entity) {
             $this->setEntity($entity);
@@ -855,6 +856,25 @@ class ObjectEntity
         return $this->subresourceOf;
     }
 
+    /**
+     * Try to find a Value this ObjectEntity is a child of. Searching/filtering these values by a specific Attribute.
+     *
+     * @param Attribute $attribute
+     *
+     * @return ArrayCollection
+     */
+    public function findSubresourceOf(Attribute $attribute): ArrayCollection
+    {
+        $subresourceOfFound = $this->subresourceOf->filter(function ($subresourceOf) use ($attribute) {
+            return $subresourceOf->getAttribute() === $attribute;
+        });
+        if (count($subresourceOfFound) > 0) {
+            return $subresourceOfFound;
+        }
+
+        return new ArrayCollection();
+    }
+
     public function addSubresourceOf(Value $subresourceOf): self
     {
         // let add this
@@ -915,6 +935,36 @@ class ObjectEntity
             // set the owning side to null (unless already changed)
             if ($requestLog->getObjectEntity() === $this) {
                 $requestLog->setObjectEntity(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Synchronization[]
+     */
+    public function getSynchronizations(): Collection
+    {
+        return $this->synchronizations;
+    }
+
+    public function addSynchronization(Synchronization $synchronization): self
+    {
+        if (!$this->synchronizations->contains($synchronization)) {
+            $this->synchronizations[] = $synchronization;
+            $synchronization->setObject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSynchronization(Synchronization $synchronization): self
+    {
+        if ($this->synchronizations->removeElement($synchronization)) {
+            // set the owning side to null (unless already changed)
+            if ($synchronization->getObject() === $this) {
+                $synchronization->setObject(null);
             }
         }
 

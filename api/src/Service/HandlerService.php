@@ -184,7 +184,7 @@ class HandlerService
                 }
                 if (isset($override['queryParameters'])) {
                     foreach ($override['queryParameters'] as $key => $value) {
-                        if ($key == 'fields') {
+                        if ($key == 'fields' || $key == '_fields') {
                             $this->request->query->set('fields', $value);
                         } else {
                             $this->request->query->set($key, $content->get($value));
