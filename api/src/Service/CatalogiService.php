@@ -614,6 +614,7 @@ class CatalogiService
             )
         );
         unset($addComponent['x-commongateway-metadata']); // todo: not sure if this is needed before we hash?
+        // todo: make a choice how we hash this, it has to always be the same type of data in the hash so we can correctly compare it later
         $synchronization->setHash(hash('sha384', serialize($addComponent)));
         $this->entityManager->persist($synchronization);
         $this->entityManager->flush();
