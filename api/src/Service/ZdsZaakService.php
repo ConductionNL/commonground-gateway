@@ -234,11 +234,11 @@ class ZdsZaakService
 
     public function vestigingToOrganisatorischeEenheid(ObjectEntity $vestiging): array
     {
-      return [
-      	'identificatie' => $vestiging->getValue('vestigingsNummer'),
-      	'naam'		=> $vestiging->getValue('handelsnaam'),
-      	'isGehuisvestIn' => $vestiging->getValue('verblijfsadres')->getValue('wplWoonplaatsNaam'),
-      	];
+        return [
+            'identificatie'  => $vestiging->getValue('vestigingsNummer'),
+            'naam'		         => $vestiging->getValue('handelsnaam'),
+            'isGehuisvestIn' => $vestiging->getValue('verblijfsadres')->getValue('wplWoonplaatsNaam'),
+        ];
     }
 
     /**
