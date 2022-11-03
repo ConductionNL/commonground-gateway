@@ -14,10 +14,9 @@ class ActionService
     private iterable $actionHandlers;
 
     public function __construct(
-        iterable           $actionHandlers,
+        iterable $actionHandlers,
         ContainerInterface $container
-    )
-    {
+    ) {
         $this->actionHandlers = $actionHandlers;
         $this->container = $container;
     }
@@ -43,8 +42,9 @@ class ActionService
     /**
      * Generates a list of all action handlers.
      *
-     * @return array
      * @throws Exception
+     *
+     * @return array
      */
     public function getAllActionHandlers(): array
     {
