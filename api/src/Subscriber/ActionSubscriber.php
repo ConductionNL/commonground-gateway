@@ -51,8 +51,7 @@ class ActionSubscriber implements EventSubscriberInterface
         ObjectEntityService $objectEntityService,
         SessionInterface $session,
         MessageBusInterface $messageBus
-    )
-    {
+    ) {
         $this->entityManager = $entityManager;
         $this->container = $container;
         $this->objectEntityService = $objectEntityService;
@@ -127,7 +126,7 @@ class ActionSubscriber implements EventSubscriberInterface
         if (JsonLogic::apply($action->getConditions(), $event->getData())) {
             $currentCronJobThrow = $this->handleActionIoStart($action, $event);
 
-            if(!$action->getAsync()) {
+            if (!$action->getAsync()) {
                 $event->setData($this->runFunction($action, $event->getData(), $currentCronJobThrow));
             } else {
                 $data = $event->getData();
