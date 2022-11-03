@@ -38,24 +38,24 @@ class SynchronizationWebhookHandler implements ActionHandlerInterface
                     'type'        => 'string',
                     'description' => 'The source where to sink from',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'entity' => [
                     'type'        => 'string',
                     'description' => 'The enitity to sink',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
 
                 ],
                 'apiSource' => [
                     'type'        => 'object',
                     'description' => 'The location of the id field in the external object',
-                    'properties' => [
+                    'properties'  => [
                         'locationIdField' => [
                             'type'        => 'string',
                             'description' => 'The location of the id field in the external object',
                             'example'     => 'id',
-                            'required'    => true
+                            'required'    => true,
                         ],
                         'object' => [
                             'type'        => 'string',

@@ -35,55 +35,55 @@ class SynchronizationPushHandler implements ActionHandlerInterface
                     'type'        => 'uuid',
                     'description' => 'The source to sync from',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'entity' => [
                     'type'        => 'uuid',
                     'description' => 'The entity to sync to',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'apiSource' => [
                     'type'        => 'object',
                     'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
-                    'properties' => [
+                    'properties'  => [
                         'location' => [
                             'type'        => 'object',
                             'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
-                            'properties' => [
+                            'properties'  => [
                                 'idField' => [
                                     'type'        => 'uuid',
                                     'description' => 'The place where we can find the id field',
                                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                                    'required'    => true
+                                    'required'    => true,
                                 ],
                                 'object' => [
                                     'type'        => 'object',
                                     'description' => 'The place where we can find an object',
                                     'example'     => 'native://default',
-                                    'nullable'    => true
+                                    'nullable'    => true,
                                 ],
                                 'contentType' => [
                                     'type'        => 'string',
                                     'description' => 'The content type',
                                     'example'     => 'application/json',
-                                    'nullable'    => true
+                                    'nullable'    => true,
                                 ],
                                 'xmlRootNodeName' => [
                                     'type'        => 'string',
                                     'description' => 'The XML root name',
                                     'example'     => 'SOAP:env',
-                                    'nullable'    => true
+                                    'nullable'    => true,
                                 ],
                                 'dateCreatedField' => [
                                     'type'        => 'string',
                                     'description' => 'The date created field',
-                                    'nullable'    => true
+                                    'nullable'    => true,
                                 ],
                                 'dateChangedField' => [
                                     'type'        => 'string',
                                     'description' => 'The date changed field',
-                                    'nullable'    => true
+                                    'nullable'    => true,
                                 ],
                             ],
                         ],
@@ -91,120 +91,120 @@ class SynchronizationPushHandler implements ActionHandlerInterface
                             'type'        => 'string',
                             'description' => '',
                             'example'     => '',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'sourceLimitKey' => [
                             'type'        => 'string',
                             'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
                             'example'     => 'native://default',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'limit' => [
                             'type'        => 'string',
                             'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
                             'example'     => 'native://default',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'sourcePaginated' => [
                             'type'        => 'boolean',
                             'description' => 'If the source is paginated',
                             'example'     => true,
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'skeletonIn' => [
                             'type'        => 'object',
                             'description' => 'Skeleton in',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'skeletonOut' => [
                             'type'        => 'object',
                             'description' => 'Skeleton out',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'mappingIn' => [
                             'type'        => 'object',
                             'description' => 'Mapping in',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'mappingOut' => [
                             'type'        => 'object',
                             'description' => 'Mapping out',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'translationsIn' => [
                             'type'        => 'object',
                             'description' => 'Translation in',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'translationsOut' => [
                             'type'        => 'object',
                             'description' => 'Translation out',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'allowedPropertiesIn' => [
                             'type'        => 'array',
                             'description' => 'The allowed propertied in',
                             'example'     => ['name'],
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'allowedPropertiesOut' => [
                             'type'        => 'array',
                             'description' => 'The allowed propertied out',
                             'example'     => ['name'],
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'notAllowedPropertiesIn' => [
                             'type'        => 'array',
                             'description' => 'The not allowed propertied in',
                             'example'     => ['name'],
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'notAllowedPropertiesOut' => [
                             'type'        => 'array',
                             'description' => 'The not allowed propertied out',
                             'example'     => ['name'],
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'unavailablePropertiesOut' => [
                             'type'        => 'array',
                             'description' => 'The unavailable propertied out',
                             'example'     => ['name'],
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'prefixFieldsOut' => [
                             'type'        => 'array',
                             'description' => 'The prefix fields out',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'clearNull' => [
                             'type'        => 'boolean',
                             'description' => 'Removes all null fields',
                             'example'     => true,
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                     ],
                 ],
                 'callService' => [
                     'type'        => 'array',
                     'description' => 'If we want to overwrite how we do a callService call to a source',
-                    'nullable'    => true
+                    'nullable'    => true,
                 ],
                 'replaceTwigLocation' => [
                     'type'        => 'string',
                     'description' => 'Replace the location with twig',
                     'example'     => 'objectEntityData',
-                    'nullable'    => true
+                    'nullable'    => true,
                 ],
                 'useDataFromCollection' => [
                     'type'        => 'boolean',
                     'description' => 'If to use date from collection',
                     'example'     => false,
-                    'nullable'    => true
+                    'nullable'    => true,
                 ],
                 'queryParams' => [
                     'type'        => 'object',
                     'description' => 'queryParams',
-                    'properties' => [
+                    'properties'  => [
                         'syncSourceId' => [
                             'type'        => 'uuid',
                             'description' => 'syncSourceId',
@@ -214,12 +214,12 @@ class SynchronizationPushHandler implements ActionHandlerInterface
                 'owner' => [
                     'type'        => 'string',
                     'description' => 'The owner',
-                    'nullable'    => true
+                    'nullable'    => true,
                 ],
                 'actionConditions' => [
                     'type'        => 'array',
                     'description' => 'The conditions of the action',
-                    'nullable'    => true
+                    'nullable'    => true,
                 ],
             ],
         ];

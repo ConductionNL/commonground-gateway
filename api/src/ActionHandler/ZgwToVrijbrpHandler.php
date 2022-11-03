@@ -39,25 +39,25 @@ class ZgwToVrijbrpHandler implements ActionHandlerInterface
                             'type'        => 'uuid',
                             'description' => 'The uuid of the Birth entity',
                             'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'InterRelocation' => [
                             'type'        => 'uuid',
                             'description' => 'The uuid of the InterRelocation entity',
                             'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'Commitment' => [
                             'type'        => 'uuid',
                             'description' => 'The uuid of the Commitment entity',
                             'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                         'Death' => [
                             'type'        => 'uuid',
                             'description' => 'The uuid of the Death entity',
                             'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                     ],
                 ],

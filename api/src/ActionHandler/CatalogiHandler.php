@@ -30,12 +30,12 @@ class CatalogiHandler implements ActionHandlerInterface
                     'type'        => 'uuid',
                     'description' => 'The uuid of the entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'location' => [
                     'type'        => 'string',
                     'description' => 'The location',
-                    'required'    => true
+                    'required'    => true,
                 ],
             ],
         ];

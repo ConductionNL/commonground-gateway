@@ -35,13 +35,13 @@ class ZgwObjectInformatieObjectToZdsDocumentHandler implements ActionHandlerInte
                     'type'        => 'uuid',
                     'description' => 'The uuid of the document entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'zdsEntityId' => [
                     'type'        => 'uuid',
                     'description' => 'The uuid of the zds entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
             ],
         ];
