@@ -232,18 +232,13 @@ class ZdsZaakService
         $zaak->setValue('rollen', $rol);
     }
 
-    public function vestigingToOrganisatorischeEenheid(ObjectEntity $vestiging, ObjectEntity $natuurlijkPersoon): ObjectEntity
+    public function vestigingToOrganisatorischeEenheid(ObjectEntity $vestiging): array
     {
-        $betrokkeneIdentificatie = new ObjectEntity($natuurlijkPersoon->getEntity());
-
-        $betrokkeneIdentificatie->setValue('identificatie', $vestiging->getValue('vestigingsNummer'));
-        $betrokkeneIdentificatie->setValue('naam', $vestiging->getValue('handelsnaam'));
-        $betrokkeneIdentificatie->setValue('isGehuisvestIn', $vestiging->getValue('verblijfsadres')->getValue('wplWoonplaatsNaam'));
-        $this->entityManager->persist($betrokkeneIdentificatie);
-
-        $this->synchronizationService->setApplicationAndOrganization($betrokkeneIdentificatie);
-
-        return $betrokkeneIdentificatie;
+      return [
+      	'identificatie' => $vestiging->getValue('vestigingsNummer'),
+      	'naam'		=> $vestiging->getValue('handelsnaam'),
+      	'isGehuisvestIn' => $vestiging->getValue('verblijfsadres')->getValue('wplWoonplaatsNaam'),
+      	];
     }
 
     /**
@@ -269,12 +264,13 @@ class ZdsZaakService
             $rol->setValue('roltoelichting', $zaak->getValue('toelichting'));
 
             if ($natuurlijkPersoonObject = $heeftAlsInitiatorObject->getValue('natuurlijkPersoon')) {
-                $rol->setValue('betrokkeneIdentificatie', $natuurlijkPersoonObject);
+                $rol->setValue('betrokkeneIdentificatie', $natuurlijkPersoonObject->toArray());
                 $rol->setValue('betrokkeneType', 'natuurlijk_persoon');
+                $rol->getValue('betrokkeneIdentificatie')->setValue('verblijfsadres', $natuurlijkPersoonObject->getValue('verblijfadres')->toArray());
             }
 
             if ($heeftAlsInitiatorObject->getValue('vestiging')->getValue('vestigingsNummer') || $heeftAlsInitiatorObject->getValue('vestiging')->getValue('handelsnaam')) {
-                $rol->setValue('betrokkeneIdentificatie', $this->vestigingToOrganisatorischeEenheid($heeftAlsInitiatorObject->getValue('vestiging'), $heeftAlsInitiatorObject->getValue('natuurlijkPersoon')));
+                $rol->setValue('betrokkeneIdentificatie', $this->vestigingToOrganisatorischeEenheid($heeftAlsInitiatorObject->getValue('vestiging')));
                 $rol->setValue('betrokkeneType', 'organisatorische_eenheid');
             }
 
@@ -394,7 +390,6 @@ class ZdsZaakService
         } else {
             throw new ErrorException('Cannot create rollen');
         }
-
         $this->entityManager->persist($zaak);
         $this->synchronizationService->setApplicationAndOrganization($zaak);
 
