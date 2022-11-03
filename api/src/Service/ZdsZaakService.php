@@ -232,14 +232,16 @@ class ZdsZaakService
         $zaak->setValue('rollen', $rol);
     }
 
-    public function vestigingToOrganisatorischeEenheid(ObjectEntity $vestiging, ObjectEntity $rol): ObjectEntity
+    public function vestigingToOrganisatorischeEenheid(ObjectEntity $vestiging, ObjectEntity $natuurlijkPersoon): ObjectEntity
     {
-        $betrokkeneIdentificatie = new ObjectEntity($rol->getEntity()->getAttributeByName('betrokkeneIdentificatie')->getObject());
+        $betrokkeneIdentificatie = new ObjectEntity($natuurlijkPersoon->getEntity());
 
         $betrokkeneIdentificatie->setValue('identificatie', $vestiging->getValue('vestigingsNummer'));
         $betrokkeneIdentificatie->setValue('naam', $vestiging->getValue('handelsnaam'));
         $betrokkeneIdentificatie->setValue('isGehuisvestIn', $vestiging->getValue('verblijfsadres')->getValue('wplWoonplaatsNaam'));
         $this->entityManager->persist($betrokkeneIdentificatie);
+
+        $this->synchronizationService->setApplicationAndOrganization($betrokkeneIdentificatie);
 
         return $betrokkeneIdentificatie;
     }
@@ -272,7 +274,7 @@ class ZdsZaakService
             }
 
             if ($heeftAlsInitiatorObject->getValue('vestiging')->getValue('vestigingsNummer') || $heeftAlsInitiatorObject->getValue('vestiging')->getValue('handelsnaam')) {
-                $rol->setValue('betrokkeneIdentificatie', $this->vestigingToOrganisatorischeEenheid($heeftAlsInitiatorObject->getValue('vestiging'), $rol));
+                $rol->setValue('betrokkeneIdentificatie', $this->vestigingToOrganisatorischeEenheid($heeftAlsInitiatorObject->getValue('vestiging'), $heeftAlsInitiatorObject->getValue('natuurlijkPersoon')));
                 $rol->setValue('betrokkeneType', 'organisatorische_eenheid');
             }
 
@@ -516,6 +518,7 @@ class ZdsZaakService
         //        $document->setValue('ontvangstdatum', $zdsObject->getValue(''));
         //        $document->setValue('verzenddatum', $zdsObject->getValue('')); // stuurgegevens.tijdstipBericht
         $this->entityManager->persist($document);
+        $this->synchronizationService->setApplicationAndOrganization($document);
 
         $this->createZgwZaakInformatieObject($zdsObject, $zdsZaakObjectEntity, $document);
 
