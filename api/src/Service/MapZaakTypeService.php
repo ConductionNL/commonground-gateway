@@ -124,7 +124,7 @@ class MapZaakTypeService
                 $result['label'] && $resultaatTypeArray['toelichting'] = $result['label'];
                 $resultaatTypeArray['selectielijstklasse'] = $result['selection_list'] ?? 'http://localhost';
                 $result['type_of_archiving'] && $resultaatTypeArray['archiefnominatie'] = $result['type_of_archiving'];
-                $result['period_of_preservation'] && $resultaatTypeArray['archiefactietermijn'] = strval($result['period_of_preservation']);
+                $result['period_of_preservation'] && $resultaatTypeArray['archiefactietermijn'] = $result['period_of_preservation'];
 
                 $zaakTypeArray['resultaattypen'][] = $resultaatTypeArray;
             }
@@ -186,42 +186,31 @@ class MapZaakTypeService
         $this->data = $data['response'];
         $this->configuration = $configuration;
 
-        var_dump('MapZaakType triggered');
-
         // Find ZGW Type entities by id from config
         $zaakTypeEntity = $this->entityRepo->find($configuration['entities']['ZaakType']);
 
         if (!isset($zaakTypeEntity)) {
-            var_dump('error zaakTypeEntity could not be found');
             throw new \Exception('ZaakType entity could not be found');
         }
 
-        // Get XxllncZaakTypeObjectEntity from this->data['id']
-        $xxllncZaakTypeObjectEntity = $this->entityManager->getRepository(ObjectEntity::class)->find($this->data['id']);
-
         $zaakTypeObjectEntity = $this->getZaakTypeObjectEntity($zaakTypeEntity);
 
-        // set organization, application and owner on zaakTypeObjectEntity from this->data
-        $zaakTypeObjectEntity->setOrganization($xxllncZaakTypeObjectEntity->getOrganization());
-        $zaakTypeObjectEntity->setOwner($xxllncZaakTypeObjectEntity->getOwner());
-        $zaakTypeObjectEntity->setApplication($xxllncZaakTypeObjectEntity->getApplication());
-
         // Map and set default values from xxllnc casetype to zgw zaaktype
-        $zgwZaakTypeArray = $this->translationService->dotHydrator(isset($this->skeletonIn) ? array_merge($this->data, $this->skeletonIn) : $this->data, $this->data, $this->mappingIn);
+        $zgwZaakTypeArray = $this->translationService->dotHydrator(isset($skeletonIn) ? array_merge($this->data, $this->skeletonIn) : $this->data, $this->data, $this->mappingIn);
         $zgwZaakTypeArray['instance'] = null;
         $zgwZaakTypeArray['embedded'] = null;
 
         $zgwZaakTypeArray = $this->mapStatusTypen($zgwZaakTypeArray);
         $zgwZaakTypeArray = $this->mapResultaatTypen($zgwZaakTypeArray);
-        // $zgwZaakTypeArray = $this->mapEigenschappen($zgwZaakTypeArray);
+        $zgwZaakTypeArray = $this->mapEigenschappen($zgwZaakTypeArray);
 
         $zaakTypeObjectEntity->hydrate($zgwZaakTypeArray);
 
         $zaakTypeObjectEntity->setExternalId($this->data['reference']);
+        $zaakTypeObjectEntity = $this->synchronizationService->setApplicationAndOrganization($zaakTypeObjectEntity);
 
         $this->entityManager->persist($zaakTypeObjectEntity);
         $this->entityManager->flush();
-        var_dump('ZGW ZaakType created');
 
         return $this->data;
     }

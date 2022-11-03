@@ -8,7 +8,7 @@ use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
-class HandelsRegisterSearchHandler
+class HandelsRegisterSearchHandler implements ActionHandlerInterface
 {
     private HandelsRegisterSearchService $handelsRegisterSearchService;
 

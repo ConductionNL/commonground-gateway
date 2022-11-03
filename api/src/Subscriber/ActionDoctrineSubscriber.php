@@ -38,8 +38,26 @@ class ActionDoctrineSubscriber implements EventSubscriberInterface
     {
         $route = $event->getRequest()->attributes->get('_route');
 
+        if ($route == 'api_action_handlers_get_collection' && $class = $event->getRequest()->get('class')) {
+            // get the actionHandler with the same class from the request
+            $actionHandlers = $this->actionService->getAllActionHandlers();
+            foreach ($actionHandlers as $actionHandler) {
+                if ($class == $actionHandler->getClass()) {
+                    $event->setControllerResult($actionHandler);
+                }
+            }
+        } elseif ($route == 'api_action_handlers_get_collection') {
+            // get all actionHandlers with a commongateway.action_handlers tag
+            $actionHandlers = $this->actionService->getAllActionHandlers();
+            $event->setControllerResult($actionHandlers);
+        }
+
         if ($route == 'api_actions_get_collection') {
-            $actions = $this->entityManager->getRepository('App:Action')->findAll();
+            if ($event->getRequest()->query->count() > 0) {
+                $actions = $this->entityManager->getRepository('App:Action')->findBy($event->getRequest()->query->all());
+            } else {
+                $actions = $this->entityManager->getRepository('App:Action')->findAll();
+            }
 
             $response = [];
             foreach ($actions as $action) {

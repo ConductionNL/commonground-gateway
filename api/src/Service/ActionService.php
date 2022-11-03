@@ -3,15 +3,21 @@
 namespace App\Service;
 
 use App\Entity\Action;
+use App\Entity\ActionHandler;
+use Exception;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ActionService
 {
     private ContainerInterface $container;
+    private iterable $actionHandlers;
 
     public function __construct(
+        iterable $actionHandlers,
         ContainerInterface $container
     ) {
+        $this->actionHandlers = $actionHandlers;
         $this->container = $container;
     }
 
@@ -36,12 +42,21 @@ class ActionService
     /**
      * Generates a list of all action handlers.
      *
+     * @throws Exception
+     *
      * @return array
      */
-    public function getAllHandler(): array
+    public function getAllActionHandlers(): array
     {
-        $handlers = $this->container->findTaggedServiceIds('commongateway.action_handlers');
+        $result = [];
+        foreach ($this->actionHandlers as $actionHandler) {
+            $newActionHandler = new ActionHandler();
+            $newActionHandler->setId(Uuid::uuid4());
+            $newActionHandler->setClass(get_class($actionHandler));
+            $newActionHandler->setConfiguration($actionHandler->getConfiguration());
+            $result[] = $newActionHandler;
+        }
 
-        return $handlers;
+        return $result;
     }
 }

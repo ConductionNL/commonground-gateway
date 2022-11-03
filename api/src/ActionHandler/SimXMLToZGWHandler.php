@@ -5,7 +5,7 @@ namespace App\ActionHandler;
 use App\Service\SimXMLZaakService;
 use ErrorException;
 
-class SimXMLToZGWHandler
+class SimXMLToZGWHandler implements ActionHandlerInterface
 {
     private SimXMLZaakService $simXMLZaakService;
 

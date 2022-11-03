@@ -8,7 +8,7 @@ use Cassandra\Exception\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Cache\Exception\CacheException;
 
-class SynchronizationCollectionHandler
+class SynchronizationCollectionHandler implements ActionHandlerInterface
 {
     private SynchronizationService $synchronizationService;
 
@@ -54,7 +54,6 @@ class SynchronizationCollectionHandler
      */
     public function run(array $data, array $configuration): array
     {
-        var_dump('Sync triggered: ' . $configuration['location']);
         $this->synchronizationService->SynchronizationCollectionHandler($data, $configuration);
 
         return $data;

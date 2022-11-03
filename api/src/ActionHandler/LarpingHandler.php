@@ -2,15 +2,15 @@
 
 namespace App\ActionHandler;
 
-use App\Service\HuwelijksplannerService;
+use App\Service\LarpingService;
 
-class HuwelijksplannerHandler implements ActionHandlerInterface
+class LarpingHandler implements ActionHandlerInterface
 {
-    private huwelijksplannerService $huwelijksplannerService;
+    private LarpingService $larpingService;
 
-    public function __construct(HuwelijksplannerService $huwelijksplannerService)
+    public function __construct(LarpingService $larpingService)
     {
-        $this->huwelijksplannerService = $huwelijksplannerService;
+        $this->larpingService = $larpingService;
     }
 
     /**
@@ -24,11 +24,15 @@ class HuwelijksplannerHandler implements ActionHandlerInterface
             '$id'        => 'https://example.com/person.schema.json',
             '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
             'title'      => 'Notification Action',
-            'required'   => ['huwelijksEntityId'],
+            'required'   => ['characterEntityId', 'effectEntityId'],
             'properties' => [
-                'huwelijksEntityId' => [
+                'characterEntityId' => [
                     'type'        => 'string',
-                    'description' => 'The id of the huwelijks entity',
+                    'description' => 'The id of the character entity',
+                ],
+                'effectEntityId' => [
+                    'type'        => 'string',
+                    'description' => 'The id of the effect entity',
                 ],
             ],
         ];
@@ -40,15 +44,15 @@ class HuwelijksplannerHandler implements ActionHandlerInterface
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
-     * @throws \App\Exception\GatewayException
      * @throws \Psr\Cache\CacheException
      * @throws \Psr\Cache\InvalidArgumentException
      * @throws \Respect\Validation\Exceptions\ComponentException
+     * @throws \App\Exception\GatewayException
      *
      * @return array
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->huwelijksplannerService->HuwelijksplannerHandler($data, $configuration);
+        return $this->larpingService->LarpingHandler($data, $configuration);
     }
 }

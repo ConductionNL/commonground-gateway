@@ -232,6 +232,18 @@ class ZdsZaakService
         $zaak->setValue('rollen', $rol);
     }
 
+    public function vestigingToOrganisatorischeEenheid(ObjectEntity $vestiging, ObjectEntity $rol): ObjectEntity
+    {
+        $betrokkeneIdentificatie = new ObjectEntity($rol->getEntity()->getAttributeByName('betrokkeneIdentificatie')->getObject());
+
+        $betrokkeneIdentificatie->setValue('identificatie', $vestiging->getValue('vestigingsNummer'));
+        $betrokkeneIdentificatie->setValue('naam', $vestiging->getValue('handelsnaam'));
+        $betrokkeneIdentificatie->setValue('isGehuisvestIn', $vestiging->getValue('verblijfsadres')->getValue('wplWoonplaatsNaam'));
+        $this->entityManager->persist($betrokkeneIdentificatie);
+
+        return $betrokkeneIdentificatie;
+    }
+
     /**
      * @param ObjectEntity $zdsObject
      * @param ObjectEntity $zaak
@@ -260,8 +272,8 @@ class ZdsZaakService
             }
 
             if ($heeftAlsInitiatorObject->getValue('vestiging')->getValue('vestigingsNummer') || $heeftAlsInitiatorObject->getValue('vestiging')->getValue('handelsnaam')) {
-                $rol->setValue('betrokkeneIdentificatie', $heeftAlsInitiatorObject->getValue('vestiging'));
-                $rol->setValue('betrokkeneType', 'vestiging');
+                $rol->setValue('betrokkeneIdentificatie', $this->vestigingToOrganisatorischeEenheid($heeftAlsInitiatorObject->getValue('vestiging'), $rol));
+                $rol->setValue('betrokkeneType', 'organisatorische_eenheid');
             }
 
             $this->entityManager->persist($rol);
