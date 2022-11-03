@@ -226,7 +226,7 @@ class SynchronizationService
             $synchronization = $this->findSyncBySource($gateway, $entity, $id);
             // todo: Another search function for sync object. If no sync object is found, look for matching properties in $result and an ObjectEntity in db. And then create sync for an ObjectEntity if we find one this way. (nice to have)
             // Other option to find a sync object, currently not used:
-//            $synchronization = $this->findSyncByObject($object, $gateway, $entity);
+            //            $synchronization = $this->findSyncByObject($object, $gateway, $entity);
 
             // Lets sync (returns the Synchronization object)
             if (array_key_exists('useDataFromCollection', $this->configuration) and !$this->configuration['useDataFromCollection']) {
@@ -437,7 +437,7 @@ class SynchronizationService
                 $this->io->warning("(This might just be the final page!) - Error while doing fetchObjectsFromSource: {$exception->getMessage()}");
                 $this->io->block("File: {$exception->getFile()}");
                 $this->io->block("Line: {$exception->getLine()}");
-//                $this->io->block("Trace: {$exception->getTraceAsString()}");
+                //                $this->io->block("Trace: {$exception->getTraceAsString()}");
             }
 
             //todo: error, log this
@@ -494,7 +494,7 @@ class SynchronizationService
                 $this->io->warning("Error while doing getSingleFromSource: {$exception->getMessage()}");
                 $this->io->block("File: {$exception->getFile()}");
                 $this->io->block("Line: {$exception->getLine()}");
-//                $this->io->block("Trace: {$exception->getTraceAsString()}");
+                //                $this->io->block("Trace: {$exception->getTraceAsString()}");
             }
 
             //todo: error, log this
@@ -503,7 +503,7 @@ class SynchronizationService
         $result = json_decode($response->getBody()->getContents(), true);
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
-//        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
+        //        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
 
         // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
         return $dot->get($this->configuration['apiSource']['location']['object'], $result);
@@ -905,11 +905,11 @@ class SynchronizationService
                 $this->io->warning("Error while doing syncToSource: {$exception->getMessage()}");
                 $this->io->block("File: {$exception->getFile()}");
                 $this->io->block("Line: {$exception->getLine()}");
-//                $this->io->block("Trace: {$exception->getTraceAsString()}");
+                //                $this->io->block("Trace: {$exception->getTraceAsString()}");
             }
 
             // todo: error, log this
-//            return $synchronization;
+            //            return $synchronization;
         }
 
         $body = new Dot($body);
@@ -935,11 +935,12 @@ class SynchronizationService
      */
     private function checkActionConditionsEntity(string $entityId): bool
     {
-        if (!isset($this->configuration['actionConditions']) ||
+        if (
+            !isset($this->configuration['actionConditions']) ||
             (isset($this->configuration['actionConditions']['=='][0]['var']) &&
-            isset($this->configuration['actionConditions']['=='][1]) &&
-            $this->configuration['actionConditions']['=='][0]['var'] === 'entity' &&
-            $this->configuration['actionConditions']['=='][1] === $entityId)
+                isset($this->configuration['actionConditions']['=='][1]) &&
+                $this->configuration['actionConditions']['=='][0]['var'] === 'entity' &&
+                $this->configuration['actionConditions']['=='][1] === $entityId)
         ) {
             return true;
         }
@@ -1042,7 +1043,7 @@ class SynchronizationService
                 $this->io->warning("Error while doing syncToSource: {$exception->getMessage()}");
                 $this->io->block("File: {$exception->getFile()}");
                 $this->io->block("Line: {$exception->getLine()}");
-//                $this->io->block("Trace: {$exception->getTraceAsString()}");
+                //                $this->io->block("Trace: {$exception->getTraceAsString()}");
             }
             $synchronization->setLastSynced(new DateTime());
 
