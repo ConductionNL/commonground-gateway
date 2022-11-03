@@ -27,18 +27,39 @@ class ZgwToSoapHandler implements ActionHandlerInterface
         return [
             '$id'         => 'https://example.com/person.schema.json',
             '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
-            'title'       => 'Zaakeigenschappen Action',
-            'description' => 'This handler posts zaak eigenschappen from ZDS to ZGW',
-            'required'    => ['identifierPath'],
+            'title'       => 'ZgwToSoapHandler',
+            'description' => 'This handler posts zaak eigenschappen from ZGW to VrijBrp SOAP',
+            'required'    => [],
             'properties'  => [
-                'identifierPath' => [
-                    'type'        => 'string',
-                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
-                    'example'     => 'native://default',
-                ],
-                'eigenschappen' => [
-                    'type'        => 'array',
+                'entities' => [
+                    'type'        => 'object',
                     'description' => '',
+                    'properties'  => [
+                        'Birth' => [
+                            'type'        => 'uuid',
+                            'description' => 'The uuid of the Birth entity',
+                            'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                            'nullable'    => true,
+                        ],
+                        'InterRelocation' => [
+                            'type'        => 'uuid',
+                            'description' => 'The uuid of the InterRelocation entity',
+                            'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                            'nullable'    => true,
+                        ],
+                        'Commitment' => [
+                            'type'        => 'uuid',
+                            'description' => 'The uuid of the Commitment entity',
+                            'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                            'nullable'    => true,
+                        ],
+                        'Death' => [
+                            'type'        => 'uuid',
+                            'description' => 'The uuid of the Death entity',
+                            'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                            'nullable'    => true,
+                        ],
+                    ],
                 ],
             ],
         ];

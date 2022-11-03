@@ -15,14 +15,16 @@ services:
         
     # this config only applies to the services created by this file
     _instanceof:
-        # actionHandlers whose classes are instances of ActionHandlerInterface will be tagged automatically
+        # actionHandlers whose classes are instances of ActionHandlerInterface will be tagged automatically and set to public
         App\ActionHandler\ActionHandlerInterface:
+            public: true
             tags: ['commongateway.action_handlers']
             
     App\Service\ActionService:
         autowire: false
         # inject all services tagged with commongateway.action_handlers as first argument
         arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
             $actionHandlers: !tagged_iterator commongateway.action_handlers # Inject all services tagged with "commongateway.action_handlers"
             $container: '@service_container'
 
@@ -76,7 +78,7 @@ services:
         public: true
         arguments:
             $emailService: '@App\Service\EmailService'
-
+ 
     App\ActionHandler\EnrichPubliccodeHandler:
         public: true
         arguments:

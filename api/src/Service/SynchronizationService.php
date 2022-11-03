@@ -165,7 +165,7 @@ class SynchronizationService
         $id = $dot->get($this->configuration['apiSource']['location']['idField']);
 
         // If we have a complete object we can use that to sync
-        if (array_key_exists('Object', $this->configuration['location'])) {
+        if (array_key_exists('object', $this->configuration['apiSource']['location'])) {
             $sourceObject = $dot->get($this->configuration['apiSource']['location']['object'], $responseData); // todo should default be $data or [] ?
         }
 

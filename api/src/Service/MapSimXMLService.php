@@ -351,12 +351,13 @@ class MapSimXMLService
     public function mapSimXMLHandler(array $data, array $configuration): array
     {
         $this->data = $data;
+        $this->configuration = $configuration;
         $simXMLArray = $data['response'];
 
         // Find ZGW entities by id from config
-        $zaakTypeEntity = $this->entityRepo->find($configuration['entities']['ZaakType']);
-        $zaakEntity = $this->entityRepo->find($configuration['entities']['Zaak']);
-        $documentEntity = $this->entityRepo->find($configuration['entities']['ObjectInformatieObject']);
+        $zaakTypeEntity = $this->entityRepo->find($this->configuration['entities']['ZaakType']);
+        $zaakEntity = $this->entityRepo->find($this->configuration['entities']['Zaak']);
+        $documentEntity = $this->entityRepo->find($this->configuration['entities']['ObjectInformatieObject']);
 
         if (!isset($zaakTypeEntity)) {
             throw new \Exception('ZaakType entity could not be found');
@@ -388,7 +389,7 @@ class MapSimXMLService
         $zaakObjectEntity = $this->objectEntityRepo->find($zaakObjectEntity->getId()->toString());
 
         $documents = $this->createDocumenten($zaakObjectEntity, $documentEntity, $simXMLArray);
-        $this->createRollen($zaakObjectEntity, $simXMLArray, $configuration['entities']['rolEntityId'], $configuration['entities']['rolTypeEntityId'], $zaakObjectEntity);
+        $this->createRollen($zaakObjectEntity, $simXMLArray, $this->configuration['entities']['rolEntityId'], $this->configuration['entities']['rolTypeEntityId'], $zaakObjectEntity);
         $simXMLObject = $this->entityManager->getRepository(ObjectEntity::class)->find($data['response']['id']);
 
         $simXMLObject->setValue('zgwZaak', $zaakObjectEntity->getId()->toString());
