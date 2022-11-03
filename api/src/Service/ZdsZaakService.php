@@ -266,12 +266,12 @@ class ZdsZaakService
             if ($natuurlijkPersoonObject = $heeftAlsInitiatorObject->getValue('natuurlijkPersoon')) {
                 $rol->setValue('betrokkeneIdentificatie', $natuurlijkPersoonObject->toArray());
                 $rol->setValue('betrokkeneType', 'natuurlijk_persoon');
-                $rol->getValue('betrokkeneIdentificatie')->setValue('verblijfsadres', $natuurlijkPersoonObject->getValue('verblijfadres')->toArray());
             }
 
             if ($heeftAlsInitiatorObject->getValue('vestiging')->getValue('vestigingsNummer') || $heeftAlsInitiatorObject->getValue('vestiging')->getValue('handelsnaam')) {
                 $rol->setValue('betrokkeneIdentificatie', $this->vestigingToOrganisatorischeEenheid($heeftAlsInitiatorObject->getValue('vestiging')));
                 $rol->setValue('betrokkeneType', 'organisatorische_eenheid');
+                $this->synchronizationService->setApplicationAndOrganization($rol->getValue('betrokkeneIdentificatie'));
             }
 
             $this->entityManager->persist($rol);
