@@ -3,6 +3,8 @@
 
 api/helm/kubeconfig.yaml
 
+api/var/cache
+
 .idea/
 
 api/helm/*-kubeconfig.yaml
