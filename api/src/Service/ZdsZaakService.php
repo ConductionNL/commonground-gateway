@@ -1007,7 +1007,7 @@ class ZdsZaakService
         $zaak = $this->entityManager->getRepository(ObjectEntity::class)->find($result->getValue('zgwZaak'));
 
         $this->configuration = $configuration;
-        if ($configuration['entityType'] == 'ZAK' && !$zaak->getValue('identificatie')) {
+        if ($this->configuration['entityType'] == 'ZAK' && !$zaak->getValue('identificatie')) {
             $messageType = 'genereerZaakIdentificatie';
             $zaak->setValue('identificatie', $this->getIdentificationForObject($messageType));
             $this->entityManager->persist($zaak);
@@ -1059,12 +1059,15 @@ class ZdsZaakService
 
     public function zgwObjectInformatieObjectToZdsDocumentHandler(array $data, array $configuration): array
     {
-        $objectInformatieObjectEntity = $this->entityManager->getRepository(Entity::class)->find($configuration['documentEntityId']);
-        $result = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
+        $this->data = $data;
+        $this->configuration = $configuration;
+
+        $objectInformatieObjectEntity = $this->entityManager->getRepository(Entity::class)->find($this->configuration['documentEntityId']);
+        $result = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['response']['id']);
         $documenten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($objectInformatieObjectEntity, ['object' => $result->getValue('zgwZaak')]);
         $zaak = $this->entityManager->getRepository(ObjectEntity::class)->find($result->getValue('zgwZaak'));
         foreach ($documenten as $document) {
-            $zds = new ObjectEntity($this->entityManager->getRepository(Entity::class)->find($configuration['zdsEntityId']));
+            $zds = new ObjectEntity($this->entityManager->getRepository(Entity::class)->find($this->configuration['zdsEntityId']));
             $zds->setValue('referentienummer', Uuid::uuid4());
             $zds->setValue('object', $this->getDocumentObject($zds, $document, $zaak));
 
@@ -1075,7 +1078,7 @@ class ZdsZaakService
             $this->entityManager->flush();
         }
 
-        return $data;
+        return $this->data;
     }
 
     /**
@@ -1090,12 +1093,15 @@ class ZdsZaakService
      */
     public function zaakInformatieObjectHandler(array $data, array $configuration): array
     {
-        $informatieObject = $this->entityManager->getRepository(ObjectEntity::class)->find($data['response']['id'])->getValue('zgwDocument');
+        $this->data = $data;
+        $this->configuration = $configuration;
+
+        $informatieObject = $this->entityManager->getRepository(ObjectEntity::class)->find($this->data['response']['id'])->getValue('zgwDocument');
         if (!$informatieObject instanceof ObjectEntity) {
-            return $data;
+            return $this->data;
         }
 
-        $zaakInformatieObjectEntity = $this->entityManager->getRepository(Entity::class)->findOneBy(['id' => $configuration['zaakInformatieObjectEntityId']]);
+        $zaakInformatieObjectEntity = $this->entityManager->getRepository(Entity::class)->findOneBy(['id' => $this->configuration['zaakInformatieObjectEntityId']]);
         $zaakInformatieObjecten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($zaakInformatieObjectEntity, ['informatieobject' => $informatieObject->getId()->toString()]);
         foreach ($zaakInformatieObjecten as $zaakInformatieObject) {
             if (!$zaakInformatieObject instanceof ObjectEntity || $zaakInformatieObject->getEntity() !== $zaakInformatieObjectEntity) {
@@ -1106,6 +1112,6 @@ class ZdsZaakService
         }
         $this->entityManager->flush();
 
-        return $data;
+        return $this->data;
     }
 }

@@ -25,16 +25,41 @@ class MapSimXMLHandler implements ActionHandlerInterface
     public function getConfiguration(): array
     {
         return [
-            '$id'         => 'https://example.com/person.schema.json',
-            '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
-            'title'       => 'Sim XML Action',
+            '$id' => 'https://example.com/person.schema.json',
+            '$schema' => 'https://json-schema.org/draft/2020-12/schema',
+            'title' => 'MapSimXMLHandler',
             'description' => 'This handler customly maps sim xml to zgw zaak and document ',
-            'required'    => ['simXMLEntityId'],
-            'properties'  => [
-                'simXMLEntityId' => [
-                    'type'        => 'string',
-                    'description' => 'The UUID of the case entitEntity on the gateway',
-                    'example'     => '',
+            'required' => ['simXMLEntityId'],
+            'properties' => [
+                'entities' => [
+                    'type' => 'object',
+                    'description' => 'The id of the character entity',
+                    'properties' => [
+                        'rolTypeEntityId' => [
+                            'type'        => 'uuid',
+                            'description' => 'The uuid of the rolTypeEntityId entity',
+                            'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                            'required'    => true
+                        ],
+                        'ZaakType' => [
+                            'type'        => 'uuid',
+                            'description' => 'The uuid of the ZaakType entity',
+                            'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                            'required'    => true
+                        ],
+                        'Zaak' => [
+                            'type'        => 'uuid',
+                            'description' => 'The uuid of the zaak entity',
+                            'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                            'required'    => true
+                        ],
+                        'ObjectInformatieObject' => [
+                            'type'        => 'uuid',
+                            'description' => 'The uuid of the ObjectInformatieObject entity',
+                            'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                            'required'    => true
+                        ],
+                    ],
                 ],
             ],
         ];
@@ -43,15 +68,15 @@ class MapSimXMLHandler implements ActionHandlerInterface
     /**
      * This function runs the service for validating cases.
      *
-     * @param array $data          The data from the call
+     * @param array $data The data from the call
      * @param array $configuration The configuration of the action
      *
-     * @throws GatewayException
+     * @return array
      * @throws CacheException
      * @throws InvalidArgumentException
      * @throws ComponentException
      *
-     * @return array
+     * @throws GatewayException
      */
     public function run(array $data, array $configuration): array
     {

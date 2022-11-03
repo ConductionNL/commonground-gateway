@@ -27,18 +27,33 @@ class ZdsToZGWDocumentenHandler implements ActionHandlerInterface
         return [
             '$id'         => 'https://example.com/person.schema.json',
             '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
-            'title'       => 'Zaakeigenschappen Action',
-            'description' => 'This handler posts zaak eigenschappen from ZDS to ZGW',
-            'required'    => ['identifierPath'],
+            'title'       => 'ZdsToZGWDocumentenHandler',
+            'description' => 'This handler posts a zaak document from ZDS to ZGW',
+            'required'    => ['informatieObjectTypeEntityId', 'enkelvoudigInformatieObjectEntityId', 'zaakTypeInformatieObjectTypeEntityId'],
             'properties'  => [
-                'identifierPath' => [
-                    'type'        => 'string',
-                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
-                    'example'     => 'native://default',
+                'informatieObjectTypeEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the informatieObject entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true
                 ],
-                'eigenschappen' => [
-                    'type'        => 'array',
-                    'description' => '',
+                'enkelvoudigInformatieObjectEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the enkelvoudigInformatieObject entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true
+                ],
+                'zaakTypeInformatieObjectTypeEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the zaakTypeInformatieObjectType entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true
+                ],
+                'enrichData' => [
+                    'type'        => 'boolean',
+                    'description' => 'Boolean for enrich data',
+                    'example'     => 'true',
+                    'nullable'    => true
                 ],
             ],
         ];
