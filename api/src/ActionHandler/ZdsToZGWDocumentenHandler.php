@@ -35,25 +35,25 @@ class ZdsToZGWDocumentenHandler implements ActionHandlerInterface
                     'type'        => 'uuid',
                     'description' => 'The uuid of the informatieObject entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'enkelvoudigInformatieObjectEntityId' => [
                     'type'        => 'uuid',
                     'description' => 'The uuid of the enkelvoudigInformatieObject entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'zaakTypeInformatieObjectTypeEntityId' => [
                     'type'        => 'uuid',
                     'description' => 'The uuid of the zaakTypeInformatieObjectType entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'enrichData' => [
                     'type'        => 'boolean',
                     'description' => 'Boolean for enrich data',
                     'example'     => 'true',
-                    'nullable'    => true
+                    'nullable'    => true,
                 ],
             ],
         ];

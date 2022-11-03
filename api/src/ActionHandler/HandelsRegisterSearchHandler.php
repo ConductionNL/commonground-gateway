@@ -34,12 +34,12 @@ class HandelsRegisterSearchHandler implements ActionHandlerInterface
                 'entities' => [
                     'type'        => 'string',
                     'description' => 'The entities',
-                    'properties' => [
+                    'properties'  => [
                         'vestiging' => [
                             'type'        => 'uuid',
                             'description' => 'The uuid of the vestiging entity',
                             'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                            'nullable'    => true
+                            'nullable'    => true,
                         ],
                     ],
                 ],

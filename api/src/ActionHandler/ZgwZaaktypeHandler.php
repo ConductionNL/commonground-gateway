@@ -35,25 +35,25 @@ class ZgwZaaktypeHandler implements ActionHandlerInterface
                     'type'        => 'uuid',
                     'description' => 'The uuid of the eigenschap entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'roltypenEntityId' => [
                     'type'        => 'uuid',
                     'description' => 'The uuid of the roltypen entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'resultaattypenEntityId' => [
                     'type'        => 'uuid',
                     'description' => 'The uuid of the resultaattypen entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'statustypenEntityId' => [
                     'type'        => 'uuid',
                     'description' => 'The uuid of the statustypen entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
             ],
         ];

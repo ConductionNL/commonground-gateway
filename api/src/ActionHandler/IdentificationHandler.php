@@ -29,13 +29,13 @@ class IdentificationHandler implements ActionHandlerInterface
             '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
             'title'       => 'IdentificationHandler',
             'description' => 'This handler checks if the case has an identification field and if not, launches a Di02 request to add it.',
-            'required' => ['entityType'],
+            'required'    => ['entityType'],
             'properties'  => [
                 'entityType' => [
                     'type'        => 'string',
                     'description' => 'The entity type',
                     'example'     => 'ZAK',
-                    'required'    => true
+                    'required'    => true,
                 ],
             ],
         ];

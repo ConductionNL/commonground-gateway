@@ -35,43 +35,43 @@ class ZdsToZGWHandler implements ActionHandlerInterface
                     'type'        => 'uuid',
                     'description' => 'The uuid of the zaak entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'zaakTypeEntityId' => [
                     'type'        => 'uuid',
                     'description' => 'The uuid of the zaakType entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'eigenschapEntityId' => [
                     'type'        => 'uuid',
                     'description' => 'The uuid of the eigenschap entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'zaakEigenschapEntityId' => [
                     'type'        => 'uuid',
                     'description' => 'The uuid of the zaakEigenschap entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'rolEntityId' => [
                     'type'        => 'uuid',
                     'description' => 'The uuid of the rol entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'rolTypeEntityId' => [
                     'type'        => 'uuid',
                     'description' => 'The uuid of the rolType entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true
+                    'required'    => true,
                 ],
                 'enrichData' => [
                     'type'        => 'boolean',
                     'description' => 'Boolean for enrich data',
                     'example'     => 'true',
-                    'nullable'    => true
+                    'nullable'    => true,
                 ],
             ],
         ];
