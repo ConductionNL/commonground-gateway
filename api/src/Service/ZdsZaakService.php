@@ -241,6 +241,8 @@ class ZdsZaakService
         $betrokkeneIdentificatie->setValue('isGehuisvestIn', $vestiging->getValue('verblijfsadres')->getValue('wplWoonplaatsNaam'));
         $this->entityManager->persist($betrokkeneIdentificatie);
 
+        $this->synchronizationService->setApplicationAndOrganization($betrokkeneIdentificatie);
+
         return $betrokkeneIdentificatie;
     }
 
@@ -516,6 +518,7 @@ class ZdsZaakService
         //        $document->setValue('ontvangstdatum', $zdsObject->getValue(''));
         //        $document->setValue('verzenddatum', $zdsObject->getValue('')); // stuurgegevens.tijdstipBericht
         $this->entityManager->persist($document);
+        $this->synchronizationService->setApplicationAndOrganization($document);
 
         $this->createZgwZaakInformatieObject($zdsObject, $zdsZaakObjectEntity, $document);
 
