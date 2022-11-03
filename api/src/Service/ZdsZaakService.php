@@ -232,9 +232,9 @@ class ZdsZaakService
         $zaak->setValue('rollen', $rol);
     }
 
-    public function vestigingToOrganisatorischeEenheid(ObjectEntity $vestiging, ObjectEntity $rol): ObjectEntity
+    public function vestigingToOrganisatorischeEenheid(ObjectEntity $vestiging, ObjectEntity $natuurlijkPersoon): ObjectEntity
     {
-        $betrokkeneIdentificatie = new ObjectEntity($rol->getEntity()->getAttributeByName('betrokkeneIdentificatie')->getObject());
+        $betrokkeneIdentificatie = new ObjectEntity($natuurlijkPersoon->getEntity());
 
         $betrokkeneIdentificatie->setValue('identificatie', $vestiging->getValue('vestigingsNummer'));
         $betrokkeneIdentificatie->setValue('naam', $vestiging->getValue('handelsnaam'));
@@ -272,7 +272,7 @@ class ZdsZaakService
             }
 
             if ($heeftAlsInitiatorObject->getValue('vestiging')->getValue('vestigingsNummer') || $heeftAlsInitiatorObject->getValue('vestiging')->getValue('handelsnaam')) {
-                $rol->setValue('betrokkeneIdentificatie', $this->vestigingToOrganisatorischeEenheid($heeftAlsInitiatorObject->getValue('vestiging'), $rol));
+                $rol->setValue('betrokkeneIdentificatie', $this->vestigingToOrganisatorischeEenheid($heeftAlsInitiatorObject->getValue('vestiging'), $heeftAlsInitiatorObject->getValue('natuurlijkPersoon')));
                 $rol->setValue('betrokkeneType', 'organisatorische_eenheid');
             }
 
