@@ -10,7 +10,6 @@ use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -29,7 +28,6 @@ use Twig\Error\SyntaxError;
 
 class SynchronizationService
 {
-    private CommonGroundService $commonGroundService;
     private CallService $callService;
     private EntityManagerInterface $entityManager;
     private SessionInterface $session;
@@ -46,7 +44,6 @@ class SynchronizationService
     private Environment $twig;
 
     /**
-     * @param CommonGroundService    $commonGroundService
      * @param CallService            $callService
      * @param EntityManagerInterface $entityManager
      * @param SessionInterface       $session
@@ -60,9 +57,8 @@ class SynchronizationService
      * @param EavService             $eavService
      * @param Environment            $twig
      */
-    public function __construct(CommonGroundService $commonGroundService, CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig)
+    public function __construct(CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig)
     {
-        $this->commonGroundService = $commonGroundService;
         $this->callService = $callService;
         $this->entityManager = $entityManager;
         $this->session = $session;
