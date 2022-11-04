@@ -24,7 +24,6 @@ services:
         autowire: false
         # inject all services tagged with commongateway.action_handlers as first argument
         arguments:
-            $entityManager: '@doctrine.orm.entity_manager'
             $actionHandlers: !tagged_iterator commongateway.action_handlers # Inject all services tagged with "commongateway.action_handlers"
             $container: '@service_container'
 
@@ -184,8 +183,13 @@ services:
         public: true
         arguments:
             $zgwToVrijbrpService: '@App\Service\ZgwToVrijbrpService'
-            
 
+    App\ActionHandler\VrijbrpToZgwHandler:
+        public: true
+        arguments:
+            $zgwToVrijbrpService: '@App\Service\ZgwToVrijbrpService'
+
+    
     App\ActionHandler\ZaakInformatieObjectHandler:
         public: true
         arguments:

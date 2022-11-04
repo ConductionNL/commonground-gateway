@@ -9,27 +9,26 @@ use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Exception\GatewayException;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use CommonGateway\CoreBundle\Service\CallService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
-use function Symfony\Component\Translation\t;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\SyntaxError;
 
 class SynchronizationService
 {
-    private CommonGroundService $commonGroundService;
+    private CallService $callService;
     private EntityManagerInterface $entityManager;
     private SessionInterface $session;
     private GatewayService $gatewayService;
@@ -45,7 +44,7 @@ class SynchronizationService
     private Environment $twig;
 
     /**
-     * @param CommonGroundService    $commonGroundService
+     * @param CallService            $callService
      * @param EntityManagerInterface $entityManager
      * @param SessionInterface       $session
      * @param GatewayService         $gatewayService
@@ -58,9 +57,9 @@ class SynchronizationService
      * @param EavService             $eavService
      * @param Environment            $twig
      */
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig)
+    public function __construct(CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig)
     {
-        $this->commonGroundService = $commonGroundService;
+        $this->callService = $callService;
         $this->entityManager = $entityManager;
         $this->session = $session;
         $this->gatewayService = $gatewayService;
@@ -102,7 +101,7 @@ class SynchronizationService
      * @param array $data          The data from the action
      * @param array $configuration The configuration given by the action
      *
-     * @throws CacheException|InvalidArgumentException
+     * @throws CacheException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError
      *
      * @return array The data from the action modified by the execution of the synchronisation
      */
@@ -137,14 +136,14 @@ class SynchronizationService
     }
 
     /**
+     * @todo
+     *
      * @param array $data
      * @param array $configuration
      *
-     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
+     * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError
      *
      * @return array
-     *
-     * @todo
      */
     public function SynchronizationWebhookHandler(array $data, array $configuration): array
     {
@@ -187,7 +186,7 @@ class SynchronizationService
      * @param array $data          Data from the request running
      * @param array $configuration Configuration for the action running
      *
-     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
+     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException|LoaderError|SyntaxError|GuzzleException
      *
      * @return array The resulting data
      */
@@ -295,10 +294,13 @@ class SynchronizationService
     private function getCallServiceConfig(Gateway $gateway, string $id = null, ?array $objectArray = []): array
     {
         return [
-            'component' => $this->gatewayService->gatewayToArray($gateway),
-            'url'       => $this->getUrlForSource($gateway, $id, $objectArray),
+            'gateway'   => $gateway,
+            'endpoint'  => $this->getCallServiceEndpoint($id, $objectArray),
             'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService($id), //todo maybe array_merge instead of ??
-            'headers'   => $this->getCallServiceOverwrite('headers') ?? $gateway->getHeaders(), //todo maybe array_merge instead of ??
+            'headers'   => array_merge(
+                ['Content-Type' => 'application/json'],
+                ($this->getCallServiceOverwrite('headers') ?? $gateway->getHeaders()) //todo maybe array_merge instead of ??
+            ),
             'method'    => $this->getCallServiceOverwrite('method'),
         ];
     }
@@ -323,7 +325,6 @@ class SynchronizationService
     /**
      * Determines the URL to request.
      *
-     * @param Gateway     $gateway     The source to call
      * @param string|null $id          The id to request (optional)
      * @param array|null  $objectArray
      *
@@ -331,7 +332,7 @@ class SynchronizationService
      *
      * @return string The resulting URL
      */
-    private function getUrlForSource(Gateway $gateway, string $id = null, ?array $objectArray = []): string
+    private function getCallServiceEndpoint(string $id = null, ?array $objectArray = []): string
     {
         $renderData = array_key_exists('replaceTwigLocation', $this->configuration) && $this->configuration['replaceTwigLocation'] === 'objectEntityData' ? $objectArray : $this->data;
         $location = $this->twig->createTemplate($this->configuration['location'])->render($renderData);
@@ -340,7 +341,7 @@ class SynchronizationService
             $id = null;
         }
 
-        return $gateway->getLocation().$location.($id ? '/'.$id : '');
+        return $location.($id ? '/'.$id : '');
     }
 
     /**
@@ -370,7 +371,7 @@ class SynchronizationService
      *
      * @param Gateway $gateway The source to get the data from
      *
-     * @throws LoaderError|SyntaxError
+     * @throws LoaderError|SyntaxError|GuzzleException
      *
      * @return array The results found on the source
      */
@@ -381,8 +382,8 @@ class SynchronizationService
             $this->io->definitionList(
                 'getObjectsFromSource with this callServiceConfig data',
                 new TableSeparator(),
-                ['Component' => "Data of Source/Gateway \"{$gateway->getName()}\" ({$gateway->getId()->toString()}) as array"],
-                ['Url'       => $callServiceConfig['url']],
+                ['Gateway'   => "Source/Gateway \"{$gateway->getName()}\" ({$gateway->getId()->toString()})"],
+                ['Endpoint'  => $callServiceConfig['endpoint']],
                 ['Query'     => is_array($callServiceConfig['query']) ? "[{$this->objectEntityService->implodeMultiArray($callServiceConfig['query'])}]" : $callServiceConfig['query']],
                 ['Headers'   => is_array($callServiceConfig['headers']) ? "[{$this->objectEntityService->implodeMultiArray($callServiceConfig['headers'])}]" : $callServiceConfig['headers']],
                 ['Method'    => $callServiceConfig['method'] ?? 'GET'],
@@ -403,6 +404,8 @@ class SynchronizationService
      * @param array $callServiceConfig The configuration for the source
      * @param int   $page              The current page to be requested
      *
+     * @throws GuzzleException
+     *
      * @return array
      */
     private function fetchObjectsFromSource(array $callServiceConfig, int $page = 1): array
@@ -418,20 +421,17 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->text("fetchObjectsFromSource with \$page = $page");
             }
-            $response = $this->commonGroundService->callService(
-                $callServiceConfig['component'],
-                $callServiceConfig['url'],
-                '',
-                $query,
-                $callServiceConfig['headers'],
-                false,
-                $callServiceConfig['method'] ?? 'GET'
+            $response = $this->callService->call(
+                $callServiceConfig['gateway'],
+                $callServiceConfig['endpoint'],
+                $callServiceConfig['method'] ?? 'GET',
+                [
+                    'body'    => strtoupper($callServiceConfig['method']) == 'POST' ? '{}' : '',
+                    'query'   => $query,
+                    'headers' => $callServiceConfig['headers'],
+                ]
             );
-
-            if (is_array($response)) {
-                throw new Exception('callService returned an array'.(isset($response['error']) ? " with error: {$response['error']}" : ''));
-            }
-        } catch (Exception $exception) {
+        } catch (Exception|GuzzleException $exception) {
             // If no next page with this $page exists...
             if (isset($this->io)) {
                 $this->io->warning("(This might just be the final page!) - Error while doing fetchObjectsFromSource: {$exception->getMessage()}");
@@ -463,7 +463,7 @@ class SynchronizationService
      *
      * @param Synchronization $synchronization The synchronisation object with the related source object id
      *
-     * @throws LoaderError|SyntaxError
+     * @throws LoaderError|SyntaxError|GuzzleException
      *
      * @return array|null The resulting object
      */
@@ -476,20 +476,18 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->text("getSingleFromSource with Synchronization->sourceId = {$synchronization->getSourceId()}");
             }
-            $response = $this->commonGroundService->callService(
-                $callServiceConfig['component'],
-                $synchronization->getEndpoint() ?? $callServiceConfig['url'],
-                '',
-                $callServiceConfig['query'],
-                $callServiceConfig['headers'],
-                false,
-                $callServiceConfig['method'] ?? 'GET'
-            );
 
-            if (is_array($response)) {
-                throw new Exception('callService returned an array'.(isset($response['error']) ? " with error: {$response['error']}" : ''));
-            }
-        } catch (Exception $exception) {
+            $response = $this->callService->call(
+                $callServiceConfig['gateway'],
+                $synchronization->getEndpoint() ?? $callServiceConfig['endpoint'],
+                $callServiceConfig['method'] ?? 'GET',
+                [
+                    'body'    => '',
+                    'query'   => $callServiceConfig['query'],
+                    'headers' => $callServiceConfig['headers'],
+                ]
+            );
+        } catch (Exception|GuzzleException $exception) {
             if (isset($this->io)) {
                 $this->io->warning("Error while doing getSingleFromSource: {$exception->getMessage()}");
                 $this->io->block("File: {$exception->getFile()}");
@@ -500,6 +498,7 @@ class SynchronizationService
             //todo: error, log this
             return null;
         }
+
         $result = json_decode($response->getBody()->getContents(), true);
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
@@ -637,7 +636,7 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronisation object before synchronisation
      * @param array           $sourceObject    The object in the source
      *
-     *@throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError
      *
      * @return Synchronization The updated synchronisation object
      */
@@ -686,10 +685,7 @@ class SynchronizationService
      * @param array        $data         The data that has to go into the objectEntity
      * @param ObjectEntity $objectEntity The ObjectEntity to populate
      *
-     * @throws CacheException
-     * @throws InvalidArgumentException
-     * @throws ComponentException
-     * @throws GatewayException
+     * @throws CacheException|InvalidArgumentException|ComponentException|GatewayException
      *
      * @return ObjectEntity The populated ObjectEntity
      */
@@ -1005,7 +1001,7 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronisation object for the created or updated object
      * @param bool            $existsInSource  Determines if a new synchronisation should be made, or an existing one should be updated
      *
-     * @throws CacheException|InvalidArgumentException|LoaderError|SyntaxError
+     * @throws CacheException|InvalidArgumentException|LoaderError|SyntaxError|GuzzleException
      *
      * @return Synchronization The updated synchronisation object
      */
@@ -1025,27 +1021,23 @@ class SynchronizationService
         $objectString = $this->getObjectString($objectArray);
 
         try {
-            $result = $this->commonGroundService->callService(
-                $callServiceConfig['component'],
-                $synchronization->getEndpoint() ?? $callServiceConfig['url'],
-                $objectString,
-                $callServiceConfig['query'],
-                $callServiceConfig['headers'],
-                false,
-                $callServiceConfig['method'] ?? ($existsInSource ? 'PUT' : 'POST')
+            $result = $this->callService->call(
+                $callServiceConfig['gateway'],
+                $synchronization->getEndpoint() ?? $callServiceConfig['endpoint'],
+                $callServiceConfig['method'] ?? ($existsInSource ? 'PUT' : 'POST'),
+                [
+                    'body'    => $objectString,
+                    'query'   => $callServiceConfig['query'],
+                    'headers' => $callServiceConfig['headers'],
+                ]
             );
-
-            if (is_array($result)) {
-                throw new Exception('callService returned an array'.(isset($response['error']) ? " with error: {$response['error']}" : ''));
-            }
-        } catch (Exception $exception) {
+        } catch (Exception|GuzzleException $exception) {
             if (isset($this->io)) {
                 $this->io->warning("Error while doing syncToSource: {$exception->getMessage()}");
                 $this->io->block("File: {$exception->getFile()}");
                 $this->io->block("Line: {$exception->getLine()}");
-                //                $this->io->block("Trace: {$exception->getTraceAsString()}");
+//                $this->io->block("Trace: {$exception->getTraceAsString()}");
             }
-            $synchronization->setLastSynced(new DateTime());
 
             //todo: error, log this
             return $synchronization;
@@ -1105,8 +1097,7 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronisation object to update
      * @param array           $sourceObject    The external object to synchronise from
      *
-     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
-     * @throws Exception
+     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
      *
      * @return Synchronization The updated synchronisation object containing an updated objectEntity
      */
@@ -1122,7 +1113,7 @@ class SynchronizationService
         $sourceObjectDot = new Dot($sourceObject);
 
         $object = $this->populateObject($sourceObject, $object, $method);
-        $object->setUri($this->getUrlForSource($synchronization->getGateway(), $synchronization->getSourceId()));
+        $object->setUri($synchronization->getGateway()->getLocation().$this->getCallServiceEndpoint($synchronization->getSourceId()));
         if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
             $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
         }
