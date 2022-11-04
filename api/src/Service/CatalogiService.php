@@ -563,7 +563,8 @@ class CatalogiService
             $object->setEntity($entity);
             $addComponentWithMetadata = $addComponent;
             unset($addComponent['x-commongateway-metadata']); // todo: not sure if this is needed before populateObject
-//            $addComponent = $someService->replaceEmbedded($addComponent); // todo: remove/replace embedded before populateObject...
+            // todo: remove/replace embedded before populateObject... We could just check for embedded array in the ObjectEntityService->saveObject function instead?
+//            $addComponent = $this->synchronizationService->replaceEmbedded($addComponent);
             $newComponent = $this->synchronizationService->populateObject($addComponent, $object);
             // todo: get correct source for createSyncForComponent function. Will be a Catalogi source or a other/new source we need to create here ?
             $synchronization = $this->createSyncForComponent(['object' => $newComponent, 'source' => 'todo', 'entity' => $entity], $addComponentWithMetadata);
