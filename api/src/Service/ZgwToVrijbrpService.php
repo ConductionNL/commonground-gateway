@@ -558,9 +558,9 @@ class ZgwToVrijbrpService
         $meeEmigranten = [];
         foreach ($meeverhuizende_gezinsleden as $meeverhuizende_gezinslid) {
             $meeEmigranten[] = [
-                'burgerservicenummer' => key_exists('bsn', $meeverhuizende_gezinslid) ? $meeverhuizende_gezinslid['bsn'] : null,
+                'burgerservicenummer'  => key_exists('bsn', $meeverhuizende_gezinslid) ? $meeverhuizende_gezinslid['bsn'] : null,
                 'omschrijvingAangifte' => key_exists('rol', $meeverhuizende_gezinslid) ? $meeverhuizende_gezinslid['rol'] : null,
-                'duur' => null
+                'duur'                 => null,
             ];
         }
 
@@ -588,7 +588,8 @@ class ZgwToVrijbrpService
      * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
      *
      * @param ObjectEntity $zaakObjectEntity
-     * @param array $properties
+     * @param array        $properties
+     *
      * @return array $this->data Data which we entered the function with
      */
     public function getZaakEigenschappen(ObjectEntity $zaakObjectEntity, array $properties): array
@@ -604,12 +605,14 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * Creates a VrijRBP Soap object
+     * Creates a VrijRBP Soap object.
      *
      * @param Entity $requestEntity
-     * @param array $soapArray
-     * @return ObjectEntity $this->data Data which we entered the function with
+     * @param array  $soapArray
+     *
      * @throws Exception
+     *
+     * @return ObjectEntity $this->data Data which we entered the function with
      */
     public function createSoapObject(Entity $requestEntity, array $soapArray): ObjectEntity
     {
@@ -634,7 +637,7 @@ class ZgwToVrijbrpService
     {
         $properties = [
             'bsn'                => null,
-            'bsn_geheimhouding' => null,
+            'bsn_geheimhouding'  => null,
             'code_geheimhouding' => null,
         ];
 
@@ -647,7 +650,7 @@ class ZgwToVrijbrpService
 
         $geheimhoudingBetrokkenen[] = [
             'burgerservicenummer' => key_exists('bsn_geheimhouding', $zaakEigenschappen) ? $zaakEigenschappen['bsn_geheimhouding'] : null,
-            'codeGeheimhouding' => key_exists('code_geheimhouding', $zaakEigenschappen) ? $zaakEigenschappen['code_geheimhouding'] : null,
+            'codeGeheimhouding'   => key_exists('code_geheimhouding', $zaakEigenschappen) ? $zaakEigenschappen['code_geheimhouding'] : null,
         ];
 
         $soapConfidentialityArray['aanvraaggegevens'] = [
@@ -676,9 +679,9 @@ class ZgwToVrijbrpService
     {
         $properties = [
             'bsn'                => null,
-            'code' => null,
-            'omschrijving' => null,
-            'uittreksel' => null
+            'code'               => null,
+            'omschrijving'       => null,
+            'uittreksel'         => null,
         ];
 
         $uittrekselaanvraagRequestEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['uittrekselaanvraagRequestEntityId']);
@@ -697,8 +700,8 @@ class ZgwToVrijbrpService
         foreach ($uittreksels as $uittreksel) {
             $uittrekselBetrokkenen[] = [
                 'burgerservicenummer' => key_exists('bsn', $uittreksel) ? $uittreksel['bsn'] : null,
-                'uittrekselcode' => key_exists('code', $uittreksel) ? $uittreksel['code'] : null,
-                'indicatieGratis' => key_exists('omschrijving', $uittreksel) ? $uittreksel['omschrijving'] : null,
+                'uittrekselcode'      => key_exists('code', $uittreksel) ? $uittreksel['code'] : null,
+                'indicatieGratis'     => key_exists('omschrijving', $uittreksel) ? $uittreksel['omschrijving'] : null,
             ];
         }
 
@@ -727,11 +730,11 @@ class ZgwToVrijbrpService
     public function zgwNamingToVrijBrpSoap(ObjectEntity $zaakObjectEntity): array
     {
         $properties = [
-            'bsn'  => null,
-            'gemeentecode' => null,
-            'sub.telefoonnummer' => null,
-            'sub.emailadres' => null,
-            'geselecteerdNaamgebruik' => null
+            'bsn'                     => null,
+            'gemeentecode'            => null,
+            'sub.telefoonnummer'      => null,
+            'sub.emailadres'          => null,
+            'geselecteerdNaamgebruik' => null,
         ];
 
         $naamgebruikaanvraagRequestEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['naamgebruikaanvraagRequestEntityId']);
@@ -743,7 +746,7 @@ class ZgwToVrijbrpService
 
         $naamgebruikBetrokkenen[] = [
             'burgerservicenummer' => $zaakEigenschappen['gemeentecode'],
-            'codeNaamgebruik' => $zaakEigenschappen['geselecteerdNaamgebruik'],
+            'codeNaamgebruik'     => $zaakEigenschappen['geselecteerdNaamgebruik'],
         ];
 
         $soapNamingArray['aanvraaggegevens'] = [
