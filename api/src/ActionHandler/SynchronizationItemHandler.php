@@ -27,15 +27,10 @@ class SynchronizationItemHandler implements ActionHandlerInterface
         return [
             '$id'        => 'https://example.com/person.schema.json',
             '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
-            'title'      => 'Notification Action',
-            'required'   => ['ServiceDNS', 'template', 'sender', 'reciever', 'subject'],
-            'properties' => [
-                'serviceDNS' => [
-                    'type'        => 'string',
-                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
-                    'example'     => 'native://default',
-                ],
-            ],
+            'title'      => 'synchronizationItemHandler',
+            'description'=> 'Todo',
+            'required'   => [],
+            'properties' => [],
         ];
     }
 

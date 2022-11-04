@@ -27,13 +27,21 @@ class HandelsRegisterSearchHandler implements ActionHandlerInterface
         return [
             '$id'        => 'https://example.com/person.schema.json',
             '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
-            'title'      => 'Notification Action',
-            'required'   => ['ServiceDNS'],
+            'title'      => 'HandelsRegisterSearchHandler',
+            'description'=> 'Handles the search action for kvk handelsRegister.',
+            'required'   => [],
             'properties' => [
-                'serviceDNS' => [
+                'entities' => [
                     'type'        => 'string',
-                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
-                    'example'     => 'native://default',
+                    'description' => 'The entities',
+                    'properties'  => [
+                        'vestiging' => [
+                            'type'        => 'uuid',
+                            'description' => 'The uuid of the vestiging entity',
+                            'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                            'nullable'    => true,
+                        ],
+                    ],
                 ],
             ],
         ];

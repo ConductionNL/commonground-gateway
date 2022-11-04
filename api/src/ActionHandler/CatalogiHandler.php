@@ -23,13 +23,19 @@ class CatalogiHandler implements ActionHandlerInterface
         return [
             '$id'        => 'https://example.com/person.schema.json',
             '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
-            'title'      => 'Catalogi Action',
-            'required'   => [],
+            'title'      => 'CatalogiHandler',
+            'required'   => ['entity', 'location'],
             'properties' => [
-                'todo' => [
+                'entity' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true,
+                ],
+                'location' => [
                     'type'        => 'string',
-                    'description' => 'todo',
-                    'example'     => 'todo',
+                    'description' => 'The location',
+                    'required'    => true,
                 ],
             ],
         ];
