@@ -295,7 +295,7 @@ class SynchronizationService
     {
         return [
             'gateway'   => $gateway,
-            'url'       => $this->getUrlForSource($id, $objectArray),
+            'endpoint'  => $this->getCallServiceEndpoint($id, $objectArray),
             'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService($id), //todo maybe array_merge instead of ??
             'headers'   => array_merge(
                 ['Content-Type' => 'application/json'],
@@ -332,7 +332,7 @@ class SynchronizationService
      *
      * @return string The resulting URL
      */
-    private function getUrlForSource(string $id = null, ?array $objectArray = []): string
+    private function getCallServiceEndpoint(string $id = null, ?array $objectArray = []): string
     {
         $renderData = array_key_exists('replaceTwigLocation', $this->configuration) && $this->configuration['replaceTwigLocation'] === 'objectEntityData' ? $objectArray : $this->data;
         $location = $this->twig->createTemplate($this->configuration['location'])->render($renderData);
@@ -382,8 +382,8 @@ class SynchronizationService
             $this->io->definitionList(
                 'getObjectsFromSource with this callServiceConfig data',
                 new TableSeparator(),
-                ['Component' => "Data of Source/Gateway \"{$gateway->getName()}\" ({$gateway->getId()->toString()}) as array"],
-                ['Url'       => $callServiceConfig['url']],
+                ['Gateway'   => "Source/Gateway \"{$gateway->getName()}\" ({$gateway->getId()->toString()})"],
+                ['Endpoint'  => $callServiceConfig['endpoint']],
                 ['Query'     => is_array($callServiceConfig['query']) ? "[{$this->objectEntityService->implodeMultiArray($callServiceConfig['query'])}]" : $callServiceConfig['query']],
                 ['Headers'   => is_array($callServiceConfig['headers']) ? "[{$this->objectEntityService->implodeMultiArray($callServiceConfig['headers'])}]" : $callServiceConfig['headers']],
                 ['Method'    => $callServiceConfig['method'] ?? 'GET'],
@@ -423,7 +423,7 @@ class SynchronizationService
             }
             $response = $this->callService->call(
                 $callServiceConfig['gateway'],
-                $callServiceConfig['url'],
+                $callServiceConfig['endpoint'],
                 $callServiceConfig['method'] ?? 'GET',
                 [
                     'body'    => strtoupper($callServiceConfig['method']) == 'POST' ? '{}' : '',
@@ -479,7 +479,7 @@ class SynchronizationService
 
             $response = $this->callService->call(
                 $callServiceConfig['gateway'],
-                $synchronization->getEndpoint() ?? $callServiceConfig['url'],
+                $synchronization->getEndpoint() ?? $callServiceConfig['endpoint'],
                 $callServiceConfig['method'] ?? 'GET',
                 [
                     'body'    => '',
@@ -1023,7 +1023,7 @@ class SynchronizationService
         try {
             $result = $this->callService->call(
                 $callServiceConfig['gateway'],
-                $synchronization->getEndpoint() ?? $callServiceConfig['url'],
+                $synchronization->getEndpoint() ?? $callServiceConfig['endpoint'],
                 $callServiceConfig['method'] ?? ($existsInSource ? 'PUT' : 'POST'),
                 [
                     'body'    => $objectString,
@@ -1113,7 +1113,7 @@ class SynchronizationService
         $sourceObjectDot = new Dot($sourceObject);
 
         $object = $this->populateObject($sourceObject, $object, $method);
-        $object->setUri($synchronization->getGateway()->getLocation().$this->getUrlForSource($synchronization->getSourceId()));
+        $object->setUri($synchronization->getGateway()->getLocation().$this->getCallServiceEndpoint($synchronization->getSourceId()));
         if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
             $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
         }
