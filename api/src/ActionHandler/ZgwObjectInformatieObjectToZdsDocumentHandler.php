@@ -27,18 +27,21 @@ class ZgwObjectInformatieObjectToZdsDocumentHandler implements ActionHandlerInte
         return [
             '$id'         => 'https://example.com/person.schema.json',
             '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
-            'title'       => 'Zaakeigenschappen Action',
-            'description' => 'This handler posts zaak eigenschappen from ZDS to ZGW',
-            'required'    => ['identifierPath'],
+            'title'       => 'ZgwObjectInformatieObjectToZdsDocumentHandler',
+            'description' => 'This handler posts zaak eigenschappen from ZGW InformatieObject to ZDS Document',
+            'required'    => ['documentEntityId', 'zdsEntityId'],
             'properties'  => [
-                'identifierPath' => [
-                    'type'        => 'string',
-                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
-                    'example'     => 'native://default',
+                'documentEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the document entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true,
                 ],
-                'eigenschappen' => [
-                    'type'        => 'array',
-                    'description' => '',
+                'zdsEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the zds entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true,
                 ],
             ],
         ];

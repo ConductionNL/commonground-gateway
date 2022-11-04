@@ -231,16 +231,21 @@ class ZgwToVrijbrpService
         isset($this->configuration['entities']['IntraRelocation']) && $intraRelocationEntity = $this->entityRepo->find($this->configuration['entities']['IntraRelocation']);
 
         if (!isset($interRelocationEntity)) {
-            throw new Exception('IntraRelocation entity could not be found, check ZgwToVrijbrpAction config');
+            throw new \Exception('IntraRelocation entity could not be found, check the ZgwToVrijbrpAction config');
         }
         if (!isset($intraRelocationEntity)) {
-            throw new Exception('InterRelocation entity could not be found, check ZgwToVrijbrpAction config');
+            throw new \Exception('InterRelocation entity could not be found, check the ZgwToVrijbrpAction config');
+        }
+        if (!isset($this->configuration['gemeentecode'])) {
+            throw new \Exception('Municipality code could not be found, check the ZgwToVrijbrpAction config');
         }
 
         $relocators = [];
         $relocator = [];
 
         $relocationArray = [];
+
+        $isInterRelocation = false;
 
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             if ($eigenschap['naam'] == 'meeverhuizende_gezinsleden') {
@@ -275,14 +280,18 @@ class ZgwToVrijbrpService
                 case 'huisnummertoevoeging_nieuw':
                     $relocationArray['newAddress']['houseNumberAddition'] = $eigenschap['waarde'];
                     continue 2;
-                case 'gemeentecode':
-                    $relocationArray['newAddress']['municipality']['code'] = $eigenschap['waarde'];
-                    continue 2;
                 case 'emailadres':
                     $relocator['email'] = $eigenschap['waarde'];
                     continue 2;
                 case 'aantal_pers_nieuw_adres':
                     $relocationArray['newAddress']['numberOfResidents'] = intval($eigenschap['waarde']);
+                    continue 2;
+                case 'gemeentecode':
+                    $relocationArray['newAddress']['municipality']['code'] = $eigenschap['waarde'];
+                    if ($eigenschap['waarde'] !== $this->configuration['gemeentecode']) {
+                        $relocationArray['previousMunicipality']['code'] = $this->configuration['gemeentecode'];
+                        $isInterRelocation = true;
+                    }
                     continue 2;
             }
         }
@@ -325,15 +334,20 @@ class ZgwToVrijbrpService
         $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
 
         // Save in gateway
-        $intraObjectEntity = new ObjectEntity();
-        $intraObjectEntity->setEntity($intraRelocationEntity);
+        $relocationObjectEntity = new ObjectEntity();
+        $relocationObjectEntity->setEntity($isInterRelocation ? $interRelocationEntity : $intraRelocationEntity);
 
-        $intraObjectEntity->hydrate($relocationArray);
+        $relocationObjectEntity->hydrate($relocationArray);
 
-        $this->entityManager->persist($intraObjectEntity);
+        $this->entityManager->persist($relocationObjectEntity);
         $this->entityManager->flush();
 
-        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $intraRelocationEntity->getId()->toString(), 'response' => $relocationArray]);
+        $event = 'commongateway.vrijbrp.intrarelocation.created';
+        if ($isInterRelocation === true) {
+            $event = 'commongateway.vrijbrp.interrelocation.created';
+        }
+
+        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $relocationObjectEntity->getEntity()->getId()->toString(), 'response' => $relocationArray], $event);
 
         return $this->data;
     }
@@ -350,54 +364,102 @@ class ZgwToVrijbrpService
 
         $eigenschappenArray = [];
 
+        $event = 'commongateway.vrijbrp.death.created';
+
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
+            $extractIndex = '';
+            if (in_array(substr_replace($eigenschap['naam'], '', -1), ['amount', 'code'])) {
+                $extractIndex = substr($eigenschap['naam'], -1);
+            }
             $eigenschappenArray[] = ['naam' => $eigenschap['naam'], 'waarde' => $eigenschap['waarde']];
             switch ($eigenschap['naam']) {
                 case 'sub.emailadres':
-                    $relocationArray['deceased']['contactInformation']['email'] = $eigenschap['waarde'];
+                    $deathArrayObject['correspondence']['email'] = $eigenschap['waarde'];
                     continue 2;
                 case 'inp.bsn':
-                    $relocationArray['deceased']['bsn'] = $eigenschap['waarde'];
+                    $deathArrayObject['deceased']['bsn'] = $eigenschap['waarde'];
                     continue 2;
                 case 'voornamen':
-                    $relocationArray['deceased']['firstname'] = $eigenschap['waarde'];
+                    $deathArrayObject['deceased']['firstname'] = $eigenschap['waarde'];
                     continue 2;
                 case 'voorvoegselGeslachtsnaam':
-                    $relocationArray['deceased']['prefix'] = $eigenschap['waarde'];
+                    $deathArrayObject['deceased']['prefix'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geslachtsnaam':
-                    $relocationArray['deceased']['lastname'] = $eigenschap['waarde'];
+                    $deathArrayObject['deceased']['lastname'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geboortedatum':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                    $dateTimeFormatted = (int) $dateTimeObject->format('ymd');
-                    $deathArrayObject['deceased']['birthdate'] = $dateTimeFormatted;
+                    $deathArrayObject['deceased']['birthdate'] = (int) $eigenschap['waarde'];
                     continue 2;
                 case 'natdood':
-                    $relocationArray['deathByNaturalCauses'] = $eigenschap['waarde'] == 'True' ? true : false;
+                    $deathArrayObject['deathByNaturalCauses'] = $eigenschap['waarde'] == 'True' ? true : false;
                     continue 2;
                 case 'gemeentecode':
-                    $relocationArray['municipality']['code'] = $eigenschap['waarde'];
+                    $deathArrayObject['municipality']['code'] = $eigenschap['waarde'];
                     continue 2;
                 case 'datumoverlijden':
                     $dateTimeObject = new \DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
-                    $relocationArray['dateOfDeath'] = $dateTimeFormatted;
+                    $deathArrayObject['dateOfDeath'] = $dateTimeFormatted;
                     continue 2;
                 case 'tijdoverlijden':
                     $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-                    $relocationArray['dateOfDeath'] = $dateTimeFormatted;
+                    $dateTimeFormatted = $dateTimeObject->format('H:i');
+                    $deathArrayObject['timeOfDeath'] = $dateTimeFormatted;
+                    continue 2;
+                case 'type':
+                    in_array($eigenschap['waarde'], ['BURIAL_CREMATION', 'DISSECTION']) && $deathArrayObject['funeralServices']['serviceType'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'amount'.$extractIndex:
+                    $deathArrayObject['extracts'][$extractIndex]['amount'] = (int) $eigenschap['waarde'];
+                    continue 2;
+                case 'code'.$extractIndex:
+                    $deathArrayObject['extracts'][$extractIndex]['code'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'datum':
+                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
+                    $deathArrayObject['funeralServices']['date'] = $dateTimeFormatted;
+                    continue 2;
+                case 'buitenbenelux':
+                    $deathArrayObject['funeralServices']['outsideBenelux'] = $eigenschap['waarde'] == 'True' ? true : false;
+                    continue 2;
+                case 'communicatietype':
+                    in_array($eigenschap['waarde'], ['EMAIL', 'POST']) && $deathArrayObject['correspondence']['communicationType'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'contact.naam':
+                    $deathArrayObject['correspondence']['name'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'handelsnaam':
+                    $deathArrayObject['correspondence']['organization'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'aoa.huisnummer':
+                    $deathArrayObject['correspondence']['houseNumber'] = (int) $eigenschap['waarde'];
+                    continue 2;
+                case 'aoa.huisletter':
+                    !empty($eigenschap['waarde']) && $deathArrayObject['correspondence']['houseNumberLetter'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'aoa.huisnummertoevoeging':
+                    !empty($eigenschap['waarde']) && $deathArrayObject['correspondence']['houseNumberAddition'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'aoa.postcode':
+                    $deathArrayObject['correspondence']['postalCode'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'wpl.woonplaatsnaam':
+                    $deathArrayObject['correspondence']['residence'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'lnd.landcode':
+                    !empty($eigenschap['waarde']) && $event = 'commongateway.vrijbrp.foundbody.created';
+                    continue 2;
+                case 'contact.inp.bsn':
+                    $deathArrayObject['declarant']['bsn'] = $eigenschap['waarde'];
                     continue 2;
             }
         }
 
-        if ((isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'])
-            || (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['vestigingsNummer']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['vestigingsNummer'])
-        ) {
-            $deathArrayObject['declarant']['bsn'] = $bsn;
-            $deathArrayObject['deceased']['bsn'] = $bsn;
-        }
+        isset($deathArrayObject['extracts']) && $deathArrayObject['extracts'] = array_values($deathArrayObject['extracts']);
+
+        $deathArrayObject['funeralServices']['causeOfDeathType'] = $deathArrayObject['deathByNaturalCauses'] == true ? 'NATURAL_CAUSES' : 'NON_CONTAGIOUS_DISEASE';
 
         $deathArrayObject['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $deathArrayObject['dossier']['dossierId'] = $zaakArray['id'];
@@ -411,9 +473,6 @@ class ZgwToVrijbrpService
         $deathArrayObject['dossier']['entryDateTime'] = $dateTimeFormatted;
         $deathArrayObject['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
 
-        var_dump(json_encode($deathArrayObject));
-        exit;
-
         // Save in gateway
         $deathObjectEntity = new ObjectEntity();
         $deathObjectEntity->setEntity($deathEntity);
@@ -423,9 +482,7 @@ class ZgwToVrijbrpService
         $this->entityManager->persist($deathObjectEntity);
         $this->entityManager->flush();
 
-        $event = 'commongateway.vrijbrp.death.created' ?? 'commongateway.vrijbrp.foundbody.created';
-
-        $this->objectEntityService->dispatchEvent($event, ['entity' => $deathEntity->getId()->toString(), 'response' => $deathArrayObject]);
+        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $deathEntity->getId()->toString(), 'response' => $deathArrayObject], $event);
 
         return $this->data;
     }
@@ -493,18 +550,18 @@ class ZgwToVrijbrpService
         $zaakEigenschappen = [];
         foreach ($zaakObjectEntity->getValue('eigenschappen') as $eigenschap) {
             if (key_exists($eigenschap->getValue('naam'), $properties)) {
-//                var_dump($eigenschap->getValue('naam'));
+                //                var_dump($eigenschap->getValue('naam'));
                 $zaakEigenschappen[$eigenschap->getValue('naam')] = $eigenschap;
             }
         }
 
-//        foreach ($properties as $key => $value ) {
-//            if (key_exists($key, $zaakEigenschappen)){
-//                var_dump("joooo");
-//            }
-//        }
+        //        foreach ($properties as $key => $value ) {
+        //            if (key_exists($key, $zaakEigenschappen)){
+        //                var_dump("joooo");
+        //            }
+        //        }
 
-//        var_dump($zaakEigenschappen);
+        //        var_dump($zaakEigenschappen);
 
         $soapEmigrationArray['aanvraaggegevens'] = [
             'burgerservicenummerAanvrager' => null,
@@ -614,9 +671,130 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     * Maps dossier status to ztc statustype.
      *
-     * @param array $data          Data from the handler where the xxllnc casetype is in.
+     * @param array $dossierArrayObject Dossier array object.
+     *
+     * @return array StatusType array
+     */
+    private function mapStatusType($dossierArrayObject): array
+    {
+        return [
+            'omschrijving'         => $dossierArrayObject['embedded']['status']['code'],
+            'omschrijvingGeneriek' => $dossierArrayObject['embedded']['status']['description'],
+            'isEindstatus'         => $dossierArrayObject['embedded']['status']['endStatus'] ?? false,
+        ];
+    }
+
+    /**
+     * Finds ZaakType statustype and if found creates a status.
+     *
+     * @param array $zaakTypeArrayObject ZaakType array object.
+     * @param array $dossierArrayObject  Dossier array object.
+     *
+     * @return ?array Status array
+     */
+    private function findAndCreateStatus($zaakTypeArrayObject, $dossierArrayObject): ?array
+    {
+        foreach ($zaakTypeArrayObject['statustypen'] as $statusType) {
+            if ($statusType['omschrijving'] == $dossierArrayObject['embedded']['status']['code']) {
+                return [
+                    'statustype'       => $this->entityManager->find('App:ObjectEntity', $statusType['id']),
+                    'datumStatusGezet' => $dossierArrayObject['embedded']['status']['entryDateTime'],
+                ];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Creates or updates a ZGW Zaak from a VrijBRP dossier with the use of mapping.
+     *
+     * @param array $data          Data from the handler where the vrijbrp dossier is in.
+     * @param array $configuration Configuration from the Action where entity id's are stored in.
+     *
+     * @throws Exception
+     *
+     * @return array $this->data Data which we entered the function with
+     */
+    public function vrijbrpToZgwHandler(array $data, array $configuration): array
+    {
+        $this->data = $data;
+        $this->configuration = $configuration;
+
+        isset($this->configuration['entities']['Zaak']) && $zaakEntity = $this->entityRepo->find($this->configuration['entities']['Zaak']);
+        isset($this->configuration['entities']['ZaakType']) && $zaakTypeEntity = $this->entityRepo->find($this->configuration['entities']['ZaakType']);
+
+        if (!isset($zaakEntity)) {
+            throw new Exception('Zaak entity could not be found, check VrijbrpToZgwAction config');
+        }
+
+        $dossierArrayObject = $this->data['response'];
+
+        $zaakObjectEntity = $this->objectEntityRepo->findOneBy(['entity' => $zaakEntity, 'externalId' => $dossierArrayObject['dossierId']]);
+        $zaaktypeValues = $this->entityManager->getRepository('App:Value')->findBy(['stringValue' => $dossierArrayObject['embedded']['type']['code']]);
+        foreach ($zaaktypeValues as $zaaktypeValue) {
+            if ($zaaktypeValue->getObjectEntity()->getEntity()->getId()->toString() == $this->configuration['entities']['ZaakType']) {
+                $zaakTypeObjectEntity = $zaaktypeValue->getObjectEntity();
+            }
+        }
+
+        if (!isset($zaakTypeObjectEntity) || !$zaakTypeObjectEntity instanceof ObjectEntity) {
+            // Create zaakType
+            $zaakTypeObjectEntity = new ObjectEntity($zaakTypeEntity);
+            $zaakTypeArray = [
+                'identificatie' => $dossierArrayObject['embedded']['type']['code'],
+                'omschrijving'  => $dossierArrayObject['embedded']['type']['description'],
+                'statustypen'   => [
+                    $this->mapStatusType($dossierArrayObject),
+                ],
+            ];
+            $zaakTypeObjectEntity->hydrate($zaakTypeArray);
+            $this->entityManager->persist($zaakTypeObjectEntity);
+            $this->entityManager->flush();
+            $zaakTypeObjectEntity = $this->entityManager->find('App:ObjectEntity', $zaakTypeObjectEntity->getId()->toString());
+        }
+
+        $zaakTypeArrayObject = $zaakTypeObjectEntity->toArray();
+
+        !$zaakObjectEntity instanceof ObjectEntity && $zaakObjectEntity = new ObjectEntity($zaakEntity);
+        $zaakArrayObject = [
+            'zaaktype'         => $zaakTypeObjectEntity,
+            'identificatie'    => $dossierArrayObject['dossierId'],
+            'registratiedatum' => $dossierArrayObject['entryDateTime'],
+            'startdatum'       => $dossierArrayObject['startDate'],
+        ];
+
+        $status = $this->findAndCreateStatus($zaakTypeArrayObject, $dossierArrayObject);
+
+        if (!isset($status)) {
+            $zaakTypeArrayObject['statustypen'][] = $this->mapStatusType($dossierArrayObject);
+            $zaakTypeObjectEntity->hydrate($zaakTypeArrayObject);
+            $this->entityManager->persist($zaakTypeObjectEntity);
+            $this->entityManager->flush();
+            $zaakTypeObjectEntity = $this->entityManager->find('App:ObjectEntity', $zaakTypeObjectEntity->getId()->toString());
+            $zaakTypeArrayObject = $zaakTypeObjectEntity->toArray();
+            $status = $this->findAndCreateStatus($zaakTypeArrayObject, $dossierArrayObject);
+        }
+
+        $zaakArrayObject['status'] = $status;
+        $zaakObjectEntity->hydrate($zaakArrayObject);
+
+        $this->entityManager->persist($zaakObjectEntity);
+        $this->entityManager->flush();
+
+        $zaakArrayObject = $zaakObjectEntity->toArray();
+
+        $this->data['response'] = $zaakArrayObject;
+
+        return $this->data;
+    }
+
+    /**
+     * Creates a vrijbrp object from a ZGW Zaak with the use of mapping.
+     *
+     * @param array $data          Data from the handler where the vrijbrp casetype is in.
      * @param array $configuration Configuration from the Action where the ZaakType entity id is stored in.
      *
      * @throws Exception
@@ -653,19 +831,19 @@ class ZgwToVrijbrpService
             case 'B1425':
                 return $this->data;
                 //emigratie
-//                return $this->zgwEmigrationToVrijBrpSoap($zaakObjectEntity);
+                //                return $this->zgwEmigrationToVrijBrpSoap($zaakObjectEntity);
             case 'B0328':
                 return $this->data;
                 // geheimhouding
-//                return $this->zgwConfidentialityToVrijBrpSoap($zaakObjectEntity);
+                //                return $this->zgwConfidentialityToVrijBrpSoap($zaakObjectEntity);
             case 'B0255':
                 return $this->data;
                 // brp uittreksel
-//                return $this->zgwExtractToVrijBrpSoap($zaakObjectEntity);
+                //                return $this->zgwExtractToVrijBrpSoap($zaakObjectEntity);
             case 'B0348':
                 // naamsgebruik
                 return $this->data;
-//                return $this->zgwNamingToVrijBrpSoap($zaakObjectEntity);
+                //                return $this->zgwNamingToVrijBrpSoap($zaakObjectEntity);
             default:
                 return $this->data;
         }

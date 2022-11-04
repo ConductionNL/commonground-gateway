@@ -23,14 +23,10 @@ class HuwelijksplannerHandler implements ActionHandlerInterface
         return [
             '$id'        => 'https://example.com/person.schema.json',
             '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
-            'title'      => 'Notification Action',
+            'title'      => 'HuwelijksplannerHandler',
+            'description'=> 'Handles Huwelijkslnner actions.',
             'required'   => ['huwelijksEntityId'],
-            'properties' => [
-                'huwelijksEntityId' => [
-                    'type'        => 'string',
-                    'description' => 'The id of the huwelijks entity',
-                ],
-            ],
+            'properties' => [],
         ];
     }
 

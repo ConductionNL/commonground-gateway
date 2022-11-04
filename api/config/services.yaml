@@ -15,8 +15,9 @@ services:
         
     # this config only applies to the services created by this file
     _instanceof:
-        # actionHandlers whose classes are instances of ActionHandlerInterface will be tagged automatically
+        # actionHandlers whose classes are instances of ActionHandlerInterface will be tagged automatically and set to public
         App\ActionHandler\ActionHandlerInterface:
+            public: true
             tags: ['commongateway.action_handlers']
             
     App\Service\ActionService:
@@ -76,7 +77,7 @@ services:
         public: true
         arguments:
             $emailService: '@App\Service\EmailService'
-
+ 
     App\ActionHandler\EnrichPubliccodeHandler:
         public: true
         arguments:
@@ -182,8 +183,13 @@ services:
         public: true
         arguments:
             $zgwToVrijbrpService: '@App\Service\ZgwToVrijbrpService'
-            
 
+    App\ActionHandler\VrijbrpToZgwHandler:
+        public: true
+        arguments:
+            $zgwToVrijbrpService: '@App\Service\ZgwToVrijbrpService'
+
+    
     App\ActionHandler\ZaakInformatieObjectHandler:
         public: true
         arguments:
