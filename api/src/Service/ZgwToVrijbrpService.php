@@ -56,15 +56,15 @@ class ZgwToVrijbrpService
                 $childIndexInt = intval($childIndex) - 1;
             }
             switch ($eigenschap['naam']) {
-                case 'voornamen' . $childIndex:
+                case 'voornamen'.$childIndex:
                     $birthArray['children'][$childIndexInt]['firstname'] = $eigenschap['waarde'];
                     continue 2;
-                case 'geboortedatum' . $childIndex:
+                case 'geboortedatum'.$childIndex:
                     $dateTimeObject = new \DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
                     $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTimeFormatted;
                     continue 2;
-                case 'geslachtsaanduiding' . $childIndex:
+                case 'geslachtsaanduiding'.$childIndex:
                     in_array($eigenschap['waarde'], ['MAN', 'WOMAN', 'UNKNOWN']) && $birthArray['children'][$childIndexInt]['gender'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geslachtsnaam':
@@ -342,7 +342,6 @@ class ZgwToVrijbrpService
         $this->entityManager->persist($relocationObjectEntity);
         $this->entityManager->flush();
 
-
         $event = 'commongateway.vrijbrp.intrarelocation.created';
         if ($isInterRelocation === true) {
             $event = 'commongateway.vrijbrp.interrelocation.created';
@@ -411,10 +410,10 @@ class ZgwToVrijbrpService
                 case 'type':
                     in_array($eigenschap['waarde'], ['BURIAL_CREMATION', 'DISSECTION']) && $deathArrayObject['funeralServices']['serviceType'] = $eigenschap['waarde'];
                     continue 2;
-                case 'amount' . $extractIndex:
+                case 'amount'.$extractIndex:
                     $deathArrayObject['extracts'][$extractIndex]['amount'] = (int) $eigenschap['waarde'];
                     continue 2;
-                case 'code' . $extractIndex:
+                case 'code'.$extractIndex:
                     $deathArrayObject['extracts'][$extractIndex]['code'] = $eigenschap['waarde'];
                     continue 2;
                 case 'datum':
@@ -672,7 +671,7 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * Maps dossier status to ztc statustype
+     * Maps dossier status to ztc statustype.
      *
      * @param array $dossierArrayObject Dossier array object.
      *
@@ -681,18 +680,17 @@ class ZgwToVrijbrpService
     private function mapStatusType($dossierArrayObject): array
     {
         return [
-            'omschrijving' => $dossierArrayObject['embedded']['status']['code'],
+            'omschrijving'         => $dossierArrayObject['embedded']['status']['code'],
             'omschrijvingGeneriek' => $dossierArrayObject['embedded']['status']['description'],
-            'isEindstatus' => $dossierArrayObject['embedded']['status']['endStatus'] ?? false
+            'isEindstatus'         => $dossierArrayObject['embedded']['status']['endStatus'] ?? false,
         ];
     }
 
-
     /**
-     * Finds ZaakType statustype and if found creates a status
+     * Finds ZaakType statustype and if found creates a status.
      *
      * @param array $zaakTypeArrayObject ZaakType array object.
-     * @param array $dossierArrayObject Dossier array object.
+     * @param array $dossierArrayObject  Dossier array object.
      *
      * @return ?array Status array
      */
@@ -701,14 +699,14 @@ class ZgwToVrijbrpService
         foreach ($zaakTypeArrayObject['statustypen'] as $statusType) {
             if ($statusType['omschrijving'] == $dossierArrayObject['embedded']['status']['code']) {
                 return [
-                    'statustype' => $this->entityManager->find('App:ObjectEntity', $statusType['id']),
-                    'datumStatusGezet' => $dossierArrayObject['embedded']['status']['entryDateTime']
+                    'statustype'       => $this->entityManager->find('App:ObjectEntity', $statusType['id']),
+                    'datumStatusGezet' => $dossierArrayObject['embedded']['status']['entryDateTime'],
                 ];
             }
         }
+
         return null;
     }
-
 
     /**
      * Creates or updates a ZGW Zaak from a VrijBRP dossier with the use of mapping.
@@ -747,10 +745,10 @@ class ZgwToVrijbrpService
             $zaakTypeObjectEntity = new ObjectEntity($zaakTypeEntity);
             $zaakTypeArray = [
                 'identificatie' => $dossierArrayObject['embedded']['type']['code'],
-                'omschrijving' => $dossierArrayObject['embedded']['type']['description'],
-                'statustypen' => [
-                    $this->mapStatusType($dossierArrayObject)
-                ]
+                'omschrijving'  => $dossierArrayObject['embedded']['type']['description'],
+                'statustypen'   => [
+                    $this->mapStatusType($dossierArrayObject),
+                ],
             ];
             $zaakTypeObjectEntity->hydrate($zaakTypeArray);
             $this->entityManager->persist($zaakTypeObjectEntity);
@@ -762,10 +760,10 @@ class ZgwToVrijbrpService
 
         !$zaakObjectEntity instanceof ObjectEntity && $zaakObjectEntity = new ObjectEntity($zaakEntity);
         $zaakArrayObject = [
-            'zaaktype' => $zaakTypeObjectEntity,
-            'identificatie' => $dossierArrayObject['dossierId'],
+            'zaaktype'         => $zaakTypeObjectEntity,
+            'identificatie'    => $dossierArrayObject['dossierId'],
             'registratiedatum' => $dossierArrayObject['entryDateTime'],
-            'startdatum' => $dossierArrayObject['startDate']
+            'startdatum'       => $dossierArrayObject['startDate'],
         ];
 
         $status = $this->findAndCreateStatus($zaakTypeArrayObject, $dossierArrayObject);
@@ -792,6 +790,7 @@ class ZgwToVrijbrpService
 
         return $this->data;
     }
+
     /**
      * Creates a vrijbrp object from a ZGW Zaak with the use of mapping.
      *
@@ -806,7 +805,6 @@ class ZgwToVrijbrpService
     {
         $this->data = $data;
         $this->configuration = $configuration;
-
 
         if (!isset($data['response']['zgwZaak']['id'])) {
             throw new Exception('Zaak ID not given for ZgwToVrijbrpHandler');

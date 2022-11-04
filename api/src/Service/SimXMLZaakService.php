@@ -47,10 +47,10 @@ class SimXMLZaakService
      * @param ObjectEntity $zaaktypeObjectEntity
      * @param ObjectEntity $zaak
      *
-     * @return ObjectEntity $zaak The modified data of the call with the case type and identification
      * @throws Exception
      *
-     * @return void The modified data of the call with the case type and identification
+     * @return ObjectEntity $zaak The modified data of the call with the case type and identification
+     * @return void         The modified data of the call with the case type and identification
      */
     public function createNewZgwEigenschappen(ObjectEntity $simXmlBody, ObjectEntity $simXmlStuurgegevens, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): ObjectEntity
     {
@@ -92,6 +92,7 @@ class SimXMLZaakService
         }
 
         $zaak->setValue('eigenschappen', $zaakEigenschappen);
+
         return $zaak;
     }
 
@@ -160,10 +161,10 @@ class SimXMLZaakService
      * @param ObjectEntity $zaaktypeObjectEntity
      * @param ObjectEntity $zaak
      *
-     * @return ObjectEntity $zaak The modified data of the call with the case type and identification
      * @throws Exception
      *
-     * @return void The modified data of the call with the case type and identification
+     * @return ObjectEntity $zaak The modified data of the call with the case type and identification
+     * @return void         The modified data of the call with the case type and identification
      */
     public function createNewZgwRolObject(ObjectEntity $simXmlBody, ObjectEntity $simXmlStuurgegevens, ObjectEntity $zaaktypeObjectEntity, ObjectEntity $zaak): ObjectEntity
     {
@@ -181,6 +182,7 @@ class SimXMLZaakService
 
         $rol[] = $this->createZgwRollen($simXmlBody, $zaak, $roltype);
         $zaak->setValue('rollen', $rol);
+
         return $zaak;
     }
 
