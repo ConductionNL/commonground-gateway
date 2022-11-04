@@ -302,7 +302,10 @@ class SynchronizationService
             'component' => $this->gatewayService->gatewayToArray($gateway),
             'url'       => $this->getUrlForSource($gateway, $id, $objectArray),
             'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService($id), //todo maybe array_merge instead of ??
-            'headers'   => $this->getCallServiceOverwrite('headers') ?? $gateway->getHeaders(), //todo maybe array_merge instead of ??
+            'headers'   => array_merge(
+                ['Content-Type' => 'application/json'],
+                ($this->getCallServiceOverwrite('headers') ?? $gateway->getHeaders()) //todo maybe array_merge instead of ??
+            ),
             'method'    => $this->getCallServiceOverwrite('method'),
         ];
     }
@@ -345,7 +348,7 @@ class SynchronizationService
         }
 
         return $location.($id ? '/'.$id : '');
-        return $gateway->getLocation().$location.($id ? '/'.$id : '');
+        return $gateway->getLocation().$location.($id ? '/'.$id : ''); // todo!
     }
 
     /**
@@ -1045,42 +1048,12 @@ class SynchronizationService
                 $this->io->warning("Error while doing syncToSource: {$exception->getMessage()}");
                 $this->io->block("File: {$exception->getFile()}");
                 $this->io->block("Line: {$exception->getLine()}");
-                //                $this->io->block("Trace: {$exception->getTraceAsString()}");
+//                $this->io->block("Trace: {$exception->getTraceAsString()}");
             }
-            $synchronization->setLastSynced(new DateTime());
 
             //todo: error, log this
             return $synchronization;
         }
-
-//        try {
-//            $result = $this->commonGroundService->callService(
-//                $callServiceConfig['component'],
-//                $synchronization->getEndpoint() ?? $callServiceConfig['url'],
-//                $objectString,
-//                $callServiceConfig['query'],
-//                $callServiceConfig['headers'],
-//                false,
-//                $callServiceConfig['method'] ?? ($existsInSource ? 'PUT' : 'POST')
-//            );
-//
-//            if (is_array($result)) {
-//                throw new Exception('callService returned an array'.(isset($response['error']) ? " with error: {$response['error']}" : ''));
-//            }
-//        } catch (Exception $exception) {
-//            if (isset($this->io)) {
-//                $this->io->warning("Error while doing syncToSource: {$exception->getMessage()}");
-//                $this->io->block("File: {$exception->getFile()}");
-//                $this->io->block("Line: {$exception->getLine()}");
-//                //                $this->io->block("Trace: {$exception->getTraceAsString()}");
-//            }
-//            $synchronization->setLastSynced(new DateTime());
-//
-//            var_dump("Error while doing syncToSource: {$exception->getMessage()}", "File: {$exception->getFile()}", "Line: {$exception->getLine()}");
-//
-//            //todo: error, log this
-//            return $synchronization;
-//        }
         $contentType = $result->getHeader('content-type')[0];
         if (!$contentType) {
             $contentType = $result->getHeader('Content-Type')[0];

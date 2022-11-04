@@ -483,8 +483,6 @@ class ZgwToVrijbrpService
         $this->entityManager->persist($deathObjectEntity);
         $this->entityManager->flush();
 
-        var_dump(json_encode($deathArrayObject));
-
         $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $deathEntity->getId()->toString(), 'response' => $deathArrayObject], $event);
 
         return $this->data;
