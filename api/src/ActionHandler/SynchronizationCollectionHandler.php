@@ -4,9 +4,12 @@ namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
 use App\Service\SynchronizationService;
-use Cassandra\Exception\InvalidArgumentException;
+use Psr\Cache\CacheException;
+use GuzzleHttp\Exception\GuzzleException;
+use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
-use Symfony\Component\Cache\Exception\CacheException;
+use Twig\Error\LoaderError;
+use Twig\Error\SyntaxError;
 
 class SynchronizationCollectionHandler implements ActionHandlerInterface
 {
@@ -234,9 +237,9 @@ class SynchronizationCollectionHandler implements ActionHandlerInterface
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
-     * @throws GatewayException|InvalidArgumentException|ComponentException|CacheException
-     *
      * @return array
+     *
+     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException|LoaderError|SyntaxError|GuzzleException
      */
     public function run(array $data, array $configuration): array
     {
