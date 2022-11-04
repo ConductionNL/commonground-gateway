@@ -4,7 +4,13 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\CallLogRepository;
+use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ApiResource(
@@ -24,57 +30,101 @@ use Doctrine\ORM\Mapping as ORM;
 class CallLog
 {
     /**
+     * @var UuidInterface The UUID identifier of this resource
+     *
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
+     *
+     * @Assert\Uuid
+     * @Groups({"read","read_secure"})
      * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="uuid", unique=true)
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private $id;
+    private UuidInterface $id;
 
     /**
-     * @ORM\OneToOne(targetEntity=Gateway::class, cascade={"persist", "remove"})
+     * @var Gateway The source that is requested
+     *
+     * @Groups({"read","read_secure"})
+     * @ORM\ManyToOne(targetEntity=Gateway::class, cascade={"persist", "remove"})
      * @ORM\JoinColumn(nullable=false)
      */
-    private $source;
+    private Gateway $source;
 
     /**
+     * @var string the endpoint on the source that is requested
+     *
+     * @Groups({"read","read_secure"})
      * @ORM\Column(type="string", length=255)
      */
-    private $endpoint;
+    private string $endpoint = '';
 
     /**
+     * @var array the configuration array of the request
+     *
+     * @Groups({"read","read_secure"})
      * @ORM\Column(type="array")
      */
-    private $config = [];
+    private array $config = [];
 
     /**
+     * @var string The method of the request
+     *
+     * @Groups({"read","read_secure"})
      * @ORM\Column(type="string", length=255)
      */
-    private $method;
+    private string $method = '';
 
     /**
+     * @var string the response status of the request
+     *
+     * @Groups({"read","read_secure"})
      * @ORM\Column(type="string", length=255)
      */
-    private $responseStatus;
+    private string $responseStatus = '';
 
     /**
+     * @var int the response status code
+     *
+     * @Groups({"read","read_secure"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $responseStatusCode;
+    private int $responseStatusCode = 0;
 
     /**
+     * @var string The body of the response
+     *
+     * @Groups({"read","read_secure"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $responseBody;
+    private string $responseBody = '';
 
     /**
+     * @var int the runtime of the request
+     *
+     * @Groups({"read","read_secure"})
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $responseTime = 0;
+
+    /**
+     * @var Datetime The moment this resource was created
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="create")
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private $dateCreated;
+    private DateTimeInterface $dateCreated;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @var Datetime The moment this resource was last Modified
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="update")
+     * @ORM\Column(type="datetime", nullable=true)
      */
-    private $dateModified;
+    private DateTimeInterface $dateModified;
 
     public function getId(): ?int
     {
@@ -165,27 +215,37 @@ class CallLog
         return $this;
     }
 
-    public function getDateCreated(): ?\DateTimeInterface
+    public function getDateCreated(): ?DateTimeInterface
     {
         return $this->dateCreated;
     }
 
-    public function setDateCreated(?\DateTimeInterface $dateCreated): self
+    public function setDateCreated(?DateTimeInterface $dateCreated): self
     {
         $this->dateCreated = $dateCreated;
 
         return $this;
     }
 
-    public function getDateModified(): ?\DateTimeInterface
+    public function getDateModified(): ?DateTimeInterface
     {
         return $this->dateModified;
     }
 
-    public function setDateModified(\DateTimeInterface $dateModified): self
+    public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
 
         return $this;
+    }
+
+    public function getResponseTime(): int
+    {
+        return $this->responseTime;
+    }
+
+    public function setResponseTime(int $responseTime): void
+    {
+        $this->responseTime = $responseTime;
     }
 }
