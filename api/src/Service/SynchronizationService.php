@@ -118,7 +118,6 @@ class SynchronizationService
             $this->io = $this->session->get('io');
             $this->io->note('SynchronizationService->synchronisationPushHandler()');
         }
-        var_dump('SynchronizationService->synchronisationPushHandler()');
 
         $source = $this->getSourceFromConfig();
         $entity = $this->getEntityFromConfig();
@@ -127,7 +126,6 @@ class SynchronizationService
             return $this->data;
         }
 
-        var_dump(count($entity->getObjectEntities()));
         foreach ($entity->getObjectEntities() as $object) {
             $synchronisation = $this->findSyncByObject($object, $source, $entity);
             if (!$synchronisation->getLastSynced()) {
@@ -1021,7 +1019,6 @@ class SynchronizationService
         if (isset($this->io)) {
             $this->io->text("syncToSource for Synchronization with id = {$synchronization->getId()->toString()}");
         }
-        var_dump("syncToSource for Synchronization with id = {$synchronization->getId()->toString()}");
         $object = $synchronization->getObject();
         $objectArray = $object->toArray(1, $this->configuration['apiSource']['extend'] ?? ['id']);
 
@@ -1031,8 +1028,6 @@ class SynchronizationService
         $objectArray = $this->mapOutput($objectArray);
 
         $objectString = $this->getObjectString($objectArray);
-
-        var_dump($objectString);
 
         try {
             $result = $this->callService->call(
@@ -1053,10 +1048,6 @@ class SynchronizationService
                 //                $this->io->block("Trace: {$exception->getTraceAsString()}");
             }
             $synchronization->setLastSynced(new DateTime());
-
-            var_dump("Error while doing syncToSource: {$exception->getMessage()}", "File: {$exception->getFile()}", "Line: {$exception->getLine()}");
-
-            var_dump($exception->getResponse()->getBody()->getContents());
 
             //todo: error, log this
             return $synchronization;
@@ -1095,8 +1086,6 @@ class SynchronizationService
             $contentType = $result->getHeader('Content-Type')[0];
         }
         $body = $this->decodeResponse($result->getBody()->getContents(), $contentType);
-
-        var_dump('RESPONSE BODY:', $body);
 
         return $this->storeSynchronization($synchronization, $body);
     }
