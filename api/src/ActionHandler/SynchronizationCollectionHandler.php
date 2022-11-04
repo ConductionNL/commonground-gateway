@@ -4,8 +4,8 @@ namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
 use App\Service\SynchronizationService;
-use Psr\Cache\CacheException;
 use GuzzleHttp\Exception\GuzzleException;
+use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 use Twig\Error\LoaderError;
@@ -237,9 +237,9 @@ class SynchronizationCollectionHandler implements ActionHandlerInterface
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
-     * @return array
-     *
      * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException|LoaderError|SyntaxError|GuzzleException
+     *
+     * @return array
      */
     public function run(array $data, array $configuration): array
     {
