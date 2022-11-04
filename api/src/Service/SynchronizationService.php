@@ -46,19 +46,19 @@ class SynchronizationService
     private Environment $twig;
 
     /**
-     * @param CommonGroundService $commonGroundService
-     * @param CallService $callService
+     * @param CommonGroundService    $commonGroundService
+     * @param CallService            $callService
      * @param EntityManagerInterface $entityManager
-     * @param SessionInterface $session
-     * @param GatewayService $gatewayService
-     * @param FunctionService $functionService
-     * @param LogService $logService
-     * @param MessageBusInterface $messageBus
-     * @param TranslationService $translationService
-     * @param ObjectEntityService $objectEntityService
-     * @param ValidatorService $validatorService
-     * @param EavService $eavService
-     * @param Environment $twig
+     * @param SessionInterface       $session
+     * @param GatewayService         $gatewayService
+     * @param FunctionService        $functionService
+     * @param LogService             $logService
+     * @param MessageBusInterface    $messageBus
+     * @param TranslationService     $translationService
+     * @param ObjectEntityService    $objectEntityService
+     * @param ValidatorService       $validatorService
+     * @param EavService             $eavService
+     * @param Environment            $twig
      */
     public function __construct(CommonGroundService $commonGroundService, CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig)
     {
@@ -102,12 +102,12 @@ class SynchronizationService
     /**
      * Synchronises objects in the gateway to a source.
      *
-     * @param array $data The data from the action
+     * @param array $data          The data from the action
      * @param array $configuration The configuration given by the action
      *
-     * @return array The data from the action modified by the execution of the synchronisation
-     *
      * @throws CacheException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError
+     *
+     * @return array The data from the action modified by the execution of the synchronisation
      */
     public function synchronisationPushHandler(array $data, array $configuration): array
     {
@@ -145,9 +145,9 @@ class SynchronizationService
      * @param array $data
      * @param array $configuration
      *
-     * @return array
-     *
      * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError
+     *
+     * @return array
      */
     public function SynchronizationWebhookHandler(array $data, array $configuration): array
     {
@@ -190,9 +190,9 @@ class SynchronizationService
      * @param array $data          Data from the request running
      * @param array $configuration Configuration for the action running
      *
-     * @return array The resulting data
-     *
      * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException|LoaderError|SyntaxError|GuzzleException
+     *
+     * @return array The resulting data
      */
     public function SynchronizationCollectionHandler(array $data, array $configuration): array
     {
@@ -298,7 +298,7 @@ class SynchronizationService
     private function getCallServiceConfig(Gateway $gateway, string $id = null, ?array $objectArray = []): array
     {
         return [
-            'gateway' => $gateway,
+            'gateway'   => $gateway,
             'url'       => $this->getUrlForSource($id, $objectArray),
             'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService($id), //todo maybe array_merge instead of ??
             'headers'   => array_merge(
@@ -375,9 +375,9 @@ class SynchronizationService
      *
      * @param Gateway $gateway The source to get the data from
      *
-     * @return array The results found on the source
-     *
      * @throws LoaderError|SyntaxError|GuzzleException
+     *
+     * @return array The results found on the source
      */
     private function getObjectsFromSource(Gateway $gateway): array
     {
@@ -406,11 +406,11 @@ class SynchronizationService
      * Fetches the objects stored on the source.
      *
      * @param array $callServiceConfig The configuration for the source
-     * @param int $page The current page to be requested
-     *
-     * @return array
+     * @param int   $page              The current page to be requested
      *
      * @throws GuzzleException
+     *
+     * @return array
      */
     private function fetchObjectsFromSource(array $callServiceConfig, int $page = 1): array
     {
@@ -430,9 +430,9 @@ class SynchronizationService
                 $callServiceConfig['url'],
                 $callServiceConfig['method'] ?? 'GET',
                 [
-                    'body' => strtoupper($callServiceConfig['method']) == 'POST' ? '{}' : '',
-                    'query' => $query,
-                    'headers' => $callServiceConfig['headers']
+                    'body'    => strtoupper($callServiceConfig['method']) == 'POST' ? '{}' : '',
+                    'query'   => $query,
+                    'headers' => $callServiceConfig['headers'],
                 ]
             );
         } catch (Exception|GuzzleException $exception) {
@@ -467,9 +467,9 @@ class SynchronizationService
      *
      * @param Synchronization $synchronization The synchronisation object with the related source object id
      *
-     * @return array|null The resulting object
-     *
      * @throws LoaderError|SyntaxError|GuzzleException
+     *
+     * @return array|null The resulting object
      */
     private function getSingleFromSource(Synchronization $synchronization): ?array
     {
@@ -486,9 +486,9 @@ class SynchronizationService
                 $synchronization->getEndpoint() ?? $callServiceConfig['url'],
                 $callServiceConfig['method'] ?? 'GET',
                 [
-                    'body' => '',
-                    'query' => $callServiceConfig['query'],
-                    'headers' => $callServiceConfig['headers']
+                    'body'    => '',
+                    'query'   => $callServiceConfig['query'],
+                    'headers' => $callServiceConfig['headers'],
                 ]
             );
         } catch (Exception|GuzzleException $exception) {
@@ -638,11 +638,11 @@ class SynchronizationService
      * Executes the synchronisation between source and gateway.
      *
      * @param Synchronization $synchronization The synchronisation object before synchronisation
-     * @param array $sourceObject The object in the source
-     *
-     * @return Synchronization The updated synchronisation object
+     * @param array           $sourceObject    The object in the source
      *
      * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError
+     *
+     * @return Synchronization The updated synchronisation object
      */
     public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
     {
@@ -689,9 +689,9 @@ class SynchronizationService
      * @param array        $data         The data that has to go into the objectEntity
      * @param ObjectEntity $objectEntity The ObjectEntity to populate
      *
-     * @return ObjectEntity The populated ObjectEntity
-     *
      * @throws CacheException|InvalidArgumentException|ComponentException|GatewayException
+     *
+     * @return ObjectEntity The populated ObjectEntity
      */
     public function populateObject(array $data, ObjectEntity $objectEntity, ?string $method = 'POST'): ObjectEntity
     {
@@ -1005,9 +1005,9 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronisation object for the created or updated object
      * @param bool            $existsInSource  Determines if a new synchronisation should be made, or an existing one should be updated
      *
-     * @return Synchronization The updated synchronisation object
-     *
      * @throws CacheException|InvalidArgumentException|LoaderError|SyntaxError|GuzzleException
+     *
+     * @return Synchronization The updated synchronisation object
      */
     private function syncToSource(Synchronization $synchronization, bool $existsInSource): Synchronization
     {
@@ -1030,9 +1030,9 @@ class SynchronizationService
                 $synchronization->getEndpoint() ?? $callServiceConfig['url'],
                 $callServiceConfig['method'] ?? ($existsInSource ? 'PUT' : 'POST'),
                 [
-                    'body' => $objectString,
-                    'query' => $callServiceConfig['query'],
-                    'headers' => $callServiceConfig['headers']
+                    'body'    => $objectString,
+                    'query'   => $callServiceConfig['query'],
+                    'headers' => $callServiceConfig['headers'],
                 ]
             );
         } catch (Exception|GuzzleException $exception) {
