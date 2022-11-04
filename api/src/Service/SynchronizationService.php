@@ -256,8 +256,6 @@ class SynchronizationService
         }
         if (isset($this->io)) {
             $this->io->error('Could not get a Source with current Action->Configuration');
-        } else {
-            var_dump('Could not get a Source with current Action->Configuration');
         }
 
         return null;
@@ -278,8 +276,6 @@ class SynchronizationService
         }
         if (isset($this->io)) {
             $this->io->error('Could not get an Entity with current Action->Configuration');
-        } else {
-            var_dump('Could not get an Entity with current Action->Configuration');
         }
 
         return null;
