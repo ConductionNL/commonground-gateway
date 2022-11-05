@@ -12,9 +12,15 @@ class MapSimXMLHandler implements ActionHandlerInterface
 {
     private MapSimXMLService $mapSimXMLService;
 
-    public function __construct(MapSimXMLService $mapSimXMLService)
-    {
-        $this->mapSimXMLService = $mapSimXMLService;
+    /**
+     * Wrapper function to prevent service loading on container autowiring
+     *
+     * @param MapSimXMLService $mapSimXMLService
+     * @return MapSimXMLService
+     */
+    private function getMapSimXMLService(MapSimXMLService $mapSimXMLService):MapSimXMLService {
+        if(isset($this->mapSimXMLService)) {$this->mapSimXMLService = $mapSimXMLService;}
+        return  $this->mapSimXMLService;
     }
 
     /**
@@ -80,6 +86,6 @@ class MapSimXMLHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->mapSimXMLService->mapSimXMLHandler($data, $configuration);
+        return $this->getMapSimXMLService()->mapSimXMLHandler($data, $configuration);
     }
 }

@@ -12,9 +12,15 @@ class VrijbrpToZgwHandler
 {
     private ZgwToVrijbrpService $zgwToVrijbrpService;
 
-    public function __construct(ZgwToVrijbrpService $zgwToVrijbrpService)
-    {
-        $this->zgwToVrijbrpService = $zgwToVrijbrpService;
+    /**
+     * Wrapper function to prevent service loading on container autowiring
+     *
+     * @param ZgwToVrijbrpService $zgwToVrijbrpService
+     * @return ZgwToVrijbrpService
+     */
+    private function getZgwToVrijbrpService(ZgwToVrijbrpService $zgwToVrijbrpService): ZgwToVrijbrpService{
+        if(isset($this->zgwToVrijbrpService)) {$this->zgwToVrijbrpService = $zgwToVrijbrpService;}
+        return  $this->zgwToVrijbrpService;
     }
 
     /**
@@ -59,6 +65,6 @@ class VrijbrpToZgwHandler
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->zgwToVrijbrpService->vrijbrpToZgwHandler($data, $configuration);
+        return $this->getZgwToVrijbrpService()->vrijbrpToZgwHandler($data, $configuration);
     }
 }

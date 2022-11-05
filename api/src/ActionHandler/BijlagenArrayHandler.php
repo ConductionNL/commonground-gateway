@@ -12,9 +12,15 @@ class BijlagenArrayHandler implements ActionHandlerInterface
 {
     private BijlagenArrayService $bijlagenArrayService;
 
-    public function __construct(BijlagenArrayService $bijlagenArrayService)
-    {
-        $this->bijlagenArrayService = $bijlagenArrayService;
+    /**
+     * Wrapper function to prevent service loading on container autowiring
+     *
+     * @param BijlagenArrayService $bijlagenArrayService
+     * @return BijlagenArrayService
+     */
+    private function getBijlagenArrayService(BijlagenArrayService $bijlagenArrayService):BijlagenArrayService {
+        if(isset($this->bijlagenArrayService)) {$this->bijlagenArrayService = $bijlagenArrayService;}
+        return  $this->bijlagenArrayService;
     }
 
     /**
@@ -49,6 +55,6 @@ class BijlagenArrayHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->bijlagenArrayService->bijlagenArrayHandler($data, $configuration);
+        return $this->getbijlagenArrayService()->bijlagenArrayHandler($data, $configuration);
     }
 }

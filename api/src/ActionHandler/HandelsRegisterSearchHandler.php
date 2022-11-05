@@ -12,9 +12,15 @@ class HandelsRegisterSearchHandler implements ActionHandlerInterface
 {
     private HandelsRegisterSearchService $handelsRegisterSearchService;
 
-    public function __construct(HandelsRegisterSearchService $handelsRegisterSearchService)
-    {
-        $this->handelsRegisterSearchService = $handelsRegisterSearchService;
+    /**
+     * Wrapper function to prevent service loading on container autowiring
+     *
+     * @param HandelsRegisterSearchService $handelsRegisterSearchService
+     * @return HandelsRegisterSearchService
+     */
+    private function getHandelsRegisterSearchService(HandelsRegisterSearchService $handelsRegisterSearchService):HandelsRegisterSearchService {
+        if(isset($this->handelsRegisterSearchService)) {$this->handelsRegisterSearchService = $handelsRegisterSearchService;}
+        return  $this->handelsRegisterSearchService;
     }
 
     /**
@@ -59,6 +65,6 @@ class HandelsRegisterSearchHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->handelsRegisterSearchService->handelsRegisterSearchHandler($data, $configuration);
+        return $this->getHandelsRegisterSearchService()->handelsRegisterSearchHandler($data, $configuration);
     }
 }

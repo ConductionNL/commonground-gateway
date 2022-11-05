@@ -13,11 +13,14 @@ class SynchronizationWebhookHandler implements ActionHandlerInterface
     private SynchronizationService $synchronizationService;
 
     /**
+     * Wrapper function to prevent service loading on container autowiring
+     *
      * @param SynchronizationService $synchronizationService
+     * @return SynchronizationService
      */
-    public function __construct(SynchronizationService $synchronizationService)
-    {
-        $this->synchronizationService = $synchronizationService;
+    private function getSynchronizationService(ZgwToVrijbrpService $synchronizationService){
+        if(isset($this->synchronizationService)) {$this->synchronizationService = $synchronizationService;}
+        return  $this->synchronizationService;
     }
 
     /**
@@ -81,7 +84,7 @@ class SynchronizationWebhookHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        $result = $this->synchronizationService->SynchronizationWebhookHandler($data, $configuration);
+        $result = $this->getSynchronizationService->SynchronizationWebhookHandler($data, $configuration);
 
         return $data;
     }

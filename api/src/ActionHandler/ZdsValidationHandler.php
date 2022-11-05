@@ -12,9 +12,15 @@ class ZdsValidationHandler implements ActionHandlerInterface
 {
     private ZdsZaakService $zdsZaakService;
 
-    public function __construct(ZdsZaakService $zdsZaakService)
-    {
-        $this->zdsZaakService = $zdsZaakService;
+    /**
+     * Wrapper function to prevent service loading on container autowiring
+     *
+     * @param ZdsZaakService $zdsZaakService
+     * @return ZdsZaakService
+     */
+    private function getZdsZaakService(ZdsZaakService $zdsZaakService): ZdsZaakService{
+        if(isset($this->zdsZaakService)) {$this->zdsZaakService = $zdsZaakService;}
+        return  $this->zdsZaakService;
     }
 
     /**
@@ -55,6 +61,6 @@ class ZdsValidationHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->zdsZaakService->zdsValidationHandler($data, $configuration);
+        return $this->getZdsZaakService()->zdsValidationHandler($data, $configuration);
     }
 }

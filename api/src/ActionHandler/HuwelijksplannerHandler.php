@@ -6,11 +6,17 @@ use App\Service\HuwelijksplannerService;
 
 class HuwelijksplannerHandler implements ActionHandlerInterface
 {
-    private huwelijksplannerService $huwelijksplannerService;
+    private HuwelijksplannerService $huwelijksplannerService;
 
-    public function __construct(HuwelijksplannerService $huwelijksplannerService)
-    {
-        $this->huwelijksplannerService = $huwelijksplannerService;
+    /**
+     * Wrapper function to prevent service loading on container autowiring
+     *
+     * @param HuwelijksplannerService $huwelijksplannerService
+     * @return HuwelijksplannerService
+     */
+    private function getHuwelijksplannerService(HuwelijksplannerService $huwelijksplannerService):HuwelijksplannerService {
+        if(isset($this->huwelijksplannerService)) {$this->huwelijksplannerService = $huwelijksplannerService;}
+        return  $this->huwelijksplannerService;
     }
 
     /**
@@ -45,6 +51,6 @@ class HuwelijksplannerHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->huwelijksplannerService->HuwelijksplannerHandler($data, $configuration);
+        return $this->getHuwelijksplannerService()->HuwelijksplannerHandler($data, $configuration);
     }
 }
