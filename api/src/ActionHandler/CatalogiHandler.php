@@ -8,9 +8,15 @@ class CatalogiHandler implements ActionHandlerInterface
 {
     private CatalogiService $catalogiService;
 
-    public function __construct(CatalogiService $catalogiService)
-    {
-        $this->catalogiService = $catalogiService;
+    /**
+     * Wrapper function to prevent service loading on container autowiring
+     *
+     * @param CatalogiService $catalogiService
+     * @return CatalogiService
+     */
+    private function getCatalogiService(CatalogiService $catalogiService):CatalogiService {
+        if(isset($this->catalogiService)) {$this->catalogiService = $catalogiService;}
+        return  $this->catalogiService;
     }
 
     /**
@@ -51,6 +57,6 @@ class CatalogiHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->catalogiService->catalogiHandler($data, $configuration);
+        return $this->getcatalogiService()->catalogiHandler($data, $configuration);
     }
 }
