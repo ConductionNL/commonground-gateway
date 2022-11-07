@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a5fa345f5e94f567c394ae1383beb358",
+    "content-hash": "5b7516a41633ac4de0981064b4cd26fe",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -630,17 +630,55 @@
             "time": "2022-11-02T13:47:27+00:00"
         },
         {
+            "name": "common-gateway/xxllnc-zgw-bundle",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/XxllncZGWBundle.git",
+                "reference": "c569086627a546b0681e95ab715eeb0bae100f9b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/XxllncZGWBundle/zipball/c569086627a546b0681e95ab715eeb0bae100f9b",
+                "reference": "c569086627a546b0681e95ab715eeb0bae100f9b",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "default-branch": true,
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\XxllncZGWBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "A package for a symfony flex bundle containing functionality for mapping ZGW api standard to XXLLNC api",
+            "support": {
+                "issues": "https://github.com/CommonGateway/XxllncZGWBundle/issues",
+                "source": "https://github.com/CommonGateway/XxllncZGWBundle/tree/main"
+            },
+            "time": "2022-11-03T10:21:04+00:00"
+        },
+        {
             "name": "commongateway/corebundle",
             "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "b55e18a0e094c98610b9e48aaa85cdb5b124dfb7"
+                "reference": "86d6b21aca62a131ee4b5c8ec156d57feb06a0c3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/b55e18a0e094c98610b9e48aaa85cdb5b124dfb7",
-                "reference": "b55e18a0e094c98610b9e48aaa85cdb5b124dfb7",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/86d6b21aca62a131ee4b5c8ec156d57feb06a0c3",
+                "reference": "86d6b21aca62a131ee4b5c8ec156d57feb06a0c3",
                 "shasum": ""
             },
             "require": {
@@ -698,7 +736,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2022-10-26T11:25:19+00:00"
+            "time": "2022-11-01T14:08:51+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -14253,6 +14291,7 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "common-gateway/waardepapieren-bundle": 20,
+        "common-gateway/xxllnc-zgw-bundle": 20,
         "commongateway/corebundle": 20,
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,

@@ -40,6 +40,9 @@
     "common-gateway/waardepapieren-bundle": {
         "version": "dev-main"
     },
+    "common-gateway/xxllnc-zgw-bundle": {
+        "version": "dev-main"
+    },
     "commongateway/corebundle": {
         "version": "dev-master"
     },
