@@ -501,6 +501,21 @@ class Gateway
      */
     private $dateModified;
 
+    /**
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private $configuration = [];
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $lastCall;
+
+    /**
+     * @ORM\Column(type="integer", nullable=true)
+     */
+    private $status;
+
     public function __construct()
     {
         $this->responceLogs = new ArrayCollection();
@@ -946,5 +961,41 @@ class Gateway
             'username'              => $this->getUsername(),
             'password'              => $this->getPassword(),
         ];
+    }
+
+    public function getConfiguration(): ?array
+    {
+        return $this->configuration;
+    }
+
+    public function setConfiguration(?array $configuration): self
+    {
+        $this->configuration = $configuration;
+
+        return $this;
+    }
+
+    public function getLastCall(): ?\DateTimeInterface
+    {
+        return $this->lastCall;
+    }
+
+    public function setLastCall(?\DateTimeInterface $lastCall): self
+    {
+        $this->lastCall = $lastCall;
+
+        return $this;
+    }
+
+    public function getStatus(): ?int
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?int $status): self
+    {
+        $this->status = $status;
+
+        return $this;
     }
 }

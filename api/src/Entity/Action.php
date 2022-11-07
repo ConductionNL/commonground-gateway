@@ -186,6 +186,11 @@ class Action
      */
     private ?array $actionHandlerConfiguration;
 
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private $active;
+
     public function __construct()
     {
         $this->actionLogs = new ArrayCollection();
@@ -402,6 +407,18 @@ class Action
     public function setActionHandlerConfiguration(?array $actionHandlerConfiguration): self
     {
         $this->actionHandlerConfiguration = $actionHandlerConfiguration;
+
+        return $this;
+    }
+
+    public function getActive(): ?bool
+    {
+        return $this->active;
+    }
+
+    public function setActive(?bool $active): self
+    {
+        $this->active = $active;
 
         return $this;
     }

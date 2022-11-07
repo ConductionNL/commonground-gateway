@@ -126,6 +126,11 @@ class CallLog
      */
     private DateTimeInterface $dateModified;
 
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $status;
+
     public function getId(): ?UuidInterface
     {
         return $this->id;
@@ -247,5 +252,17 @@ class CallLog
     public function setResponseTime(int $responseTime): void
     {
         $this->responseTime = $responseTime;
+    }
+
+    public function getStatus(): ?bool
+    {
+        return $this->status;
+    }
+
+    public function setStatus(bool $status): self
+    {
+        $this->status = $status;
+
+        return $this;
     }
 }
