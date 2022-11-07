@@ -408,15 +408,16 @@ class SynchronizationService
      * A function used to send userFeedback with SymfonyStyle $io when an Exception is caught during a try-catch.
      *
      * @param Exception $exception The Exception we caught.
-     * @param array $config A configuration array for this function, if one of the keys 'file', 'line' or 'trace' is present
-     * this function will show that data of the Exception with $this->io->block. It is also possible to configure the message
-     * with this array through the key 'message' => [Here you have the options to add the keys 'preMessage' & 'postMessage'
-     * to expend on the Exception message and choose the type of the io message, io->error or io->warning with the key
-     * 'type' => 'error', default = warning].
+     * @param array     $config    A configuration array for this function, if one of the keys 'file', 'line' or 'trace' is present
+     *                             this function will show that data of the Exception with $this->io->block. It is also possible to configure the message
+     *                             with this array through the key 'message' => [Here you have the options to add the keys 'preMessage' & 'postMessage'
+     *                             to expend on the Exception message and choose the type of the io message, io->error or io->warning with the key
+     *                             'type' => 'error', default = warning].
      *
      * @return void
      */
-    public function ioCatchException(Exception $exception, array $config) {
+    public function ioCatchException(Exception $exception, array $config)
+    {
         if (!isset($this->io) && $this->session->get('io')) {
             $this->io = $this->session->get('io');
         }
@@ -465,8 +466,7 @@ class SynchronizationService
             );
         } catch (Exception|GuzzleException $exception) {
             // If no next page with this $page exists...
-            $this->ioCatchException($exception, ['line', 'file', 'message' =>
-                ['preMessage' => "(This might just be the final page!) - Error while doing fetchObjectsFromSource: "]
+            $this->ioCatchException($exception, ['line', 'file', 'message' => ['preMessage' => '(This might just be the final page!) - Error while doing fetchObjectsFromSource: '],
             ]);
 
             //todo: error, log this
@@ -517,8 +517,7 @@ class SynchronizationService
                 ]
             );
         } catch (Exception|GuzzleException $exception) {
-            $this->ioCatchException($exception, ['line', 'file', 'message' =>
-                ['preMessage' => "Error while doing getSingleFromSource: "]
+            $this->ioCatchException($exception, ['line', 'file', 'message' => ['preMessage' => 'Error while doing getSingleFromSource: '],
             ]);
 
             //todo: error, log this
@@ -923,8 +922,7 @@ class SynchronizationService
         try {
             $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
         } catch (Exception $exception) {
-            $this->ioCatchException($exception, ['line', 'file', 'message' =>
-                ['preMessage' => "Error while doing syncToSource: "]
+            $this->ioCatchException($exception, ['line', 'file', 'message' => ['preMessage' => 'Error while doing syncToSource: '],
             ]);
 
             // todo: error, log this
@@ -1055,8 +1053,7 @@ class SynchronizationService
                 ]
             );
         } catch (Exception|GuzzleException $exception) {
-            $this->ioCatchException($exception, ['line', 'file', 'message' =>
-                ['preMessage' => "Error while doing syncToSource: "]
+            $this->ioCatchException($exception, ['line', 'file', 'message' => ['preMessage' => 'Error while doing syncToSource: '],
             ]);
             $this->asyncError = true;
 
