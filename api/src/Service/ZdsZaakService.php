@@ -491,7 +491,7 @@ class ZdsZaakService
                     $informatieobjecttypenObjectEntity = $informatieObjectType;
                     break;
                 }
-                if(is_array($informatieObjectTypeEntity) && !isset($this->configuration['enrichData'])) {
+                if (is_array($informatieObjectTypeEntity) && !isset($this->configuration['enrichData'])) {
                     throw new ErrorException('The informatieobjecttypen with omschrijving: '.$zdsObject->getValue('dctOmschrijving').' can\'t be found');
                 }
             }
