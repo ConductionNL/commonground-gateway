@@ -467,7 +467,7 @@ class SynchronizationService
         } catch (Exception|GuzzleException $exception) {
             // If no next page with this $page exists...
             $this->ioCatchException($exception, ['line', 'file', 'message' => [
-                'preMessage' => '(This might just be the final page!) - Error while doing fetchObjectsFromSource: '
+                'preMessage' => '(This might just be the final page!) - Error while doing fetchObjectsFromSource: ',
             ]]);
 
             //todo: error, log this
@@ -519,7 +519,7 @@ class SynchronizationService
             );
         } catch (Exception|GuzzleException $exception) {
             $this->ioCatchException($exception, ['line', 'file', 'message' => [
-                'preMessage' => 'Error while doing getSingleFromSource: '
+                'preMessage' => 'Error while doing getSingleFromSource: ',
             ]]);
 
             //todo: error, log this
@@ -925,7 +925,7 @@ class SynchronizationService
             $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
         } catch (Exception $exception) {
             $this->ioCatchException($exception, ['line', 'file', 'message' => [
-                'preMessage' => 'Error while doing syncToSource: '
+                'preMessage' => 'Error while doing syncToSource: ',
             ]]);
 
             // todo: error, log this
@@ -1057,7 +1057,7 @@ class SynchronizationService
             );
         } catch (Exception|GuzzleException $exception) {
             $this->ioCatchException($exception, ['line', 'file', 'message' => [
-                'preMessage' => 'Error while doing syncToSource: '
+                'preMessage' => 'Error while doing syncToSource: ',
             ]]);
             $this->asyncError = true;
 
