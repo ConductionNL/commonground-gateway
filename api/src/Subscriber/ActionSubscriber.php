@@ -81,7 +81,12 @@ class ActionSubscriber implements EventSubscriberInterface
             $this->io->text("Run ActionHandlerInterface \"{$action->getClass()}\"");
             $this->io->newLine();
         }
-        $data = $object->run($data, array_merge($action->getConfiguration(), ['actionConditions' => $action->getConditions()]));
+
+        try{
+            $data = $object->run($data, array_merge($action->getConfiguration(), ['actionConditions' => $action->getConditions()]));
+        } catch(AsynchronousException $exception) {
+            
+        }
         // timer stoppen
         $stopTimer = microtime(true);
 
@@ -104,6 +109,10 @@ class ActionSubscriber implements EventSubscriberInterface
         $this->entityManager->flush();
 
         $this->handleActionThrows($action, $data, $currentThrow);
+
+        if(isset($exception)) {
+            throw $exception;
+        }
 
         return $data;
     }
@@ -131,6 +140,7 @@ class ActionSubscriber implements EventSubscriberInterface
                 try {
                     $event->setData($this->runFunction($action, $event->getData(), $currentCronJobThrow));
                 } catch (AsynchronousException $exception) {
+
                 }
             } else {
                 $data = $event->getData();
