@@ -504,7 +504,7 @@ class ZdsZaakService
         $document->setValue('formaat', $zdsObject->getValue('formaat'));
         $document->setValue('taal', $zdsObject->getValue('taal'));
         $document->setValue('inhoud', $zdsObject->getValue('inhoud'));
-        $document->setValue('beschrijving', $zdsObject->getValue('beschrijving'));
+        $document->setValue('beschrijving', $zdsObject->getValue('dctOmschrijving'));
         $document->setValue('informatieobjecttype', $informatieobjecttypenObjectEntity->getValue('url'));
         $document->setValue('vertrouwelijkheidaanduiding', $informatieobjecttypenObjectEntity->getValue('vertrouwelijkheidaanduiding'));
 
