@@ -362,6 +362,29 @@ class Entity
         return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
     }
 
+    private const SUPPORTED_VALIDATORS = [
+        'multipleOf',
+        'maximum',
+        'exclusiveMaximum',
+        'minimum',
+        'exclusiveMinimum',
+        'maxLength',
+        'minLength',
+        'maxItems',
+        'uniqueItems',
+        'maxProperties',
+        'minProperties',
+        'required',
+        'enum',
+        'allOf',
+        'oneOf',
+        'anyOf',
+        'not',
+        'items',
+        'additionalProperties',
+        'default',
+    ];
+
     public function getId()
     {
         return $this->id;
@@ -1056,6 +1079,7 @@ class Entity
 
             // Aanmaken property
             // @todo ik laad dit nu in als array maar eigenlijk wil je testen en alleen zetten als er waardes in zitten
+
             $attribute->getType() && $property['type'] = $attribute->getType();
             $attribute->getFormat() && $property['format'] = $attribute->getFormat();
             $attribute->getDescription() && $property['description'] = $attribute->getDescription();
@@ -1068,6 +1092,13 @@ class Entity
 
             // Zetten van de property
             $schema['properties'][$attribute->getName()] = $property;
+
+            // Add the validators
+            foreach ($attribute->getValidations() as $validator => $validation) {
+                if (!array_key_exists($validator, Entity::SUPPORTED_VALIDATORS) && $validation != null) {
+                    $schema['properties'][$attribute->getName()][$validator] = $validation;
+                }
+            }
         }
 
         return $schema;

@@ -3,18 +3,18 @@
 namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
-use App\Service\BijlagenArrayService;
+use App\Service\ZgwToVrijbrpService;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 
-class BijlagenArrayHandler implements ActionHandlerInterface
+class VrijbrpToZgwHandler
 {
-    private BijlagenArrayService $bijlagenArrayService;
+    private ZgwToVrijbrpService $zgwToVrijbrpService;
 
-    public function __construct(BijlagenArrayService $bijlagenArrayService)
+    public function __construct(ZgwToVrijbrpService $zgwToVrijbrpService)
     {
-        $this->bijlagenArrayService = $bijlagenArrayService;
+        $this->zgwToVrijbrpService = $zgwToVrijbrpService;
     }
 
     /**
@@ -27,15 +27,25 @@ class BijlagenArrayHandler implements ActionHandlerInterface
         return [
             '$id'         => 'https://example.com/person.schema.json',
             '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
-            'title'       => 'BijlagenArrayHandler',
-            'description' => 'This handler customly maps sim xml to zgw zaak and document ',
-            'required'    => [],
-            'properties'  => [],
+            'title'       => 'Zaakeigenschappen Action',
+            'description' => 'This handler posts zaak eigenschappen from ZDS to ZGW',
+            'required'    => ['identifierPath'],
+            'properties'  => [
+                'identifierPath' => [
+                    'type'        => 'string',
+                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
+                    'example'     => 'native://default',
+                ],
+                'eigenschappen' => [
+                    'type'        => 'array',
+                    'description' => '',
+                ],
+            ],
         ];
     }
 
     /**
-     * This function runs the service for validating cases.
+     * This function runs the zgw zaaktype plugin.
      *
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
@@ -49,6 +59,6 @@ class BijlagenArrayHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->bijlagenArrayService->bijlagenArrayHandler($data, $configuration);
+        return $this->zgwToVrijbrpService->vrijbrpToZgwHandler($data, $configuration);
     }
 }

@@ -8,7 +8,7 @@ use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 
-class ZgwToZdsHandler
+class ZgwToZdsHandler implements ActionHandlerInterface
 {
     private ZdsZaakService $zdsZaakService;
 
@@ -27,18 +27,27 @@ class ZgwToZdsHandler
         return [
             '$id'         => 'https://example.com/person.schema.json',
             '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
-            'title'       => 'Zaakeigenschappen Action',
+            'title'       => 'ZgwToZdsHandler',
             'description' => 'This handler posts zaak eigenschappen from ZDS to ZGW',
-            'required'    => ['identifierPath'],
+            'required'    => ['zaakEntityId', 'rolEntityId', 'zdsEntityId'],
             'properties'  => [
-                'identifierPath' => [
-                    'type'        => 'string',
-                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
-                    'example'     => 'native://default',
+                'zaakEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the zaak entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true,
                 ],
-                'eigenschappen' => [
-                    'type'        => 'array',
-                    'description' => '',
+                'rolEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the rol entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true,
+                ],
+                'zdsEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the zds entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true,
                 ],
             ],
         ];

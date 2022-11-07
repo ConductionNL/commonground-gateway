@@ -4,7 +4,7 @@ namespace App\ActionHandler;
 
 use App\Service\LarpingService;
 
-class LarpingHandler
+class LarpingHandler implements ActionHandlerInterface
 {
     private LarpingService $larpingService;
 
@@ -21,18 +21,21 @@ class LarpingHandler
     public function getConfiguration(): array
     {
         return [
-            '$id'        => 'https://example.com/person.schema.json',
-            '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
-            'title'      => 'Notification Action',
-            'required'   => ['characterEntityId', 'effectEntityId'],
-            'properties' => [
+            '$id'         => 'https://example.com/person.schema.json',
+            '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
+            'title'       => 'LarpingHandler',
+            'description' => 'This handler calculates the attributes for any or all character effected by a change in the data set.',
+            'required'    => ['characterEntityId', 'effectEntityId'],
+            'properties'  => [
                 'characterEntityId' => [
                     'type'        => 'string',
                     'description' => 'The id of the character entity',
+                    'required'    => true,
                 ],
                 'effectEntityId' => [
                     'type'        => 'string',
                     'description' => 'The id of the effect entity',
+                    'required'    => true,
                 ],
             ],
         ];

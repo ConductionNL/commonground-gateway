@@ -652,8 +652,6 @@ class ObjectEntityService
 
         $data = $this->responseService->renderResult($object, $queryParamData['fields'], $queryParamData['extend'], $acceptType);
 
-        $this->messageBus->dispatch(new PromiseMessage($object->getId(), $method));
-
         return $data;
     }
 
