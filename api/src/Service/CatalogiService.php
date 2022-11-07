@@ -191,8 +191,9 @@ class CatalogiService
                 $source = $this->getOrCreateSourceForCatalogi($catalogi);
                 $response = $this->callService->call($source, $this->configuration['location']);
             } catch (Exception|GuzzleException $exception) {
-                $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => ['type' => 'error',
-                    'preMessage'                                                                                           => "Error while doing getUnknownCatalogi for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": ",
+                $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => [
+                    'type'       => 'error',
+                    'preMessage' => "Error while doing getUnknownCatalogi for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": ",
                 ]]);
                 //todo: error, log this
                 continue;
@@ -461,8 +462,9 @@ class CatalogiService
                     'extend' => ['x-commongateway-metadata.synchronizations', 'x-commongateway-metadata.self', 'x-commongateway-metadata.dateModified'],
                 ]]);
             } catch (Exception|GuzzleException $exception) {
-                $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => ['type' => 'error',
-                    'preMessage'                                                                                           => "Error while doing getUnknownComponents for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": ",
+                $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => [
+                    'type'       => 'error',
+                    'preMessage' => "Error while doing getUnknownComponents for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": ",
                 ]]);
 
                 //todo: error, log this
