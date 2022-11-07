@@ -131,7 +131,6 @@ class ActionSubscriber implements EventSubscriberInterface
                 try {
                     $event->setData($this->runFunction($action, $event->getData(), $currentCronJobThrow));
                 } catch (AsynchronousException $exception) {
-
                 }
             } else {
                 $data = $event->getData();
