@@ -355,7 +355,7 @@ class ResponseService
         if (array_key_exists('@context', $response)) {
             $gatewayContext['@gateway/context'] = $response['@context'];
         }
-        $gatewayContext['@synchronizations'] = $this->addObjectSyncsData($result);
+        $gatewayContext['@synchronizations'] = $result->getReadableSyncDataArray();
         if (is_array($extend)) {
             $gatewayContext['@extend'] = $extend;
         }
@@ -410,7 +410,7 @@ class ResponseService
         if (array_key_exists('@context', $response)) {
             $gatewayContext['_metadata']['_gateway/context'] = $response['@context'];
         }
-        $gatewayContext['_metadata']['_synchronizations'] = $this->addObjectSyncsData($result);
+        $gatewayContext['_metadata']['_synchronizations'] = $result->getReadableSyncDataArray();
         if (is_array($extend)) {
             $gatewayContext['_metadata']['_extend'] = $extend;
         }
@@ -474,7 +474,7 @@ class ResponseService
         if (array_key_exists('@context', $response)) {
             $this->addToMetadata($metadata, 'gateway/context', $response['@context']);
         }
-        $this->addToMetadata($metadata, 'synchronizations', $this->addObjectSyncsData($result));
+        $this->addToMetadata($metadata, 'synchronizations', $result->getReadableSyncDataArray());
         if (is_array($extend)) {
             $this->addToMetadata($metadata, 'extend', $extend);
         }
@@ -508,41 +508,6 @@ class ResponseService
             }
             $metadata[$overwriteKey ?? $key] = $value;
         }
-    }
-
-    /**
-     * Adds the most important data of all synchronizations an ObjectEntity has to an array and returns this array or null if it has no Synchronizations.
-     *
-     * @param ObjectEntity $object
-     *
-     * @return array|null
-     */
-    private function addObjectSyncsData(ObjectEntity $object): ?array
-    {
-        if (!empty($object->getSynchronizations()) && is_countable($object->getSynchronizations()) && count($object->getSynchronizations()) > 0) {
-            $synchronizations = [];
-            foreach ($object->getSynchronizations() as $synchronization) {
-                $synchronizations[] = [
-                    'id'      => $synchronization->getId()->toString(),
-                    'gateway' => [
-                        'id'       => $synchronization->getGateway()->getId()->toString(),
-                        'name'     => $synchronization->getGateway()->getName(),
-                        'location' => $synchronization->getGateway()->getLocation(),
-                    ],
-                    'endpoint'          => $synchronization->getEndpoint(),
-                    'sourceId'          => $synchronization->getSourceId(),
-                    'dateCreated'       => $synchronization->getDateCreated(),
-                    'dateModified'      => $synchronization->getDateModified(),
-                    'lastChecked'       => $synchronization->getLastChecked(),
-                    'lastSynced'        => $synchronization->getLastSynced(),
-                    'sourceLastChanged' => $synchronization->getSourceLastChanged(),
-                ];
-            }
-
-            return $synchronizations;
-        }
-
-        return null;
     }
 
     /**
