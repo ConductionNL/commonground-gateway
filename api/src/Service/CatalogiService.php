@@ -92,9 +92,9 @@ class CatalogiService
      * @param array $data
      * @param array $configuration
      *
-     * @return array
-     *
      * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
+     *
+     * @return array
      */
     private function componentsHandler(array $data, array $configuration): array
     {
@@ -192,7 +192,7 @@ class CatalogiService
                 $response = $this->callService->call($source, $this->configuration['location']);
             } catch (Exception|GuzzleException $exception) {
                 $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => ['type' => 'error',
-                    'preMessage' => "Error while doing getUnknownCatalogi for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": "
+                    'preMessage'                                                                                           => "Error while doing getUnknownCatalogi for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": ",
                 ]]);
                 //todo: error, log this
                 continue;
@@ -273,7 +273,7 @@ class CatalogiService
         }
 
         // Keep track of locations we already are going to add new Catalogi for.
-        $unknownCatalogiLocations = array_column(array_column(array_column($unknownCatalogi, 'embedded'), 'source'),'location');
+        $unknownCatalogiLocations = array_column(array_column(array_column($unknownCatalogi, 'embedded'), 'source'), 'location');
 
         // Check if these extern Catalogi know any Catalogi we don't know yet
         foreach ($externCatalogi as $checkCatalogi) {
@@ -362,9 +362,9 @@ class CatalogiService
     /**
      * @todo
      *
-     * @return array
-     *
      * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
+     *
+     * @return array
      */
     private function pullComponents(): array
     {
@@ -410,7 +410,7 @@ class CatalogiService
     /**
      * @todo
      *
-     * @param array $component
+     * @param array  $component
      * @param string $catalogiLocation
      *
      * @return string
@@ -420,11 +420,13 @@ class CatalogiService
         // todo: always key=0?
         if (isset($component['x-commongateway-metadata']['synchronizations'][0])) {
             $componentSync = $component['x-commongateway-metadata']['synchronizations'][0];
+
             return $componentSync['gateway']['location'].$componentSync['endpoint'].$componentSync['sourceId'];
         } elseif (isset($component['x-commongateway-metadata']['self']) &&
             str_contains($component['x-commongateway-metadata']['self'], $this->configuration['componentsLocation'])) {
             return $catalogiLocation.$component['x-commongateway-metadata']['self'];
         }
+
         return $catalogiLocation.$this->configuration['componentsLocation'].$component['id'];
     }
 
@@ -456,11 +458,11 @@ class CatalogiService
                 }
                 $source = $this->getOrCreateSourceForCatalogi($catalogi);
                 $response = $this->callService->call($source, $this->configuration['componentsLocation'], 'GET', ['query' => [
-                    'extend' => ['x-commongateway-metadata.synchronizations', 'x-commongateway-metadata.self', 'x-commongateway-metadata.dateModified']
+                    'extend' => ['x-commongateway-metadata.synchronizations', 'x-commongateway-metadata.self', 'x-commongateway-metadata.dateModified'],
                 ]]);
             } catch (Exception|GuzzleException $exception) {
                 $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => ['type' => 'error',
-                    'preMessage' => "Error while doing getUnknownComponents for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": "
+                    'preMessage'                                                                                           => "Error while doing getUnknownComponents for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": ",
                 ]]);
 
                 //todo: error, log this
@@ -495,9 +497,9 @@ class CatalogiService
     /**
      * @todo
      *
-     * @param array $externComponents
-     * @param array $knownComponentLocations
-     * @param array $unknownComponents
+     * @param array  $externComponents
+     * @param array  $knownComponentLocations
+     * @param array  $unknownComponents
      * @param string $catalogiLocation
      *
      * @return array
@@ -540,15 +542,15 @@ class CatalogiService
      *
      * @param array $unknownComponents
      *
-     * @return array
-     *
      * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
+     *
+     * @return array
      */
     private function addNewComponents(array $unknownComponents): array
     {
         $totalUnknownComponents = is_countable($unknownComponents) ? count($unknownComponents) : 0;
         if (isset($this->io) && $totalUnknownComponents > 0) {
-            $this->io->block("Found $totalUnknownComponents unknown Component".($totalUnknownComponents !== 1 ? 's' : '').", start adding them...");
+            $this->io->block("Found $totalUnknownComponents unknown Component".($totalUnknownComponents !== 1 ? 's' : '').', start adding them...');
         }
 
         $addedComponents = [];
@@ -588,12 +590,12 @@ class CatalogiService
     /**
      * @todo
      *
-     * @param array $data An array containing an 'object' => ObjectEntity, 'source' => Gateway & 'entity' => Entity.
+     * @param array $data         An array containing an 'object' => ObjectEntity, 'source' => Gateway & 'entity' => Entity.
      * @param array $addComponent
      *
-     * @return Synchronization
-     *
      * @throws Exception
+     *
+     * @return Synchronization
      */
     private function createSyncForComponent(array $data, array $addComponent): Synchronization
     {
@@ -609,9 +611,11 @@ class CatalogiService
         $now = new DateTime();
         $synchronization->setLastChecked($now);
         $synchronization->setLastSynced($now);
-        $synchronization->setSourcelastChanged($componentSync ?
+        $synchronization->setSourcelastChanged(
+            $componentSync ?
             new DateTime($componentSync['sourceLastChanged']) :
-            ($componentMetaData['dateModified'] ?
+            (
+                $componentMetaData['dateModified'] ?
                 new DateTime($componentMetaData['dateModified']) :
                 $now
             )

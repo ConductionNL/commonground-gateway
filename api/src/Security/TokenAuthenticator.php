@@ -61,8 +61,9 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
     /**
      * Gets the public key for the application connected to the request, defaults to a general public key.
      *
-     * @return string Public key for the application or the general public key
      * @throws GatewayException
+     *
+     * @return string Public key for the application or the general public key
      */
     public function getPublicKey(): string
     {
@@ -191,11 +192,11 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
      *
      * @param Request $request
      *
-     * @return PassportInterface
-     *
      * @throws CacheException
      * @throws GatewayException
      * @throws InvalidArgumentException
+     *
+     * @return PassportInterface
      */
     public function authenticate(Request $request): PassportInterface
     {

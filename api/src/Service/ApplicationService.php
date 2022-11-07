@@ -24,6 +24,7 @@ class ApplicationService
 
     /**
      * A function that finds an application or creates one.
+     *
      * @throws GatewayException
      */
     public function getApplication()
@@ -71,7 +72,7 @@ class ApplicationService
                 $host && $data = ['host' => $host];
 
                 throw new GatewayException($message ?? null, null, null, [
-                    'data' => $data ?? null, 'path' => $public ?? $host ?? 'Header', 'responseType' => Response::HTTP_FORBIDDEN
+                    'data' => $data ?? null, 'path' => $public ?? $host ?? 'Header', 'responseType' => Response::HTTP_FORBIDDEN,
                 ]);
             }
         }
