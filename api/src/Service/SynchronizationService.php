@@ -134,7 +134,7 @@ class SynchronizationService
             $this->entityManager->persist($synchronisation);
             $this->entityManager->flush();
         }
-        if($this->asyncError) {
+        if ($this->asyncError) {
             throw new AsynchronousException('Synchronization failed');
         }
 
