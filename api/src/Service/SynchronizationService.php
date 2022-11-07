@@ -8,6 +8,7 @@ use App\Entity\Entity;
 use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
+use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
 use DateTime;
@@ -42,6 +43,8 @@ class SynchronizationService
     private array $data;
     private SymfonyStyle $io;
     private Environment $twig;
+
+    private bool $asyncError = false;
 
     /**
      * @param CallService            $callService
@@ -130,6 +133,9 @@ class SynchronizationService
             }
             $this->entityManager->persist($synchronisation);
             $this->entityManager->flush();
+        }
+        if($this->asyncError) {
+            throw new AsynchronousException('Synchronization failed');
         }
 
         return $this->data;
@@ -1037,6 +1043,7 @@ class SynchronizationService
                 $this->io->block("File: {$exception->getFile()}");
                 $this->io->block("Line: {$exception->getLine()}");
 //                $this->io->block("Trace: {$exception->getTraceAsString()}");
+                $this->asyncError = true;
             }
 
             //todo: error, log this

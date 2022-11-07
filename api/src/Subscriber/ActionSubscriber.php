@@ -4,6 +4,7 @@ namespace App\Subscriber;
 
 use App\Entity\Action;
 use App\Event\ActionEvent;
+use App\Exception\AsynchronousException;
 use App\Message\ActionMessage;
 use App\Service\ObjectEntityService;
 use DateTime;
@@ -127,7 +128,11 @@ class ActionSubscriber implements EventSubscriberInterface
             $currentCronJobThrow = $this->handleActionIoStart($action, $event);
 
             if (!$action->getAsync()) {
-                $event->setData($this->runFunction($action, $event->getData(), $currentCronJobThrow));
+                try {
+                    $event->setData($this->runFunction($action, $event->getData(), $currentCronJobThrow));
+                } catch (AsynchronousException $exception) {
+
+                }
             } else {
                 $data = $event->getData();
                 unset($data['httpRequest']);
