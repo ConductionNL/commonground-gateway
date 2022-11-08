@@ -24,7 +24,10 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/logs/calllogs"},
  *      "post"={"path"="/admin/logs/calllogs"}
- *  })
+ *  },
+ *  order={"dateCreated": "DESC"}
+ *  )
+ *
  * @ORM\Entity(repositoryClass=CallLogRepository::class)
  */
 class CallLog

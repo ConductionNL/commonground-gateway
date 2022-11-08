@@ -171,6 +171,7 @@ class Entity
     /**
      * @Groups({"write"})
      * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="entity", cascade={"remove"}, fetch="EXTRA_LAZY")
+     * @ORM\OrderBy({"dateCreated" = "DESC"})
      * @MaxDepth(1)
      */
     private Collection $objectEntities;

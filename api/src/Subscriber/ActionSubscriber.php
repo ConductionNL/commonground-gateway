@@ -85,7 +85,7 @@ class ActionSubscriber implements EventSubscriberInterface
         try{
             $data = $object->run($data, array_merge($action->getConfiguration(), ['actionConditions' => $action->getConditions()]));
         } catch(AsynchronousException $exception) {
-            
+            //Do not stop the execution when the asynchronousError is thrown, but throw at the end
         }
         // timer stoppen
         $stopTimer = microtime(true);
