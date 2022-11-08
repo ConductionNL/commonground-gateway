@@ -4,6 +4,7 @@ namespace App\Subscriber;
 
 use App\Entity\Action;
 use App\Event\ActionEvent;
+use App\Exception\AsynchronousException;
 use App\Message\ActionMessage;
 use App\Service\ObjectEntityService;
 use DateTime;
@@ -80,7 +81,11 @@ class ActionSubscriber implements EventSubscriberInterface
             $this->io->text("Run ActionHandlerInterface \"{$action->getClass()}\"");
             $this->io->newLine();
         }
-        $data = $object->run($data, array_merge($action->getConfiguration(), ['actionConditions' => $action->getConditions()]));
+
+        try {
+            $data = $object->run($data, array_merge($action->getConfiguration(), ['actionConditions' => $action->getConditions()]));
+        } catch (AsynchronousException $exception) {
+        }
         // timer stoppen
         $stopTimer = microtime(true);
 
@@ -103,6 +108,10 @@ class ActionSubscriber implements EventSubscriberInterface
         $this->entityManager->flush();
 
         $this->handleActionThrows($action, $data, $currentThrow);
+
+        if (isset($exception)) {
+            throw $exception;
+        }
 
         return $data;
     }
@@ -127,7 +136,10 @@ class ActionSubscriber implements EventSubscriberInterface
             $currentCronJobThrow = $this->handleActionIoStart($action, $event);
 
             if (!$action->getAsync()) {
-                $event->setData($this->runFunction($action, $event->getData(), $currentCronJobThrow));
+                try {
+                    $event->setData($this->runFunction($action, $event->getData(), $currentCronJobThrow));
+                } catch (AsynchronousException $exception) {
+                }
             } else {
                 $data = $event->getData();
                 unset($data['httpRequest']);

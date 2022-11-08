@@ -479,7 +479,7 @@ class ZdsZaakService
                 ];
 
                 $informatieobjecttypenObjectEntity->hydrate($informatieobjecttypenArray);
-                $this->entityManager->persist($informatieobjecttypenObjectEntity[0]);
+                $this->entityManager->persist($informatieobjecttypenObjectEntity);
                 $informatieobjecttypenObjectEntity->setValue('url', $informatieobjecttypenObjectEntity->getValue('url'));
             } else {
                 // @todo fix error
@@ -490,6 +490,9 @@ class ZdsZaakService
                 if ($this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakTypeInformatieObjectTypeEntity, ['zaaktype' => $zdsZaakObjectEntity->getValue('zgwZaak')->getValue('zaaktype')->getValue('url'), 'informatieobjecttype' => $informatieObjectType->getValue('url')])) {
                     $informatieobjecttypenObjectEntity = $informatieObjectType;
                     break;
+                }
+                if (is_array($informatieObjectTypeEntity) && !isset($this->configuration['enrichData'])) {
+                    throw new ErrorException('The informatieobjecttypen with omschrijving: '.$zdsObject->getValue('dctOmschrijving').' can\'t be found');
                 }
             }
         }
@@ -504,7 +507,7 @@ class ZdsZaakService
         $document->setValue('formaat', $zdsObject->getValue('formaat'));
         $document->setValue('taal', $zdsObject->getValue('taal'));
         $document->setValue('inhoud', $zdsObject->getValue('inhoud'));
-        $document->setValue('beschrijving', $zdsObject->getValue('beschrijving'));
+        $document->setValue('beschrijving', $zdsObject->getValue('dctOmschrijving'));
         $document->setValue('informatieobjecttype', $informatieobjecttypenObjectEntity->getValue('url'));
         $document->setValue('vertrouwelijkheidaanduiding', $informatieobjecttypenObjectEntity->getValue('vertrouwelijkheidaanduiding'));
 

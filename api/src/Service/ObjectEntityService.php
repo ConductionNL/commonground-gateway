@@ -652,8 +652,6 @@ class ObjectEntityService
 
         $data = $this->responseService->renderResult($object, $queryParamData['fields'], $queryParamData['extend'], $acceptType);
 
-        $this->messageBus->dispatch(new PromiseMessage($object->getId(), $method));
-
         return $data;
     }
 
@@ -764,13 +762,8 @@ class ObjectEntityService
      */
     public function handleObject(Handler $handler, Endpoint $endpoint, ?array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'jsonld'): array
     {
-
-        // If type is array application is an error
-        $application = $this->applicationService->getApplication();
-        if (gettype($application) === 'array') {
-            // todo: maybe just throw a gatewayException? see getApplication() function^
-            return $application;
-        }
+        // Set application in the session or create new application for localhost if we need it.
+        $this->applicationService->getApplication();
 
         // set session with sessionInfo
         $sessionInfo = [
