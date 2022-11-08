@@ -463,7 +463,14 @@ class ZdsZaakService
         }
 
         // Let get the informatieobjecttypen
-        $informatieobjecttypenObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($informatieObjectTypeEntity, ['omschrijving' => $zdsObject->getValue('dctOmschrijving')]);
+        for ($i = 0; $i < 5; $i++) {
+            $informatieobjecttypenObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($informatieObjectTypeEntity, ['omschrijving' => $zdsObject->getValue('dctOmschrijving')]);
+            if (count($informatieObjectTypeEntity) > 0) {
+                break;
+            } else {
+                sleep(1);
+            }
+        }
         if (count($informatieobjecttypenObjectEntity) == 0 || !$informatieobjecttypenObjectEntity[0] instanceof ObjectEntity) {
             if (
                 key_exists('enrichData', $this->configuration) &&
@@ -492,7 +499,7 @@ class ZdsZaakService
                     break;
                 }
                 if (is_array($informatieObjectTypeEntity) && !isset($this->configuration['enrichData'])) {
-                    throw new ErrorException('The informatieobjecttypen with omschrijving: '.$zdsObject->getValue('dctOmschrijving').' can\'t be found');
+                    throw new ErrorException('The zaaktypen-informatieobjecttypen with omschrijving: '.$zdsObject->getValue('dctOmschrijving').' can\'t be found');
                 }
             }
         }
