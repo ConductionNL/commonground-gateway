@@ -45,7 +45,11 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "method"="PUT",
  *          "path"="/admin/objects/{id}"
  *      },
- *     "delete"={"path"="/admin/object_entities/{id}"}
+ *     "delete"={"path"="/admin/object_entities/{id}"},
+ *     "delete_object"={
+ *          "method"="DELETE",
+ *          "path"="/admin/objects/{id}"
+ *      }
  *  },
  *  collectionOperations={
  *     "get"={"path"="/admin/object_entities"},
