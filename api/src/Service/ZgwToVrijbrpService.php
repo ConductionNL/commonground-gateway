@@ -631,7 +631,7 @@ class ZgwToVrijbrpService
         ];
 
         $soapEmigrationArray['aanvraaggegevens'] = [
-            'burgerservicenummerAanvrager' => key_exists('bsn', $zaakEigenschappen) ? $zaakEigenschappen['bsn'] : $bsn,
+            'burgerservicenummerAanvrager' => key_exists('bsn', $zaakEigenschappen) && $zaakEigenschappen['bsn'] !== null ? $zaakEigenschappen['bsn'] : $bsn,
             'emigratiedatum'               => key_exists('datumVertrek', $zaakEigenschappen) ? $zaakEigenschappen['datumVertrek'] : null,
             'landcodeEmigratie'            => key_exists('landcode', $zaakEigenschappen) ? $zaakEigenschappen['landcode'] : null,
             'adresBuitenland'              => $adresBuitenland, // object
@@ -728,7 +728,7 @@ class ZgwToVrijbrpService
         }
 
         $soapExtractArray['aanvraaggegevens'] = [
-            'burgerservicenummerAanvrager' => key_exists('bsn', $zaakEigenschappen) ? $zaakEigenschappen['bsn'] : $bsn,
+            'burgerservicenummerAanvrager' => key_exists('bsn', $zaakEigenschappen) && $zaakEigenschappen['bsn'] !== null ? $zaakEigenschappen['bsn'] : $bsn,
             'uittrekselBetrokkenen'        => $uittrekselBetrokkenen,
         ];
 
