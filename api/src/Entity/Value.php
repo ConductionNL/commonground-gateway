@@ -571,6 +571,10 @@ class Value
                         $value = $valueObject;
                     }
 
+                    if (is_string($value) || $value == null) {
+                        continue;
+                    }
+
                     $idArray[] = $value->getId();
                     $this->addObject($value);
                 }

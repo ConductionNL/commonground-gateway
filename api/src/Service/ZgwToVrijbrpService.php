@@ -488,11 +488,11 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     * Creates a VrijRBP Soap Zaakgegevens array with the data of the zgwZaak
      *
      * @param ObjectEntity $zaakObjectEntity
      *
-     * @return array $this->data Data which we entered the function with
+     * @return array zaakgegevens
      */
     public function createVrijBrpSoapZaakgegevens(ObjectEntity $zaakObjectEntity): array
     {
@@ -507,11 +507,11 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     * Creates a VrijRBP Soap Contactgegevens array with the data of the zgwZaak
      *
      * @param ObjectEntity $zaakObjectEntity
      *
-     * @return array $this->data Data which we entered the function with
+     * @return array contactgegevens
      */
     public function createVrijBrpSoapContactgegevens(ObjectEntity $zaakObjectEntity): array
     {
@@ -524,73 +524,12 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
-     *
-     * @param ObjectEntity $zaakObjectEntity
-     *
-     * @throws Exception
-     *
-     * @return array $this->data Data which we entered the function with
-     */
-    public function zgwEmigrationToVrijBrpSoap(ObjectEntity $zaakObjectEntity): array
-    {
-        $properties = [
-            'bsn'                        => 'burgerservicenummerAanvrager',
-            'datumVertrek'               => 'emigratiedatum',
-            'landcode'                   => 'landcodeEmigratie',
-            'adresregel1'                => 'adresBuitenland',
-            'adresregel2'                => null,
-            'meeverhuizende_gezinsleden' => 'meeEmigranten',
-        ];
-
-        $emigratieaanvraagRequestEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['emigratieaanvraagRequestEntityId']);
-
-        $soapEmigrationArray['zaakgegevens'] = $this->createVrijBrpSoapZaakgegevens($zaakObjectEntity);
-        $soapEmigrationArray['contactgegevens'] = $this->createVrijBrpSoapContactgegevens($zaakObjectEntity);
-
-        $zaakEigenschappen = $this->getZaakEigenschappen($zaakObjectEntity, $properties);
-
-        $meeverhuizende_gezinsleden = [];
-        if (key_exists('meeverhuizende_gezinsleden', $zaakEigenschappen)) {
-            $meeverhuizende_gezinsleden = json_decode($zaakEigenschappen['meeverhuizende_gezinsleden'], true);
-        }
-
-        $meeEmigranten = [];
-        foreach ($meeverhuizende_gezinsleden as $meeverhuizende_gezinslid) {
-            $meeEmigranten[] = [
-                'burgerservicenummer'  => key_exists('bsn', $meeverhuizende_gezinslid) ? $meeverhuizende_gezinslid['bsn'] : null,
-                'omschrijvingAangifte' => key_exists('rol', $meeverhuizende_gezinslid) ? $meeverhuizende_gezinslid['rol'] : null,
-                'duur'                 => null,
-            ];
-        }
-
-        $adresBuitenland = [
-            'adresBuitenland1' => key_exists('adresregel1', $zaakEigenschappen) ? $zaakEigenschappen['adresregel1'] : null,
-            'adresBuitenland2' => key_exists('adresregel2', $zaakEigenschappen) ? $zaakEigenschappen['adresregel2'] : null,
-            'adresBuitenland3' => key_exists('adresregel3', $zaakEigenschappen) ? $zaakEigenschappen['adresregel3'] : null,
-        ];
-
-        $soapEmigrationArray['aanvraaggegevens'] = [
-            'burgerservicenummerAanvrager' => key_exists('bsn', $zaakEigenschappen) ? $zaakEigenschappen['bsn'] : null,
-            'emigratiedatum'               => key_exists('datumVertrek', $zaakEigenschappen) ? $zaakEigenschappen['datumVertrek'] : null,
-            'landcodeEmigratie'            => key_exists('landcode', $zaakEigenschappen) ? $zaakEigenschappen['landcode'] : null,
-            'adresBuitenland'              => $adresBuitenland, // object
-            'meeEmigranten'                => $meeEmigranten,
-        ];
-
-        $soapEmigration = $this->createSoapObject($emigratieaanvraagRequestEntity, $soapEmigrationArray);
-        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $emigratieaanvraagRequestEntity->getId()->toString(), 'response' => $soapEmigration->toArray()], 'soap.object.handled');
-
-        return $this->data;
-    }
-
-    /**
-     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     * This function gets the zaakEigenschappen from the zgwZaak with the given properties (simXml elementen and Stuf extraElementen)
      *
      * @param ObjectEntity $zaakObjectEntity
      * @param array        $properties
      *
-     * @return array $this->data Data which we entered the function with
+     * @return array zaakEigenschappen
      */
     public function getZaakEigenschappen(ObjectEntity $zaakObjectEntity, array $properties): array
     {
@@ -605,14 +544,33 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * Creates a VrijRBP Soap object.
+     * This function gets the bsn of the rol with the betrokkeneType set as natuurlijk_persoon
+     *
+     * @param ObjectEntity $zaakObjectEntity
+     *
+     * @return string bsn of the natuurlijk_persoon
+     */
+    public function getRollen(ObjectEntity $zaakObjectEntity): ?string
+    {
+        foreach ($zaakObjectEntity->getValue('rollen') as $rol) {
+            if ($rol->getValue('betrokkeneType') === 'natuurlijk_persoon') {
+                $betrokkeneIdentificatie = $rol->getValue('betrokkeneIdentificatie');
+                return $betrokkeneIdentificatie->getValue('inpBsn');
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Creates a VrijRBP Soap object with the given entity and soap array
      *
      * @param Entity $requestEntity
      * @param array  $soapArray
      *
      * @throws Exception
      *
-     * @return ObjectEntity $this->data Data which we entered the function with
+     * @return ObjectEntity Soap object
      */
     public function createSoapObject(Entity $requestEntity, array $soapArray): ObjectEntity
     {
@@ -625,13 +583,75 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     * Creates a VrijRBP Soap Emigration from a ZGW Zaak.
      *
      * @param ObjectEntity $zaakObjectEntity
      *
      * @throws Exception
      *
-     * @return array $this->data Data which we entered the function with
+     * @return array $this->dataData which we entered the function with
+     */
+    public function zgwEmigrationToVrijBrpSoap(ObjectEntity $zaakObjectEntity): array
+    {
+        $properties = [
+            'bsn'                        => null,
+            'datumVertrek'               => null,
+            'landcode'                   => null,
+            'adresregel1'                => null,
+            'adresregel2'                => null,
+            'meeverhuizende_gezinsleden' => null,
+        ];
+
+        $emigratieaanvraagRequestEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['emigratieaanvraagRequestEntityId']);
+
+        $soapEmigrationArray['zaakgegevens'] = $this->createVrijBrpSoapZaakgegevens($zaakObjectEntity);
+        $soapEmigrationArray['contactgegevens'] = $this->createVrijBrpSoapContactgegevens($zaakObjectEntity);
+
+        $zaakEigenschappen = $this->getZaakEigenschappen($zaakObjectEntity, $properties);
+        $bsn = $this->getRollen($zaakObjectEntity);
+
+        $meeverhuizende_gezinsleden = [];
+        if (key_exists('meeverhuizende_gezinsleden', $zaakEigenschappen)) {
+            $meeverhuizende_gezinsleden = json_decode($zaakEigenschappen['meeverhuizende_gezinsleden'], true);
+        }
+
+        $meeEmigranten = [];
+        foreach ($meeverhuizende_gezinsleden as $meeverhuizende_gezinslid) {
+            $meeEmigranten[] = [
+                'burgerservicenummer'  => key_exists('bsn', $meeverhuizende_gezinslid) ? $meeverhuizende_gezinslid['bsn'] : null,
+                'omschrijvingAangifte' => key_exists('rol', $meeverhuizende_gezinslid) ? $meeverhuizende_gezinslid['rol'] : null,
+                'duur'                 => 'l',
+            ];
+        }
+
+        $adresBuitenland = [
+            'adresBuitenland1' => key_exists('adresregel1', $zaakEigenschappen) ? $zaakEigenschappen['adresregel1'] : null,
+            'adresBuitenland2' => key_exists('adresregel2', $zaakEigenschappen) ? $zaakEigenschappen['adresregel2'] : null,
+            'adresBuitenland3' => key_exists('adresregel3', $zaakEigenschappen) ? $zaakEigenschappen['adresregel3'] : null,
+        ];
+
+        $soapEmigrationArray['aanvraaggegevens'] = [
+            'burgerservicenummerAanvrager' => key_exists('bsn', $zaakEigenschappen) ? $zaakEigenschappen['bsn'] : $bsn,
+            'emigratiedatum'               => key_exists('datumVertrek', $zaakEigenschappen) ? $zaakEigenschappen['datumVertrek'] : null,
+            'landcodeEmigratie'            => key_exists('landcode', $zaakEigenschappen) ? $zaakEigenschappen['landcode'] : null,
+            'adresBuitenland'              => $adresBuitenland, // object
+            'meeEmigranten'                => $meeEmigranten,
+        ];
+
+        $soapEmigration = $this->createSoapObject($emigratieaanvraagRequestEntity, $soapEmigrationArray);
+        $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $emigratieaanvraagRequestEntity->getId()->toString(), 'response' => $soapEmigration->toArray()], 'soap.object.handled');
+
+        return $this->data;
+    }
+
+    /**
+     * Creates a VrijRBP Soap Confidentiality from a ZGW Zaak.
+     *
+     * @param ObjectEntity $zaakObjectEntity
+     *
+     * @throws Exception
+     *
+     * @return array $this->dataData which we entered the function with
      */
     public function zgwConfidentialityToVrijBrpSoap(ObjectEntity $zaakObjectEntity): array
     {
@@ -647,6 +667,7 @@ class ZgwToVrijbrpService
         $soapConfidentialityArray['contactgegevens'] = $this->createVrijBrpSoapContactgegevens($zaakObjectEntity);
 
         $zaakEigenschappen = $this->getZaakEigenschappen($zaakObjectEntity, $properties);
+        $bsn = $this->getRollen($zaakObjectEntity);
 
         $geheimhoudingBetrokkenen[] = [
             'burgerservicenummer' => key_exists('bsn_geheimhouding', $zaakEigenschappen) ? $zaakEigenschappen['bsn_geheimhouding'] : null,
@@ -654,7 +675,7 @@ class ZgwToVrijbrpService
         ];
 
         $soapConfidentialityArray['aanvraaggegevens'] = [
-            'burgerservicenummerAanvrager' => key_exists('bsn', $zaakEigenschappen) ? $zaakEigenschappen['bsn'] : null,
+            'burgerservicenummerAanvrager' => $bsn,
             'geheimhoudingBetrokkenen'     => $geheimhoudingBetrokkenen,
         ];
 
@@ -667,13 +688,13 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     * Creates a VrijRBP Soap Extract from a ZGW Zaak.
      *
      * @param ObjectEntity $zaakObjectEntity
      *
      * @throws Exception
      *
-     * @return array $this->data Data which we entered the function with
+     * @return array $this->dataData which we entered the function with
      */
     public function zgwExtractToVrijBrpSoap(ObjectEntity $zaakObjectEntity): array
     {
@@ -690,6 +711,7 @@ class ZgwToVrijbrpService
         $soapExtractArray['contactgegevens'] = $this->createVrijBrpSoapContactgegevens($zaakObjectEntity);
 
         $zaakEigenschappen = $this->getZaakEigenschappen($zaakObjectEntity, $properties);
+        $bsn = $this->getRollen($zaakObjectEntity);
 
         $uittreksels = [];
         if (key_exists('uittreksel', $zaakEigenschappen)) {
@@ -701,12 +723,12 @@ class ZgwToVrijbrpService
             $uittrekselBetrokkenen[] = [
                 'burgerservicenummer' => key_exists('bsn', $uittreksel) ? $uittreksel['bsn'] : null,
                 'uittrekselcode'      => key_exists('code', $uittreksel) ? $uittreksel['code'] : null,
-                'indicatieGratis'     => key_exists('omschrijving', $uittreksel) ? $uittreksel['omschrijving'] : null,
+                'indicatieGratis'     => false,
             ];
         }
 
         $soapExtractArray['aanvraaggegevens'] = [
-            'burgerservicenummerAanvrager' => key_exists('bsn', $zaakEigenschappen) ? $zaakEigenschappen['bsn'] : null,
+            'burgerservicenummerAanvrager' => key_exists('bsn', $zaakEigenschappen) ? $zaakEigenschappen['bsn'] : $bsn,
             'uittrekselBetrokkenen'        => $uittrekselBetrokkenen,
         ];
 
@@ -719,7 +741,7 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * Creates a VrijRBP Birth from a ZGW Zaak with the use of mapping.
+     * Creates a VrijRBP Soap Naming from a ZGW Zaak.
      *
      * @param ObjectEntity $zaakObjectEntity
      *
@@ -743,14 +765,15 @@ class ZgwToVrijbrpService
         $soapNamingArray['contactgegevens'] = $this->createVrijBrpSoapContactgegevens($zaakObjectEntity);
 
         $zaakEigenschappen = $this->getZaakEigenschappen($zaakObjectEntity, $properties);
+        $bsn = $this->getRollen($zaakObjectEntity);
 
         $naamgebruikBetrokkenen[] = [
-            'burgerservicenummer' => $zaakEigenschappen['gemeentecode'],
+            'burgerservicenummer' => $bsn,
             'codeNaamgebruik'     => $zaakEigenschappen['geselecteerdNaamgebruik'],
         ];
 
         $soapNamingArray['aanvraaggegevens'] = [
-            'burgerservicenummerAanvrager' => key_exists('bsn', $zaakEigenschappen) ? $zaakEigenschappen['bsn'] : null,
+            'burgerservicenummerAanvrager' => $bsn,
             'naamgebruikBetrokkenen'       => $naamgebruikBetrokkenen,
         ];
 
@@ -917,20 +940,15 @@ class ZgwToVrijbrpService
             case 'B0337':
                 return $this->createCommitmentObject($zaakArray);
             case 'B0360':
-                return $this->data;
-//                return $this->createDeceasementObject($zaakArray);
+                return $this->createDeceasementObject($zaakArray);
             case 'B1425':
-                return $this->data;
-//                return $this->zgwEmigrationToVrijBrpSoap($zaakObjectEntity);
+                return $this->zgwEmigrationToVrijBrpSoap($zaakObjectEntity);
             case 'B0328':
-                return $this->data;
-//                return $this->zgwConfidentialityToVrijBrpSoap($zaakObjectEntity);
+                return $this->zgwConfidentialityToVrijBrpSoap($zaakObjectEntity);
             case 'B0255':
-                return $this->data;
-//                return $this->zgwExtractToVrijBrpSoap($zaakObjectEntity);
+                return $this->zgwExtractToVrijBrpSoap($zaakObjectEntity);
             case 'B0348':
-                return $this->data;
-//                return $this->zgwNamingToVrijBrpSoap($zaakObjectEntity);
+                return $this->zgwNamingToVrijBrpSoap($zaakObjectEntity);
             default:
                 return $this->data;
         }
