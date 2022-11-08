@@ -473,8 +473,7 @@ class SynchronizationService
             //todo: error, log this
             return [];
         }
-
-        $pageResult = json_decode($response->getBody()->getContents(), true);
+        $pageResult = $this->callService->decodeResponse($callServiceConfig['gateway'], $response);
 
         $dot = new Dot($pageResult);
         $results = $dot->get($this->configuration['apiSource']['location']['objects'], $pageResult);
@@ -526,7 +525,7 @@ class SynchronizationService
             return null;
         }
 
-        $result = json_decode($response->getBody()->getContents(), true);
+        $result = $this->callService->decodeResponse($callServiceConfig['gateway'], $response);
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
         //        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
@@ -994,32 +993,6 @@ class SynchronizationService
     }
 
     /**
-     * Decodes the response body based on the content type header.
-     *
-     * @param string $responseBody The body of the response
-     * @param string $contentType  The media type from the response headers
-     *
-     * @return array The decoded response body as array
-     */
-    public function decodeResponse(string $responseBody, string $contentType): array
-    {
-        if (!$responseBody) {
-            return [];
-        }
-        switch ($contentType) {
-            case 'text/xml':
-            case 'text/xml; charset=utf-8':
-            case 'application/xml':
-                $xmlEncoder = new XmlEncoder(['xml_root_node_name' => $this->configuration['apiSource']['location']['xmlRootNodeName'] ?? 'response']);
-
-                return $xmlEncoder->decode($responseBody, 'xml');
-            case 'application/json':
-            default:
-                return json_decode($responseBody, true);
-        }
-    }
-
-    /**
      * Synchronises a new object in the gateway to it source, or an object updated in the gateway.
      *
      * @param Synchronization $synchronization The synchronisation object for the created or updated object
@@ -1068,7 +1041,7 @@ class SynchronizationService
         if (!$contentType) {
             $contentType = $result->getHeader('Content-Type')[0];
         }
-        $body = $this->decodeResponse($result->getBody()->getContents(), $contentType);
+        $body = $this->callService->decodeResponse($callServiceConfig['gateway'], $result);
 
         return $this->storeSynchronization($synchronization, $body);
     }
