@@ -41,6 +41,10 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  },
  *  collectionOperations={
  *     "get"={"path"="/admin/entities"},
+ *     "get_objects"={
+ *          "method"="GET",
+ *          "path"="/admin/schemas/{id}/objects"
+ *      },
  *     "post"={"path"="/admin/entities"}
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")
