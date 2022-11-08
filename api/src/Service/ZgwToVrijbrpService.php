@@ -488,7 +488,7 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * Creates a VrijRBP Soap Zaakgegevens array with the data of the zgwZaak
+     * Creates a VrijRBP Soap Zaakgegevens array with the data of the zgwZaak.
      *
      * @param ObjectEntity $zaakObjectEntity
      *
@@ -507,7 +507,7 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * Creates a VrijRBP Soap Contactgegevens array with the data of the zgwZaak
+     * Creates a VrijRBP Soap Contactgegevens array with the data of the zgwZaak.
      *
      * @param ObjectEntity $zaakObjectEntity
      *
@@ -524,7 +524,7 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * This function gets the zaakEigenschappen from the zgwZaak with the given properties (simXml elementen and Stuf extraElementen)
+     * This function gets the zaakEigenschappen from the zgwZaak with the given properties (simXml elementen and Stuf extraElementen).
      *
      * @param ObjectEntity $zaakObjectEntity
      * @param array        $properties
@@ -544,7 +544,7 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * This function gets the bsn of the rol with the betrokkeneType set as natuurlijk_persoon
+     * This function gets the bsn of the rol with the betrokkeneType set as natuurlijk_persoon.
      *
      * @param ObjectEntity $zaakObjectEntity
      *
@@ -555,6 +555,7 @@ class ZgwToVrijbrpService
         foreach ($zaakObjectEntity->getValue('rollen') as $rol) {
             if ($rol->getValue('betrokkeneType') === 'natuurlijk_persoon') {
                 $betrokkeneIdentificatie = $rol->getValue('betrokkeneIdentificatie');
+
                 return $betrokkeneIdentificatie->getValue('inpBsn');
             }
         }
@@ -563,7 +564,7 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * Creates a VrijRBP Soap object with the given entity and soap array
+     * Creates a VrijRBP Soap object with the given entity and soap array.
      *
      * @param Entity $requestEntity
      * @param array  $soapArray
