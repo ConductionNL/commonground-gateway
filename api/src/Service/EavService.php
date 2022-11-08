@@ -956,7 +956,7 @@ class EavService
      *
      * @return array
      */
-    public function handleGet(ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType = 'jsonld'): array
+    public function handleGet(ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType = 'json'): array
     {
         return $this->responseService->renderResult($object, $fields, $extend, $acceptType);
     }
@@ -1017,7 +1017,7 @@ class EavService
      *
      * @return array|array[]
      */
-    public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'jsonld', ?array $query = null): array
+    public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'json', ?array $query = null): array
     {
         $query = $query ?? $this->realRequestQueryAll($request->getMethod());
         unset($query['limit']);

@@ -43,6 +43,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "put"={"path"="/admin/entities/{id}"},
  *     "put_object"={
  *          "method"="PUT",
+ *          "read"=false,
+ *          "validate"=false,
  *          "path"="/admin/schemas/{id}/objects/{objectId}"
  *      },
  *     "delete"={"path"="/admin/entities/{id}"},
@@ -60,6 +62,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "post"={"path"="/admin/entities"},
  *     "post_objects"={
  *          "method"="POST",
+ *          "read"=false,
+ *          "validate"=false,
  *          "path"="/admin/schemas/{id}/objects"
  *      },
  *  })

@@ -166,7 +166,7 @@ class ResponseService
      *
      * @return array|string[]|string Only returns a string if $level is higher than 3 and acceptType is not jsonld.
      */
-    public function renderResult(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType = 'jsonld', bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
+    public function renderResult(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType = 'json', bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
     {
         $response = [];
         if ($level === 0) {
