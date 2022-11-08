@@ -57,10 +57,14 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "method"="GET",
  *          "path"="/admin/objects"
  *      },
+ *     "get_objects_schema"={
+ *          "method"="GET",
+ *          "path"="/admin/objects/schema/{schemaId}"
+ *      },
  *     "post"={"path"="/admin/object_entities"},
- *     "post_objects"={
+ *     "post_objects_schema"={
  *          "method"="POST",
- *          "path"="/admin/objects"
+ *          "path"="/admin/objects/schema/{schemaId}"
  *      },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
