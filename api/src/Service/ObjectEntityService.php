@@ -490,6 +490,7 @@ class ObjectEntityService
      */
     public function checkGetOperationTypeExceptions(Endpoint $endpoint, Entity $entity, array &$data)
     {
+        $operationType = $endpoint->getOperationType();
         if (((isset($operationType) && $operationType === 'item') || $endpoint->getOperationType() === 'item') && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
             $data = $data['results'][0];
             isset($data['id']) && Uuid::isValid($data['id']) ?? $this->session->set('object', $data['id']);
@@ -695,6 +696,7 @@ class ObjectEntityService
      * @param array|null $data Data to be set into the eav
      * @param Endpoint|null $endpoint The endpoint of the object
      * @param Entity $entity The entity of the object
+     * @param string|null $id The id of the object
      * @param string $method The method of the call
      * @param string $acceptType The acceptType of the call - defaulted to jsonld
      *
@@ -705,12 +707,11 @@ class ObjectEntityService
      * @throws GatewayException
      * @throws InvalidArgumentException
      */
-    public function switchMethod(?array &$data, ?Endpoint $endpoint, Entity $entity, string $method = 'GET', string $acceptType = 'json')
+    public function switchMethod(?array &$data, ?Endpoint $endpoint, Entity $entity, string $id = null, string $method = 'GET', string $acceptType = 'json')
     {
         // Get filters from query parameters
         $filters = $this->getFilterFromParameters();
 
-        $id = null;
         array_key_exists('id', ($filters)) && $id = $filters['id'];
         !isset($id) && array_key_exists('uuid', ($filters)) && $id = $filters['uuid'];
 
@@ -755,14 +756,13 @@ class ObjectEntityService
      * @param Endpoint    $endpoint      The endpoint of the object
      * @param array|null  $data          Data to be set into the eav
      * @param string|null $method        Method from request if there is a request
-     * @param string|null $operationType The operation type of the object
      * @param string      $acceptType    The acceptType of the call - defaulted to jsonld
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
      *
      * @return array $data
      */
-    public function handleObject(Handler $handler, Endpoint $endpoint, ?array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'json'): array
+    public function handleObject(Handler $handler, Endpoint $endpoint, ?array $data = null, string $method = null, string $acceptType = 'json'): array
     {
         // Set application in the session or create new application for localhost if we need it.
         $this->applicationService->getApplication();
@@ -774,7 +774,7 @@ class ObjectEntityService
         ];
         $this->session->set('entitySource', $sessionInfo);
 
-        $validationErrors = $this->switchMethod($data, $endpoint, $handler->getEntity(), $method, $acceptType);
+        $validationErrors = $this->switchMethod($data, $endpoint, $handler->getEntity(), null, $method, $acceptType);
         if (isset($validationErrors)) {
             throw new GatewayException('Validation errors', null, null, ['data' => $validationErrors, 'path' => $handler->getEntity()->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
