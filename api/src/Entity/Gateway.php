@@ -562,12 +562,12 @@ class Gateway
     private ?Collection $subscribers;
 
     /**
-     * @var array The guzzle configuration of the source
+     * @var array|null The guzzle configuration of the source
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $configuration = [];
+    private ?array $configuration = [];
 
     /**
      * @var Datetime The moment this resource was created
