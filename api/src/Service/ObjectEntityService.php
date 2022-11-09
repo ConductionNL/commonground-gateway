@@ -955,7 +955,7 @@ class ObjectEntityService
         $valueObject = $objectEntity->getValueByAttribute($attribute);
 
         // If the value given by the user is empty...
-        if (empty($value)) {
+        if (empty($value) && !(in_array($attribute->getType(), ['bool', 'boolean']) && $value === false)) {
             if ($attribute->getMultiple() && $value === []) {
                 if ($attribute->getType() == 'object' && ($this->request->getMethod() == 'PUT' || $this->request->getMethod() == 'PATCH')) {
                     foreach ($valueObject->getObjects() as $object) {
