@@ -1034,12 +1034,10 @@ class Gateway
         ];
     }
 
-
     public function getConfiguration(): array
     {
         return $this->configuration;
     }
-
 
     public function setConfiguration(?array $configuration = []): self
     {
