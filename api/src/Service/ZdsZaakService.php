@@ -183,7 +183,7 @@ class ZdsZaakService
                 // Eigenschap type
                 $eigenschapType = $eigenschappenArray[$extraElement->getValue('@naam')];
 
-                if(!$extraElement->getValue('#')) {
+                if (!$extraElement->getValue('#')) {
                     continue;
                 }
 
@@ -463,7 +463,7 @@ class ZdsZaakService
         // Let get the zaak
         $zdsZaakObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakIdentificatie);
 
-        if(!$zdsZaakObjectEntity) {
+        if (!$zdsZaakObjectEntity) {
             $zaken = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($this->getZaakEntityFromZdsObjectEntity($zdsDocument), ['identificatie' => $zaakIdentificatie]);
             $zaak = count($zaken) > 0 ? $zaken[0] : null;
         } else {
@@ -539,7 +539,7 @@ class ZdsZaakService
 
         $this->createZgwZaakInformatieObject($zdsObject, $zaak, $document);
 
-        if(isset($zdsZaakObjectEntity)){
+        if (isset($zdsZaakObjectEntity)) {
             $zdsZaakObjectEntity->setValue('zgwDocument', $document);
             $this->entityManager->persist($zdsZaakObjectEntity);
         }
