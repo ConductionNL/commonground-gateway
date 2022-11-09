@@ -67,8 +67,6 @@ class ObjectSubscriber implements EventSubscriberInterface
         $route = $event->getRequest()->attributes->get('_route');
         $this->route = is_string($route) ? $route : '';
 
-        var_dump($this->route);
-
         // Make sure we only trigger when needed
         if (!in_array($this->route, self::ALLOWED_ROUTES)) {
             return;
