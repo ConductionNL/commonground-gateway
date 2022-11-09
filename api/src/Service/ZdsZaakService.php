@@ -203,7 +203,7 @@ class ZdsZaakService
                 continue;
             }
             // Extra element doesn't exist in eigenschappen
-            $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')}|{$extraElement->getValue('#')}"); //{$extraElement->getValue('@naam')}:
+            $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')}|{$extraElement->getValue('#')}"); //If the name of the attribute is desirable, add this to the string: {$extraElement->getValue('@naam')}:
         }
         $zaak->setValue('eigenschappen', $zaakEigenschappen);
     }
@@ -433,6 +433,11 @@ class ZdsZaakService
         $this->entityManager->persist($zaakinformatieobject);
     }
 
+    /**
+     * Finds the ZGW Zaak entity if an zdsObjectEntity is provided
+     * @param ObjectEntity $zdsObjectEntity The ZDS objecte
+     * @return Entity The entity for ZGW zaken
+     */
     public function getZaakEntityFromZdsObjectEntity(ObjectEntity $zdsObjectEntity): Entity
     {
         return $zdsObjectEntity->getEntity()->getAttributeByName('zgwZaak')->getObject();
