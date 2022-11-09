@@ -183,6 +183,10 @@ class ZdsZaakService
                 // Eigenschap type
                 $eigenschapType = $eigenschappenArray[$extraElement->getValue('@naam')];
 
+                if(!$extraElement->getValue('#')) {
+                    continue;
+                }
+
                 // Nieuwe eigenschap aanmaken
                 $zaakEigenschap = new ObjectEntity($zaakEigenschapEntity);
                 $zaakEigenschap->setValue('type', $eigenschapType->getValue('definitie'));
@@ -199,7 +203,7 @@ class ZdsZaakService
                 continue;
             }
             // Extra element doesn't exist in eigenschappen
-            $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')}\n{$extraElement->getValue('@naam')}: {$extraElement->getValue('#')}");
+            $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')}|{$extraElement->getValue('#')}"); //{$extraElement->getValue('@naam')}:
         }
         $zaak->setValue('eigenschappen', $zaakEigenschappen);
     }
@@ -412,14 +416,14 @@ class ZdsZaakService
      *
      * @return void The modified data of the call with the case type and identification
      */
-    public function createZgwZaakInformatieObject(ObjectEntity $zdsObject, ObjectEntity $zdsZaakObjectEntity, ObjectEntity $document): void
+    public function createZgwZaakInformatieObject(ObjectEntity $zdsObject, ObjectEntity $zaak, ObjectEntity $document): void
     {
         $zaakInformatieObjectEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakInformatieObjectEntityId']);
 
         // create zaakinformatieobject
         $zaakinformatieobject = new ObjectEntity($zaakInformatieObjectEntity);
         $zaakinformatieobject->setValue('informatieobject', $document);
-        $zaakinformatieobject->setValue('zaak', $zdsZaakObjectEntity->getValue('zgwZaak'));
+        $zaakinformatieobject->setValue('zaak', $zaak);
         $zaakinformatieobject->setValue('aardRelatieWeergave', $document->getValue('titel'));
         $zaakinformatieobject->setValue('titel', $document->getValue('titel'));
         $zaakinformatieobject->setValue('beschrijving', $document->getValue('beschrijving') ?? '');
@@ -427,6 +431,11 @@ class ZdsZaakService
         $zaakinformatieobject = $this->synchronizationService->setApplicationAndOrganization($zaakinformatieobject);
 
         $this->entityManager->persist($zaakinformatieobject);
+    }
+
+    public function getZaakEntityFromZdsObjectEntity(ObjectEntity $zdsObjectEntity): Entity
+    {
+        return $zdsObjectEntity->getEntity()->getAttributeByName('zgwZaak')->getObject();
     }
 
     /**
@@ -453,13 +462,15 @@ class ZdsZaakService
 
         // Let get the zaak
         $zdsZaakObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakIdentificatie);
-        if (!$zdsZaakObjectEntity && !$zdsZaakObjectEntity instanceof ObjectEntity) {
-            // @todo fix error
-            throw new ErrorException('The zaak with referentienummer: '.$zaakIdentificatie.' can\'t be found');
+
+        if(!$zdsZaakObjectEntity) {
+            $zaak = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($this->getZaakEntityFromZdsObjectEntity($zdsObject), ['identificatie' => $zaakIdentificatie]);
+        } else {
+            $zaak = $zdsZaakObjectEntity->getValue('zgwZaak');
         }
 
-        if (!$zdsZaakObjectEntity->getValue('zgwZaak')) {
-            throw new ErrorException('The zaak with can\'t be found');
+        if (!$zaak) {
+            throw new ErrorException("The zaak with identificatie $zaakIdentificatie can't be found");
         }
 
         // Let get the informatieobjecttypen
@@ -494,7 +505,7 @@ class ZdsZaakService
             }
         } else {
             foreach ($informatieobjecttypenObjectEntity as $informatieObjectType) {
-                if ($this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakTypeInformatieObjectTypeEntity, ['zaaktype' => $zdsZaakObjectEntity->getValue('zgwZaak')->getValue('zaaktype')->getValue('url'), 'informatieobjecttype' => $informatieObjectType->getValue('url')])) {
+                if ($this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakTypeInformatieObjectTypeEntity, ['zaaktype' => $zaak->getValue('zaaktype')->getValue('url'), 'informatieobjecttype' => $informatieObjectType->getValue('url')])) {
                     $informatieobjecttypenObjectEntity = $informatieObjectType;
                     break;
                 }
@@ -525,7 +536,7 @@ class ZdsZaakService
         $this->entityManager->persist($document);
         $this->synchronizationService->setApplicationAndOrganization($document);
 
-        $this->createZgwZaakInformatieObject($zdsObject, $zdsZaakObjectEntity, $document);
+        $this->createZgwZaakInformatieObject($zdsObject, $zaak, $document);
 
         $zdsZaakObjectEntity->setValue('zgwDocument', $document);
         $zdsDocument->setValue('zgwDocument', $document);
