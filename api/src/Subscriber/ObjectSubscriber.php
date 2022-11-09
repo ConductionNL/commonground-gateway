@@ -56,7 +56,8 @@ class ObjectSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @todo
+     * Subscriber handling the /admin endpoints used for getting, editing and deleting ObjectEntities
+     * in a more user-friendly way than the standard /object_entities endpoints. Comparable to how /api endpoints work.
      *
      * @param ViewEvent $event
      *
@@ -79,7 +80,7 @@ class ObjectSubscriber implements EventSubscriberInterface
 
         $response = new Response(null, Response::HTTP_OK, ['content-type' => $acceptType]);
         try {
-            $responseContent = $this->routeSwitch($event->getRequest(), $response, $acceptType);
+            $responseContent = $this->handleRequest($event->getRequest(), $response, $acceptType);
         } catch (GatewayException $gatewayException) {
             $options = $gatewayException->getOptions();
             $responseContent = ['message' =>  $gatewayException->getMessage(), 'data' => $options['data'], 'path' => $options['path']];
@@ -90,17 +91,17 @@ class ObjectSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @todo
+     * This function will handle the request and generate the correct response using the ObjectEntityService.
      *
-     * @param Request $request
-     * @param Response $response
-     * @param string $acceptType
+     * @param Request $request The Request we are currently handling.
+     * @param Response $response The response we are going to return.
+     * @param string $acceptType The acceptType used, this will influence how the response will look.
      *
-     * @return array
+     * @return array The response content.
      *
-     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
+     * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException Might throw for example a GatewayException when there are ValidationErrors.
      */
-    private function routeSwitch(Request $request, Response $response, string $acceptType): array
+    private function handleRequest(Request $request, Response $response, string $acceptType): array
     {
         $body = json_decode($request->getContent(), true);
         $requestIds = $this->getRequestIds($request);
@@ -125,7 +126,6 @@ class ObjectSubscriber implements EventSubscriberInterface
                 break;
         }
 
-        // todo: acceptType for switchMethod function?
         $validationErrors = $this->objectEntityService->switchMethod($body, null, $schema, $requestIds['objectId'], $request->getMethod(), $acceptType);
         if (isset($validationErrors)) {
             throw new GatewayException('Validation errors', null, null, [
@@ -138,25 +138,22 @@ class ObjectSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @todo
+     * Gets the objectId and schemaId from the request attributes.
+     * Will get it from different attributes depending on the request route.
      *
-     * @param Request $request
+     * @param Request $request The Request we are currently handling.
      *
-     * @return array
+     * @return array An array containing the following keys (+value): schemaId and objectId. Values could be null.
      */
     private function getRequestIds(Request $request): array
     {
+        $objectId = $request->attributes->get('objectId');
+        $schemaId = $request->attributes->get('schemaId');
+
         if (str_contains($this->route, 'api_entities_')) {
             $schemaId = $request->attributes->get('id');
-            if (str_contains($this->route, '_object_item')) {
-                $objectId = $request->attributes->get('objectId');
-            }
-        } else {
-            if (str_contains($this->route, '_object_item')) {
-                $objectId = $request->attributes->get('id');
-            } elseif (str_contains($this->route, '_objects_schema_collection')) {
-                $schemaId = $request->attributes->get('schemaId');
-            }
+        } elseif (str_contains($this->route, 'api_object_entities_') && str_contains($this->route, '_object_item')) {
+            $objectId = $request->attributes->get('id');
         }
 
         return [
@@ -166,14 +163,14 @@ class ObjectSubscriber implements EventSubscriberInterface
     }
 
     /**
-     * @todo
+     * Will look for a schema with the given requestIds.
      *
-     * @param array $requestIds
-     * @param string $errorPath
+     * @param array $requestIds An array containing a schemaId and/or objectId.
+     * @param string $errorPath The route/path of the current Request, used in case we throw an GatewayException.
      *
-     * @return Entity
+     * @return Entity The schema if we found one.
      *
-     * @throws GatewayException
+     * @throws GatewayException Throws an GatewayException when no schema is found.
      */
     private function findSchema(array $requestIds, string $errorPath): Entity
     {
