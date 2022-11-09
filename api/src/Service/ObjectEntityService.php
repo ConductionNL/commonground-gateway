@@ -490,6 +490,7 @@ class ObjectEntityService
      */
     public function checkGetOperationTypeExceptions(Endpoint $endpoint, Entity $entity, array &$data)
     {
+        $operationType = $endpoint->getOperationType();
         if (((isset($operationType) && $operationType === 'item') || $endpoint->getOperationType() === 'item') && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
             $data = $data['results'][0];
             isset($data['id']) && Uuid::isValid($data['id']) ?? $this->session->set('object', $data['id']);
@@ -556,12 +557,12 @@ class ObjectEntityService
     /**
      * This function handles the get case of an object entity.
      *
-     * @param string|null $id         The id of the object
-     * @param array|null  $data       Data to be set into the eav
-     * @param string      $method     The method of the call
-     * @param Endpoint    $endpoint   The endpoint of the object
-     * @param Entity      $entity     The entity of the object
-     * @param string      $acceptType The acceptType of the call - defaulted to jsonld
+     * @param string|null   $id         The id of the object
+     * @param array|null    $data       Data to be set into the eav
+     * @param string        $method     The method of the call
+     * @param Entity        $entity     The entity of the object
+     * @param Endpoint|null $endpoint   The endpoint of the object
+     * @param string        $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @throws CacheException
      * @throws GatewayException
@@ -569,7 +570,7 @@ class ObjectEntityService
      *
      * @return array
      */
-    public function getCase(?string $id, ?array &$data, string $method, Entity $entity, Endpoint $endpoint, string $acceptType): array
+    public function getCase(?string $id, ?array &$data, string $method, Entity $entity, ?Endpoint $endpoint, string $acceptType): array
     {
         $queryParamData = $this->getRequestQueryParams();
 
@@ -587,7 +588,9 @@ class ObjectEntityService
                 $acceptType
             );
 
-            $this->session->get('endpoint') ?? $data = $this->checkGetOperationTypeExceptions($endpoint, $entity, $data);
+            if (isset($endpoint)) {
+                $this->session->get('endpoint') ?? $data = $this->checkGetOperationTypeExceptions($endpoint, $entity, $data);
+            }
         }
 
         return $data;
@@ -690,11 +693,12 @@ class ObjectEntityService
     /**
      * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validatorService->validateData() function this saveObject() function only saves the object in the DB.
      *
-     * @param array|null $data       Data to be set into the eav
-     * @param Endpoint   $endpoint   The endpoint of the object
-     * @param Entity     $entity     The entity of the object
-     * @param string     $method     The method of the call
-     * @param string     $acceptType The acceptType of the call - defaulted to jsonld
+     * @param array|null    $data       Data to be set into the eav
+     * @param Endpoint|null $endpoint   The endpoint of the object
+     * @param Entity        $entity     The entity of the object
+     * @param string|null   $id         The id of the object
+     * @param string        $method     The method of the call
+     * @param string        $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @throws CacheException
      * @throws ComponentException
@@ -703,12 +707,11 @@ class ObjectEntityService
      *
      * @return string[]|void
      */
-    public function switchMethod(?array &$data, Endpoint $endpoint, Entity $entity, string $method, string $acceptType)
+    public function switchMethod(?array &$data, ?Endpoint $endpoint, Entity $entity, string $id = null, string $method = 'GET', string $acceptType = 'json')
     {
         // Get filters from query parameters
         $filters = $this->getFilterFromParameters();
 
-        $id = null;
         array_key_exists('id', ($filters)) && $id = $filters['id'];
         !isset($id) && array_key_exists('uuid', ($filters)) && $id = $filters['uuid'];
 
@@ -749,18 +752,17 @@ class ObjectEntityService
     /**
      * A function to handle calls to eav.
      *
-     * @param Handler     $handler       The handler the object relates to
-     * @param Endpoint    $endpoint      The endpoint of the object
-     * @param array|null  $data          Data to be set into the eav
-     * @param string|null $method        Method from request if there is a request
-     * @param string|null $operationType The operation type of the object
-     * @param string      $acceptType    The acceptType of the call - defaulted to jsonld
+     * @param Handler     $handler    The handler the object relates to
+     * @param Endpoint    $endpoint   The endpoint of the object
+     * @param array|null  $data       Data to be set into the eav
+     * @param string|null $method     Method from request if there is a request
+     * @param string      $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
      *
      * @return array $data
      */
-    public function handleObject(Handler $handler, Endpoint $endpoint, ?array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'jsonld'): array
+    public function handleObject(Handler $handler, Endpoint $endpoint, ?array $data = null, string $method = null, string $acceptType = 'json'): array
     {
         // Set application in the session or create new application for localhost if we need it.
         $this->applicationService->getApplication();
@@ -772,7 +774,7 @@ class ObjectEntityService
         ];
         $this->session->set('entitySource', $sessionInfo);
 
-        $validationErrors = $this->switchMethod($data, $endpoint, $handler->getEntity(), $method, $acceptType);
+        $validationErrors = $this->switchMethod($data, $endpoint, $handler->getEntity(), null, $method, $acceptType);
         if (isset($validationErrors)) {
             throw new GatewayException('Validation errors', null, null, ['data' => $validationErrors, 'path' => $handler->getEntity()->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
@@ -953,7 +955,7 @@ class ObjectEntityService
         $valueObject = $objectEntity->getValueByAttribute($attribute);
 
         // If the value given by the user is empty...
-        if (empty($value)) {
+        if (empty($value) && !(in_array($attribute->getType(), ['bool', 'boolean']) && $value === false)) {
             if ($attribute->getMultiple() && $value === []) {
                 if ($attribute->getType() == 'object' && ($this->request->getMethod() == 'PUT' || $this->request->getMethod() == 'PATCH')) {
                     foreach ($valueObject->getObjects() as $object) {

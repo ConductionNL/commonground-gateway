@@ -36,12 +36,40 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "method"="GET",
  *          "path"="/admin/object_entities/{id}/sync"
  *      },
+ *     "get_object"={
+ *          "method"="GET",
+ *          "path"="/admin/objects/{id}"
+ *      },
  *     "put"={"path"="/admin/object_entities/{id}"},
- *     "delete"={"path"="/admin/object_entities/{id}"}
+ *     "put_object"={
+ *          "method"="PUT",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "path"="/admin/objects/{id}"
+ *      },
+ *     "delete"={"path"="/admin/object_entities/{id}"},
+ *     "delete_object"={
+ *          "method"="DELETE",
+ *          "path"="/admin/objects/{id}"
+ *      }
  *  },
  *  collectionOperations={
  *     "get"={"path"="/admin/object_entities"},
- *     "post"={"path"="/admin/object_entities"}
+ *     "get_objects"={
+ *          "method"="GET",
+ *          "path"="/admin/objects"
+ *      },
+ *     "get_objects_schema"={
+ *          "method"="GET",
+ *          "path"="/admin/objects/schema/{schemaId}"
+ *      },
+ *     "post"={"path"="/admin/object_entities"},
+ *     "post_objects_schema"={
+ *          "method"="POST",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "path"="/admin/objects/schema/{schemaId}"
+ *      },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
