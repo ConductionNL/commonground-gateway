@@ -557,18 +557,18 @@ class ObjectEntityService
     /**
      * This function handles the get case of an object entity.
      *
-     * @param string|null $id The id of the object
-     * @param array|null $data Data to be set into the eav
-     * @param string $method The method of the call
-     * @param Entity $entity The entity of the object
-     * @param Endpoint|null $endpoint The endpoint of the object
-     * @param string $acceptType The acceptType of the call - defaulted to jsonld
-     *
-     * @return array
+     * @param string|null   $id         The id of the object
+     * @param array|null    $data       Data to be set into the eav
+     * @param string        $method     The method of the call
+     * @param Entity        $entity     The entity of the object
+     * @param Endpoint|null $endpoint   The endpoint of the object
+     * @param string        $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @throws CacheException
      * @throws GatewayException
      * @throws InvalidArgumentException
+     *
+     * @return array
      */
     public function getCase(?string $id, ?array &$data, string $method, Entity $entity, ?Endpoint $endpoint, string $acceptType): array
     {
@@ -693,19 +693,19 @@ class ObjectEntityService
     /**
      * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validatorService->validateData() function this saveObject() function only saves the object in the DB.
      *
-     * @param array|null $data Data to be set into the eav
-     * @param Endpoint|null $endpoint The endpoint of the object
-     * @param Entity $entity The entity of the object
-     * @param string|null $id The id of the object
-     * @param string $method The method of the call
-     * @param string $acceptType The acceptType of the call - defaulted to jsonld
-     *
-     * @return string[]|void
+     * @param array|null    $data       Data to be set into the eav
+     * @param Endpoint|null $endpoint   The endpoint of the object
+     * @param Entity        $entity     The entity of the object
+     * @param string|null   $id         The id of the object
+     * @param string        $method     The method of the call
+     * @param string        $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @throws CacheException
      * @throws ComponentException
      * @throws GatewayException
      * @throws InvalidArgumentException
+     *
+     * @return string[]|void
      */
     public function switchMethod(?array &$data, ?Endpoint $endpoint, Entity $entity, string $id = null, string $method = 'GET', string $acceptType = 'json')
     {
@@ -752,11 +752,11 @@ class ObjectEntityService
     /**
      * A function to handle calls to eav.
      *
-     * @param Handler     $handler       The handler the object relates to
-     * @param Endpoint    $endpoint      The endpoint of the object
-     * @param array|null  $data          Data to be set into the eav
-     * @param string|null $method        Method from request if there is a request
-     * @param string      $acceptType    The acceptType of the call - defaulted to jsonld
+     * @param Handler     $handler    The handler the object relates to
+     * @param Endpoint    $endpoint   The endpoint of the object
+     * @param array|null  $data       Data to be set into the eav
+     * @param string|null $method     Method from request if there is a request
+     * @param string      $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
      *

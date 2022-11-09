@@ -37,7 +37,7 @@ class ObjectSubscriber implements EventSubscriberInterface
         'api_object_entities_delete_object_item',
         'api_object_entities_get_objects_collection',
         'api_object_entities_get_objects_schema_collection',
-        'api_object_entities_post_objects_schema_collection'
+        'api_object_entities_post_objects_schema_collection',
     ];
 
     public function __construct(EntityManagerInterface $entityManager, ObjectEntityService $objectEntityService, HandlerService $handlerService, ResponseService $responseService)
@@ -61,9 +61,9 @@ class ObjectSubscriber implements EventSubscriberInterface
      *
      * @param ViewEvent $event
      *
-     * @return void
-     *
      * @throws CacheException|ComponentException|InvalidArgumentException|GatewayException
+     *
+     * @return void
      */
     public function object(ViewEvent $event)
     {
@@ -79,6 +79,7 @@ class ObjectSubscriber implements EventSubscriberInterface
         $acceptType == 'form.io' && $acceptType = 'json';
 
         $response = new Response(null, Response::HTTP_OK, ['content-type' => $acceptType]);
+
         try {
             $responseContent = $this->handleRequest($event->getRequest(), $response, $acceptType);
         } catch (GatewayException $gatewayException) {
@@ -93,13 +94,13 @@ class ObjectSubscriber implements EventSubscriberInterface
     /**
      * This function will handle the request and generate the correct response using the ObjectEntityService.
      *
-     * @param Request $request The Request we are currently handling.
-     * @param Response $response The response we are going to return.
-     * @param string $acceptType The acceptType used, this will influence how the response will look.
-     *
-     * @return array The response content.
+     * @param Request  $request    The Request we are currently handling.
+     * @param Response $response   The response we are going to return.
+     * @param string   $acceptType The acceptType used, this will influence how the response will look.
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException Might throw for example a GatewayException when there are ValidationErrors.
+     *
+     * @return array The response content.
      */
     private function handleRequest(Request $request, Response $response, string $acceptType): array
     {
@@ -112,6 +113,7 @@ class ObjectSubscriber implements EventSubscriberInterface
             foreach ($objectEntities as &$objectEntity) {
                 $objectEntity = $acceptType === 'json' ? $objectEntity->toArray() : $this->responseService->renderResult($objectEntity, null, null, $acceptType);
             }
+
             return $objectEntities;
         }
 
@@ -129,8 +131,8 @@ class ObjectSubscriber implements EventSubscriberInterface
         $validationErrors = $this->objectEntityService->switchMethod($body, null, $schema, $requestIds['objectId'], $request->getMethod(), $acceptType);
         if (isset($validationErrors)) {
             throw new GatewayException('Validation errors', null, null, [
-                'data' => $validationErrors, 'path' => $schema->getName(),
-                'responseType' => Response::HTTP_BAD_REQUEST
+                'data'         => $validationErrors, 'path' => $schema->getName(),
+                'responseType' => Response::HTTP_BAD_REQUEST,
             ]);
         }
 
@@ -158,19 +160,19 @@ class ObjectSubscriber implements EventSubscriberInterface
 
         return [
             'schemaId' => $schemaId ?? null,
-            'objectId' => $objectId ?? null
+            'objectId' => $objectId ?? null,
         ];
     }
 
     /**
      * Will look for a schema with the given requestIds.
      *
-     * @param array $requestIds An array containing a schemaId and/or objectId.
-     * @param string $errorPath The route/path of the current Request, used in case we throw an GatewayException.
-     *
-     * @return Entity The schema if we found one.
+     * @param array  $requestIds An array containing a schemaId and/or objectId.
+     * @param string $errorPath  The route/path of the current Request, used in case we throw an GatewayException.
      *
      * @throws GatewayException Throws an GatewayException when no schema is found.
+     *
+     * @return Entity The schema if we found one.
      */
     private function findSchema(array $requestIds, string $errorPath): Entity
     {
@@ -184,8 +186,8 @@ class ObjectSubscriber implements EventSubscriberInterface
         }
         if (!isset($schema) || !$schema instanceof Entity) {
             throw new GatewayException('No Schema found with/for these ids', null, null, [
-                'data' => $requestIds, 'path' => $errorPath,
-                'responseType' => Response::HTTP_NOT_FOUND
+                'data'         => $requestIds, 'path' => $errorPath,
+                'responseType' => Response::HTTP_NOT_FOUND,
             ]);
         }
 
