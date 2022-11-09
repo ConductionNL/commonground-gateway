@@ -20,15 +20,16 @@ class ProxySubscriber implements EventSubscriberInterface
     private CallService $callService;
 
     public const PROXY_ROUTES = [
-        "api_gateways_get_proxy_item",
-        "api_gateways_get_proxy_endpoint_item",
-        "api_gateways_post_proxy_collection",
-        "api_gateways_post_proxy_endpoint_collection",
-        "api_gateways_put_proxy_single_item",
-        "api_gateways_delete_proxy_single_item",
+        'api_gateways_get_proxy_item',
+        'api_gateways_get_proxy_endpoint_item',
+        'api_gateways_post_proxy_collection',
+        'api_gateways_post_proxy_endpoint_collection',
+        'api_gateways_put_proxy_single_item',
+        'api_gateways_delete_proxy_single_item',
     ];
 
-    public function __construct(EntityManagerInterface $entityManager, CallService $callService) {
+    public function __construct(EntityManagerInterface $entityManager, CallService $callService)
+    {
         $this->entityManager = $entityManager;
         $this->callService = $callService;
     }
@@ -44,13 +45,13 @@ class ProxySubscriber implements EventSubscriberInterface
     {
         $route = $event->getRequest()->attributes->get('_route');
 
-        if(!in_array($route, self::PROXY_ROUTES)) {
+        if (!in_array($route, self::PROXY_ROUTES)) {
             return;
         }
 
         //@Todo rename
-        $source = $this->entityManager->getRepository("App:Gateway")->find($event->getRequest()->attributes->get('id'));
-        if(!$source instanceof Source) {
+        $source = $this->entityManager->getRepository('App:Gateway')->find($event->getRequest()->attributes->get('id'));
+        if (!$source instanceof Source) {
             return;
         }
 
@@ -61,8 +62,8 @@ class ProxySubscriber implements EventSubscriberInterface
                 $event->getRequest()->getMethod(),
                 array_merge([
                     'headers' => array_merge_recursive($source->getHeaders(), $event->getRequest()->headers->all()),
-                    'query' => $event->getRequest()->query->all(),
-                    'body'  => $event->getRequest()->getContent(),
+                    'query'   => $event->getRequest()->query->all(),
+                    'body'    => $event->getRequest()->getContent(),
                 ], $source->getConfiguration())
             );
         } catch (ServerException|ClientException|RequestException $e) {
