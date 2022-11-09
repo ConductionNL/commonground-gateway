@@ -182,7 +182,7 @@ class ObjectSubscriber implements EventSubscriberInterface
             }
         }
         if (!isset($schema) || !$schema instanceof Entity) {
-            throw new GatewayException('No Schema found with these ids', null, null, [
+            throw new GatewayException('No Schema found with/for these ids', null, null, [
                 'data' => $requestIds, 'path' => $errorPath,
                 'responseType' => Response::HTTP_NOT_FOUND
             ]);
