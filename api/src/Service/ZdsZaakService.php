@@ -541,13 +541,14 @@ class ZdsZaakService
 
         if(isset($zdsZaakObjectEntity)){
             $zdsZaakObjectEntity->setValue('zgwDocument', $document);
+            $this->entityManager->persist($zdsZaakObjectEntity);
         }
         $zdsDocument->setValue('zgwDocument', $document);
         $zdsDocument->setValue('zgwZaak', $zaak);
 
         $this->entityManager->persist($document);
         $this->entityManager->persist($zdsDocument);
-        $this->entityManager->persist($zdsZaakObjectEntity);
+        $this->entityManager->persist($zaak);
         $this->entityManager->flush();
 
         return $this->data;
