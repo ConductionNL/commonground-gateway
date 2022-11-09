@@ -464,7 +464,8 @@ class ZdsZaakService
         $zdsZaakObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByAnyId($zaakIdentificatie);
 
         if(!$zdsZaakObjectEntity) {
-            $zaak = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($this->getZaakEntityFromZdsObjectEntity($zdsObject), ['identificatie' => $zaakIdentificatie]);
+            $zaken = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($this->getZaakEntityFromZdsObjectEntity($zdsDocument), ['identificatie' => $zaakIdentificatie]);
+            $zaak = count($zaken) > 0 ? $zaken[0] : null;
         } else {
             $zaak = $zdsZaakObjectEntity->getValue('zgwZaak');
         }
@@ -538,9 +539,11 @@ class ZdsZaakService
 
         $this->createZgwZaakInformatieObject($zdsObject, $zaak, $document);
 
-        $zdsZaakObjectEntity->setValue('zgwDocument', $document);
+        if(isset($zdsZaakObjectEntity)){
+            $zdsZaakObjectEntity->setValue('zgwDocument', $document);
+        }
         $zdsDocument->setValue('zgwDocument', $document);
-        $zdsDocument->setValue('zgwZaak', $zdsZaakObjectEntity->getValue('zgwZaak'));
+        $zdsDocument->setValue('zgwZaak', $zaak);
 
         $this->entityManager->persist($document);
         $this->entityManager->persist($zdsDocument);
