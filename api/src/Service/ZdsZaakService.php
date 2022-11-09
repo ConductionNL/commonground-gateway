@@ -434,8 +434,10 @@ class ZdsZaakService
     }
 
     /**
-     * Finds the ZGW Zaak entity if an zdsObjectEntity is provided
+     * Finds the ZGW Zaak entity if an zdsObjectEntity is provided.
+     *
      * @param ObjectEntity $zdsObjectEntity The ZDS objecte
+     *
      * @return Entity The entity for ZGW zaken
      */
     public function getZaakEntityFromZdsObjectEntity(ObjectEntity $zdsObjectEntity): Entity
