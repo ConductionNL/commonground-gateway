@@ -128,7 +128,7 @@ class SynchronizationService
             $synchronisation = $this->findSyncByObject($object, $source, $entity);
             if (!$synchronisation->getLastSynced()) {
                 $synchronisation = $this->syncToSource($synchronisation, false);
-            } elseif ($object->getDateModified() > $synchronisation->getLastSynced()) {
+            } elseif ($object->getDateModified() > $synchronisation->getLastSynced() && $this->configuration['updatesAllowed']) {
                 $synchronisation = $this->syncToSource($synchronisation, true);
             }
             $this->entityManager->persist($synchronisation);
