@@ -6,8 +6,9 @@ use ApiPlatform\Core\EventListener\EventPriorities;
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
+use App\Service\HandlerService;
 use App\Service\ObjectEntityService;
-use App\Service\SynchronizationService;
+use App\Service\ResponseService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
@@ -17,13 +18,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
-use Symfony\Component\Serializer\SerializerInterface;
 
 class ObjectSubscriber implements EventSubscriberInterface
 {
     private EntityManagerInterface $entityManager;
     private ObjectEntityService $objectEntityService;
-    private SynchronizationService $synchronizationService;
+    private HandlerService $handlerService;
+    private ResponseService $responseService;
     private string $route;
     public const ALLOWED_ROUTES = [
         'api_entities_get_object_item',
@@ -39,11 +40,12 @@ class ObjectSubscriber implements EventSubscriberInterface
         'api_object_entities_post_objects_schema_collection'
     ];
 
-    public function __construct(EntityManagerInterface $entityManager, ObjectEntityService $objectEntityService, SynchronizationService $synchronizationService)
+    public function __construct(EntityManagerInterface $entityManager, ObjectEntityService $objectEntityService, HandlerService $handlerService, ResponseService $responseService)
     {
         $this->entityManager = $entityManager;
         $this->objectEntityService = $objectEntityService;
-        $this->synchronizationService = $synchronizationService;
+        $this->handlerService = $handlerService;
+        $this->responseService = $responseService;
     }
 
     public static function getSubscribedEvents()
@@ -60,7 +62,7 @@ class ObjectSubscriber implements EventSubscriberInterface
      *
      * @return void
      *
-     * @throws CacheException|ComponentException|InvalidArgumentException
+     * @throws CacheException|ComponentException|InvalidArgumentException|GatewayException
      */
     public function object(ViewEvent $event)
     {
@@ -72,10 +74,12 @@ class ObjectSubscriber implements EventSubscriberInterface
             return;
         }
 
-        // todo: acceptType? see ZZController
-        $response = new Response();
+        $acceptType = $this->handlerService->getRequestType('accept');
+        $acceptType == 'form.io' && $acceptType = 'json';
+
+        $response = new Response(null, Response::HTTP_OK, ['content-type' => $acceptType]);
         try {
-            $responseContent = $this->routeSwitch($event->getRequest(), $response);
+            $responseContent = $this->routeSwitch($event->getRequest(), $response, $acceptType);
         } catch (GatewayException $gatewayException) {
             $options = $gatewayException->getOptions();
             $responseContent = ['message' =>  $gatewayException->getMessage(), 'data' => $options['data'], 'path' => $options['path']];
@@ -90,12 +94,13 @@ class ObjectSubscriber implements EventSubscriberInterface
      *
      * @param Request $request
      * @param Response $response
+     * @param string $acceptType
      *
      * @return array
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException
      */
-    private function routeSwitch(Request $request, Response $response): array
+    private function routeSwitch(Request $request, Response $response, string $acceptType): array
     {
         $body = json_decode($request->getContent(), true);
         $requestIds = $this->getRequestIds($request);
@@ -104,7 +109,7 @@ class ObjectSubscriber implements EventSubscriberInterface
         if ($this->route === 'api_object_entities_get_objects_collection') {
             $objectEntities = $this->entityManager->getRepository('App:ObjectEntity')->findAll();
             foreach ($objectEntities as &$objectEntity) {
-                $objectEntity = $objectEntity->toArray();
+                $objectEntity = $acceptType === 'json' ? $objectEntity->toArray() : $this->responseService->renderResult($objectEntity, null, null, $acceptType);
             }
             return $objectEntities;
         }
@@ -121,7 +126,7 @@ class ObjectSubscriber implements EventSubscriberInterface
         }
 
         // todo: acceptType for switchMethod function?
-        $validationErrors = $this->objectEntityService->switchMethod($body, null, $schema, $requestIds['objectId'], $request->getMethod());
+        $validationErrors = $this->objectEntityService->switchMethod($body, null, $schema, $requestIds['objectId'], $request->getMethod(), $acceptType);
         if (isset($validationErrors)) {
             throw new GatewayException('Validation errors', null, null, [
                 'data' => $validationErrors, 'path' => $schema->getName(),
