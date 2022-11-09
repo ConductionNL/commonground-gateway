@@ -116,7 +116,6 @@ class ObjectSubscriber implements EventSubscriberInterface
                 $response->setStatusCode(Response::HTTP_CREATED);
                 break;
             case 'DELETE':
-                // todo: Delete paths don't work atm, we can't create custom delete paths with api-platform?
                 $response->setStatusCode(Response::HTTP_NO_CONTENT);
                 break;
         }
