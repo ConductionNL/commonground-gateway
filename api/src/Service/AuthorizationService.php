@@ -379,7 +379,7 @@ class AuthorizationService
             !in_array($info['attribute']->getType(), ['object', 'file', 'array']) &&
             !$info['attribute']->getMultiple()
         ) {
-            $info['value'] = $info['object']->getValueByAttribute($info['attribute'])->getValue();
+            $info['value'] = $info['object']->getValue($info['attribute']);
         }
 
         return $info;
@@ -491,7 +491,7 @@ class AuthorizationService
             }
             if (!array_key_exists('value', $info) && $subScopeResult['scopeAttribute']) {
                 // Get the value from the Object with the attribute of this scope
-                $info['value'] = $info['object']->getValueByAttribute($subScopeResult['scopeAttribute'])->getValue();
+                $info['value'] = $info['object']->getValue($subScopeResult['scopeAttribute']);
                 //todo, what to do if a $info['value'] is empty?
             }
 
