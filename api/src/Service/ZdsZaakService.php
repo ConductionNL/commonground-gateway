@@ -482,7 +482,7 @@ class ZdsZaakService
         }
 
         // Let get the informatieobjecttypen
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 20; $i++) {
             $informatieobjecttypenObjectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($informatieObjectTypeEntity, ['omschrijving' => $zdsObject->getValue('dctOmschrijving')]);
             if (count($informatieobjecttypenObjectEntity) > 0) {
                 break;
