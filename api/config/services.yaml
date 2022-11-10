@@ -88,11 +88,6 @@ services:
         arguments:
             $handelsRegisterSearchService: '@App\Service\HandelsRegisterSearchService'
             
-    App\ActionHandler\HuwelijksplannerHandler:
-        public: true
-        arguments:
-            $huwelijksplannerService: '@App\Service\HuwelijksplannerService'
-            
     App\ActionHandler\IdentificationHandler:
         public: true
         arguments:
