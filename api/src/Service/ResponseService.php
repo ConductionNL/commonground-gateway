@@ -237,7 +237,7 @@ class ResponseService
             if (!is_null($result->getEntity()->getAvailableProperties() || !empty($fields))) {
                 $response = array_filter($response, function ($propertyName) use ($result, $fields) {
                     $attTypeObject = false;
-                    if ($attribute = $result->getEntity()->getAttributeByName($propertyName)) {
+                    if ($attribute = $result->getAttributeObject($propertyName)) {
                         $attTypeObject = $attribute->getType() === 'object';
                     }
 
@@ -556,7 +556,7 @@ class ResponseService
                 continue;
             }
 
-            $valueObject = $result->getValueByAttribute($attribute);
+            $valueObject = $result->getValueObject($attribute);
             if ($attribute->getType() == 'object') {
                 // Lets deal with extending
                 if (!$this->checkExtendAttribute($response, $attribute, $valueObject, $extend, $acceptType)) {

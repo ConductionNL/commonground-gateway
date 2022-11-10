@@ -1230,7 +1230,7 @@ class EavService
         // Check mayBeOrphaned
         // Get all attributes with mayBeOrphaned == false and one or more objects
         $cantBeOrphaned = $object->getEntity()->getAttributes()->filter(function (Attribute $attribute) use ($object) {
-            if (!$attribute->getMayBeOrphaned() && count($object->getValueByAttribute($attribute)->getObjects()) > 0) {
+            if (!$attribute->getMayBeOrphaned() && count($object->getSubresources($attribute)) > 0) {
                 return true;
             }
 
@@ -1240,7 +1240,7 @@ class EavService
             $data = [];
             foreach ($cantBeOrphaned as $attribute) {
                 $data[] = $attribute->getName();
-                //                $data[$attribute->getName()] = $object->getValueByAttribute($attribute)->getId();
+                //                $data[$attribute->getName()] = $object->getValueObject($attribute)->getId();
             }
 
             return [
@@ -1260,17 +1260,17 @@ class EavService
         foreach ($object->getEntity()->getAttributes() as $attribute) {
             // If this object has subresources and cascade delete is set to true, delete the subresources as well.
             // TODO: use switch for type? ...also delete type file?
-            if ($attribute->getType() == 'object' && $attribute->getCascadeDelete() && !is_null($object->getValueByAttribute($attribute)->getValue())) {
+            if ($attribute->getType() == 'object' && $attribute->getCascadeDelete() && !is_null($object->getValue($attribute))) {
                 if ($attribute->getMultiple()) {
                     // !is_null check above makes sure we do not try to loop through null
-                    foreach ($object->getValueByAttribute($attribute)->getValue() as $subObject) {
+                    foreach ($object->getValue($attribute) as $subObject) {
                         if ($subObject && !$maxDepth->contains($subObject)) {
                             $this->handleDelete($subObject, $maxDepth);
                         }
                     }
                 } else {
-                    $subObject = $object->getValueByAttribute($attribute)->getValue();
-                    if ($subObject && !$maxDepth->contains($subObject)) {
+                    $subObject = $object->getValue($attribute);
+                    if ($subObject instanceof ObjectEntity && !$maxDepth->contains($subObject)) {
                         $this->handleDelete($subObject, $maxDepth);
                     }
                 }
