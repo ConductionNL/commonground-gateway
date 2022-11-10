@@ -74,10 +74,11 @@ class TranslationService
                     strpos(substr($replace, 0, strpos($replace, '.$') + 3), '.$!') !== false ? $mapping[preg_replace('/\.\$!/', ".$key", $replace, 1)] = preg_replace('/\.\$/', ".$key", $search, 1) : $mapping[preg_replace('/\.\$/', ".$key", $replace, 1)] = preg_replace('/\.\$/', ".$key", $search, 1);
                 }
                 unset($mapping[$replace]);
-                $mapping = $this->iterateNumericArrays($mapping, $source);
             } elseif (strpos($search, '.$') !== false) {
                 strpos(substr($replace, 0, strpos($replace, '.$') + 3), '.$!') !== false ? $mapping[preg_replace('/\.\$!/', '.0', $replace, 1)] = preg_replace('/\.\$/', '', $search, 1) : $mapping[preg_replace('/\.\$/', '', $replace, 1)] = preg_replace('/\.\$/', '', $search, 1);
                 unset($mapping[$replace]);
+            }
+            if(strpos($search, '.$') !== false) {
                 $mapping = $this->iterateNumericArrays($mapping, $source);
             }
         }
