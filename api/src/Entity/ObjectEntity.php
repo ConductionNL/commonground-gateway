@@ -680,7 +680,7 @@ class ObjectEntity
      *
      * @return Value Either the current value for this attribute or a new value for the attribute if there isnt a current value
      */
-    public function getValueByAttribute(Attribute $attribute): Value
+    private function getValueByAttribute(Attribute $attribute): Value
     {
         if (!$this->getEntity()->getAttributes()->contains($attribute)) {
             $this->addError($attribute->getName(), 'The entity: '.$this->getEntity()->getName().' does not have this attribute. (intern getValueByAttribute error)');
