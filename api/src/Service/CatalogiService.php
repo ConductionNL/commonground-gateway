@@ -420,13 +420,13 @@ class CatalogiService
         if (isset($component['x-commongateway-metadata']['synchronizations'][0])) {
             $componentSync = $component['x-commongateway-metadata']['synchronizations'][0];
 
-            return $componentSync['gateway']['location'].$componentSync['endpoint'].$componentSync['sourceId'];
+            return $componentSync['gateway']['location'].$componentSync['endpoint'].'/'.$componentSync['sourceId'];
         } elseif (isset($component['x-commongateway-metadata']['self']) &&
             str_contains($component['x-commongateway-metadata']['self'], $this->configuration['componentsLocation'])) {
             return $catalogiLocation.$component['x-commongateway-metadata']['self'];
         }
 
-        return $catalogiLocation.$this->configuration['componentsLocation'].$component['id'];
+        return $catalogiLocation.$this->configuration['componentsLocation'].'/'.$component['id'];
     }
 
     /**
@@ -567,16 +567,16 @@ class CatalogiService
             $object->setEntity($entity);
             $addComponentWithMetadata = $addComponent;
             unset($addComponent['x-commongateway-metadata']); // todo: not sure if this is needed before populateObject
-            // todo: remove/replace embedded before populateObject... Try with hydrate functie
-//            $addComponent = $this->synchronizationService->replaceEmbedded($addComponent);
+            $addComponent = $object->includeEmbeddedArray($addComponent);
             $newComponent = $this->synchronizationService->populateObject($addComponent, $object);
             // todo: get correct source for createSyncForComponent function. Will be a Catalogi source or a other/new source we need to create here ?
-            $synchronization = $this->createSyncForComponent(['object' => $newComponent, 'source' => 'todo', 'entity' => $entity], $addComponentWithMetadata);
-            $newComponent = $newComponent->toArray();
+//            $synchronization = $this->createSyncForComponent(['object' => $newComponent, 'source' => 'todo', 'entity' => $entity], $addComponentWithMetadata);
 
             if (isset($this->io)) {
-                $this->io->text("Added Component ({$addComponent['name']}) \"$url\"");
+                $this->io->text("Added Component ({$addComponent['name']}) \"$url\" with id: {$newComponent->getId()->toString()}");
+                $this->io->newLine();
             }
+            $newComponent = $newComponent->toArray();
             $addedComponents[] = $newComponent;
         }
 
