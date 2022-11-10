@@ -570,7 +570,7 @@ class CatalogiService
             $addComponent = $object->includeEmbeddedArray($addComponent);
             $newComponent = $this->synchronizationService->populateObject($addComponent, $object);
             // todo: get correct source for createSyncForComponent function. Will be a Catalogi source or a other/new source we need to create here ?
-//            $synchronization = $this->createSyncForComponent(['object' => $newComponent, 'source' => 'todo', 'entity' => $entity], $addComponentWithMetadata);
+//            $synchronization = $this->createSyncForComponent(['object' => $newComponent, 'entity' => $entity], $addComponentWithMetadata);
 
             if (isset($this->io)) {
                 $this->io->text("Added Component ({$addComponent['name']}) \"$url\" with id: {$newComponent->getId()->toString()}");
@@ -590,7 +590,7 @@ class CatalogiService
     /**
      * @todo
      *
-     * @param array $data         An array containing an 'object' => ObjectEntity, 'source' => Gateway & 'entity' => Entity.
+     * @param array $data         An array containing an 'object' => ObjectEntity & 'entity' => Entity.
      * @param array $addComponent
      *
      * @throws Exception
@@ -604,6 +604,8 @@ class CatalogiService
 
         $synchronization = new Synchronization();
         $synchronization->setObject($data['object']);
+        // todo use $componentSync['gateway'] in a new function to get existing source or create a new one? compare with getOrCreateSourceForCatalogi()
+        // todo instead of $data['source'] -->>
         $synchronization->setGateway($data['source']);
         $synchronization->setEntity($data['entity']);
         $synchronization->setEndpoint($componentSync ? $componentSync['endpoint'] : $this->configuration['componentsLocation']);
