@@ -769,8 +769,8 @@ class ZdsZaakService
     public function getHeeftRelevant(ObjectEntity $zdsObject, ObjectEntity $zaak): array
     {
         $documentEntity = $zaak->getAttributeObject('zaakinformatieobjecten')->getObject();
-        $documenten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($documentEntity, ['zaak.id' => $zaak->getId()->toString()],['_dateCreated' => 'DESC']);
-        
+        $documenten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($documentEntity, ['zaak.id' => $zaak->getId()->toString()], ['_dateCreated' => 'DESC']);
+
         $heeftRelevant = [];
         foreach ($documenten as $document) {
             $enkelvoudigInformatieObject = $document->getValue('informatieobject');
@@ -898,7 +898,7 @@ class ZdsZaakService
         $rolEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['rolEntityId']);
 
         if ($result->getValue('object') && $result->getValue('object')->getValue('identificatie')) {
-            $rollen = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($rolEntity, ['omschrijvingGeneriek' => 'initiator'],['_dateCreated' => 'DESC'],0, 250);
+            $rollen = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($rolEntity, ['omschrijvingGeneriek' => 'initiator'], ['_dateCreated' => 'DESC'], 0, 250);
             $zaak = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($zakenEntity, ['identificatie' => $result->getValue('object')->getValue('identificatie')])[0];
             foreach ($rollen as $rol) {
                 if ($rol->getValue('zaak') == $zaak) {
@@ -908,7 +908,7 @@ class ZdsZaakService
             $result->setValue('object', $this->getZaakObject($result, $zaak, $rol));
             $data['response'] = $result->toArray();
         } elseif ($result->getValue('object') && $result->getValue('object')->getValue('heeftAlsInitiator')->getValue('natuurlijkPersoon')->getValue('inpBsn')) {
-            $rollen = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($rolEntity, ['omschrijvingGeneriek' => 'initiator', 'betrokkeneIdentificatie.inpBsn' => $result->getValue('object')->getValue('heeftAlsInitiator')->getValue('natuurlijkPersoon')->getValue('inpBsn')],['_dateCreated' => 'DESC'],0, 250);
+            $rollen = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($rolEntity, ['omschrijvingGeneriek' => 'initiator', 'betrokkeneIdentificatie.inpBsn' => $result->getValue('object')->getValue('heeftAlsInitiator')->getValue('natuurlijkPersoon')->getValue('inpBsn')], ['_dateCreated' => 'DESC'], 0, 250);
             $zaken = [];
             foreach ($rollen as $rol) {
                 if ($rol->getValue('betrokkeneIdentificatie')->getValue('inpBsn') == $result->getValue('object')->getValue('heeftAlsInitiator')->getValue('natuurlijkPersoon')->getValue('inpBsn')) {
@@ -919,7 +919,7 @@ class ZdsZaakService
             $result['object'] = $zaken;
             $data['response'] = $result;
         } elseif ($result->getValue('Body') && $result->getValue('zgwZaak')) {
-            $rollen = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($rolEntity, ['omschrijvingGeneriek' => 'initiator'],['_dateCreated' => 'DESC'],0, 250);
+            $rollen = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($rolEntity, ['omschrijvingGeneriek' => 'initiator'], ['_dateCreated' => 'DESC'], 0, 250);
             $zaak = $this->entityManager->getRepository(ObjectEntity::class)->find($result->getValue('zgwZaak'));
             foreach ($rollen as $rol) {
                 if ($rol->getValue('zaak') && $rol->getValue('zaak') == $zaak) {
@@ -1074,7 +1074,7 @@ class ZdsZaakService
 
         $objectInformatieObjectEntity = $this->entityManager->getRepository(Entity::class)->find($this->configuration['documentEntityId']);
         $result = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['response']['id']);
-        $documenten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($objectInformatieObjectEntity, ['object' => $result->getValue('zgwZaak')],['_dateCreated' => 'DESC'],0, 250);
+        $documenten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($objectInformatieObjectEntity, ['object' => $result->getValue('zgwZaak')], ['_dateCreated' => 'DESC'], 0, 250);
         $zaak = $this->entityManager->getRepository(ObjectEntity::class)->find($result->getValue('zgwZaak'));
         foreach ($documenten as $document) {
             $zds = new ObjectEntity($this->entityManager->getRepository(Entity::class)->find($this->configuration['zdsEntityId']));
