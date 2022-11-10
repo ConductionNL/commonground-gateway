@@ -36,12 +36,40 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "method"="GET",
  *          "path"="/admin/object_entities/{id}/sync"
  *      },
+ *     "get_object"={
+ *          "method"="GET",
+ *          "path"="/admin/objects/{id}"
+ *      },
  *     "put"={"path"="/admin/object_entities/{id}"},
- *     "delete"={"path"="/admin/object_entities/{id}"}
+ *     "put_object"={
+ *          "method"="PUT",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "path"="/admin/objects/{id}"
+ *      },
+ *     "delete"={"path"="/admin/object_entities/{id}"},
+ *     "delete_object"={
+ *          "method"="DELETE",
+ *          "path"="/admin/objects/{id}"
+ *      }
  *  },
  *  collectionOperations={
  *     "get"={"path"="/admin/object_entities"},
- *     "post"={"path"="/admin/object_entities"}
+ *     "get_objects"={
+ *          "method"="GET",
+ *          "path"="/admin/objects"
+ *      },
+ *     "get_objects_schema"={
+ *          "method"="GET",
+ *          "path"="/admin/objects/schema/{schemaId}"
+ *      },
+ *     "post"={"path"="/admin/object_entities"},
+ *     "post_objects_schema"={
+ *          "method"="POST",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "path"="/admin/objects/schema/{schemaId}"
+ *      },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -550,7 +578,7 @@ class ObjectEntity
      *
      * @param string|Attribute $attribute
      *
-     * @return array|bool|string|int|object Returns a Value if its found or false when its not found
+     * @return array|bool|string|int|object Returns a Value if its found or false when its not found.
      */
     public function getValue($attribute)
     {
@@ -569,19 +597,21 @@ class ObjectEntity
      *
      * @param string|Attribute $attribute
      *
-     * @return Value|bool Returns a Value if its found or false when its not found
+     * @return Value|bool Returns a Value if its found or false when its not found.
      */
     public function getValueObject($attribute)
     {
         if (is_string($attribute)) {
-            $attribute = $this->getEntity()->getAttributeByName($attribute);
+            $attribute = $this->getAttributeObject($attribute);
         }
 
-        if (!$attribute instanceof Attribute) {
-            return false;
+        // If we have a valid Attribute object
+        if ($attribute instanceof Attribute) {
+            return $this->getValueByAttribute($attribute);
         }
 
-        return $this->getValueByAttribute($attribute);
+        // If not return false
+        return false;
     }
 
     /**
@@ -599,6 +629,26 @@ class ObjectEntity
         // If we find the Value object we set the value
         if ($valueObject instanceof Value) {
             return $valueObject->setValue($value);
+        }
+
+        // If not return false
+        return false;
+    }
+
+    /**
+     * Gets a Attribute object based on the attribute string name.
+     *
+     * @param string $attributeName
+     *
+     * @return Attribute|false Returns an Attribute if its found or false when its not found.
+     */
+    public function getAttributeObject(string $attributeName)
+    {
+        $attribute = $this->getEntity()->getAttributeByName($attributeName);
+
+        // If we have a valid Attribute object
+        if ($attribute instanceof Attribute) {
+            return $attribute;
         }
 
         // If not return false
@@ -624,13 +674,13 @@ class ObjectEntity
     }
 
     /**
-     * Get an value based on a attribut.
+     * Get a value based on an attribute.
      *
      * @param Attribute $attribute the attribute that you are searching for
      *
-     * @return Value Iether the current value for this attribute or a new value for the attribute if there isnt a current value
+     * @return Value Either the current value for this attribute or a new value for the attribute if there isnt a current value
      */
-    public function getValueByAttribute(Attribute $attribute): Value
+    private function getValueByAttribute(Attribute $attribute): Value
     {
         if (!$this->getEntity()->getAttributes()->contains($attribute)) {
             $this->addError($attribute->getName(), 'The entity: '.$this->getEntity()->getName().' does not have this attribute. (intern getValueByAttribute error)');
@@ -655,9 +705,9 @@ class ObjectEntity
     /*
      * A recursion save way of getting subresources
      */
-    public function getAllSubresources(?ArrayCollection $result): ArrayCollection
+    public function getAllSubresources(?ArrayCollection $result, Attribute $attribute = null): ArrayCollection
     {
-        $subresources = $this->getSubresources();
+        $subresources = $this->getSubresources($attribute);
 
         foreach ($subresources as $subresource) {
             if (!$result->contains($subresource)) {
@@ -673,7 +723,7 @@ class ObjectEntity
      *
      * @return ArrayCollection the subresources of this object entity
      */
-    public function getSubresources(): ArrayCollection
+    public function getSubresources(Attribute $attribute = null): ArrayCollection
     {
         // Get all values of this ObjectEntity with attribute type object
         //$values = $this->getObjectValues()->filter(function (Value $value) {
@@ -690,6 +740,9 @@ class ObjectEntity
         */
         $subresources = new ArrayCollection();
         foreach ($this->getObjectValues() as $value) {
+            if ($attribute && $value->getAttribute() !== $attribute) {
+                continue;
+            }
             foreach ($value->getObjects() as $objectEntity) {
                 // prevent double work and downward recurions
                 $subresources->add($objectEntity);
@@ -784,7 +837,7 @@ class ObjectEntity
                         // Hacky
                         //if($convar == 'true'  ) {$convar = true;}
                         //if($convar == 'false'  ) {$convar = false;}
-                        $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
+                        $checkAgainst = $this->getValue($conditionProperty);
                         if (!is_array($checkAgainst) && $checkAgainst == $convar) {
                             $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$convar);
                         } elseif (is_array($checkAgainst) && in_array($convar, $checkAgainst)) {
@@ -795,7 +848,7 @@ class ObjectEntity
                     // Hacky
                     //if($conditionValue == 'true'  ) {$conditionValue = true;}
                     //if($conditionValue == 'false'  ) {$conditionValue = false;}
-                    $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
+                    $checkAgainst = $this->getValue($conditionProperty);
                     if (!is_array($checkAgainst) && $checkAgainst == $conditionValue) {
                         $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$conditionValue);
                     } elseif (is_array($checkAgainst) && in_array($conditionValue, $checkAgainst)) {
@@ -831,7 +884,7 @@ class ObjectEntity
         in_array('self', $extend) && $array['x-commongateway-metadata']['self'] = $this->getSelf(); //todo? $this->getSelf() ?? $this->setSelf(???->createSelf($this))->getSelf()
         in_array('synchronizations', $extend) && $array['x-commongateway-metadata']['synchronizations'] = $this->getReadableSyncDataArray();
         foreach ($this->getEntity()->getAttributes() as $attribute) {
-            $valueObject = $this->getValueByAttribute($attribute);
+            $valueObject = $this->getValueObject($attribute);
             if ($attribute->getType() == 'object') {
                 if ($valueObject->getValue() == null) {
                     $array[$attribute->getName()] = null;

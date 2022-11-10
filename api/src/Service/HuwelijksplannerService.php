@@ -114,24 +114,24 @@ class HuwelijksplannerService
         $checklist = [];
 
         // Check partners
-        if (count($huwelijk->getValueByAttribute('partners')) < 2) {
+        if (count($huwelijk->getValueObject('partners')) < 2) {
             $checklist['partners'] = 'Voor een huwelijk/partnerschap zijn minimaal 2 partners nodig';
-        } elseif (count($huwelijk->getValueByAttribute('partners')) > 2) {
+        } elseif (count($huwelijk->getValueObject('partners')) > 2) {
             $checklist['partners'] = 'Voor een huwelijk/partnerschap kunnen maximaal 2 partners worden opgegeven';
         }
         // Check getuigen
         // @todo eigenlijk is het minimaal 1 en maximaal 2 getuigen per partner
-        if (count($huwelijk->getValueByAttribute('getuigen')) < 2) {
+        if (count($huwelijk->getValueObject('getuigen')) < 2) {
             $checklist['getuigen'] = 'Voor een huwelijk/partnerschap zijn minimaal 2 getuigen nodig';
-        } elseif (count($huwelijk->getValueByAttribute('getuigen')) > 4) {
+        } elseif (count($huwelijk->getValueObject('getuigen')) > 4) {
             $checklist['getuigen'] = 'Voor een huwelijk/partnerschap kunnen maximaal 4 getuigen worden opgegeven';
         }
         // Kijken naar locatie
-        if (!$huwelijk->getValueByAttribute('locatie')) {
+        if (!$huwelijk->getValueObject('locatie')) {
             $checklist['locatie'] = 'Nog geen locatie opgegeven';
         }
         // Kijken naar ambtenaar
-        if (!$huwelijk->getValueByAttribute('ambtenaar')) {
+        if (!$huwelijk->getValueObject('ambtenaar')) {
             $checklist['ambtenaar'] = 'Nog geen ambtenaar opgegeven';
         }
         // @todo trouwdatum minimaal 2 weken groter dan aanvraag datum
