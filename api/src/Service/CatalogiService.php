@@ -74,14 +74,12 @@ class CatalogiService
         // todo: We also need to check if existing Catalogi have been changed and update them if needed.
         $newCatalogi = $this->pullCatalogi();
 
-        // todo: disabled the following code for now until this is finished and works correctly:
-//
-//        // todo: we might want to move this to the componentsHandler() function, see todo there!
-//        if (isset($this->io)) {
-//            $this->io->note('CatalogiService->pullComponents()');
-//        }
-//        // Get all Components from all known Catalogi and compare them to our known Components. Add unknown ones.
-//        $newComponents = $this->pullComponents();
+        // todo: we might want to move this to the componentsHandler() function, see todo there!
+        if (isset($this->io)) {
+            $this->io->note('CatalogiService->pullComponents()');
+        }
+        // Get all Components from all known Catalogi and compare them to our known Components. Add unknown ones.
+        $newComponents = $this->pullComponents();
 
         return $data;
     }
