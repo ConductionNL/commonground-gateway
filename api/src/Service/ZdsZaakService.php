@@ -757,27 +757,6 @@ class ZdsZaakService
     }
 
     /**
-     * Finds the enkelvoudigInformatieObject for a zaakInformatieObject.
-     *
-     * @param ObjectEntity $document The zaakInformatieObject to find the enkelvoudigInformatieObject for
-     *
-     * @return ObjectEntity|null
-     */
-    private function getInformatieObject(ObjectEntity $document): ?ObjectEntity
-    {
-        $values = $this->entityManager->getRepository(Value::class)->findBy(['stringValue' => $document->getValue('informatieobject')]);
-        foreach ($values as $value) {
-            if ($value instanceof Value && $value->getAttribute()->getName() == 'url') {
-                $enkelvoudigInformatieObject = $value->getObjectEntity();
-
-                return $enkelvoudigInformatieObject;
-            }
-        }
-
-        return null;
-    }
-
-    /**
      * Creates the HeeftRelevant subarray of a ZDS object.
      *
      * @param ObjectEntity $zdsObject The ZDS object to create the subarray for
@@ -790,11 +769,11 @@ class ZdsZaakService
     public function getHeeftRelevant(ObjectEntity $zdsObject, ObjectEntity $zaak): array
     {
         $documentEntity = $zaak->getAttributeObject('zaakinformatieobjecten')->getObject();
-        $documenten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($documentEntity, ['zaak.id' => $zaak->getId()->toString()]);
-
+        $documenten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($documentEntity, ['zaak.id' => $zaak->getId()->toString()],['_dateCreated' => 'DESC']);
+        
         $heeftRelevant = [];
         foreach ($documenten as $document) {
-            $enkelvoudigInformatieObject = $this->getInformatieObject($document);
+            $enkelvoudigInformatieObject = $document->getValue('informatieobject');
             if (!$enkelvoudigInformatieObject) {
                 continue;
             }
@@ -845,6 +824,8 @@ class ZdsZaakService
         $zdsObject->setValue('heeftRelevant', $this->getHeeftRelevant($zdsObject, $zaak));
         $this->entityManager->persist($zdsObject);
         $this->entityManager->flush();
+        
+        var_dump($zdsObject->toArray());
 
         return $zdsObject;
     }
