@@ -824,9 +824,6 @@ class ZdsZaakService
         $zdsObject->setValue('heeftRelevant', $this->getHeeftRelevant($zdsObject, $zaak));
         $this->entityManager->persist($zdsObject);
         $this->entityManager->flush();
-        
-        var_dump($zdsObject->toArray());
-
         return $zdsObject;
     }
 
