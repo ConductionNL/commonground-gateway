@@ -58,6 +58,28 @@ class TranslationService
         return array_keys($array) !== range(0, count($array) - 1);
     }
 
+
+    private function recursiveNumeric($search, $replace, $source, $mapping)
+    {
+        if (strpos($search, '.$') !== false && is_array($source[substr($search, 0, strpos($search, '.$'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$'))])) {
+            foreach ($source[substr($search, 0, strpos($search, '.$'))] as $key => $value) {
+                $newSearch = preg_replace('/\.\$/', ".$key", $search, 1);
+                $newReplace = strpos(substr($replace, 0, strpos($replace, '.$') + 3), '.$!') !== false ? preg_replace('/\.\$!/', ".$key", $replace, 1) : preg_replace('/\.\$/', ".$key", $replace, 1);
+                $mapping[$newReplace] = $newSearch;
+                $mapping = $this->recursiveNumeric($newSearch, $newReplace, $source, $mapping);
+
+            }
+            unset($mapping[$replace]);
+        } elseif (strpos($search, '.$') !== false) {
+            $newSearch = preg_replace('/\.\$/', '', $search, 1);
+            $newReplace = strpos(substr($replace, 0, strpos($replace, '.$') + 3), '.$!') !== false ? preg_replace('/\.\$!/', '.0', $replace, 1) : preg_replace('/\.\$/', '', $replace, 1);
+            $mapping = $this->recursiveNumeric($newSearch, $newReplace, $source, $mapping);
+            unset($mapping[$replace]);
+        }
+
+        return $mapping;
+    }
+
     /**
      * Update mapping for numeric arrays. Replaces .$ by the keys in a numeric array, or removes it in the case of an associative array.
      *
@@ -69,18 +91,19 @@ class TranslationService
     public function iterateNumericArrays(array $mapping, Dot $source): array
     {
         foreach ($mapping as $replace => $search) {
-            if (strpos($search, '.$') !== false && is_array($source[substr($search, 0, strpos($search, '.$'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$'))])) {
-                foreach ($source[substr($search, 0, strpos($search, '.$'))] as $key => $value) {
-                    strpos(substr($replace, 0, strpos($replace, '.$') + 3), '.$!') !== false ? $mapping[preg_replace('/\.\$!/', ".$key", $replace, 1)] = preg_replace('/\.\$/', ".$key", $search, 1) : $mapping[preg_replace('/\.\$/', ".$key", $replace, 1)] = preg_replace('/\.\$/', ".$key", $search, 1);
-                }
-                unset($mapping[$replace]);
-            } elseif (strpos($search, '.$') !== false) {
-                strpos(substr($replace, 0, strpos($replace, '.$') + 3), '.$!') !== false ? $mapping[preg_replace('/\.\$!/', '.0', $replace, 1)] = preg_replace('/\.\$/', '', $search, 1) : $mapping[preg_replace('/\.\$/', '', $replace, 1)] = preg_replace('/\.\$/', '', $search, 1);
-                unset($mapping[$replace]);
-            }
-            if (strpos(preg_replace('/\.\$/', '', $search, 1), '.$') !== false) {
-                $mapping = $this->iterateNumericArrays($mapping, $source);
-            }
+            $mapping = $this->recursiveNumeric($search, $replace, $source, $mapping);
+//            if (strpos($search, '.$') !== false && is_array($source[substr($search, 0, strpos($search, '.$'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$'))])) {
+//                foreach ($source[substr($search, 0, strpos($search, '.$'))] as $key => $value) {
+//                    strpos(substr($replace, 0, strpos($replace, '.$') + 3), '.$!') !== false ? $mapping[preg_replace('/\.\$!/', ".$key", $replace, 1)] = preg_replace('/\.\$/', ".$key", $search, 1) : $mapping[preg_replace('/\.\$/', ".$key", $replace, 1)] = preg_replace('/\.\$/', ".$key", $search, 1);
+//                }
+//                unset($mapping[$replace]);
+//            } elseif (strpos($search, '.$') !== false) {
+//                strpos(substr($replace, 0, strpos($replace, '.$') + 3), '.$!') !== false ? $mapping[preg_replace('/\.\$!/', '.0', $replace, 1)] = preg_replace('/\.\$/', '', $search, 1) : $mapping[preg_replace('/\.\$/', '', $replace, 1)] = preg_replace('/\.\$/', '', $search, 1);
+//                unset($mapping[$replace]);
+//            }
+//            if (strpos(preg_replace('/\.\$/', '', $search, 1), '.$') !== false) {
+//                $mapping = $this->iterateNumericArrays($mapping, $source);
+//            }
         }
 
         return $mapping;
