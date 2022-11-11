@@ -724,7 +724,7 @@ class ZgwToVrijbrpService
             $uittrekselBetrokkenen[] = [
                 'burgerservicenummer' => key_exists('bsn', $uittreksel) ? $uittreksel['bsn'] : null,
                 'uittrekselcode'      => key_exists('code', $uittreksel) ? $uittreksel['code'] : null,
-                'indicatieGratis'     => false,
+                'indicatieGratis'     => 'false',
             ];
         }
 
