@@ -1029,7 +1029,6 @@ class SynchronizationService
                 ]
             );
         } catch (Exception|GuzzleException $exception) {
-            var_dump($exception->getMessage());
             $this->ioCatchException($exception, ['line', 'file', 'message' => [
                 'preMessage' => 'Error while doing syncToSource: ',
             ]]);
