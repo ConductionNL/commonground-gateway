@@ -73,6 +73,7 @@ class TranslationService
         } elseif (strpos($search, '.$') !== false) {
             $newSearch = preg_replace('/\.\$/', '', $search, 1);
             $newReplace = strpos(substr($replace, 0, strpos($replace, '.$') + 3), '.$!') !== false ? preg_replace('/\.\$!/', '.0', $replace, 1) : preg_replace('/\.\$/', '', $replace, 1);
+            $mapping[$newReplace] = $newSearch;
             $mapping = $this->recursiveNumeric($newSearch, $newReplace, $source, $mapping);
             unset($mapping[$replace]);
         }
@@ -105,7 +106,6 @@ class TranslationService
 //                $mapping = $this->iterateNumericArrays($mapping, $source);
 //            }
         }
-
         return $mapping;
     }
 
