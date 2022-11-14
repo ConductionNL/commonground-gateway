@@ -146,8 +146,8 @@ jobs:
             name: php.tar
             path: php.tar
       - name: Create NGINX Artifact
-      - name: Upload NGINX artifact
         run: docker save -o nginx.tar nginx
+      - name: Upload NGINX artifact
         uses: actions/upload-artifact@v2
         with:
             name: nginx.tar
