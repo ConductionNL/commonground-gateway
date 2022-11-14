@@ -432,8 +432,8 @@ class CatalogiService
             $componentSync = $component['x-commongateway-metadata']['synchronizations'][0];
 
             // Endpoint could be set to "" or null. Isset() won't pass this check so use array_key_exists!
-            if (isset($componentSync['gateway']) && array_key_exists('location', $componentSync['gateway']) &&
-                array_key_exists('endpoint', $componentSync) && array_key_exists('sourceId', $componentSync)) {
+            if (isset($componentSync['gateway']['location']) && isset($componentSync['sourceId']) &&
+                array_key_exists('endpoint', $componentSync)) {
                 return $componentSync['gateway']['location'].$componentSync['endpoint'].'/'.$componentSync['sourceId'];
             }
         }
