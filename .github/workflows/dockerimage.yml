@@ -139,14 +139,14 @@ jobs:
         run: docker images
       # Lets save the images
       - name: Create PHP Artifact
-        run: docker save -o php.tar php    
+        run: docker save -o php.tar ghcr.io/conductionnl/commonground-gateway-php
       - name: Upload PHP artifact
         uses: actions/upload-artifact@v2
         with:
             name: php.tar
             path: php.tar
       - name: Create NGINX Artifact
-        run: docker save -o nginx.tar nginx
+        run: docker save -o nginx.tar ghcr.io/conductionnl/commonground-gateway-nginx
       - name: Upload NGINX artifact
         uses: actions/upload-artifact@v2
         with:
@@ -218,7 +218,7 @@ jobs:
           - name: Show all images
             run: docker images
           - name: Up the images
-            run: docker compose up
+            run: docker compose up -d
           - name: Run Gryphe to check for vulnerabilities
             uses: anchore/scan-action@v3
             with:
@@ -251,7 +251,7 @@ jobs:
           - name: Show all images
             run: docker images
           - name: Up the images
-            run: docker compose up
+            run: docker compose up -d
           - name: Run Core Postman checks
             uses: matt-ball/newman-action@master
             with:
@@ -281,7 +281,7 @@ jobs:
           - name: Show all images
             run: docker images
           - name: Up the images
-            run: docker compose up
+            run: docker compose up -d
           - name: Checksing al dependencies for known security issues
             run: |
                 curl -L -sS --output local-php-security-checker https://github.com/fabpot/local-php-security-checker/releases/download/v1.0.0/local-php-security-checker_1.0.0_linux_amd64
@@ -312,7 +312,7 @@ jobs:
           - name: Show all images
             run: docker images
           - name: Up the images
-            run: docker compose up
+            run: docker compose up -d
           - name: Unit  Check
             #run: docker-compose exec -T php bin/phpunit
             run: docker-compose exec -T php phpunit
@@ -341,7 +341,7 @@ jobs:
           - name: Show all images
             run: docker images
           - name: Up the images
-            run: docker compose up
+            run: docker compose up -d
           - name: Run Fossa checks
             uses: fossas/fossa-action@main # Use a specific version if locking is preferred
             with:
@@ -373,7 +373,7 @@ jobs:
           - name: Show all images
             run: docker images
           - name: Up the images
-            run: docker compose up
+            run: docker compose up -d
           # @todo add snyk  
   Database:
       needs: build
@@ -390,7 +390,7 @@ jobs:
           - name: Show all images
             run: docker images
           - name: Up the images
-            run: docker compose up
+            run: docker compose up -d
           - name: Database Update
             run: docker-compose exec -T php bin/console doctrine:schema:update --force
   publish:
@@ -408,7 +408,7 @@ jobs:
         - name: Show all images
           run: docker images
         - name: Up the images
-          run: docker compose up
+          run: docker compose up -d
         - name: Login to Container Registry
           id: containerregistry-login
           run: |
