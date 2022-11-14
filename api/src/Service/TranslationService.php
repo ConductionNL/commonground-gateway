@@ -58,13 +58,12 @@ class TranslationService
         return array_keys($array) !== range(0, count($array) - 1);
     }
 
-
     /**
      * Recursively scans keys for the occurence of the numeric key identifier and either replaces them by numeric keys or removes them.
      *
-     * @param string $search    The search key to update
-     * @param string $replace   The replace key to update
-     * @param Dot    $source    The source to scan
+     * @param string $search  The search key to update
+     * @param string $replace The replace key to update
+     * @param Dot    $source  The source to scan
      * @param array  $mapping
      *
      * @return mixed
@@ -105,6 +104,7 @@ class TranslationService
         foreach ($mapping as $replace => $search) {
             $mapping = $this->addNumericKeysRecursive($search, $replace, $source, $mapping);
         }
+
         return $mapping;
     }
 
