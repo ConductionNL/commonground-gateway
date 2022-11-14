@@ -431,8 +431,13 @@ class CatalogiService
         if (isset($component['x-commongateway-metadata']['synchronizations'][0])) {
             $componentSync = $component['x-commongateway-metadata']['synchronizations'][0];
 
-            return $componentSync['gateway']['location'].$componentSync['endpoint'].'/'.$componentSync['sourceId'];
-        } elseif (isset($component['x-commongateway-metadata']['self']) &&
+            // Endpoint could be set to "" or null. Isset() won't pass this check so use array_key_exists!
+            if (isset($componentSync['gateway']) && array_key_exists('location', $componentSync['gateway']) &&
+                array_key_exists('endpoint', $componentSync) && array_key_exists('sourceId', $componentSync)) {
+                return $componentSync['gateway']['location'].$componentSync['endpoint'].'/'.$componentSync['sourceId'];
+            }
+        }
+        if (isset($component['x-commongateway-metadata']['self']) &&
             str_contains($component['x-commongateway-metadata']['self'], $this->configuration['componentsLocation'])) {
             return $catalogiLocation.$component['x-commongateway-metadata']['self'];
         }
@@ -512,7 +517,7 @@ class CatalogiService
      * @param array  $externComponents
      * @param array  $knownComponentLocations
      * @param array  $unknownComponents
-     * @param string $catalogiLocation
+     * @param array $catalogi
      *
      * @return array
      */
@@ -546,9 +551,9 @@ class CatalogiService
                     $this->io->text("Found an unknown Component: ({$checkComponent['name']}) \"$checkComponentLocation\"");
                 }
             }
-//            elseif (isset($this->io)) {
-//                $this->io->text("Already known Component: ({$checkComponent['name']}) \"$checkComponentLocation\"");
-//            }
+            elseif (isset($this->io)) {
+                $this->io->text("Already known Component (or already on 'to-add list'): ({$checkComponent['name']}) \"$checkComponentLocation\"");
+            }
         }
 
         return $unknownComponents;
@@ -589,7 +594,7 @@ class CatalogiService
             $synchronization = $this->createSyncForComponent(['object' => $newComponent, 'entity' => $entity], $addComponentWithMetadata);
 
             if (isset($this->io)) {
-                $this->io->text("Added Component ({$addComponent['name']}) \"$url\" with id: {$newComponent->getId()->toString()}");
+                $this->io->text("Finished adding new Component ({$addComponent['name']}) \"$url\" with id: {$newComponent->getId()->toString()}");
                 $this->io->newLine();
             }
             $newComponent = $newComponent->toArray();
@@ -597,7 +602,7 @@ class CatalogiService
         }
 
         if (isset($this->io) && $totalUnknownComponents > 0) {
-            $this->io->block('Finished adding all new Components');
+            $this->io->block("Finished adding all $totalUnknownComponents new Components"); // todo: add try catch^ and count errors?
         }
 
         return $addedComponents;
@@ -615,6 +620,9 @@ class CatalogiService
      */
     private function createSyncForComponent(array $data, array $addComponent): Synchronization
     {
+        if (isset($this->io)) {
+            $this->io->text("Creating a Synchronization for Component {$addComponent['name']}...");
+        }
         $componentMetaData = $addComponent['x-commongateway-metadata'];
         $componentSync = $componentMetaData['synchronizations'][0] ?? null; // todo: always key=0?
 
@@ -623,17 +631,18 @@ class CatalogiService
         $synchronization->setGateway($this->getOrCreateSource($componentSync['gateway']));
         $synchronization->setObject($data['object']);
         $synchronization->setEntity($data['entity']);
-        $synchronization->setEndpoint($componentSync['endpoint'] ?: $this->configuration['componentsLocation']);
-        $synchronization->setSourceId($componentSync['sourceId'] ?: $addComponent['id']);
+        // Endpoint needs to be set to "" or null if $componentSync['endpoint'] === "" or null. Isset() won't pass this check, so use array_key_exists!
+        $synchronization->setEndpoint(array_key_exists('endpoint', $componentSync) ? $componentSync['endpoint'] : $this->configuration['componentsLocation']);
+        $synchronization->setSourceId($componentSync['sourceId'] ?? $addComponent['id']);
         $now = new DateTime();
         $synchronization->setLastChecked($now);
         $synchronization->setLastSynced($now);
         $synchronization->setSourcelastChanged(
-            $componentSync ?
+            isset($componentSync['sourceLastChanged']) ?
             new DateTime($componentSync['sourceLastChanged']) :
             (
                 // When getting the Components from other Catalogi we extend metadata.dateModified
-                $componentMetaData['dateModified'] ?
+                isset($componentMetaData['dateModified']) ?
                 new DateTime($componentMetaData['dateModified']) :
                 $now
             )
@@ -643,6 +652,10 @@ class CatalogiService
         $synchronization->setHash(hash('sha384', serialize($addComponent)));
         $this->entityManager->persist($synchronization);
         $this->entityManager->flush();
+
+        if (isset($this->io)) {
+            $this->io->text("Finished creating a Synchronization ({$synchronization->getId()->toString()}) for Component {$addComponent['name']}");
+        }
 
         return $synchronization;
     }
