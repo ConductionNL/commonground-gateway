@@ -179,37 +179,11 @@ class CatalogiService
 
         // Get the Catalogi of all the Catalogi we know of
         foreach ($knownCatalogiToCheck as $catalogi) {
-            // todo: make this a function? to decrease line breaks and prevent duplicate code, see getUnknownComponents()
-            // todo: also use recursion to deal with pages on GET $url!
-            // todo: ^async?
-            try {
-                $url = $catalogi['source']['location'].$this->configuration['location'];
-                if (isset($this->io)) {
-                    $this->io->text("Get Catalogi from ({$catalogi['source']['name']}) \"$url\"");
-                }
-                $source = $this->getOrCreateSource(['name' => "Source for Catalogi {$catalogi['source']['name']}", 'location' => $catalogi['source']['location']]);
-                $response = $this->callService->call($source, $this->configuration['location']);
-            } catch (Exception|GuzzleException $exception) {
-                $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => [
-                    'type'       => 'error',
-                    'preMessage' => "Error while doing getUnknownCatalogi for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": ",
-                ]]);
-                //todo: error, log this
+            $externCatalogi = $this->getDataFromCatalogi($catalogi, 'Catalogi');
+            if (empty($externCatalogi)) {
                 continue;
             }
-
-            $externCatalogi = json_decode($response->getBody()->getContents(), true);
-            if (!isset($externCatalogi['results'])) {
-                if (isset($this->io)) {
-                    $this->io->warning("No \'results\' found in response from \"$url\"");
-                }
-                continue;
-            }
-            if (isset($this->io) && is_countable($externCatalogi['results'])) {
-                $externCatalogiCount = count($externCatalogi['results']);
-                $this->io->text("Found $externCatalogiCount Catalogi in Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\"");
-            }
-            $unknownCatalogi = $this->checkForUnknownCatalogi($externCatalogi['results'], $knownCatalogi, $unknownCatalogi);
+            $unknownCatalogi = $this->checkForUnknownCatalogi($externCatalogi, $knownCatalogi, $unknownCatalogi);
 
             if (isset($this->io)) {
                 $this->io->newLine();
@@ -221,6 +195,93 @@ class CatalogiService
         }
 
         return $unknownCatalogi;
+    }
+
+    /**
+     * @todo
+     *
+     * @param array $catalogi
+     * @param string $type Catalogi or Components. The type of objects we are going to get from the given Catalogi.
+     *
+     * @return array|null
+     */
+    private function getDataFromCatalogi(array $catalogi, string $type): ?array
+    {
+        $location = $type === 'Catalogi' ? $this->configuration['location'] : $this->configuration['componentsLocation'];
+        $url = $catalogi['source']['location'].$location;
+        if (isset($this->io)) {
+            $this->io->text("Get $type from (known Catalogi: {$catalogi['source']['name']}) \"$url\"");
+        }
+
+        $objects = $this->getDataFromCatalogiRecursive($catalogi, [
+            'type' => $type, 'location' => $location, 'url' => $url,
+            'query' => $type === 'Catalogi' ? [] : [
+                'extend' => [
+                    'x-commongateway-metadata.synchronizations',
+                    'x-commongateway-metadata.self',
+                    'x-commongateway-metadata.dateModified'
+                ]
+            ]
+        ]);
+
+        if (isset($this->io) && is_countable($objects)) {
+            $externObjectsCount = count($objects);
+            $this->io->text("Found $externObjectsCount $type in Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\"");
+            $this->io->newLine();
+        }
+
+        return $objects;
+    }
+
+    /**
+     * @todo
+     *
+     * @param array $catalogi
+     * @param array $config
+     * @param int $page
+     *
+     * @return array
+     */
+    private function getDataFromCatalogiRecursive(array $catalogi, array $config, int $page = 1): array
+    {
+        // todo: maybe make this function async? One message per page?
+        try {
+            if (isset($this->io)) {
+                $this->io->text("Getting page: $page");
+            }
+            $source = $this->getOrCreateSource([
+                'name' => "Source for Catalogi {$catalogi['source']['name']}",
+                'location' => $catalogi['source']['location']
+            ]);
+            $response = $this->callService->call($source, $config['location'], 'GET', ['query' =>
+                array_merge($config['query'], $page !== 1 ? ['page' => $page] : [])
+            ]);
+        } catch (Exception|GuzzleException $exception) {
+            $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => [
+                'type'       => 'error',
+                'preMessage' => "Error while doing getUnknown{$config['type']} for Catalogi: ({$catalogi['source']['name']}) \"{$config['url']}\" (Page: $page): ",
+            ]]);
+            //todo: error, log this
+            return [];
+        }
+
+        $responseContent = json_decode($response->getBody()->getContents(), true);
+        if (!isset($responseContent['results'])) {
+            if (isset($this->io)) {
+                $this->io->warning("No \'results\' found in response from \"{$config['url']}\" (Page: $page)");
+            }
+            //todo: error, log this
+            return [];
+        }
+
+        $results = $responseContent['results'];
+        if (!empty($results)) {
+            $results = array_merge($results, $this->getDataFromCatalogiRecursive($catalogi, $config, $page + 1));
+        } elseif (isset($this->io)) {
+            $this->io->text("Final page reached, page $page returned 0 results");
+        }
+
+        return $results;
     }
 
     /**
@@ -405,11 +466,13 @@ class CatalogiService
         if (isset($this->io)) {
             $totalKnownComponents = is_countable($knownComponents) ? count($knownComponents) : 0;
             $this->io->section("Found $totalKnownComponents known Component".($totalKnownComponents !== 1 ? 's' : ''));
+            $this->io->block("Converting all known Components to readable/usable arrays...");
         }
 
         // Convert ObjectEntities to useable arrays
         $domain = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== 'localhost' ? 'https://'.$_SERVER['HTTP_HOST'] : 'http://localhost';
         foreach ($knownComponents as &$component) {
+            // todo: can't we make these 2 functions into one function? We only need the metadata and/or id in this specific case to get the ComponentLocation.
             $component = $component->toArray(1, ['id', 'synchronizations', 'self']);
             $component = $this->getComponentLocation($component, $domain);
         }
@@ -464,40 +527,11 @@ class CatalogiService
 
         // Get the Components of all the Catalogi we know of
         foreach ($knownCatalogi as $catalogi) {
-            // todo: make this a function? to decrease line breaks and prevent duplicate code, see getUnknownCatalogi()
-            // todo: also use recursion to deal with pages on GET $url!
-            // todo: ^async?
-            try {
-                $url = $catalogi['source']['location'].$this->configuration['componentsLocation'];
-                if (isset($this->io)) {
-                    $this->io->text("Get Components from (known Catalogi: {$catalogi['source']['name']}) \"$url\"");
-                }
-                $source = $this->getOrCreateSource(['name' => "Source for Catalogi {$catalogi['source']['name']}", 'location' => $catalogi['source']['location']]);
-                $response = $this->callService->call($source, $this->configuration['componentsLocation'], 'GET', ['query' => [
-                    'extend' => ['x-commongateway-metadata.synchronizations', 'x-commongateway-metadata.self', 'x-commongateway-metadata.dateModified'],
-                ]]);
-            } catch (Exception|GuzzleException $exception) {
-                $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => [
-                    'type'       => 'error',
-                    'preMessage' => "Error while doing getUnknownComponents for Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\": ",
-                ]]);
-
-                //todo: error, log this
+            $externComponents = $this->getDataFromCatalogi($catalogi, 'Components');
+            if (empty($externComponents)) {
                 continue;
             }
-
-            $externComponents = json_decode($response->getBody()->getContents(), true);
-            if (!isset($externComponents['results'])) {
-                if (isset($this->io)) {
-                    $this->io->warning("No \'results\' found in response from \"$url\"");
-                }
-                continue;
-            }
-            if (isset($this->io) && is_countable($externComponents['results'])) {
-                $externComponentsCount = count($externComponents['results']);
-                $this->io->text("Found $externComponentsCount Components in Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\"");
-            }
-            $unknownComponents = $this->checkForUnknownComponents($externComponents['results'], $knownComponentLocations, $unknownComponents, $catalogi);
+            $unknownComponents = $this->checkForUnknownComponents($externComponents, $knownComponentLocations, $unknownComponents, $catalogi);
 
             if (isset($this->io)) {
                 $this->io->newLine();
