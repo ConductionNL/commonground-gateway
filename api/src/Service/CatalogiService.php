@@ -45,7 +45,7 @@ class CatalogiService
     }
 
     /**
-     * Handles finding and adding new Catalogi.
+     * Handles finding and adding unknown Catalogi. (and for now also does the same for their Components)
      *
      * @param array $data
      * @param array $configuration
@@ -85,7 +85,7 @@ class CatalogiService
     }
 
     /**
-     * @todo For now we don't use this, we could if we wanted to use a different cronjob/action to handle components than the CatalogiHandler.
+     * @todo For now we don't use this function, we could if we wanted to use a different cronjob/action to handle components than the CatalogiHandler.
      *
      * @param array $data
      * @param array $configuration
@@ -585,9 +585,9 @@ class CatalogiService
                     $this->io->text("Found an unknown Component: ({$checkComponent['name']}) \"$checkComponentLocation\"");
                 }
             }
-            elseif (isset($this->io)) {
-                $this->io->text("Already known Component (or already on 'to-add list'): ({$checkComponent['name']}) \"$checkComponentLocation\"");
-            }
+//            elseif (isset($this->io)) {
+//                $this->io->text("Already known Component (or already on 'to-add list'): ({$checkComponent['name']}) \"$checkComponentLocation\"");
+//            }
         }
 
         return $unknownComponents;
