@@ -184,7 +184,7 @@ jobs:
           - name: Show all images
             run: docker images
           - name: Up the images 
-            run: docker compose up
+            run: docker compose up -d
           - name: Run Trivy to check for vulnerabilities
             uses: aquasecurity/trivy-action@master
             with:
