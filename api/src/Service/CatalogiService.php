@@ -181,12 +181,13 @@ class CatalogiService
         foreach ($knownCatalogiToCheck as $catalogi) {
             // todo: make this a function? to decrease line breaks and prevent duplicate code, see getUnknownComponents()
             // todo: also use recursion to deal with pages on GET $url!
+            // todo: ^async?
             try {
                 $url = $catalogi['source']['location'].$this->configuration['location'];
                 if (isset($this->io)) {
                     $this->io->text("Get Catalogi from ({$catalogi['source']['name']}) \"$url\"");
                 }
-                $source = $this->getOrCreateSourceForCatalogi($catalogi);
+                $source = $this->getOrCreateSource(['name' => "Source for Catalogi {$catalogi['source']['name']}", 'location' => $catalogi['source']['location']]);
                 $response = $this->callService->call($source, $this->configuration['location']);
             } catch (Exception|GuzzleException $exception) {
                 $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => [
@@ -223,34 +224,44 @@ class CatalogiService
     }
 
     /**
-     * Tries to find an existing Source for the given Catalogi and if it can't be found creates a new one.
-     * Used by the callService when we are going to get all Catalogi of an extern Catalogi.
+     * Tries to find an existing Source with the given data and if it can't be found creates a new one.
+     * Used by the callService when we are going to get all Catalogi of an extern Catalogi
+     * or when we are going to get all Components of an extern Catalogi.
+     * And used when we are creating new Synchronizations (for new Components) during Components sync.
      *
-     * @param array $catalogi A single known Catalogi.
+     * @param array|null $data A data array containing at least 'location' & 'name' for the Source. But can also contain the 'accept' & 'auth'.
      *
-     * @return Gateway A Gateway/Source object with data used by the callService.
+     * @return Gateway|null A Gateway/Source object with data used by the callService.
      */
-    private function getOrCreateSourceForCatalogi(array $catalogi): Gateway
+    private function getOrCreateSource(?array $data): ?Gateway
     {
-        $location = $catalogi['source']['location'];
-        $accept = 'application/json';
-        $auth = 'none';
-        $name = "Source for Catalogi {$catalogi['source']['name']}";
+        if (!isset($data) || !isset($data['name']) || !isset($data['location'])) {
+            if (isset($this->io)) {
+                $this->io->error("Could not Get or Create a Source with the given data array!");
+            }
+            return null;
+        }
 
-        // First try to find an existing Gateway/Source with this location.
-        $sources = $this->entityManager->getRepository('App:Gateway')->findBy(['location' => $location]);
+        $accept = $data['accept'] ?? 'application/json';
+        $auth = $data['auth'] ?? 'none'; // todo will we ever have a source for components with auth???
+
+        // First try to find an existing Gateway/Source with this location. // todo: if it helps, we could cache this
+        $sources = $this->entityManager->getRepository('App:Gateway')->findBy(['location' => $data['location']]);
 
         if (is_countable($sources) && count($sources) > 0) {
             $source = $sources[0];
         } else {
             // Create a new Source for this Catalogi
             $source = new Gateway();
-            $source->setLocation($location);
+            $source->setLocation($data['location']);
             $source->setAccept($accept);
             $source->setAuth($auth);
-            $source->setName($name);
+            $source->setName($data['name']);
             $this->entityManager->persist($source);
             $this->entityManager->flush();
+            if ($this->io) {
+                $this->io->text("Created a new Source ({$data['name']}) \"{$data['location']}\"");
+            }
         }
 
         return $source;
@@ -450,12 +461,13 @@ class CatalogiService
         foreach ($knownCatalogi as $catalogi) {
             // todo: make this a function? to decrease line breaks and prevent duplicate code, see getUnknownCatalogi()
             // todo: also use recursion to deal with pages on GET $url!
+            // todo: ^async?
             try {
                 $url = $catalogi['source']['location'].$this->configuration['componentsLocation'];
                 if (isset($this->io)) {
                     $this->io->text("Get Components from (known Catalogi: {$catalogi['source']['name']}) \"$url\"");
                 }
-                $source = $this->getOrCreateSourceForCatalogi($catalogi);
+                $source = $this->getOrCreateSource(['name' => "Source for Catalogi {$catalogi['source']['name']}", 'location' => $catalogi['source']['location']]);
                 $response = $this->callService->call($source, $this->configuration['componentsLocation'], 'GET', ['query' => [
                     'extend' => ['x-commongateway-metadata.synchronizations', 'x-commongateway-metadata.self', 'x-commongateway-metadata.dateModified'],
                 ]]);
@@ -480,7 +492,7 @@ class CatalogiService
                 $externComponentsCount = count($externComponents['results']);
                 $this->io->text("Found $externComponentsCount Components in Catalogi: ({$catalogi['source']['name']}) \"{$catalogi['source']['location']}\"");
             }
-            $unknownComponents = $this->checkForUnknownComponents($externComponents['results'], $knownComponentLocations, $unknownComponents, $catalogi['source']['location']);
+            $unknownComponents = $this->checkForUnknownComponents($externComponents['results'], $knownComponentLocations, $unknownComponents, $catalogi);
 
             if (isset($this->io)) {
                 $this->io->newLine();
@@ -504,7 +516,7 @@ class CatalogiService
      *
      * @return array
      */
-    private function checkForUnknownComponents(array $externComponents, array $knownComponentLocations, array $unknownComponents, string $catalogiLocation): array
+    private function checkForUnknownComponents(array $externComponents, array $knownComponentLocations, array $unknownComponents, array $catalogi): array
     {
         if (isset($this->io)) {
             $this->io->text('Checking for unknown Components...');
@@ -513,15 +525,20 @@ class CatalogiService
         // Keep track of locations we already are going to add new Components for.
         $unknownComponentsLocations = [];
         foreach ($unknownComponents as $unknownComponent) {
-            $unknownComponentsLocations[] = $this->getComponentLocation($unknownComponent, $catalogiLocation);
+            $unknownComponentsLocations[] = $this->getComponentLocation($unknownComponent, $catalogi['source']['location']);
         }
 
         // Check if these extern Catalogi know any Components we don't know yet
         foreach ($externComponents as $checkComponent) {
             // We dont want to add to $unknownComponents if it is already in there. Use $unknownComponentsLocations to check for this.
-            $checkComponentLocation = $this->getComponentLocation($checkComponent, $catalogiLocation);
+            $checkComponentLocation = $this->getComponentLocation($checkComponent, $catalogi['source']['location']);
             if (!in_array($checkComponentLocation, $unknownComponentsLocations) &&
                 !in_array($checkComponentLocation, $knownComponentLocations)) {
+                // If $checkComponent has no synchronizations, add the catalogi source as synchronization gateway...
+                // ...for when we are going to add a Synchronization (for a new Component) later.
+                if (!isset($checkComponent['x-commongateway-metadata']['synchronizations'][0])) {
+                    $checkComponent['x-commongateway-metadata']['synchronizations'][0]['gateway'] = $catalogi['source'];
+                }
                 $unknownComponents[] = $checkComponent;
                 // Make sure to also add this to $unknownComponentsLocations
                 $unknownComponentsLocations[] = $checkComponentLocation;
@@ -542,7 +559,7 @@ class CatalogiService
      *
      * @param array $unknownComponents
      *
-     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
+     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException|Exception
      *
      * @return array
      */
@@ -569,8 +586,7 @@ class CatalogiService
             unset($addComponent['x-commongateway-metadata']); // todo: not sure if this is needed before populateObject
             $addComponent = $object->includeEmbeddedArray($addComponent);
             $newComponent = $this->synchronizationService->populateObject($addComponent, $object);
-            // todo: get correct source for createSyncForComponent function. Will be a Catalogi source or a other/new source we need to create here ?
-//            $synchronization = $this->createSyncForComponent(['object' => $newComponent, 'entity' => $entity], $addComponentWithMetadata);
+            $synchronization = $this->createSyncForComponent(['object' => $newComponent, 'entity' => $entity], $addComponentWithMetadata);
 
             if (isset($this->io)) {
                 $this->io->text("Added Component ({$addComponent['name']}) \"$url\" with id: {$newComponent->getId()->toString()}");
@@ -603,13 +619,12 @@ class CatalogiService
         $componentSync = $componentMetaData['synchronizations'][0] ?? null; // todo: always key=0?
 
         $synchronization = new Synchronization();
+        // If a Catalogi is the source we set this in checkForUnknownComponents() and $addComponent should have this correct Source data.
+        $synchronization->setGateway($this->getOrCreateSource($componentSync['gateway']));
         $synchronization->setObject($data['object']);
-        // todo use $componentSync['gateway'] in a new function to get existing source or create a new one? compare with getOrCreateSourceForCatalogi()
-        // todo instead of $data['source'] -->>
-        $synchronization->setGateway($data['source']);
         $synchronization->setEntity($data['entity']);
-        $synchronization->setEndpoint($componentSync ? $componentSync['endpoint'] : $this->configuration['componentsLocation']);
-        $synchronization->setSourceId($componentSync ? $componentSync['sourceId'] : $addComponent['id']);
+        $synchronization->setEndpoint($componentSync['endpoint'] ?: $this->configuration['componentsLocation']);
+        $synchronization->setSourceId($componentSync['sourceId'] ?: $addComponent['id']);
         $now = new DateTime();
         $synchronization->setLastChecked($now);
         $synchronization->setLastSynced($now);
@@ -617,12 +632,13 @@ class CatalogiService
             $componentSync ?
             new DateTime($componentSync['sourceLastChanged']) :
             (
+                // When getting the Components from other Catalogi we extend metadata.dateModified
                 $componentMetaData['dateModified'] ?
                 new DateTime($componentMetaData['dateModified']) :
                 $now
             )
         );
-        unset($addComponent['x-commongateway-metadata']); // todo: not sure if this is needed before we hash?
+        unset($addComponent['x-commongateway-metadata']); // todo: not sure if we want this before we hash?
         // todo: make a choice how we hash this, it has to always be the same type of data in the hash so we can correctly compare it later
         $synchronization->setHash(hash('sha384', serialize($addComponent)));
         $this->entityManager->persist($synchronization);
