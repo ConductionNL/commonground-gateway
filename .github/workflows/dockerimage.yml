@@ -386,7 +386,7 @@ jobs:
           - name: Download artifacts (Docker images) from previous workflows
             uses: actions/download-artifact@v2
           - name: Load Docker images from previous workflows
-            run: docker load --input  php/php.tar && docker load --input nginx/nginx.tar && docker load --input postgres/postgres.tar
+            run: docker load --input  php.tar && docker load --input nginx.tar && docker load --input postgres.tar
           - name: Show all images
             run: docker images
           - name: Up the images
