@@ -236,12 +236,10 @@ class ZdsZaakService
         $zaak->setValue('rollen', $rol);
     }
 
-    public function vestigingToOrganisatorischeEenheid(ObjectEntity $vestiging): array
+    public function vestigingToNietNatuurlijkPersoon(ObjectEntity $vestiging): array
     {
         return [
-            'identificatie'  => $vestiging->getValue('vestigingsNummer'),
-            'naam'		         => $vestiging->getValue('handelsnaam'),
-            'isGehuisvestIn' => $vestiging->getValue('verblijfsadres')->getValue('wplWoonplaatsNaam'),
+            'annIdentificatie'  => $vestiging->getValue('vestigingsNummer'),
         ];
     }
 
@@ -273,9 +271,8 @@ class ZdsZaakService
             }
 
             if ($heeftAlsInitiatorObject->getValue('vestiging')->getValue('vestigingsNummer') || $heeftAlsInitiatorObject->getValue('vestiging')->getValue('handelsnaam')) {
-                $rol->setValue('betrokkeneIdentificatie', $this->vestigingToOrganisatorischeEenheid($heeftAlsInitiatorObject->getValue('vestiging')));
-                $rol->setValue('betrokkeneType', 'organisatorische_eenheid');
-                $this->synchronizationService->setApplicationAndOrganization($rol->getValue('betrokkeneIdentificatie'));
+                $rol->setValue('betrokkeneIdentificatie', $this->vestigingToNietNatuurlijkPersoon($heeftAlsInitiatorObject->getValue('vestiging')));
+                $rol->setValue('betrokkeneType', 'niet_natuurlijk_persoon');
             }
 
             $this->entityManager->persist($rol);
