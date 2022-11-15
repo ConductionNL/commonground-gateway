@@ -62,7 +62,6 @@ class HandlerService
         RequestStack $requestStack,
         ValidationService $validationService,
         TranslationService $translationService,
-        SOAPService $soapService,
         EavService $eavService,
         SerializerInterface $serializer,
         LogService $logService,
@@ -81,7 +80,6 @@ class HandlerService
         $this->request = $requestStack->getCurrentRequest();
         $this->validationService = $validationService;
         $this->translationService = $translationService;
-        $this->soapService = $soapService;
         $this->eavService = $eavService;
         $this->serializer = $serializer;
         $this->logService = $logService;
@@ -393,6 +391,7 @@ class HandlerService
             break;
             case 'xml':
                 $options['xml_root_node_name'] = array_keys($data)[0];
+                $options['xml_encoding'] = 'utf-8';
                 $data = $data[array_keys($data)[0]];
                 break;
 
