@@ -708,8 +708,8 @@ class ObjectEntity
      * This function will check if the given array has an embedded array, if so it will move all objects from the
      * embedded array to the keys outside this embedded array and (by default) unset the entire embedded array.
      *
-     * @param array $array The array to move and unset embedded array from.
-     * @param bool $unsetEmbeddedArray Default=true. If false the embedded array will not be removed from $array.
+     * @param array $array              The array to move and unset embedded array from.
+     * @param bool  $unsetEmbeddedArray Default=true. If false the embedded array will not be removed from $array.
      *
      * @return array The updated/changed $array. Or unchanged $array if it did not contain an embedded array.
      */
@@ -735,14 +735,15 @@ class ObjectEntity
     /**
      * Check if the given array has an embedded array and if so return it.
      *
-     * @param array $array An array to check.
-     * @param null $embeddedKey If we already (used getEmbeddedKey() function or) know what the key is of the embedded array. ('embedded', '@embedded' or '_embedded')
+     * @param array $array       An array to check.
+     * @param null  $embeddedKey If we already (used getEmbeddedKey() function or) know what the key is of the embedded array. ('embedded', '@embedded' or '_embedded')
      *
      * @return false|mixed The embedded array found in $array or false if we didn't find an embedded array.
      */
     private function getEmbeddedArray(array $array, $embeddedKey = null)
     {
         $embeddedKey = $embeddedKey ?? $this->getEmbeddedKey($array);
+
         return $embeddedKey ? $array[$embeddedKey] : false;
     }
 
@@ -759,8 +760,8 @@ class ObjectEntity
             isset($array['embedded']) ? 'embedded' : (
                 isset($array['@embedded']) ? '@embedded' : (
                     isset($array['_embedded']) ? '_embedded' : false
-            )
-        );
+                )
+            );
     }
 
     /*

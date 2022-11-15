@@ -45,7 +45,7 @@ class CatalogiService
     }
 
     /**
-     * Handles finding and adding unknown Catalogi. (and for now also does the same for their Components)
+     * Handles finding and adding unknown Catalogi. (and for now also does the same for their Components).
      *
      * @param array $data
      * @param array $configuration
@@ -203,8 +203,8 @@ class CatalogiService
     /**
      * Gets objects of $type from the given $catalogi, using the callService.
      *
-     * @param array $catalogi A Catalogi we are going to get objects from.
-     * @param string $type Catalogi or Components. The type of objects we are going to get from the given Catalogi.
+     * @param array  $catalogi A Catalogi we are going to get objects from.
+     * @param string $type     Catalogi or Components. The type of objects we are going to get from the given Catalogi.
      *
      * @return array An array of objects of $type. Or an empty array on error or if we couldn't find anything.
      */
@@ -217,14 +217,14 @@ class CatalogiService
         }
 
         $objects = $this->getDataFromCatalogiRecursive($catalogi, [
-            'type' => $type, 'location' => $location, 'url' => $url,
+            'type'  => $type, 'location' => $location, 'url' => $url,
             'query' => $type === 'Catalogi' ? [] : [
                 'extend' => [
                     'x-commongateway-metadata.synchronizations',
                     'x-commongateway-metadata.self',
-                    'x-commongateway-metadata.dateModified'
-                ]
-            ]
+                    'x-commongateway-metadata.dateModified',
+                ],
+            ],
         ]);
 
         if (isset($this->io) && is_countable($objects)) {
@@ -241,11 +241,11 @@ class CatalogiService
      * Recursive function, will call itself to get the next page until we don't find any results.
      *
      * @param array $catalogi A Catalogi we are going to get objects from.
-     * @param array $config A configuration array containing a 'type' = Catalogi or Components,
-     * a 'location' = the endpoint where we can find objects of $config['type'] from all Catalogi,
-     * an 'url' = a combination of $catalogi location + $config['location']
-     * and a 'query' array with query parameters to use when doing a GET api-call with the callservice.
-     * @param int $page The page we are going to get.
+     * @param array $config   A configuration array containing a 'type' = Catalogi or Components,
+     *                        a 'location' = the endpoint where we can find objects of $config['type'] from all Catalogi,
+     *                        an 'url' = a combination of $catalogi location + $config['location']
+     *                        and a 'query' array with query parameters to use when doing a GET api-call with the callservice.
+     * @param int   $page     The page we are going to get.
      *
      * @return array An array of objects of $config['type']. Or an empty array on error or if we couldn't find anything.
      */
@@ -257,11 +257,10 @@ class CatalogiService
                 $this->io->text("Getting page: $page");
             }
             $source = $this->getOrCreateSource([
-                'name' => "Source for Catalogi {$catalogi['source']['name']}",
-                'location' => $catalogi['source']['location']
+                'name'     => "Source for Catalogi {$catalogi['source']['name']}",
+                'location' => $catalogi['source']['location'],
             ]);
-            $response = $this->callService->call($source, $config['location'], 'GET', ['query' =>
-                array_merge($config['query'], $page !== 1 ? ['page' => $page] : [])
+            $response = $this->callService->call($source, $config['location'], 'GET', ['query' => array_merge($config['query'], $page !== 1 ? ['page' => $page] : []),
             ]);
         } catch (Exception|GuzzleException $exception) {
             $this->synchronizationService->ioCatchException($exception, ['trace', 'line', 'file', 'message' => [
@@ -305,8 +304,9 @@ class CatalogiService
     {
         if (!isset($data) || !isset($data['name']) || !isset($data['location'])) {
             if (isset($this->io)) {
-                $this->io->error("Could not Get or Create a Source with the given data array!");
+                $this->io->error('Could not Get or Create a Source with the given data array!');
             }
+
             return null;
         }
 
@@ -478,7 +478,7 @@ class CatalogiService
         if (isset($this->io)) {
             $totalKnownComponents = is_countable($knownComponents) ? count($knownComponents) : 0;
             $this->io->section("Found $totalKnownComponents known Component".($totalKnownComponents !== 1 ? 's' : ''));
-            $this->io->block("Converting all known Components to readable/usable arrays...");
+            $this->io->block('Converting all known Components to readable/usable arrays...');
         }
 
         // Convert ObjectEntities to useable arrays
@@ -499,7 +499,7 @@ class CatalogiService
      * And lastly if we still haven't found a location combines the given catalogiLocation with the Action configuration
      * componentsLocation and the $component id.
      *
-     * @param array  $component A Component to get the location from/for.
+     * @param array  $component        A Component to get the location from/for.
      * @param string $catalogiLocation A location of a Catalogi where the component originally came from.
      *
      * @return string The location of the given Component.
@@ -564,10 +564,10 @@ class CatalogiService
     /**
      * Check for new/unknown Components in the Components of an extern Catalogi.
      *
-     * @param array $externComponents An array of all Components of an extern Catalogi we know.
+     * @param array $externComponents        An array of all Components of an extern Catalogi we know.
      * @param array $knownComponentLocations An array of all locations of the Catalogi we know.
-     * @param array $unknownComponents An array of all Components we do not know yet.
-     * @param array $catalogi The extern Catalogi we got $externComponents from.
+     * @param array $unknownComponents       An array of all Components we do not know yet.
+     * @param array $catalogi                The extern Catalogi we got $externComponents from.
      *
      * @return array An array of all Components we do not know yet.
      */
