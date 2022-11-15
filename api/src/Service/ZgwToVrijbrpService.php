@@ -349,7 +349,7 @@ class ZgwToVrijbrpService
         }
 
         $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $relocationObjectEntity->getEntity()->getId()->toString(), 'response' => $relocationArray], $event);
-        $this->data['response'] = $relocationArray;
+        $this->data['response']['dossier'] = $relocationArray;
 
         return $this->data;
     }
@@ -645,7 +645,7 @@ class ZgwToVrijbrpService
 
         $soapEmigration = $this->createSoapObject($emigratieaanvraagRequestEntity, $soapEmigrationArray);
         $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $emigratieaanvraagRequestEntity->getId()->toString(), 'response' => $soapEmigration->toArray()], 'soap.object.handled');
-        $this->data['response']['soapZaak'] = $soapEmigration;
+        $this->data['response']['soapZaak'] = $soapEmigration->toArray();
 
         return $this->data;
     }
@@ -688,7 +688,7 @@ class ZgwToVrijbrpService
         $soapConfidentiality = $this->createSoapObject($geheimhoudingaanvraagRequestEntity, $soapConfidentialityArray);
         $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $geheimhoudingaanvraagRequestEntity->getId()->toString(), 'response' => $soapConfidentiality->toArray()], 'soap.object.handled');
 
-        $this->data['response']['soapZaak'] = $soapConfidentiality;
+        $this->data['response']['soapZaak'] = $soapConfidentiality->toArray();
 
         return $this->data;
     }
@@ -741,7 +741,7 @@ class ZgwToVrijbrpService
         $soapExtract = $this->createSoapObject($uittrekselaanvraagRequestEntity, $soapExtractArray);
         $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $uittrekselaanvraagRequestEntity->getId()->toString(), 'response' => $soapExtract->toArray()], 'soap.object.handled');
 
-        $this->data['response']['soapZaak'] = $soapExtract;
+        $this->data['response']['soapZaak'] = $soapExtract->toArray();
 
         return $this->data;
     }
@@ -786,7 +786,7 @@ class ZgwToVrijbrpService
         $soapNaming = $this->createSoapObject($naamgebruikaanvraagRequestEntity, $soapNamingArray);
         $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $naamgebruikaanvraagRequestEntity->getId()->toString(), 'response' => $soapNaming->toArray()], 'soap.object.handled');
 
-        $this->data['response']['soapZaak'] = $soapNaming;
+        $this->data['response']['soapZaak'] = $soapNaming->toArray();
 
         return $this->data;
     }
@@ -934,12 +934,12 @@ class ZgwToVrijbrpService
                 'filename'      => $zaakDocumentObjectEntity->getValue('bestandsnaam') ?? $zaakDocumentObjectEntity->getValue('titel'),
                 'entryDateTime' => $dateTimeFormatted,
                 'content'       => $zaakDocumentObjectEntity->getValue('inhoud'),
-                'zaakgegevens'  => $this->data['response']['soapZaak'] ?? null,
+                'zaakgegevens'  => $this->data['response']['soapZaak']['zaakgegevens'] ?? null,
                 'dossier'       => $this->data['response']['dossier'] ?? null,
             ];
 
-            $vrijBrpDossier = $this->createSoapObject($vrijBrpDossierEntity, $vrijBrpDossierArray);
-            $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $vrijBrpDossierEntity->getId()->toString(), 'response' => $vrijBrpDossier->toArray()], $type);
+            $this->createSoapObject($vrijBrpDossierEntity, $vrijBrpDossierArray);
+            $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $vrijBrpDossierEntity->getId()->toString(), 'response' => $vrijBrpDossierArray], $type);
         }
     }
 
