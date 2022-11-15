@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a5fa345f5e94f567c394ae1383beb358",
+    "content-hash": "4e51d36d3ffb697e693fcfc142e58611",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -589,6 +589,44 @@
                 "source": "https://github.com/brick/reflection/tree/0.4.1"
             },
             "time": "2020-10-24T20:01:03+00:00"
+        },
+        {
+            "name": "common-gateway/huwelijksplanner-bundle",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/HuwelijksplannerBundle.git",
+                "reference": "aa6a6b16a2e9e6e14c575b7a16ad5dd305dcd570"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/HuwelijksplannerBundle/zipball/aa6a6b16a2e9e6e14c575b7a16ad5dd305dcd570",
+                "reference": "aa6a6b16a2e9e6e14c575b7a16ad5dd305dcd570",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "default-branch": true,
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\HuwelijksplannerBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "A symfony package for dutch municipality marriage functionality",
+            "support": {
+                "issues": "https://github.com/CommonGateway/HuwelijksplannerBundle/issues",
+                "source": "https://github.com/CommonGateway/HuwelijksplannerBundle/tree/main"
+            },
+            "time": "2022-11-10T11:59:54+00:00"
         },
         {
             "name": "common-gateway/waardepapieren-bundle",
@@ -14252,6 +14290,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "common-gateway/huwelijksplanner-bundle": 20,
         "common-gateway/waardepapieren-bundle": 20,
         "commongateway/corebundle": 20,
         "conduction/commongroundbundle": 20,

@@ -37,6 +37,9 @@
     "brick/reflection": {
         "version": "0.4.1"
     },
+    "common-gateway/huwelijksplanner-bundle": {
+        "version": "dev-main"
+    },
     "common-gateway/waardepapieren-bundle": {
         "version": "dev-main"
     },
