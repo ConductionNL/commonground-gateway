@@ -913,7 +913,7 @@ class ZgwToVrijbrpService
      * @return void
      * @throws Exception
      */
-    public function getZgwDocumenten(array $zgwDocumenten, string $type): void
+    public function createVrijBrpDocumenten(array $zgwDocumenten, string $type): void
     {
         foreach ($zgwDocumenten as $zgwDocument) {
             $zaakDocumentObjectEntity = $this->entityManager->find('App:ObjectEntity', $zgwDocument['id']);
@@ -967,35 +967,35 @@ class ZgwToVrijbrpService
         switch ($zaakArray['zaaktype']['identificatie']) {
             case 'B0237':
                 $this->data = $this->createBirthObject($zaakArray);
-                $this->getZgwDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrpApi.dossier.handled');
+                $this->createVrijBrpDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrpApi.dossier.handled');
                 return $this->data;
             case 'B0366':
                 $this->data = $this->createRelocationObject($zaakArray);
-                $this->getZgwDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrpApi.dossier.handled');
+                $this->createVrijBrpDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrpApi.dossier.handled');
                 return $this->data;
             case 'B0337':
                 $this->data = $this->createCommitmentObject($zaakArray);
-                $this->getZgwDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrpApi.dossier.handled');
+                $this->createVrijBrpDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrpApi.dossier.handled');
                 return $this->data;
             case 'B0360':
                 $this->data = $this->createDeceasementObject($zaakArray);
-                $this->getZgwDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrpApi.dossier.handled');
+                $this->createVrijBrpDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrpApi.dossier.handled');
                 return $this->data;
             case 'B1425':
                 $this->data = $this->zgwEmigrationToVrijBrpSoap($zaakObjectEntity);
-                $this->getZgwDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrp.dossier.handled');
+                $this->createVrijBrpDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrp.dossier.handled');
                 return $this->data;
             case 'B0328':
                 $this->data = $this->zgwConfidentialityToVrijBrpSoap($zaakObjectEntity);
-                $this->getZgwDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrp.dossier.handled');
+                $this->createVrijBrpDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrp.dossier.handled');
                 return $this->data;
             case 'B0255':
                 $this->data = $this->zgwExtractToVrijBrpSoap($zaakObjectEntity);
-                $this->getZgwDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrp.dossier.handled');
+                $this->createVrijBrpDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrp.dossier.handled');
                 return $this->data;
             case 'B0348':
                 $this->data = $this->zgwNamingToVrijBrpSoap($zaakObjectEntity);
-                $this->getZgwDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrp.dossier.handled');
+                $this->createVrijBrpDocumenten($this->data['response']['zgwDocumenten'], 'vrijBrp.dossier.handled');
                 return $this->data;
             default:
                 return $this->data;
