@@ -491,14 +491,15 @@ class ZgwToVrijbrpService
      * Creates a VrijRBP Soap Zaakgegevens array with the data of the zgwZaak.
      *
      * @param ObjectEntity $zaakObjectEntity
-     * @param string|null $type
+     * @param string|null  $type
+     *
      * @return array zaakgegevens
      */
     public function createVrijBrpSoapZaakgegevens(ObjectEntity $zaakObjectEntity, ?string $type = null): array
     {
         return [
-            'zaakId' => $type !== null ? $zaakObjectEntity->getId()->toString() : $zaakObjectEntity->getValue('identificatie'),
-            'bron' => $zaakObjectEntity->getValue('omschrijving'),
+            'zaakId'      => $type !== null ? $zaakObjectEntity->getId()->toString() : $zaakObjectEntity->getValue('identificatie'),
+            'bron'        => $zaakObjectEntity->getValue('omschrijving'),
             'leverancier' => $zaakObjectEntity->getValue('opdrachtgevendeOrganisatie'),
             //            'medewerker' => $zaakObjectEntity->getValue('identificatie'),
             'datumAanvraag' => $zaakObjectEntity->getValue('registratiedatum'),
