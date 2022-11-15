@@ -350,6 +350,7 @@ class ZgwToVrijbrpService
 
         $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $relocationObjectEntity->getEntity()->getId()->toString(), 'response' => $relocationArray], $event);
         $this->data['response'] = $relocationArray;
+
         return $this->data;
     }
 
@@ -645,6 +646,7 @@ class ZgwToVrijbrpService
         $soapEmigration = $this->createSoapObject($emigratieaanvraagRequestEntity, $soapEmigrationArray);
         $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $emigratieaanvraagRequestEntity->getId()->toString(), 'response' => $soapEmigration->toArray()], 'soap.object.handled');
         $this->data['response']['soapZaak'] = $soapEmigration;
+
         return $this->data;
     }
 
