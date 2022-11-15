@@ -743,7 +743,7 @@ class SynchronizationService
             }
         }
 
-        $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'application/ld+json');
+        $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'jsonld');
         // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
         if (!$this->checkActionConditionsEntity($objectEntity->getEntity()->getId()->toString())) {
             $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()]);

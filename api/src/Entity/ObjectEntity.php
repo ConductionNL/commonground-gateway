@@ -615,27 +615,6 @@ class ObjectEntity
     }
 
     /**
-     * Sets a value based on the attribute string name or atribute object.
-     *
-     * @param string|Attribute $attribute
-     *
-     * @throws Exception
-     *
-     * @return false|Value
-     */
-    public function setValue($attribute, $value)
-    {
-        $valueObject = $this->getValueObject($attribute);
-        // If we find the Value object we set the value
-        if ($valueObject instanceof Value) {
-            return $valueObject->setValue($value);
-        }
-
-        // If not return false
-        return false;
-    }
-
-    /**
      * Gets a Attribute object based on the attribute string name.
      *
      * @param string $attributeName
@@ -653,24 +632,6 @@ class ObjectEntity
 
         // If not return false
         return false;
-    }
-
-    /**
-     * Populate this object with an array of values, where attributes are diffined by key.
-     *
-     * @param array $array
-     *
-     * @throws Exception
-     *
-     * @return ObjectEntity
-     */
-    public function hydrate(array $array): ObjectEntity
-    {
-        foreach ($array as $key => $value) {
-            $this->setValue($key, $value);
-        }
-
-        return $this;
     }
 
     /**
@@ -700,6 +661,107 @@ class ObjectEntity
         }
 
         return $values->first();
+    }
+
+    /**
+     * Sets a value based on the attribute string name or atribute object.
+     *
+     * @param string|Attribute $attribute
+     *
+     * @throws Exception
+     *
+     * @return false|Value
+     */
+    public function setValue($attribute, $value)
+    {
+        $valueObject = $this->getValueObject($attribute);
+        // If we find the Value object we set the value
+        if ($valueObject instanceof Value) {
+            return $valueObject->setValue($value);
+        }
+
+        // If not return false
+        return false;
+    }
+
+    /**
+     * Populate this object with an array of values, where attributes are diffined by key.
+     *
+     * @param array $array
+     *
+     * @throws Exception
+     *
+     * @return ObjectEntity
+     */
+    public function hydrate(array $array): ObjectEntity
+    {
+        $array = $this->includeEmbeddedArray($array);
+
+        foreach ($array as $key => $value) {
+            $this->setValue($key, $value);
+        }
+
+        return $this;
+    }
+
+    /**
+     * This function will check if the given array has an embedded array, if so it will move all objects from the
+     * embedded array to the keys outside this embedded array and (by default) unset the entire embedded array.
+     *
+     * @param array $array              The array to move and unset embedded array from.
+     * @param bool  $unsetEmbeddedArray Default=true. If false the embedded array will not be removed from $array.
+     *
+     * @return array The updated/changed $array. Or unchanged $array if it did not contain an embedded array.
+     */
+    public function includeEmbeddedArray(array $array, bool $unsetEmbeddedArray = true): array
+    {
+        // Check if array has embedded array
+        if ($embeddedKey = $this->getEmbeddedKey($array)) {
+            $embedded = $this->getEmbeddedArray($array, $embeddedKey);
+            foreach ($embedded as $key => $value) {
+                // Replace array[$key] with the embedded array value
+                $array[$key] = $this->includeEmbeddedArray($value);
+            }
+
+            // Unset the embedded array if we want to
+            if ($unsetEmbeddedArray) {
+                unset($array[$embeddedKey]);
+            }
+        }
+
+        return $array;
+    }
+
+    /**
+     * Check if the given array has an embedded array and if so return it.
+     *
+     * @param array $array       An array to check.
+     * @param null  $embeddedKey If we already (used getEmbeddedKey() function or) know what the key is of the embedded array. ('embedded', '@embedded' or '_embedded')
+     *
+     * @return false|mixed The embedded array found in $array or false if we didn't find an embedded array.
+     */
+    private function getEmbeddedArray(array $array, $embeddedKey = null)
+    {
+        $embeddedKey = $embeddedKey ?? $this->getEmbeddedKey($array);
+
+        return $embeddedKey ? $array[$embeddedKey] : false;
+    }
+
+    /**
+     * Looks for the embedded key, the key used for the embedded array. This is different for json, jsonld and jsonhal.
+     *
+     * @param array $array The array to check.
+     *
+     * @return false|string
+     */
+    private function getEmbeddedKey(array $array)
+    {
+        return
+            isset($array['embedded']) ? 'embedded' : (
+                isset($array['@embedded']) ? '@embedded' : (
+                    isset($array['_embedded']) ? '_embedded' : false
+                )
+            );
     }
 
     /*
@@ -763,19 +825,19 @@ class ObjectEntity
     public function addResponseLog(GatewayResponseLog $responseLog): self
     {
         if (!$this->responseLogs->contains($responseLog)) {
-            $this->responseLogs->add($responceLog);
-            $responceLog->setObjectEntity($this);
+            $this->responseLogs->add($responseLog);
+            $responseLog->setObjectEntity($this);
         }
 
         return $this;
     }
 
-    public function removeResponseLog(GatewayResponseLog $responceLog): self
+    public function removeResponseLog(GatewayResponseLog $responseLog): self
     {
-        if ($this->responceLogs->removeElement($responceLog)) {
+        if ($this->responseLogs->removeElement($responseLog)) {
             // set the owning side to null (unless already changed)
-            if ($responceLog->getObjectEntity() === $this) {
-                $responceLog->setObjectEntity(null);
+            if ($responseLog->getObjectEntity() === $this) {
+                $responseLog->setObjectEntity(null);
             }
         }
 
@@ -877,12 +939,15 @@ class ObjectEntity
      *
      * @return array the array holding all the data     *
      */
-    public function toArray(int $level = 1, array $extend = ['id']): array
+    public function toArray(int $level = 1, array $extend = ['id'], bool $onlyMetadata = false): array
     {
         $array = [];
         in_array('id', $extend) && $array['id'] = (string) $this->getId();
         in_array('self', $extend) && $array['x-commongateway-metadata']['self'] = $this->getSelf(); //todo? $this->getSelf() ?? $this->setSelf(???->createSelf($this))->getSelf()
         in_array('synchronizations', $extend) && $array['x-commongateway-metadata']['synchronizations'] = $this->getReadableSyncDataArray();
+        if ($onlyMetadata) {
+            return $array;
+        }
         foreach ($this->getEntity()->getAttributes() as $attribute) {
             $valueObject = $this->getValueObject($attribute);
             if ($attribute->getType() == 'object') {
