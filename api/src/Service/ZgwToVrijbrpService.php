@@ -350,7 +350,7 @@ class ZgwToVrijbrpService
 
         $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $relocationObjectEntity->getEntity()->getId()->toString(), 'response' => $relocationArray], $event);
         $this->data['response']['dossier'] = $relocationArray;
-        
+
         return $this->data;
     }
 
