@@ -938,12 +938,15 @@ class ObjectEntity
      *
      * @return array the array holding all the data     *
      */
-    public function toArray(int $level = 1, array $extend = ['id']): array
+    public function toArray(int $level = 1, array $extend = ['id'], bool $onlyMetadata = false): array
     {
         $array = [];
         in_array('id', $extend) && $array['id'] = (string) $this->getId();
         in_array('self', $extend) && $array['x-commongateway-metadata']['self'] = $this->getSelf(); //todo? $this->getSelf() ?? $this->setSelf(???->createSelf($this))->getSelf()
         in_array('synchronizations', $extend) && $array['x-commongateway-metadata']['synchronizations'] = $this->getReadableSyncDataArray();
+        if ($onlyMetadata) {
+            return $array;
+        }
         foreach ($this->getEntity()->getAttributes() as $attribute) {
             $valueObject = $this->getValueObject($attribute);
             if ($attribute->getType() == 'object') {
