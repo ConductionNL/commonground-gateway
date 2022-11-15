@@ -209,7 +209,8 @@ class ActionSubscriber implements EventSubscriberInterface
         $currentCronJobThrow = false;
         if (isset($this->io) &&
             $this->session->get('currentCronJobThrow') &&
-            $this->session->get('currentCronJobThrow') === $event->getType()
+            $this->session->get('currentCronJobThrow') == $event->getType() &&
+            $this->session->get('currentCronJobSubThrow') == $event->getSubType()
         ) {
             $currentCronJobThrow = true;
             $this->io->block("Found an Action with matching conditions: [{$this->objectEntityService->implodeMultiArray($action->getConditions())}]");
@@ -314,7 +315,9 @@ class ActionSubscriber implements EventSubscriberInterface
     {
         if ($this->session->get('io')) {
             $this->io = $this->session->get('io');
-            if ($this->session->get('currentCronJobThrow') && $this->session->get('currentCronJobThrow') === $event->getType()) {
+            if ($this->session->get('currentCronJobThrow') &&
+                $this->session->get('currentCronJobThrow') == $event->getType() &&
+                $this->session->get('currentCronJobSubThrow') == $event->getSubType()) {
                 $this->io->section("Handle ActionEvent \"{$event->getType()}\"".($event->getSubType() ? " With SubType: \"{$event->getSubType()}\"" : ''));
 
                 return true;

@@ -349,7 +349,7 @@ class ZgwToVrijbrpService
         }
 
         $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $relocationObjectEntity->getEntity()->getId()->toString(), 'response' => $relocationArray], $event);
-
+        $this->data['response'] = $relocationArray;
         return $this->data;
     }
 
@@ -492,14 +492,15 @@ class ZgwToVrijbrpService
      * Creates a VrijRBP Soap Zaakgegevens array with the data of the zgwZaak.
      *
      * @param ObjectEntity $zaakObjectEntity
-     * @param string|null $type
+     * @param string|null  $type
+     *
      * @return array zaakgegevens
      */
     public function createVrijBrpSoapZaakgegevens(ObjectEntity $zaakObjectEntity, ?string $type = null): array
     {
         return [
-            'zaakId' => $type !== null ? $zaakObjectEntity->getId()->toString() : $zaakObjectEntity->getValue('identificatie'),
-            'bron' => $zaakObjectEntity->getValue('omschrijving'),
+            'zaakId'      => $type !== null ? $zaakObjectEntity->getId()->toString() : $zaakObjectEntity->getValue('identificatie'),
+            'bron'        => $zaakObjectEntity->getValue('omschrijving'),
             'leverancier' => $zaakObjectEntity->getValue('opdrachtgevendeOrganisatie'),
             //            'medewerker' => $zaakObjectEntity->getValue('identificatie'),
             'datumAanvraag' => $zaakObjectEntity->getValue('registratiedatum'),
@@ -643,7 +644,7 @@ class ZgwToVrijbrpService
 
         $soapEmigration = $this->createSoapObject($emigratieaanvraagRequestEntity, $soapEmigrationArray);
         $this->objectEntityService->dispatchEvent('commongateway.object.create', ['entity' => $emigratieaanvraagRequestEntity->getId()->toString(), 'response' => $soapEmigration->toArray()], 'soap.object.handled');
-
+        $this->data['response']['soapZaak'] = $soapEmigration;
         return $this->data;
     }
 
@@ -931,6 +932,8 @@ class ZgwToVrijbrpService
                 'filename'      => $zaakDocumentObjectEntity->getValue('bestandsnaam') ?? $zaakDocumentObjectEntity->getValue('titel'),
                 'entryDateTime' => $dateTimeFormatted,
                 'content'       => $zaakDocumentObjectEntity->getValue('inhoud'),
+                'zaakgegevens'  => $this->data['response']['soapZaak'] ?? null,
+                'dossier'       => $this->data['response']['dossier'] ?? null,
             ];
 
             $vrijBrpDossier = $this->createSoapObject($vrijBrpDossierEntity, $vrijBrpDossierArray);

@@ -300,7 +300,7 @@ class Gateway
      * @Assert\Length(
      *      max = 255
      * )
-     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256"})
+     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256", "vrijbrp-jwt"})
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={

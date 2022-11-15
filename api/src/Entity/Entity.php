@@ -36,12 +36,36 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "method"="GET",
  *          "path"="/admin/entities/{id}/sync"
  *      },
+ *     "get_object"={
+ *          "method"="GET",
+ *          "path"="/admin/schemas/{id}/objects/{objectId}"
+ *      },
  *     "put"={"path"="/admin/entities/{id}"},
- *     "delete"={"path"="/admin/entities/{id}"}
+ *     "put_object"={
+ *          "method"="PUT",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "path"="/admin/schemas/{id}/objects/{objectId}"
+ *      },
+ *     "delete"={"path"="/admin/entities/{id}"},
+ *     "delete_object"={
+ *          "method"="DELETE",
+ *          "path"="/admin/schemas/{id}/objects/{objectId}"
+ *      }
  *  },
  *  collectionOperations={
  *     "get"={"path"="/admin/entities"},
- *     "post"={"path"="/admin/entities"}
+ *     "get_objects"={
+ *          "method"="GET",
+ *          "path"="/admin/schemas/{id}/objects"
+ *      },
+ *     "post"={"path"="/admin/entities"},
+ *     "post_objects"={
+ *          "method"="POST",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "path"="/admin/schemas/{id}/objects"
+ *      },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")

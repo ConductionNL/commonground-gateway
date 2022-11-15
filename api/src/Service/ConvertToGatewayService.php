@@ -389,7 +389,7 @@ class ConvertToGatewayService
                 // If multiple, this should be an array
                 if (!is_array($value)) {
                     // 'Expects array, '.gettype($value).' given. (Multiple is set for this attribute)'
-                    $newObject->getValueByAttribute($attribute)->setValue(null);
+                    $newObject->setValue($attribute, null);
                     continue;
                 }
                 // Check for array of unique items TODO: is setting it to null the correct solution here?
@@ -404,7 +404,7 @@ class ConvertToGatewayService
                     }
                     if (!$containsStringKey && count($value) !== count(array_unique($value))) {
 //                        'Must be an array of unique items'
-                        $newObject->getValueByAttribute($attribute)->setValue(null);
+                        $newObject->setValue($attribute, null);
                         continue;
                     }
                 }
@@ -412,14 +412,14 @@ class ConvertToGatewayService
                 // Then validate all items in this array
                 if ($attribute->getType() == 'object') {
                     // This is an array of objects
-                    $valueObject = $newObject->getValueByAttribute($attribute);
+                    $valueObject = $newObject->getValueObject($attribute);
                     foreach ($value as $key => $object) {
                         // $key could be used for addError with attributeName = $attribute->getName().'['.$key.']'
                         $this->addObjectToValue($attribute, $object, $valueObject, $objectEntity);
                     }
                 } elseif ($attribute->getType() == 'file') {
                     // TODO? or is null ok?
-                    $newObject->getValueByAttribute($attribute)->setValue(null);
+                    $newObject->setValue($attribute, null);
                     continue;
                 } else {
                     foreach ($value as &$item) {
@@ -437,7 +437,7 @@ class ConvertToGatewayService
             // if no errors we can set the value (for type object this is already done in validateAttributeType, other types we do it here,
             // because when we use validateAttributeType to validate items in an array, we dont want to set values for that)
             if (!$newObject->getHasErrors() && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
-                $newObject->getValueByAttribute($attribute)->setValue($value);
+                $newObject->setValue($attribute, $value);
             }
         }
 
@@ -473,17 +473,17 @@ class ConvertToGatewayService
         switch ($attribute->getType()) {
             case 'object':
                 // First get the valueObject for this attribute
-                $valueObject = $newObject->getValueByAttribute($attribute);
+                $valueObject = $newObject->getValueObject($attribute);
 
                 $value = $this->addObjectToValue($attribute, $value, $valueObject, $objectEntity);
                 if ($value === null) {
-                    $newObject->getValueByAttribute($attribute)->setValue(null);
+                    $newObject->setValue($attribute, null);
                 }
 
                 break;
             case 'file':
                 // TODO? or is null ok?
-                $newObject->getValueByAttribute($attribute)->setValue(null);
+                $newObject->setValue($attribute, null);
                 break;
             case 'date':
             case 'datetime':

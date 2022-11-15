@@ -128,7 +128,7 @@ class SynchronizationService
             $synchronisation = $this->findSyncByObject($object, $source, $entity);
             if (!$synchronisation->getLastSynced()) {
                 $synchronisation = $this->syncToSource($synchronisation, false);
-            } elseif ($object->getDateModified() > $synchronisation->getLastSynced()) {
+            } elseif ($object->getDateModified() > $synchronisation->getLastSynced() && (!isset($this->configuration['updatesAllowed']) || $this->configuration['updatesAllowed'])) {
                 $synchronisation = $this->syncToSource($synchronisation, true);
             }
             $this->entityManager->persist($synchronisation);
@@ -743,7 +743,7 @@ class SynchronizationService
             }
         }
 
-        $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'application/ld+json');
+        $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'jsonld');
         // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
         if (!$this->checkActionConditionsEntity($objectEntity->getEntity()->getId()->toString())) {
             $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()]);
