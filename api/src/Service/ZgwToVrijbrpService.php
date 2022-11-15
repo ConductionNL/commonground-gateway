@@ -6,6 +6,7 @@ use App\Entity\Entity;
 use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use phpDocumentor\Reflection\Types\This;
 
 class ZgwToVrijbrpService
 {
@@ -982,14 +983,14 @@ class ZgwToVrijbrpService
 
         switch ($zaakArray['zaaktype']['identificatie']) {
             case 'B0237':
-                $this->data = $this->createBirthObject($zaakArray);
-                foreach ($this->data['response']['zgwDocumenten'] as $zgwDocument) {
-                    $this->createVrijBrpDocumenten($zgwDocument, 'vrijBrpApi.dossier.handled');
-                }
+                return $this->createBirthObject($zaakArray);
+            case 'B0366':
+                $this->data = $this->createRelocationObject($zaakArray);
+                 foreach ($this->data['response']['zgwDocumenten'] as $zgwDocument) {
+                     $this->createVrijBrpDocumenten($zgwDocument, 'vrijBrpApi.dossier.handled');
+                 }
 
                 return $this->data;
-            case 'B0366':
-                return $this->createRelocationObject($zaakArray);
             case 'B0337':
                 return $this->createCommitmentObject($zaakArray);
             case 'B0360':
