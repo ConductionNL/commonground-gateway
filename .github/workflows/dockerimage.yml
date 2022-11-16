@@ -264,10 +264,11 @@ jobs:
                 reporter:
                     htmlextra:
                         export: tests/results/htmlreport.html
-        -   name: Output the run Details
-            if: (success() || failure())
-            uses: actions/upload-artifact@v2
-            with:
+                        darktheme: true
+        - name: Output the run Details
+          if: (success() || failure())
+          uses: actions/upload-artifact@v2
+          with:
                 name: RunReports
                 path: tests/results
   Dependencies:
