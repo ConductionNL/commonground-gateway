@@ -83,6 +83,7 @@ class ActionSubscriber implements EventSubscriberInterface
         }
 
         $actionRanGood = true;
+
         try {
             $data = $object->run($data, array_merge($action->getConfiguration(), ['actionConditions' => $action->getConditions()]));
         } catch (AsynchronousException $exception) {
