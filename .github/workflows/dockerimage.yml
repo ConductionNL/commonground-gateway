@@ -251,11 +251,11 @@ jobs:
           - name: Show all images
             run: docker images
           - name: Up the images
-            run: docker compose -f docker-compose.check.yaml up -d
+            run: docker compose -f docker-compose.check.yml up -d
           - name: Wait for the containers to run
             run: sleep 90
           - name: Dumping the logs
-            run: docker-compose -f docker-compose.check.yaml logs
+            run: docker-compose -f docker-compose.check.yml logs
           - name: Run Core Postman checks
             uses: matt-ball/newman-action@master
             with:
@@ -404,11 +404,11 @@ jobs:
           - name: Show all images
             run: docker images
           - name: Up the images
-            run: docker compose -f docker-compose.check.yaml up -d
+            run: docker compose -f docker-compose.check.yml up -d
           - name: Wait for the containers to run
             run: sleep 20
           - name: Database Update
-            run: docker-compose -f docker-compose.check.yaml exec -T php bin/console doctrine:schema:update --force
+            run: docker-compose -f docker-compose.check.yml exec -T php bin/console doctrine:schema:update --force
   publish:
       needs: [Trivy, Gryphe, Dependencies,Database]
       runs-on: ubuntu-latest
