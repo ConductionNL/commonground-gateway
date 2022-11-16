@@ -162,11 +162,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $parentOrganizations = $this->session->get('parentOrganizations', []);
         }
 
-        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.organization = :defaultOrganization OR o.owner = :userId')
-            ->setParameter('userId', $userId)
-            ->setParameter('organizations', $organizations)
-            ->setParameter('parentOrganizations', $parentOrganizations)
-            ->setParameter('defaultOrganization', 'http://testdata-organization');
+//        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.organization = :defaultOrganization OR o.owner = :userId')
+//            ->setParameter('userId', $userId)
+//            ->setParameter('organizations', $organizations)
+//            ->setParameter('parentOrganizations', $parentOrganizations)
+//            ->setParameter('defaultOrganization', 'http://testdata-organization');
 
         if (!empty($order)) {
             $order = $this->cleanOrderArray($order, $entity);

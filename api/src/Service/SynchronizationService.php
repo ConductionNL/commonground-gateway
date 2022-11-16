@@ -8,6 +8,7 @@ use App\Entity\Entity;
 use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
+use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
 use DateTime;
@@ -42,6 +43,8 @@ class SynchronizationService
     private array $data;
     private SymfonyStyle $io;
     private Environment $twig;
+
+    private bool $asyncError = false;
 
     /**
      * @param CallService            $callService
@@ -125,11 +128,14 @@ class SynchronizationService
             $synchronisation = $this->findSyncByObject($object, $source, $entity);
             if (!$synchronisation->getLastSynced()) {
                 $synchronisation = $this->syncToSource($synchronisation, false);
-            } elseif ($object->getDateModified() > $synchronisation->getLastSynced()) {
+            } elseif ($object->getDateModified() > $synchronisation->getLastSynced() && (!isset($this->configuration['updatesAllowed']) || $this->configuration['updatesAllowed'])) {
                 $synchronisation = $this->syncToSource($synchronisation, true);
             }
             $this->entityManager->persist($synchronisation);
             $this->entityManager->flush();
+        }
+        if ($this->asyncError) {
+            throw new AsynchronousException('Synchronization failed');
         }
 
         return $this->data;
@@ -265,16 +271,16 @@ class SynchronizationService
      *
      * @return Entity|null The found entity for the configuration
      */
-    public function getEntityFromConfig(): ?Entity
+    public function getEntityFromConfig(string $configKey = 'entity'): ?Entity
     {
-        if (isset($this->configuration['entity'])) {
-            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->configuration['entity']]);
+        if (isset($this->configuration[$configKey])) {
+            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->configuration[$configKey]]);
             if ($entity instanceof Entity) {
                 return $entity;
             }
         }
         if (isset($this->io)) {
-            $this->io->error('Could not get an Entity with current Action->Configuration');
+            $this->io->error("Could not get an Entity with current Action->Configuration[\'$configKey\']");
         }
 
         return null;
@@ -399,6 +405,33 @@ class SynchronizationService
     }
 
     /**
+     * A function used to send userFeedback with SymfonyStyle $io when an Exception is caught during a try-catch.
+     *
+     * @param Exception $exception The Exception we caught.
+     * @param array     $config    A configuration array for this function, if one of the keys 'file', 'line' or 'trace' is present
+     *                             this function will show that data of the Exception with $this->io->block. It is also possible to configure the message
+     *                             with this array through the key 'message' => [Here you have the options to add the keys 'preMessage' & 'postMessage'
+     *                             to expend on the Exception message and choose the type of the io message, io->error or io->warning with the key
+     *                             'type' => 'error', default = warning].
+     *
+     * @return void
+     */
+    public function ioCatchException(Exception $exception, array $config)
+    {
+        if (!isset($this->io) && $this->session->get('io')) {
+            $this->io = $this->session->get('io');
+        }
+        if (isset($this->io)) {
+            $errorMessage = ($config['message']['preMessage'] ?? '').$exception->getMessage().($config['message']['postMessage'] ?? '');
+            (isset($config['message']['type']) && $config['message']['type'] === 'error') ?
+                $this->io->error($errorMessage) : $this->io->warning($errorMessage);
+            isset($config['file']) && $this->io->block("File: {$exception->getFile()}");
+            isset($config['line']) && $this->io->block("Line: {$exception->getLine()}");
+            isset($config['trace']) && $this->io->block("Trace: {$exception->getTraceAsString()}");
+        }
+    }
+
+    /**
      * Fetches the objects stored on the source.
      *
      * @param array $callServiceConfig The configuration for the source
@@ -433,18 +466,14 @@ class SynchronizationService
             );
         } catch (Exception|GuzzleException $exception) {
             // If no next page with this $page exists...
-            if (isset($this->io)) {
-                $this->io->warning("(This might just be the final page!) - Error while doing fetchObjectsFromSource: {$exception->getMessage()}");
-                $this->io->block("File: {$exception->getFile()}");
-                $this->io->block("Line: {$exception->getLine()}");
-                //                $this->io->block("Trace: {$exception->getTraceAsString()}");
-            }
+            $this->ioCatchException($exception, ['line', 'file', 'message' => [
+                'preMessage' => '(This might just be the final page!) - Error while doing fetchObjectsFromSource: ',
+            ]]);
 
             //todo: error, log this
             return [];
         }
-
-        $pageResult = json_decode($response->getBody()->getContents(), true);
+        $pageResult = $this->callService->decodeResponse($callServiceConfig['gateway'], $response);
 
         $dot = new Dot($pageResult);
         $results = $dot->get($this->configuration['apiSource']['location']['objects'], $pageResult);
@@ -488,18 +517,15 @@ class SynchronizationService
                 ]
             );
         } catch (Exception|GuzzleException $exception) {
-            if (isset($this->io)) {
-                $this->io->warning("Error while doing getSingleFromSource: {$exception->getMessage()}");
-                $this->io->block("File: {$exception->getFile()}");
-                $this->io->block("Line: {$exception->getLine()}");
-                //                $this->io->block("Trace: {$exception->getTraceAsString()}");
-            }
+            $this->ioCatchException($exception, ['line', 'file', 'message' => [
+                'preMessage' => 'Error while doing getSingleFromSource: ',
+            ]]);
 
             //todo: error, log this
             return null;
         }
 
-        $result = json_decode($response->getBody()->getContents(), true);
+        $result = $this->callService->decodeResponse($callServiceConfig['gateway'], $response);
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
         //        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
@@ -717,7 +743,7 @@ class SynchronizationService
             }
         }
 
-        $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'application/ld+json');
+        $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'jsonld');
         // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
         if (!$this->checkActionConditionsEntity($objectEntity->getEntity()->getId()->toString())) {
             $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()]);
@@ -897,12 +923,9 @@ class SynchronizationService
         try {
             $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
         } catch (Exception $exception) {
-            if (isset($this->io)) {
-                $this->io->warning("Error while doing syncToSource: {$exception->getMessage()}");
-                $this->io->block("File: {$exception->getFile()}");
-                $this->io->block("Line: {$exception->getLine()}");
-                //                $this->io->block("Trace: {$exception->getTraceAsString()}");
-            }
+            $this->ioCatchException($exception, ['line', 'file', 'message' => [
+                'preMessage' => 'Error while doing syncToSource: ',
+            ]]);
 
             // todo: error, log this
             //            return $synchronization;
@@ -970,32 +993,6 @@ class SynchronizationService
     }
 
     /**
-     * Decodes the response body based on the content type header.
-     *
-     * @param string $responseBody The body of the response
-     * @param string $contentType  The media type from the response headers
-     *
-     * @return array The decoded response body as array
-     */
-    public function decodeResponse(string $responseBody, string $contentType): array
-    {
-        if (!$responseBody) {
-            return [];
-        }
-        switch ($contentType) {
-            case 'text/xml':
-            case 'text/xml; charset=utf-8':
-            case 'application/xml':
-                $xmlEncoder = new XmlEncoder(['xml_root_node_name' => $this->configuration['apiSource']['location']['xmlRootNodeName'] ?? 'response']);
-
-                return $xmlEncoder->decode($responseBody, 'xml');
-            case 'application/json':
-            default:
-                return json_decode($responseBody, true);
-        }
-    }
-
-    /**
      * Synchronises a new object in the gateway to it source, or an object updated in the gateway.
      *
      * @param Synchronization $synchronization The synchronisation object for the created or updated object
@@ -1032,12 +1029,10 @@ class SynchronizationService
                 ]
             );
         } catch (Exception|GuzzleException $exception) {
-            if (isset($this->io)) {
-                $this->io->warning("Error while doing syncToSource: {$exception->getMessage()}");
-                $this->io->block("File: {$exception->getFile()}");
-                $this->io->block("Line: {$exception->getLine()}");
-//                $this->io->block("Trace: {$exception->getTraceAsString()}");
-            }
+            $this->ioCatchException($exception, ['line', 'file', 'message' => [
+                'preMessage' => 'Error while doing syncToSource: ',
+            ]]);
+            $this->asyncError = true;
 
             //todo: error, log this
             return $synchronization;
@@ -1046,7 +1041,7 @@ class SynchronizationService
         if (!$contentType) {
             $contentType = $result->getHeader('Content-Type')[0];
         }
-        $body = $this->decodeResponse($result->getBody()->getContents(), $contentType);
+        $body = $this->callService->decodeResponse($callServiceConfig['gateway'], $result);
 
         return $this->storeSynchronization($synchronization, $body);
     }

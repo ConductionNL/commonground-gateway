@@ -30,17 +30,30 @@ class CatalogiHandler implements ActionHandlerInterface
             '$id'        => 'https://example.com/person.schema.json',
             '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
             'title'      => 'CatalogiHandler',
-            'required'   => ['entity', 'location'],
+            'required'   => ['entity', 'location', 'componentsEntity', 'componentsLocation'],
             'properties' => [
                 'entity' => [
                     'type'        => 'uuid',
-                    'description' => 'The uuid of the entity',
+                    'description' => 'The uuid of the Catalogi entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
                     'required'    => true,
                 ],
                 'location' => [
                     'type'        => 'string',
-                    'description' => 'The location',
+                    'description' => 'The location where we can find Catalogi',
+                    'example'     => '/api/oc/catalogi',
+                    'required'    => true,
+                ],
+                'componentsEntity' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the Component entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true,
+                ],
+                'componentsLocation' => [
+                    'type'        => 'string',
+                    'description' => 'The location where we can find Components',
+                    'example'     => '/api/oc/components',
                     'required'    => true,
                 ],
             ],

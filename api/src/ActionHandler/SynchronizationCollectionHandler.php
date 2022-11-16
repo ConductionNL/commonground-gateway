@@ -13,8 +13,6 @@ use Twig\Error\SyntaxError;
 
 class SynchronizationCollectionHandler implements ActionHandlerInterface
 {
-    private SynchronizationService $synchronizationService;
-
     /**
      * Wrapper function to prevent service loading on container autowiring
      *

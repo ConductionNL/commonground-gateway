@@ -44,6 +44,32 @@ use Symfony\Component\Validator\Constraints as Assert;
  *                  "description"="routes POST calls through gateway"
  *              }
  *          },
+ *          "post_proxy_endpoint"={
+ *              "path"="/admin/sources/{id}/proxy/{endpoint}",
+ *              "method"="POST",
+ *              "read"=false,
+ *              "validate"=false,
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Proxy POST call to source",
+ *                  "description"="Proxy POST call to source",
+ *              }
+ *          },
+ *          "post_proxy"={
+ *              "path"="/admin/sources/{id}/proxy",
+ *              "method"="POST",
+ *              "read"=false,
+ *              "validate"=false,
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Proxy POST call to source",
+ *                  "description"="Proxy POST call to source",
+ *              }
+ *          }
  *     },
  *      itemOperations={
  * 		    "get"={
@@ -52,6 +78,58 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          },
  * 	        "put"={"path"="/admin/gateways/{id}"},
  * 	        "delete"={"path"="/admin/gateways/{id}"},
+ *          "get_proxy_endpoint"={
+ *              "path"="/admin/sources/{id}/proxy/{endpoint}",
+ *              "method"="GET",
+ *              "read"=false,
+ *              "validate"=false,
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Proxy GET call to source",
+ *                  "description"="Proxy GET call to source",
+ *              }
+ *          },
+ *          "get_proxy"={
+ *              "path"="/admin/sources/{id}/proxy",
+ *              "method"="GET",
+ *              "read"=false,
+ *              "validate"=false,
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Proxy GET call to source",
+ *                  "description"="Proxy GET call to source",
+ *              }
+ *          },
+ *          "put_proxy_single"={
+ *              "path"="/admin/sources/{id}/proxy/{endpoint}",
+ *              "method"="PUT",
+ *              "read"=false,
+ *              "validate"=false,
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Proxy PUT call to source",
+ *                  "description"="Proxy GET call to source",
+ *              }
+ *          },
+ *          "delete_proxy_single"={
+ *              "path"="/admin/sources/{id}/proxy/{endpoint}",
+ *              "method"="DELETE",
+ *              "read"=false,
+ *              "validate"=false,
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Proxy GET call to source",
+ *                  "description"="Proxy GET call to source",
+ *              }
+ *          },
  *          "gateway_get"={
  *              "path"="/api/gateways/{name}/{endpoint}",
  *              "method"="GET",
@@ -222,7 +300,7 @@ class Gateway
      * @Assert\Length(
      *      max = 255
      * )
-     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256"})
+     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256", "vrijbrp-jwt"})
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -482,6 +560,14 @@ class Gateway
      * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="gateway")
      */
     private ?Collection $subscribers;
+
+    /**
+     * @var array|null The guzzle configuration of the source
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $configuration = [];
 
     /**
      * @var Datetime The moment this resource was created

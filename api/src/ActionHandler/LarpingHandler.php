@@ -19,6 +19,7 @@ class LarpingHandler implements ActionHandlerInterface
         return  $this->larpingService;
     }
 
+
     /**
      *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
      *

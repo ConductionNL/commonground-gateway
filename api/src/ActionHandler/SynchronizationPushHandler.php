@@ -7,7 +7,6 @@ use App\Service\SynchronizationService;
 
 class SynchronizationPushHandler implements ActionHandlerInterface
 {
-    private SynchronizationService $synchronizationService;
 
     /**
      * Wrapper function to prevent service loading on container autowiring
