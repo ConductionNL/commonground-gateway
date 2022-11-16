@@ -7,17 +7,6 @@ use App\Service\PubliccodeService;
 class PubliccodeCheckRepositoriesForPubliccodeHandler implements ActionHandlerInterface
 {
     /**
-     * Gets the PubliccodeService trough autowiring
-     *
-     * @param PubliccodeService $publiccodeService
-     * @return PubliccodeService
-     */
-    private function getPubliccodeService(PubliccodeService $publiccodeService):PubliccodeService
-    {
-        return $publiccodeService;
-    }
-
-    /**
      * Wrapper function to prevent service loading on container autowiring
      *
      * @param PubliccodeService $publiccodeService

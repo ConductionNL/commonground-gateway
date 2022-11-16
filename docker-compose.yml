@@ -6,14 +6,17 @@ x-cache:
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-nginx
 
-services:
-  #  gateway-frontend:
-  #    &gateway-frontend
-  #    image: ghcr.io/conductionnl/commonground-gateway-frontend:latest
-  #    depends_on:
-  #      - php
-  #    ports:
-  #      - "83:80"
+services:  
+  ui:
+    &nginx
+    image: ghcr.io/conductionnl/gateway-ui:stag
+    depends_on:
+      - api        
+    ports:
+      - "81:80"
+    volumes:
+      - ./ui/env.js:/usr/share/nginx/html/env.js:rw,cached
+      
   php:
     &php
     image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php:${APP_ENV}

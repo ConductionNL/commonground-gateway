@@ -588,11 +588,6 @@ class Gateway
     private $dateModified;
 
     /**
-     * @ORM\Column(type="array", nullable=true)
-     */
-    private $configuration = [];
-
-    /**
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $lastCall;
