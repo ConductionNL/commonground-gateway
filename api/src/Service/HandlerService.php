@@ -268,7 +268,7 @@ class HandlerService
             $this->subscriberService->handleSubscribers($handler->getEntity(), $data, $method);
 
             // Update current Log
-            $this->request->getMethod() !== 'DELETE' &&  $this->logService->saveLog($this->request, null, 2, json_encode($data));
+            $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 2, json_encode($data));
 
             $event = new ActionEvent('commongateway.response.pre', ['entity' => $handler->getEntity()->getId()->toString(), 'httpRequest' => $this->request, 'request' => $originalData, 'response' => $data, 'queryParameters' => $this->request->query->all()]);
             $this->eventDispatcher->dispatch($event, 'commongateway.response.pre');
