@@ -268,7 +268,7 @@ class HandlerService
             $this->subscriberService->handleSubscribers($handler->getEntity(), $data, $method);
 
             // Update current Log
-            $this->logService->saveLog($this->request, null, 2, json_encode($data));
+            $this->request->getMethod() !== 'DELETE' &&  $this->logService->saveLog($this->request, null, 2, json_encode($data));
 
             $event = new ActionEvent('commongateway.response.pre', ['entity' => $handler->getEntity()->getId()->toString(), 'httpRequest' => $this->request, 'request' => $originalData, 'response' => $data, 'queryParameters' => $this->request->query->all()]);
             $this->eventDispatcher->dispatch($event, 'commongateway.response.pre');
@@ -278,13 +278,13 @@ class HandlerService
         }
 
         // Update current Log
-        $this->logService->saveLog($this->request, null, 3, json_encode($data));
+        $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 3, json_encode($data));
 
         // An lastly we want to create a response
         $response = $this->createResponse($data, $endpoint);
 
         // Final update Log
-        $this->logService->saveLog($this->request, $response, 4, null, true);
+        $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, $response, 4, null, true);
 
         $this->processingLogService->saveProcessingLog();
 
@@ -520,7 +520,7 @@ class HandlerService
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
 
         // Update current Log
-        $this->logService->saveLog($this->request, null, 5, json_encode($data));
+        $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 5, json_encode($data));
 
         if (!empty($handler->getTranslationsIn())) {
             // Then we want to do translations on the incomming request
@@ -533,7 +533,7 @@ class HandlerService
             }
         }
         // Update current Log
-        $this->logService->saveLog($this->request, null, 6, json_encode($data));
+        $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 6, json_encode($data));
 
         return $data;
     }
@@ -554,7 +554,7 @@ class HandlerService
 
         // Update current Log
         $this->stopwatch->start('saveLog7', 'handleDataAfterEAV');
-        $this->logService->saveLog($this->request, null, 7, json_encode($data));
+        $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 7, json_encode($data));
         $this->stopwatch->stop('saveLog7');
 
         if (!empty($handler->getTranslationsOut())) {
@@ -574,7 +574,7 @@ class HandlerService
 
         // Update current Log
         $this->stopwatch->start('saveLog8', 'handleDataAfterEAV');
-        $this->logService->saveLog($this->request, null, 8, json_encode($data));
+        $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 8, json_encode($data));
         $this->stopwatch->stop('saveLog8');
 
         // Lets see if we need te use a template
