@@ -676,6 +676,7 @@ class Gateway
         $this->collections = new ArrayCollection();
         $this->subscribers = new ArrayCollection();
         $this->synchronizations = new ArrayCollection();
+        $this->callLogs = new ArrayCollection();
     }
 
     public function export(): ?array
