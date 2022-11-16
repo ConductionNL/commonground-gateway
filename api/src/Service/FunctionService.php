@@ -41,7 +41,7 @@ class FunctionService
                     if (array_key_exists('organizationType', $data) && $data['organizationType']) {
                         $organizationType = $data['organizationType'];
                     } else {
-                        $organizationType = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue();
+                        $organizationType = $objectEntity->getValue('type');
                     }
                     $objectEntity = $this->createOrganization($objectEntity, $data['uri'], $organizationType);
                 }
@@ -51,7 +51,7 @@ class FunctionService
                     if (array_key_exists('userGroupName', $data) && $data['userGroupName']) {
                         $userGroupName = $data['userGroupName'];
                     } else {
-                        $userGroupName = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('name'))->getValue();
+                        $userGroupName = $objectEntity->getValue('name');
                     }
                     $objectEntity = $this->updateUserGroup($objectEntity, $userGroupName);
                 }

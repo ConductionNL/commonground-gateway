@@ -166,7 +166,7 @@ class ResponseService
      *
      * @return array|string[]|string Only returns a string if $level is higher than 3 and acceptType is not jsonld.
      */
-    public function renderResult(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType = 'jsonld', bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
+    public function renderResult(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType = 'json', bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
     {
         $response = [];
         if ($level === 0) {
@@ -237,7 +237,7 @@ class ResponseService
             if (!is_null($result->getEntity()->getAvailableProperties() || !empty($fields))) {
                 $response = array_filter($response, function ($propertyName) use ($result, $fields) {
                     $attTypeObject = false;
-                    if ($attribute = $result->getEntity()->getAttributeByName($propertyName)) {
+                    if ($attribute = $result->getAttributeObject($propertyName)) {
                         $attTypeObject = $attribute->getType() === 'object';
                     }
 
@@ -355,6 +355,7 @@ class ResponseService
         if (array_key_exists('@context', $response)) {
             $gatewayContext['@gateway/context'] = $response['@context'];
         }
+        $gatewayContext['@synchronizations'] = $result->getReadableSyncDataArray();
         if (is_array($extend)) {
             $gatewayContext['@extend'] = $extend;
         }
@@ -409,6 +410,7 @@ class ResponseService
         if (array_key_exists('@context', $response)) {
             $gatewayContext['_metadata']['_gateway/context'] = $response['@context'];
         }
+        $gatewayContext['_metadata']['_synchronizations'] = $result->getReadableSyncDataArray();
         if (is_array($extend)) {
             $gatewayContext['_metadata']['_extend'] = $extend;
         }
@@ -472,6 +474,7 @@ class ResponseService
         if (array_key_exists('@context', $response)) {
             $this->addToMetadata($metadata, 'gateway/context', $response['@context']);
         }
+        $this->addToMetadata($metadata, 'synchronizations', $result->getReadableSyncDataArray());
         if (is_array($extend)) {
             $this->addToMetadata($metadata, 'extend', $extend);
         }
@@ -553,7 +556,7 @@ class ResponseService
                 continue;
             }
 
-            $valueObject = $result->getValueByAttribute($attribute);
+            $valueObject = $result->getValueObject($attribute);
             if ($attribute->getType() == 'object') {
                 // Lets deal with extending
                 if (!$this->checkExtendAttribute($response, $attribute, $valueObject, $extend, $acceptType)) {

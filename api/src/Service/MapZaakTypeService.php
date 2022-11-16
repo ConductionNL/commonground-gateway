@@ -187,7 +187,7 @@ class MapZaakTypeService
         $this->configuration = $configuration;
 
         // Find ZGW Type entities by id from config
-        $zaakTypeEntity = $this->entityRepo->find($configuration['entities']['ZaakType']);
+        $zaakTypeEntity = $this->entityRepo->find($this->configuration['entities']['ZaakType']);
 
         if (!isset($zaakTypeEntity)) {
             throw new \Exception('ZaakType entity could not be found');

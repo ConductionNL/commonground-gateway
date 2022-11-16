@@ -83,7 +83,7 @@ class NotificationService
             'dataref'=> $this->configuration['dataref'].$object['id'],
             //"sequence"=>"1234",
             //"sequencetype"=>"integer",
-            'datacontenttype'=> $this->configuration['source'],
+            'datacontenttype'=> $this->configuration['datacontenttype'],
         ];
 
         // Include data if so required

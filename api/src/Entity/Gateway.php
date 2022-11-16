@@ -44,6 +44,32 @@ use Symfony\Component\Validator\Constraints as Assert;
  *                  "description"="routes POST calls through gateway"
  *              }
  *          },
+ *          "post_proxy_endpoint"={
+ *              "path"="/admin/sources/{id}/proxy/{endpoint}",
+ *              "method"="POST",
+ *              "read"=false,
+ *              "validate"=false,
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Proxy POST call to source",
+ *                  "description"="Proxy POST call to source",
+ *              }
+ *          },
+ *          "post_proxy"={
+ *              "path"="/admin/sources/{id}/proxy",
+ *              "method"="POST",
+ *              "read"=false,
+ *              "validate"=false,
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Proxy POST call to source",
+ *                  "description"="Proxy POST call to source",
+ *              }
+ *          }
  *     },
  *      itemOperations={
  * 		    "get"={
@@ -52,6 +78,58 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          },
  * 	        "put"={"path"="/admin/gateways/{id}"},
  * 	        "delete"={"path"="/admin/gateways/{id}"},
+ *          "get_proxy_endpoint"={
+ *              "path"="/admin/sources/{id}/proxy/{endpoint}",
+ *              "method"="GET",
+ *              "read"=false,
+ *              "validate"=false,
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Proxy GET call to source",
+ *                  "description"="Proxy GET call to source",
+ *              }
+ *          },
+ *          "get_proxy"={
+ *              "path"="/admin/sources/{id}/proxy",
+ *              "method"="GET",
+ *              "read"=false,
+ *              "validate"=false,
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Proxy GET call to source",
+ *                  "description"="Proxy GET call to source",
+ *              }
+ *          },
+ *          "put_proxy_single"={
+ *              "path"="/admin/sources/{id}/proxy/{endpoint}",
+ *              "method"="PUT",
+ *              "read"=false,
+ *              "validate"=false,
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Proxy PUT call to source",
+ *                  "description"="Proxy GET call to source",
+ *              }
+ *          },
+ *          "delete_proxy_single"={
+ *              "path"="/admin/sources/{id}/proxy/{endpoint}",
+ *              "method"="DELETE",
+ *              "read"=false,
+ *              "validate"=false,
+ *              "requirements"={
+ *                  "endpoint"=".+"
+ *              },
+ *              "openapi_context"={
+ *                  "summary"="Proxy GET call to source",
+ *                  "description"="Proxy GET call to source",
+ *              }
+ *          },
  *          "gateway_get"={
  *              "path"="/api/gateways/{name}/{endpoint}",
  *              "method"="GET",
@@ -222,7 +300,7 @@ class Gateway
      * @Assert\Length(
      *      max = 255
      * )
-     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256"})
+     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256", "vrijbrp-jwt"})
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -484,6 +562,94 @@ class Gateway
     private ?Collection $subscribers;
 
     /**
+     * @var array|null The guzzle configuration of the source
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $configuration = [];
+
+    /**
+     * @var string The status from the last call made to this source
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="200 OK status received on /api-endpoint"
+     *         }
+     *     }
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true, options={"default":"No calls have been made yet to this source"})
+     */
+    private string $status = 'No calls have been made yet to this source';
+
+    /**
+     * @var ?Datetime The datetime from the last request made to this source
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="datetime",
+     *             "example"="2020-02-15T120:50:00"
+     *         }
+     *     }
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private ?Datetime $lastCall;
+
+    /**
+     * @var ?Datetime The datetime from the last synchronization made to this source
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="datetime",
+     *             "example"="2020-02-15T120:50:00"
+     *         }
+     *     }
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private ?Datetime $lastSync;
+
+    /**
+     * @var int The count of total sync objects from this source
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="integer",
+     *             "example"=52
+     *         }
+     *     }
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="integer", options={"default":0})
+     */
+    private int $objectCount = 0;
+
+    /**
+     * @var Collection The synchronizations of this source
+     *
+     * @Groups({"write"})
+     * @ORM\OneToMany(targetEntity=Synchronization::class, fetch="EXTRA_LAZY", mappedBy="gateway", orphanRemoval=true)
+     */
+    private Collection $synchronizations;
+
+    /**
+     * @var Collection The call logs of this source
+     *
+     * @Groups({"write"})
+     * @ORM\OneToMany(targetEntity=CallLog::class, fetch="EXTRA_LAZY", mappedBy="source", orphanRemoval=true)
+     */
+    private Collection $callLogs;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -507,6 +673,8 @@ class Gateway
         $this->requestLogs = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->subscribers = new ArrayCollection();
+        $this->synchronizations = new ArrayCollection();
+        $this->callLogs = new ArrayCollection();
     }
 
     public function export(): ?array
@@ -906,6 +1074,91 @@ class Gateway
         return $this;
     }
 
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function getLastCall(): ?DateTime
+    {
+        return $this->lastCall;
+    }
+
+    public function setLastCall(?DateTime $lastCall): self
+    {
+        $this->lastCall = $lastCall;
+
+        return $this;
+    }
+
+    public function getLastSync(): ?DateTime
+    {
+        return $this->lastSync;
+    }
+
+    public function setLastSync(?DateTime $lastSync): self
+    {
+        $this->lastSync = $lastSync;
+
+        return $this;
+    }
+
+    public function getObjectCount(): int
+    {
+        return $this->synchronizations->count();
+    }
+
+    // Should not be used or needed
+    // public function setObjectCount(int $objectCount): self
+    // {
+    //     $this->objectCount = $objectCount;
+
+    //     return $this;
+    // }
+
+    /**
+     * @return Collection|Synchronization[]
+     */
+    public function getSynchronizations(): Collection
+    {
+        return $this->synchronizations;
+    }
+
+    public function addSynchronization(Synchronization $synchronization): self
+    {
+        if (!$this->synchronizations->contains($synchronization)) {
+            $this->synchronizations[] = $synchronization;
+            $synchronization->setGateway($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|CallLog[]
+     */
+    public function getCallLogs(): Collection
+    {
+        return $this->callLogs;
+    }
+
+    public function addCallLog(CallLog $callLog): self
+    {
+        if (!$this->callLogs->contains($callLog)) {
+            $this->callLogs[] = $callLog;
+            $callLog->setSource($this);
+        }
+
+        return $this;
+    }
+
     public function getDateCreated(): ?DateTimeInterface
     {
         return $this->dateCreated;
@@ -946,5 +1199,17 @@ class Gateway
             'username'              => $this->getUsername(),
             'password'              => $this->getPassword(),
         ];
+    }
+
+    public function getConfiguration(): ?array
+    {
+        return $this->configuration;
+    }
+
+    public function setConfiguration(?array $configuration = []): self
+    {
+        $this->configuration = $configuration;
+
+        return $this;
     }
 }
