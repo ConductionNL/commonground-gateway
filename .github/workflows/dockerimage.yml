@@ -39,6 +39,9 @@ jobs:
           mkdir api/vendor
           chmod +777 api/vendor
           chmod +777 -R api/public
+          chmod +777 -R api/bin
+      - name: show bin folder
+        run: ls -la api/bin
       - name: Setting APP_NAME
         run: |
           export NAME=$(grep APP_NAME= .env | cut -d '=' -f2)
