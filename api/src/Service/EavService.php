@@ -690,7 +690,7 @@ class EavService
      */
     public function getRequestFields(Request $request): ?array
     {
-        $fields = $request->query->get('fields');
+        $fields = $request->query->has('fields') ? $request->query->get('fields') : $request->query->get('_fields');
 
         if ($fields) {
             // Lets deal with a comma seperated list
@@ -719,7 +719,7 @@ class EavService
      */
     public function getRequestExtend(Request $request): ?array
     {
-        $extend = $request->query->get('extend');
+        $extend = $request->query->has('extend') ? $request->query->get('extend') : $request->query->get('_extend');
 
         if ($extend) {
             // Lets deal with a comma seperated list
@@ -956,7 +956,7 @@ class EavService
      *
      * @return array
      */
-    public function handleGet(ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType = 'jsonld'): array
+    public function handleGet(ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType = 'json'): array
     {
         return $this->responseService->renderResult($object, $fields, $extend, $acceptType);
     }
@@ -1017,7 +1017,7 @@ class EavService
      *
      * @return array|array[]
      */
-    public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'jsonld', ?array $query = null): array
+    public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'json', ?array $query = null): array
     {
         $query = $query ?? $this->realRequestQueryAll($request->getMethod());
         unset($query['limit']);
@@ -1073,12 +1073,10 @@ class EavService
         $filterCheck = $this->em->getRepository('App:ObjectEntity')->getFilterParameters($entity);
 
         // Lets add generic filters
-        $filterCheck[] = 'fields';
-        $filterCheck[] = 'extend';
+        $filterCheck = array_merge($filterCheck, ['fields', '_fields', 'extend', '_extend']);
         if (!empty($entity->getSearchPartial())) {
-            $filterCheck[] = 'search';
+            $filterCheck = array_merge($filterCheck, ['search', '_search']);
         }
-        $filterCheck[] = '_dateRead';
 
         foreach ($query as $param => $value) {
             if (!in_array($param, $filterCheck)) {
@@ -1232,7 +1230,7 @@ class EavService
         // Check mayBeOrphaned
         // Get all attributes with mayBeOrphaned == false and one or more objects
         $cantBeOrphaned = $object->getEntity()->getAttributes()->filter(function (Attribute $attribute) use ($object) {
-            if (!$attribute->getMayBeOrphaned() && count($object->getValueByAttribute($attribute)->getObjects()) > 0) {
+            if (!$attribute->getMayBeOrphaned() && count($object->getSubresources($attribute)) > 0) {
                 return true;
             }
 
@@ -1242,7 +1240,7 @@ class EavService
             $data = [];
             foreach ($cantBeOrphaned as $attribute) {
                 $data[] = $attribute->getName();
-                //                $data[$attribute->getName()] = $object->getValueByAttribute($attribute)->getId();
+                //                $data[$attribute->getName()] = $object->getValueObject($attribute)->getId();
             }
 
             return [
@@ -1262,17 +1260,17 @@ class EavService
         foreach ($object->getEntity()->getAttributes() as $attribute) {
             // If this object has subresources and cascade delete is set to true, delete the subresources as well.
             // TODO: use switch for type? ...also delete type file?
-            if ($attribute->getType() == 'object' && $attribute->getCascadeDelete() && !is_null($object->getValueByAttribute($attribute)->getValue())) {
+            if ($attribute->getType() == 'object' && $attribute->getCascadeDelete() && !is_null($object->getValue($attribute))) {
                 if ($attribute->getMultiple()) {
                     // !is_null check above makes sure we do not try to loop through null
-                    foreach ($object->getValueByAttribute($attribute)->getValue() as $subObject) {
+                    foreach ($object->getValue($attribute) as $subObject) {
                         if ($subObject && !$maxDepth->contains($subObject)) {
                             $this->handleDelete($subObject, $maxDepth);
                         }
                     }
                 } else {
-                    $subObject = $object->getValueByAttribute($attribute)->getValue();
-                    if ($subObject && !$maxDepth->contains($subObject)) {
+                    $subObject = $object->getValue($attribute);
+                    if ($subObject instanceof ObjectEntity && !$maxDepth->contains($subObject)) {
                         $this->handleDelete($subObject, $maxDepth);
                     }
                 }

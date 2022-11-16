@@ -3,17 +3,21 @@
 namespace App\Service;
 
 use Adbar\Dot;
+use App\Entity\Synchronization;
 use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
 class TranslationService
 {
     private SessionInterface $sessionInterface;
+    private EntityManagerInterface $entityManager;
 
-    public function __construct(SessionInterface $sessionInterface)
+    public function __construct(SessionInterface $sessionInterface, EntityManagerInterface $entityManager)
     {
         $this->sessionInterface = $sessionInterface;
+        $this->entityManager = $entityManager;
     }
 
     private function encodeArrayKeys($array, string $toReplace, string $replacement): array
@@ -38,6 +42,13 @@ class TranslationService
         return $result;
     }
 
+    /**
+     * Decides wether or not an array is associative.
+     *
+     * @param array $array The array to check
+     *
+     * @return bool Wether or not the array is associative
+     */
     private function isAssociative(array $array)
     {
         if ([] === $array) {
@@ -47,23 +58,74 @@ class TranslationService
         return array_keys($array) !== range(0, count($array) - 1);
     }
 
-    public function iterateNumericArrays(array $mapping, Dot $source): array
+    /**
+     * Recursively scans keys for the occurence of the numeric key identifier and either replaces them by numeric keys or removes them.
+     *
+     * @param string $search  The search key to update
+     * @param string $replace The replace key to update
+     * @param Dot    $source  The source to scan
+     * @param array  $mapping
+     *
+     * @return mixed
+     */
+    private function addNumericKeysRecursive(string $search, string $replace, Dot $source, array $mapping)
     {
-        foreach ($mapping as $replace => $search) {
-            if (strpos($search, '.$') !== false && is_array($source[substr($search, 0, strpos($search, '.$'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$'))])) {
-                foreach ($source[substr($search, 0, strpos($search, '.$'))] as $key => $value) {
-                    strpos(substr($replace, 0, strpos($replace, '.$') + 3), '.$!') !== false ? $mapping[preg_replace('/\.\$!/', ".$key", $replace, 1)] = preg_replace('/\.\$/', ".$key", $search, 1) : $mapping[preg_replace('/\.\$/', ".$key", $replace, 1)] = preg_replace('/\.\$/', ".$key", $search, 1);
-                }
-                unset($mapping[$replace]);
-                $mapping = $this->iterateNumericArrays($mapping, $source);
-            } elseif (strpos($search, '.$') !== false) {
-                strpos(substr($replace, 0, strpos($replace, '.$') + 3), '.$!') !== false ? $mapping[preg_replace('/\.\$!/', '.0', $replace, 1)] = preg_replace('/\.\$/', '', $search, 1) : $mapping[preg_replace('/\.\$/', '', $replace, 1)] = preg_replace('/\.\$/', '', $search, 1);
-                unset($mapping[$replace]);
-                $mapping = $this->iterateNumericArrays($mapping, $source);
+        if (strpos($search, '.$') !== false && is_array($source[substr($search, 0, strpos($search, '.$'))]) && !$this->isAssociative($source[substr($search, 0, strpos($search, '.$'))])) {
+            // if there is a numeric array, replace the keys
+            foreach ($source[substr($search, 0, strpos($search, '.$'))] as $key => $value) {
+                $newSearch = preg_replace('/\.\$/', ".$key", $search, 1);
+                $newReplace = strpos(substr($replace, 0, strpos($replace, '.$') + 3), '.$!') !== false ? preg_replace('/\.\$!/', ".$key", $replace, 1) : preg_replace('/\.\$/', ".$key", $replace, 1);
+                $mapping[$newReplace] = $newSearch;
+                $mapping = $this->addNumericKeysRecursive($newSearch, $newReplace, $source, $mapping);
             }
+            unset($mapping[$replace]);
+        } elseif (strpos($search, '.$') !== false) {
+            // if there is no array, remove the keys, or only set 0 (if the numeric key is enforced by !)
+            $newSearch = preg_replace('/\.\$/', '', $search, 1);
+            $newReplace = strpos(substr($replace, 0, strpos($replace, '.$') + 3), '.$!') !== false ? preg_replace('/\.\$!/', '.0', $replace, 1) : preg_replace('/\.\$/', '', $replace, 1);
+            $mapping[$newReplace] = $newSearch;
+            $mapping = $this->addNumericKeysRecursive($newSearch, $newReplace, $source, $mapping);
+            unset($mapping[$replace]);
         }
 
         return $mapping;
+    }
+
+    /**
+     * Update mapping for numeric arrays. Replaces .$ by the keys in a numeric array, or removes it in the case of an associative array.
+     *
+     * @param array $mapping The mapping to update
+     * @param Dot   $source  The source data
+     *
+     * @return array
+     */
+    public function iterateNumericArrays(array $mapping, Dot $source): array
+    {
+        foreach ($mapping as $replace => $search) {
+            $mapping = $this->addNumericKeysRecursive($search, $replace, $source, $mapping);
+        }
+
+        return $mapping;
+    }
+
+    /**
+     * Finds an uuid for an url, returns the uuid in the url if there is no equivalent found in the synchronisations of the gateway.
+     *
+     * @param string|null $url The url to scan
+     *
+     * @return false|mixed|string The uuid of the object the url refers to
+     */
+    public function getUuidFromUrl(?string $url)
+    {
+        $array = explode('/', $url);
+        /* @todo we might want to validate against uuid and id here */
+        $sourceId = end($array);
+        $synchronizations = $this->entityManager->getRepository(Synchronization::class)->findBy(['sourceId' => $sourceId]);
+        if (count($synchronizations) > 0 && $synchronizations[0] instanceof Synchronization) {
+            return $synchronizations[0]->getObject()->getId()->toString();
+        }
+
+        return $sourceId;
     }
 
     /**
@@ -121,6 +183,8 @@ class TranslationService
             } elseif ($format == 'datetimeutc') {
                 $datum = new DateTime(isset($source[$search]) ? (string) $source[$search] : ((string) $destination[$replace]) ?? null);
                 $destination[$replace] = $datum->format('Y-m-d\TH:i:s');
+            } elseif ($format == 'uuidFromUrl') {
+                $destination[$replace] = $this->getUuidFromUrl($source[$search]) ?? ($destination[$replace]) ?? null;
             } elseif (strpos($format, 'concatenation') !== false) {
                 $separator = substr($format, strlen('concatenation') + 1);
                 $separator = str_replace('&nbsp;', ' ', $separator);

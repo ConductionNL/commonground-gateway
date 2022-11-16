@@ -448,7 +448,7 @@ class Value
         // todo: bij inversedby setten, validate ook de opgegeven value voor de inversedBy Attribute. hiermee kunnen we json logic naar boven checken.
         // Handle inversed by
         if ($this->getAttribute()->getInversedBy()) {
-            $inversedByValue = $object->getValueByAttribute($this->getAttribute()->getInversedBy());
+            $inversedByValue = $object->getValueObject($this->getAttribute()->getInversedBy());
             if (!$inversedByValue->getObjects()->contains($this->getObjectEntity())) {
                 $inversedByValue->addObject($this->getObjectEntity());
             }
@@ -470,7 +470,7 @@ class Value
 
         // Remove inversed by
         if ($this->getAttribute()->getInversedBy()) {
-            $inversedByValue = $object->getValueByAttribute($this->getAttribute()->getInversedBy());
+            $inversedByValue = $object->getValueObject($this->getAttribute()->getInversedBy());
             if ($inversedByValue->getObjects()->contains($this->getObjectEntity())) {
                 $inversedByValue->removeObject($this->getObjectEntity());
             }
@@ -564,8 +564,15 @@ class Value
                     // Catch Array input (for hydrator)
                     if (is_array($value)) {
                         $valueObject = new ObjectEntity($this->getAttribute()->getObject());
+                        $valueObject->setOwner($this->getObjectEntity()->getOwner());
+                        $valueObject->setApplication($this->getObjectEntity()->getApplication());
+                        $valueObject->setOrganization($this->getObjectEntity()->getOrganization());
                         $valueObject->hydrate($value);
                         $value = $valueObject;
+                    }
+
+                    if (is_string($value) || $value == null) {
+                        continue;
                     }
 
                     $idArray[] = $value->getId();
@@ -628,6 +635,9 @@ class Value
                     // Catch Array input (for hydrator)
                     if (is_array($value)) {
                         $valueObject = new ObjectEntity($this->getAttribute()->getObject());
+                        $valueObject->setOwner($this->getObjectEntity()->getOwner());
+                        $valueObject->setApplication($this->getObjectEntity()->getApplication());
+                        $valueObject->setOrganization($this->getObjectEntity()->getOrganization());
                         $valueObject->hydrate($value);
                         $value = $valueObject;
                     }

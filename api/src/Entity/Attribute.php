@@ -599,7 +599,16 @@ class Attribute
     private $sortable = false;
 
     /**
-     * Whether or not the object of this property will be deleted if the parent object is deleted.
+     * Only works if this attribute has type 'object'. When set to true, updating the object of this property will also trigger an Update event for the parent object.
+     *
+     * @Assert\Type("bool")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
+     */
+    private bool $triggerParentEvents = false;
+
+    /**
+     * Only works if this attribute has type 'object'. Whether or not the object of this property will be deleted if the parent object is deleted.
      *
      * @Assert\Type("bool")
      * @Groups({"read", "write"})
@@ -608,7 +617,7 @@ class Attribute
     private bool $cascadeDelete = false;
 
     /**
-     * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
+     * Only works if this attribute has type 'object'. Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
      *
      * @Assert\Type("bool")
      * @Groups({"read", "write"})
@@ -1576,6 +1585,18 @@ class Attribute
     public function setObjectConfig(?array $objectConfig): self
     {
         $this->objectConfig = $objectConfig;
+
+        return $this;
+    }
+
+    public function getTriggerParentEvents(): ?bool
+    {
+        return $this->triggerParentEvents;
+    }
+
+    public function setTriggerParentEvents(?bool $triggerParentEvents): self
+    {
+        $this->triggerParentEvents = $triggerParentEvents;
 
         return $this;
     }

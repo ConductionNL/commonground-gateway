@@ -157,12 +157,12 @@ class ValidationService
             }
             // Check if a defaultValue is set (TODO: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string)
             elseif ($attribute->getDefaultValue()) {
-                //                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
+                //                $objectEntity->getValueObject($attribute)->setValue($attribute->getDefaultValue());
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $attribute->getDefaultValue(), $dontCheckAuth);
             }
             // Check if this field is nullable
             elseif ($attribute->getNullable() === true) {
-                $objectEntity->getValueByAttribute($attribute)->setValue(null);
+                $objectEntity->setValue($attribute, null);
             }
             // Check if this field is required
             elseif ($attribute->getRequired()) {
@@ -196,7 +196,7 @@ class ValidationService
                 $objectEntity->addError($attribute->getName(), 'This attribute is required');
             } elseif ($attribute->getNullable() === false) {
                 if ($this->request->getMethod() == 'PUT') {
-                    $value = $objectEntity->getValueByAttribute($attribute)->getValue();
+                    $value = $objectEntity->getValue($attribute);
                     if (is_null($value) || ($attribute->getType() != 'boolean') && (!$value || empty($value))) {
                         $objectEntity->addError($attribute->getName(), 'This attribute can not be null');
                     }
@@ -205,7 +205,7 @@ class ValidationService
                 }
             } elseif ($this->request->getMethod() == 'POST') {
                 // handling the setting to null of exisiting variables
-                $objectEntity->getValueByAttribute($attribute)->setValue(null);
+                $objectEntity->setValue($attribute, null);
             }
         }
         // Check post for not allowed properties
@@ -271,31 +271,33 @@ class ValidationService
     {
         switch ($attribute->getFunction()) {
             case 'id':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getId()->toString());
+                $objectEntity->setValue($attribute, $objectEntity->getId()->toString());
                 // Note: attributes with function = id should also be readOnly and type=string
                 break;
             case 'self':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $objectEntity->setSelf($this->createSelf($objectEntity))->getSelf());
+                $self = $objectEntity->getSelf() ?? $objectEntity->setSelf($this->createSelf($objectEntity))->getSelf();
+                $objectEntity->setValue($attribute, $self);
                 // Note: attributes with function = self should also be readOnly and type=string
                 break;
             case 'uri':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getUri() ?? $objectEntity->setUri($this->createUri($objectEntity))->getUri());
+                $uri = $objectEntity->getUri() ?? $objectEntity->setUri($this->createUri($objectEntity))->getUri();
+                $objectEntity->setValue($attribute, $uri);
                 // Note: attributes with function = uri should also be readOnly and type=string
                 break;
             case 'externalId':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getExternalId());
+                $objectEntity->setValue($attribute, $objectEntity->getExternalId());
                 // Note: attributes with function = externalId should also be readOnly and type=string
                 break;
             case 'dateCreated':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getDateCreated()->format("Y-m-d\TH:i:sP"));
+                $objectEntity->setValue($attribute, $objectEntity->getDateCreated()->format("Y-m-d\TH:i:sP"));
                 // Note: attributes with function = dateCreated should also be readOnly and type=string||date||datetime
                 break;
             case 'dateModified':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getDateModified()->format("Y-m-d\TH:i:sP"));
+                $objectEntity->setValue($attribute, $objectEntity->getDateModified()->format("Y-m-d\TH:i:sP"));
                 // Note: attributes with function = dateModified should also be readOnly and type=string||date||datetime
                 break;
             case 'userName':
-                $objectEntity->getValueByAttribute($attribute)->getValue() ?? $objectEntity->getValueByAttribute($attribute)->setValue($this->getUserName());
+                $objectEntity->getValue($attribute) ?? $objectEntity->setValue($attribute, $this->getUserName());
                 break;
         }
 
@@ -337,7 +339,7 @@ class ValidationService
             if ($attribute->getNullable() === false) {
                 $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', NULL given. (This attribute is not nullable)');
             } elseif ($attribute->getMultiple() && $value === []) {
-                $valueObject = $objectEntity->getValueByAttribute($attribute);
+                $valueObject = $objectEntity->getValueObject($attribute);
                 if ($attribute->getType() == 'object') {
                     foreach ($valueObject->getObjects() as $object) {
                         // If we are not re-adding this object...
@@ -351,7 +353,7 @@ class ValidationService
                     $valueObject->setValue([]);
                 }
             } else {
-                $objectEntity->getValueByAttribute($attribute)->setValue(null);
+                $objectEntity->setValue($attribute, null);
             }
             // We should not continue other validations after this!
             return $objectEntity;
@@ -380,11 +382,11 @@ class ValidationService
             }
         }
 
-        //        $this->validateLogic($objectEntity->getValueByAttribute($attribute)); // TODO maybe remove or place somewhere else than here?
+        //        $this->validateLogic($objectEntity->getValueObject($attribute)); // TODO maybe remove or place somewhere else than here?
         // if no errors we can set the value (for type object this is already done in validateAttributeType, other types we do it here,
         // because when we use validateAttributeType to validate items in an array, we dont want to set values for that)
         if ((!$objectEntity->getHasErrors() || $this->ignoreErrors) && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
-            $objectEntity->getValueByAttribute($attribute)->setValue($value);
+            $objectEntity->setValue($attribute, $value);
         }
 
         return $objectEntity;
@@ -427,7 +429,7 @@ class ValidationService
             }
         });
 
-        if (count($values) > 0 && !(count($values) == 1 && $objectEntity->getValueByAttribute($attribute)->getValue() == $value)) {
+        if (count($values) > 0 && !(count($values) == 1 && $objectEntity->getValue($attribute) == $value)) {
             if ($attribute->getType() == 'boolean') {
                 $value = $value ? 'true' : 'false';
             }
@@ -482,7 +484,7 @@ class ValidationService
         if ($attribute->getType() == 'object') {
             // TODO: maybe move and merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different, so be carefull!!!
             // This is an array of objects
-            $valueObject = $objectEntity->getValueByAttribute($attribute);
+            $valueObject = $objectEntity->getValueObject($attribute);
             $saveSubObjects = new ArrayCollection(); // collection to store all new subobjects in before we actually connect them to the value
             foreach ($value as $key => $object) {
                 if (!is_array($object)) {
@@ -615,7 +617,7 @@ class ValidationService
             foreach ($saveSubObjects as $saveSubObject) {
                 // If we have inversedBy on this attribute
                 if ($attribute->getInversedBy()) {
-                    $inversedByValue = $saveSubObject->getValueByAttribute($attribute->getInversedBy());
+                    $inversedByValue = $saveSubObject->getValueObject($attribute->getInversedBy());
                     if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
                         // If inversedBy attribute is not multiple it should only have one object connected to it
                         if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
@@ -635,7 +637,7 @@ class ValidationService
         } elseif ($attribute->getType() == 'file') {
             // TODO: maybe move and merge all this code to the validateAttributeType function under type 'file'. NOTE: this code works very different, so be carefull!!!
             // This is an array of files
-            $valueObject = $objectEntity->getValueByAttribute($attribute);
+            $valueObject = $objectEntity->getValueObject($attribute);
             foreach ($value as $key => $file) {
                 // Validations
                 if (!is_array($file)) {
@@ -677,16 +679,16 @@ class ValidationService
         foreach ($entity->getAttributes() as $attribute) {
             // Check if we have a value to validate ( a value is given in the post body for this attribute, can be null )
             if (key_exists($attribute->getName(), $post)) {
-                $objectEntity = $objectEntity->getValueByAttribute($attribute)->setValue($post[$attribute->getName()]);
+                $objectEntity = $objectEntity->setValue($attribute, $post[$attribute->getName()]);
             }
             // Check if a defaultValue is set (TODO: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string)
             elseif ($attribute->getDefaultValue()) {
-                $objectEntity = $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
+                $objectEntity = $objectEntity->setValue($attribute, $attribute->getDefaultValue());
             }
             /* @todo this feels wierd, should we PUT "value":null if we want to delete? */
             //else {
             //    // handling the setting to null of exisiting variables
-            //    $objectEntity->getValueByAttribute($attribute)->setValue(null);
+            //    $objectEntity->setValue($attribute, null);
             //}
         }
 
@@ -998,7 +1000,7 @@ class ValidationService
         switch ($attribute->getType()) {
             case 'object':
                 // lets see if we already have a sub object
-                $valueObject = $objectEntity->getValueByAttribute($attribute);
+                $valueObject = $objectEntity->getValueObject($attribute);
 
                 // If this object is given as a uuid (string) it should be valid, if not throw error
                 if (is_string($value) && Uuid::isValid($value) == false) {
@@ -1050,7 +1052,7 @@ class ValidationService
                     // Object toevoegen
                     // If we have inversedBy on this attribute
                     if ($attribute->getInversedBy()) {
-                        $inversedByValue = $subObject->getValueByAttribute($attribute->getInversedBy());
+                        $inversedByValue = $subObject->getValueObject($attribute->getInversedBy());
                         if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
                             // If inversedBy attribute is not multiple it should only have one object connected to it
                             if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
@@ -1076,7 +1078,7 @@ class ValidationService
                     $subObject->addSubresourceOf($valueObject);
                     $this->createdObjects[] = $subObject;
                     if ($attribute->getObject()->getFunction() === 'organization') {
-                        $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject), array_key_exists('type', $value) ? $value['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
+                        $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject), array_key_exists('type', $value) ? $value['type'] : $subObject->getValue('type'));
                     } else {
                         $subObject->setOrganization($this->session->get('activeOrganization'));
                     }
@@ -1092,7 +1094,7 @@ class ValidationService
                 // If no errors we can push it into our object
                 if (!$objectEntity->getHasErrors()) {
                     // TODO: clear objects, add to removeObjectsNotMultiple if needed and use add object ipv setValue
-                    $objectEntity->getValueByAttribute($attribute)->setValue($subObject);
+                    $objectEntity->setValue($attribute, $subObject);
                 }
                 break;
             case 'string':
@@ -1182,7 +1184,7 @@ class ValidationService
      */
     public function validateFile(ObjectEntity $objectEntity, Attribute $attribute, array $fileArray): ObjectEntity
     {
-        $value = $objectEntity->getValueByAttribute($attribute);
+        $value = $objectEntity->getValueObject($attribute);
         $key = $fileArray['key'] ? '['.$fileArray['key'].']' : '';
         $shortBase64String = strlen($fileArray['base64']) > 75 ? substr($fileArray['base64'], 0, 75).'...' : $fileArray['base64'];
 

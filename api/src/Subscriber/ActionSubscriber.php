@@ -4,8 +4,11 @@ namespace App\Subscriber;
 
 use App\Entity\Action;
 use App\Event\ActionEvent;
+use App\Exception\AsynchronousException;
+use App\Message\ActionMessage;
 use App\Service\ObjectEntityService;
 use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
 use Symfony\Component\Console\Helper\TableSeparator;
@@ -13,6 +16,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 class ActionSubscriber implements EventSubscriberInterface
 {
@@ -21,6 +25,7 @@ class ActionSubscriber implements EventSubscriberInterface
     private ObjectEntityService $objectEntityService;
     private SessionInterface $session;
     private SymfonyStyle $io;
+    private MessageBusInterface $messageBus;
 
     /**
      * @inheritDoc
@@ -41,15 +46,21 @@ class ActionSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function __construct(EntityManagerInterface $entityManager, ContainerInterface $container, ObjectEntityService $objectEntityService, SessionInterface $session)
-    {
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        ContainerInterface $container,
+        ObjectEntityService $objectEntityService,
+        SessionInterface $session,
+        MessageBusInterface $messageBus
+    ) {
         $this->entityManager = $entityManager;
         $this->container = $container;
         $this->objectEntityService = $objectEntityService;
         $this->session = $session;
+        $this->messageBus = $messageBus;
     }
 
-    public function runFunction(Action $action, array $data): array
+    public function runFunction(Action $action, array $data, string $currentThrow): array
     {
         // Is the action is lockable we need to lock it
         if ($action->getIsLockable()) {
@@ -70,7 +81,12 @@ class ActionSubscriber implements EventSubscriberInterface
             $this->io->text("Run ActionHandlerInterface \"{$action->getClass()}\"");
             $this->io->newLine();
         }
-        $data = $object->run($data, $action->getConfiguration());
+
+        try {
+            $data = $object->run($data, array_merge($action->getConfiguration(), ['actionConditions' => $action->getConditions()]));
+        } catch (AsynchronousException $exception) {
+            //Do not stop the execution when the asynchronousError is thrown, but throw at the end
+        }
         // timer stoppen
         $stopTimer = microtime(true);
 
@@ -92,6 +108,12 @@ class ActionSubscriber implements EventSubscriberInterface
         $this->entityManager->persist($action);
         $this->entityManager->flush();
 
+        $this->handleActionThrows($action, $data, $currentThrow);
+
+        if (isset($exception)) {
+            throw $exception;
+        }
+
         return $data;
     }
 
@@ -104,7 +126,7 @@ class ActionSubscriber implements EventSubscriberInterface
 
             if ($action->getLocked()) {
                 if (isset($this->io)) {
-                    $this->io->info("Action {$action->getName()} is lockable and locked = {$action->getLocked()}");
+                    $this->io->info("Action {$action->getName()} is lockable and locked = {$action->getLocked()->format(DateTimeInterface::ISO8601)}");
                 }
 
                 return $event;
@@ -114,12 +136,20 @@ class ActionSubscriber implements EventSubscriberInterface
         if (JsonLogic::apply($action->getConditions(), $event->getData())) {
             $currentCronJobThrow = $this->handleActionIoStart($action, $event);
 
-            $event->setData($this->runFunction($action, $event->getData()));
+            if (!$action->getAsync()) {
+                try {
+                    $event->setData($this->runFunction($action, $event->getData(), $currentCronJobThrow));
+                } catch (AsynchronousException $exception) {
+                }
+            } else {
+                $data = $event->getData();
+                unset($data['httpRequest']);
+                $this->messageBus->dispatch(new ActionMessage($action->getId(), $data, $currentCronJobThrow));
+            }
 
             $this->handleActionIoFinish($action, $currentCronJobThrow);
 
             // throw events for this Action
-            $this->handleActionThrows($action, $event, $currentCronJobThrow);
         }
 
         return $event;
@@ -134,7 +164,7 @@ class ActionSubscriber implements EventSubscriberInterface
      *
      * @return void
      */
-    private function handleActionThrows(Action $action, ActionEvent $event, bool $currentCronJobThrow)
+    private function handleActionThrows(Action $action, array $data, bool $currentCronJobThrow)
     {
         if (isset($this->io)) {
             $totalThrows = $action->getThrows() ? count($action->getThrows()) : 0;
@@ -150,7 +180,7 @@ class ActionSubscriber implements EventSubscriberInterface
         }
         foreach ($action->getThrows() as $key => $throw) {
             // Throw event
-            $this->objectEntityService->dispatchEvent('commongateway.action.event', $event->getData(), $throw);
+            $this->objectEntityService->dispatchEvent('commongateway.action.event', $data, $throw);
 
             if (isset($this->io) && isset($totalThrows) && isset($extraDashesStr)) {
                 if ($key !== array_key_last($action->getThrows())) {
@@ -179,7 +209,8 @@ class ActionSubscriber implements EventSubscriberInterface
         $currentCronJobThrow = false;
         if (isset($this->io) &&
             $this->session->get('currentCronJobThrow') &&
-            $this->session->get('currentCronJobThrow') === $event->getType()
+            $this->session->get('currentCronJobThrow') == $event->getType() &&
+            $this->session->get('currentCronJobSubThrow') == $event->getSubType()
         ) {
             $currentCronJobThrow = true;
             $this->io->block("Found an Action with matching conditions: [{$this->objectEntityService->implodeMultiArray($action->getConditions())}]");
@@ -284,7 +315,9 @@ class ActionSubscriber implements EventSubscriberInterface
     {
         if ($this->session->get('io')) {
             $this->io = $this->session->get('io');
-            if ($this->session->get('currentCronJobThrow') && $this->session->get('currentCronJobThrow') === $event->getType()) {
+            if ($this->session->get('currentCronJobThrow') &&
+                $this->session->get('currentCronJobThrow') == $event->getType() &&
+                $this->session->get('currentCronJobSubThrow') == $event->getSubType()) {
                 $this->io->section("Handle ActionEvent \"{$event->getType()}\"".($event->getSubType() ? " With SubType: \"{$event->getSubType()}\"" : ''));
 
                 return true;

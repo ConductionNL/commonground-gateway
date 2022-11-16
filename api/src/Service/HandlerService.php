@@ -62,7 +62,6 @@ class HandlerService
         RequestStack $requestStack,
         ValidationService $validationService,
         TranslationService $translationService,
-        SOAPService $soapService,
         EavService $eavService,
         SerializerInterface $serializer,
         LogService $logService,
@@ -81,7 +80,6 @@ class HandlerService
         $this->request = $requestStack->getCurrentRequest();
         $this->validationService = $validationService;
         $this->translationService = $translationService;
-        $this->soapService = $soapService;
         $this->eavService = $eavService;
         $this->serializer = $serializer;
         $this->logService = $logService;
@@ -184,7 +182,7 @@ class HandlerService
                 }
                 if (isset($override['queryParameters'])) {
                     foreach ($override['queryParameters'] as $key => $value) {
-                        if ($key == 'fields') {
+                        if ($key == 'fields' || $key == '_fields') {
                             $this->request->query->set('fields', $value);
                         } else {
                             $this->request->query->set($key, $content->get($value));
@@ -246,7 +244,7 @@ class HandlerService
         // eav new way
         // dont get collection if accept type is formio
         if (($this->getRequestType('accept') === 'form.io' && ($method === 'GET' && $operationType === 'item')) || $this->getRequestType('accept') !== 'form.io') {
-            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $endpoint, $data ?? null, $method, $operationType, $this->getRequestType('accept'));
+            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $endpoint, $data ?? null, $method, $this->getRequestType('accept'));
         }
 
         // Form.io components array
@@ -393,6 +391,7 @@ class HandlerService
             break;
             case 'xml':
                 $options['xml_root_node_name'] = array_keys($data)[0];
+                $options['xml_encoding'] = 'utf-8';
                 $data = $data[array_keys($data)[0]];
                 break;
 

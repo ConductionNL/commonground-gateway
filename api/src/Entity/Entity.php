@@ -8,6 +8,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Exception\GatewayException;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -35,12 +36,36 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "method"="GET",
  *          "path"="/admin/entities/{id}/sync"
  *      },
+ *     "get_object"={
+ *          "method"="GET",
+ *          "path"="/admin/schemas/{id}/objects/{objectId}"
+ *      },
  *     "put"={"path"="/admin/entities/{id}"},
- *     "delete"={"path"="/admin/entities/{id}"}
+ *     "put_object"={
+ *          "method"="PUT",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "path"="/admin/schemas/{id}/objects/{objectId}"
+ *      },
+ *     "delete"={"path"="/admin/entities/{id}"},
+ *     "delete_object"={
+ *          "method"="DELETE",
+ *          "path"="/admin/schemas/{id}/objects/{objectId}"
+ *      }
  *  },
  *  collectionOperations={
  *     "get"={"path"="/admin/entities"},
- *     "post"={"path"="/admin/entities"}
+ *     "get_objects"={
+ *          "method"="GET",
+ *          "path"="/admin/schemas/{id}/objects"
+ *      },
+ *     "post"={"path"="/admin/entities"},
+ *     "post_objects"={
+ *          "method"="POST",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "path"="/admin/schemas/{id}/objects"
+ *      },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -170,6 +195,7 @@ class Entity
     /**
      * @Groups({"write"})
      * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="entity", cascade={"remove"}, fetch="EXTRA_LAZY")
+     * @ORM\OrderBy({"dateCreated" = "DESC"})
      * @MaxDepth(1)
      */
     private Collection $objectEntities;
@@ -360,6 +386,29 @@ class Entity
 
         return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
     }
+
+    private const SUPPORTED_VALIDATORS = [
+        'multipleOf',
+        'maximum',
+        'exclusiveMaximum',
+        'minimum',
+        'exclusiveMinimum',
+        'maxLength',
+        'minLength',
+        'maxItems',
+        'uniqueItems',
+        'maxProperties',
+        'minProperties',
+        'required',
+        'enum',
+        'allOf',
+        'oneOf',
+        'anyOf',
+        'not',
+        'items',
+        'additionalProperties',
+        'default',
+    ];
 
     public function getId()
     {
@@ -1026,5 +1075,57 @@ class Entity
         $this->schema = $schema;
 
         return $this;
+    }
+
+    /**
+     * @throws GatewayException
+     */
+    public function toSchema(?ObjectEntity $objectEntity): array
+    {
+        $schema = [
+            '$id'          => 'https://example.com/person.schema.json', //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'      => 'https://json-schema.org/draft/2020-12/schema',
+            'title'        => $this->getName(),
+            'required'     => [],
+            'properties'   => [],
+        ];
+
+        if ($objectEntity && $objectEntity->getEntity() !== $this) {
+            throw new GatewayException('The given objectEntity has not have the same entity as this entity');
+        }
+
+        foreach ($this->getAttributes() as $attribute) {
+            // Zetten van required
+            if ($attribute->getRequired()) {
+                $schema['required'][] = $attribute->getName();
+            }
+
+            $property = [];
+
+            // Aanmaken property
+            // @todo ik laad dit nu in als array maar eigenlijk wil je testen en alleen zetten als er waardes in zitten
+
+            $attribute->getType() && $property['type'] = $attribute->getType();
+            $attribute->getFormat() && $property['format'] = $attribute->getFormat();
+            $attribute->getDescription() && $property['description'] = $attribute->getDescription();
+            $attribute->getExample() && $property['example'] = $attribute->getExample();
+
+            // What if we have an $object entity
+            if ($objectEntity) {
+                $property['value'] = $objectEntity->getValue($attribute);
+            }
+
+            // Zetten van de property
+            $schema['properties'][$attribute->getName()] = $property;
+
+            // Add the validators
+            foreach ($attribute->getValidations() as $validator => $validation) {
+                if (!array_key_exists($validator, Entity::SUPPORTED_VALIDATORS) && $validation != null) {
+                    $schema['properties'][$attribute->getName()][$validator] = $validation;
+                }
+            }
+        }
+
+        return $schema;
     }
 }

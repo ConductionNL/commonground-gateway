@@ -41,7 +41,7 @@ class FunctionService
                     if (array_key_exists('organizationType', $data) && $data['organizationType']) {
                         $organizationType = $data['organizationType'];
                     } else {
-                        $organizationType = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('type'))->getValue();
+                        $organizationType = $objectEntity->getValue('type');
                     }
                     $objectEntity = $this->createOrganization($objectEntity, $data['uri'], $organizationType);
                 }
@@ -51,7 +51,7 @@ class FunctionService
                     if (array_key_exists('userGroupName', $data) && $data['userGroupName']) {
                         $userGroupName = $data['userGroupName'];
                     } else {
-                        $userGroupName = $objectEntity->getValueByAttribute($objectEntity->getEntity()->getAttributeByName('name'))->getValue();
+                        $userGroupName = $objectEntity->getValue('name');
                     }
                     $objectEntity = $this->updateUserGroup($objectEntity, $userGroupName);
                 }
@@ -189,7 +189,8 @@ class FunctionService
     public function removeResultFromCache(ObjectEntity $objectEntity, ?SymfonyStyle $io = null): bool
     {
         if (!in_array($objectEntity->getId()->toString(), $this->removeResultFromCache)) {
-            if (!$objectEntity->getSubresourceOf()->isEmpty()) {
+            if (!$objectEntity->getSubresourceOf()->isEmpty() ||
+                !$objectEntity->getAllSubresources(new ArrayCollection())->isEmpty()) {
                 $this->removeResultFromCache[] = $objectEntity->getId()->toString();
                 $this->removeParentResultsFromCache($objectEntity, $io);
                 $this->removeChildResultsFromCache($objectEntity, $io);

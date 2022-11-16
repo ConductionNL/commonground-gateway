@@ -129,9 +129,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
             ->andWhere('o.entity = :entity')
             ->setParameters(['entity' => $entity]);
 
-        if (array_key_exists('search', $filters)) {
-            $search = $filters['search'];
+        if (array_key_exists('search', $filters) || array_key_exists('_search', $filters)) {
+            $search = array_key_exists('search', $filters) ? $filters['search'] : $filters['_search'];
             unset($filters['search']);
+            unset($filters['_search']);
             $this->addSearchQuery($query, $entity, $search)->distinct();
         }
 
@@ -161,11 +162,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $parentOrganizations = $this->session->get('parentOrganizations', []);
         }
 
-        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.organization = :defaultOrganization OR o.owner = :userId')
-            ->setParameter('userId', $userId)
-            ->setParameter('organizations', $organizations)
-            ->setParameter('parentOrganizations', $parentOrganizations)
-            ->setParameter('defaultOrganization', 'http://testdata-organization');
+//        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.organization = :defaultOrganization OR o.owner = :userId')
+//            ->setParameter('userId', $userId)
+//            ->setParameter('organizations', $organizations)
+//            ->setParameter('parentOrganizations', $parentOrganizations)
+//            ->setParameter('defaultOrganization', 'http://testdata-organization');
 
         if (!empty($order)) {
             $order = $this->cleanOrderArray($order, $entity);
@@ -896,7 +897,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
         ];
 
         foreach ($Entity->getAttributes() as $attribute) {
-            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'float', 'number']) && $attribute->getSearchable()) {
+            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'float', 'number', 'boolean']) && $attribute->getSearchable()) {
                 $filters[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
                 $attribute->getSearchable() && $filters[] = $prefix.$attribute->getName();

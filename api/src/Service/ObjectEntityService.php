@@ -15,9 +15,11 @@ use App\Exception\GatewayException;
 use App\Message\PromiseMessage;
 use App\Security\User\AuthenticationUser;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
+use EasyRdf\Literal\Date;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\Utils;
@@ -27,6 +29,7 @@ use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
@@ -59,8 +62,7 @@ class ObjectEntityService
     private EventDispatcherInterface $eventDispatcher;
     public array $notifications;
     private Environment $twig;
-
-    // todo: we need convertToGatewayService in this service for the saveObject function, add them somehow, see FunctionService...
+    private SymfonyStyle $io;
     private TranslationService $translationService;
 
     public function __construct(
@@ -107,18 +109,106 @@ class ObjectEntityService
      * @param string $type The type of event to dispatch
      * @param array  $data The data that should in the event
      */
-    public function dispatchEvent(string $type, array $data, $subType = null): void
+    public function dispatchEvent(string $type, array $data, $subType = null, array $triggeredParentEvents = []): void
     {
         if ($this->session->get('io')) {
-            $io = $this->session->get('io');
-            $io->text("Dispatch ActionEvent for Throw: \"$type\"".($subType ? " and SubType: \"$subType\"" : ''));
-            $io->newLine();
+            $this->io = $this->session->get('io');
+            $this->io->text("Dispatch ActionEvent for Throw: \"$type\"".($subType ? " and SubType: \"$subType\"" : ''));
+            $this->io->newLine();
         }
         $event = new ActionEvent($type, $data, null);
         if ($subType) {
             $event->setSubType($subType);
         }
         $this->eventDispatcher->dispatch($event, $type);
+
+        if (array_key_exists('entity', $data) &&
+            ($type === 'commongateway.object.update' || $subType === 'commongateway.object.update')
+        ) {
+            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $data['entity']]);
+            if ($entity instanceof Entity) {
+                $this->checkTriggerParentEvents($entity, $data, $triggeredParentEvents);
+
+                return;
+            }
+            if (isset($this->io)) {
+                $this->io->warning("Trying to look if we need to trigger parent events for Throw: \"$type\""
+                    .($subType ? " and SubType: \"$subType\"" : '')
+                    ." But couldn't find an Entity with id: \"{$data['entity']}\"");
+            }
+        }
+    }
+
+    /**
+     * Checks if the given Entity has parent attributes with TriggerParentEvents = true.
+     * And will dispatch put events for each parent object found for these parent attributes.
+     *
+     * @param Entity $entity
+     * @param array  $data
+     * @param array  $triggeredParentEvents An array used to keep track of objects we already triggered parent events for. To prevent endless loops.
+     *
+     * @return void
+     */
+    private function checkTriggerParentEvents(Entity $entity, array $data, array $triggeredParentEvents): void
+    {
+        $parentAttributes = $entity->getUsedIn();
+        $triggerParentAttributes = $parentAttributes->filter(function ($parentAttribute) {
+            return $parentAttribute->getTriggerParentEvents();
+        });
+        if (isset($this->io) && count($triggerParentAttributes) > 0) {
+            $count = count($triggerParentAttributes);
+            $this->io->text("Found $count attributes with triggerParentEvents = true for this entity: {$entity->getName()} ({$entity->getId()->toString()})");
+            $this->io->newLine();
+        }
+
+        if (isset($data['response']['id'])) {
+            // Get the object that triggered the initial PUT dispatchEvent.
+            $object = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
+            if ($object instanceof ObjectEntity and !in_array($data['response']['id'], $triggeredParentEvents)) {
+                // Prevent endless loop of dispatching events.
+                $triggeredParentEvents[] = $data['response']['id'];
+                $this->dispatchTriggerParentEvents($object, $triggerParentAttributes, $data, $triggeredParentEvents);
+            }
+        }
+    }
+
+    /**
+     * Follow-up function of checkTriggerParentEvents() function, that actually dispatches the put events for parent objects.
+     *
+     * @param ObjectEntity    $object
+     * @param ArrayCollection $triggerParentAttributes
+     * @param array           $data
+     * @param array           $triggeredParentEvents   An array used to keep track of objects we already triggered parent events for. To prevent endless loops.
+     *
+     * @return void
+     */
+    private function dispatchTriggerParentEvents(ObjectEntity $object, ArrayCollection $triggerParentAttributes, array $data, array $triggeredParentEvents): void
+    {
+        foreach ($triggerParentAttributes as $triggerParentAttribute) {
+            // Get the parent value & parent object using the attribute with triggerParentEvents = true.
+            $parentValues = $object->findSubresourceOf($triggerParentAttribute);
+            foreach ($parentValues as $parentValue) {
+                $parentObject = $parentValue->getObjectEntity();
+                // Create a data array for the parent Object data. (Also add entity) & dispatch event.
+                if (isset($this->io)) {
+                    $this->io->text("Trigger event for parent object ({$parentObject->getId()->toString()}) of object with id = {$data['response']['id']}");
+                    $this->io->text('Dispatch ActionEvent for Throw: commongateway.object.update');
+                    $this->io->newLine();
+                }
+                // Make sure we set dateModified of the parent object before dispatching an event so the synchronization actually happens.
+                $now = new DateTime();
+                $parentObject->setDateModified($now);
+                $this->dispatchEvent(
+                    'commongateway.object.update',
+                    [
+                        'response' => $parentObject->toArray(),
+                        'entity'   => $parentObject->getEntity()->getId()->toString(),
+                    ],
+                    null,
+                    $triggeredParentEvents
+                );
+            }
+        }
     }
 
     /**
@@ -400,6 +490,7 @@ class ObjectEntityService
      */
     public function checkGetOperationTypeExceptions(Endpoint $endpoint, Entity $entity, array &$data)
     {
+        $operationType = $endpoint->getOperationType();
         if (((isset($operationType) && $operationType === 'item') || $endpoint->getOperationType() === 'item') && array_key_exists('results', $data) && count($data['results']) == 1) { // todo: $data['total'] == 1
             $data = $data['results'][0];
             isset($data['id']) && Uuid::isValid($data['id']) ?? $this->session->set('object', $data['id']);
@@ -466,12 +557,12 @@ class ObjectEntityService
     /**
      * This function handles the get case of an object entity.
      *
-     * @param string|null $id         The id of the object
-     * @param array|null  $data       Data to be set into the eav
-     * @param string      $method     The method of the call
-     * @param Endpoint    $endpoint   The endpoint of the object
-     * @param Entity      $entity     The entity of the object
-     * @param string      $acceptType The acceptType of the call - defaulted to jsonld
+     * @param string|null   $id         The id of the object
+     * @param array|null    $data       Data to be set into the eav
+     * @param string        $method     The method of the call
+     * @param Entity        $entity     The entity of the object
+     * @param Endpoint|null $endpoint   The endpoint of the object
+     * @param string        $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @throws CacheException
      * @throws GatewayException
@@ -479,7 +570,7 @@ class ObjectEntityService
      *
      * @return array
      */
-    public function getCase(?string $id, ?array &$data, string $method, Entity $entity, Endpoint $endpoint, string $acceptType): array
+    public function getCase(?string $id, ?array &$data, string $method, Entity $entity, ?Endpoint $endpoint, string $acceptType): array
     {
         $queryParamData = $this->getRequestQueryParams();
 
@@ -497,7 +588,9 @@ class ObjectEntityService
                 $acceptType
             );
 
-            $this->session->get('endpoint') ?? $data = $this->checkGetOperationTypeExceptions($endpoint, $entity, $data);
+            if (isset($endpoint)) {
+                $this->session->get('endpoint') ?? $data = $this->checkGetOperationTypeExceptions($endpoint, $entity, $data);
+            }
         }
 
         return $data;
@@ -555,14 +648,12 @@ class ObjectEntityService
         ]);
 
         $this->handleOwner($object, $owner); // note: $owner is allowed to be null!
-        $object->setDateModified(new \DateTime());
+        $object->setDateModified(new DateTime());
 
         $this->entityManager->persist($object);
         $this->entityManager->flush();
 
         $data = $this->responseService->renderResult($object, $queryParamData['fields'], $queryParamData['extend'], $acceptType);
-
-        $this->messageBus->dispatch(new PromiseMessage($object->getId(), $method));
 
         return $data;
     }
@@ -602,11 +693,12 @@ class ObjectEntityService
     /**
      * Saves an ObjectEntity in the DB using the $post array. NOTE: validation is and should only be done by the validatorService->validateData() function this saveObject() function only saves the object in the DB.
      *
-     * @param array|null $data       Data to be set into the eav
-     * @param Endpoint   $endpoint   The endpoint of the object
-     * @param Entity     $entity     The entity of the object
-     * @param string     $method     The method of the call
-     * @param string     $acceptType The acceptType of the call - defaulted to jsonld
+     * @param array|null    $data       Data to be set into the eav
+     * @param Endpoint|null $endpoint   The endpoint of the object
+     * @param Entity        $entity     The entity of the object
+     * @param string|null   $id         The id of the object
+     * @param string        $method     The method of the call
+     * @param string        $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @throws CacheException
      * @throws ComponentException
@@ -615,12 +707,11 @@ class ObjectEntityService
      *
      * @return string[]|void
      */
-    public function switchMethod(?array &$data, Endpoint $endpoint, Entity $entity, string $method, string $acceptType)
+    public function switchMethod(?array &$data, ?Endpoint $endpoint, Entity $entity, string $id = null, string $method = 'GET', string $acceptType = 'json')
     {
         // Get filters from query parameters
         $filters = $this->getFilterFromParameters();
 
-        $id = null;
         array_key_exists('id', ($filters)) && $id = $filters['id'];
         !isset($id) && array_key_exists('uuid', ($filters)) && $id = $filters['uuid'];
 
@@ -661,26 +752,20 @@ class ObjectEntityService
     /**
      * A function to handle calls to eav.
      *
-     * @param Handler     $handler       The handler the object relates to
-     * @param Endpoint    $endpoint      The endpoint of the object
-     * @param array|null  $data          Data to be set into the eav
-     * @param string|null $method        Method from request if there is a request
-     * @param string|null $operationType The operation type of the object
-     * @param string      $acceptType    The acceptType of the call - defaulted to jsonld
+     * @param Handler     $handler    The handler the object relates to
+     * @param Endpoint    $endpoint   The endpoint of the object
+     * @param array|null  $data       Data to be set into the eav
+     * @param string|null $method     Method from request if there is a request
+     * @param string      $acceptType The acceptType of the call - defaulted to jsonld
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
      *
      * @return array $data
      */
-    public function handleObject(Handler $handler, Endpoint $endpoint, ?array $data = null, string $method = null, ?string $operationType = null, string $acceptType = 'jsonld'): array
+    public function handleObject(Handler $handler, Endpoint $endpoint, ?array $data = null, string $method = null, string $acceptType = 'json'): array
     {
-
-        // If type is array application is an error
-        $application = $this->applicationService->getApplication();
-        if (gettype($application) === 'array') {
-            // todo: maybe just throw a gatewayException? see getApplication() function^
-            return $application;
-        }
+        // Set application in the session or create new application for localhost if we need it.
+        $this->applicationService->getApplication();
 
         // set session with sessionInfo
         $sessionInfo = [
@@ -689,7 +774,7 @@ class ObjectEntityService
         ];
         $this->session->set('entitySource', $sessionInfo);
 
-        $validationErrors = $this->switchMethod($data, $endpoint, $handler->getEntity(), $method, $acceptType);
+        $validationErrors = $this->switchMethod($data, $endpoint, $handler->getEntity(), null, $method, $acceptType);
         if (isset($validationErrors)) {
             throw new GatewayException('Validation errors', null, null, ['data' => $validationErrors, 'path' => $handler->getEntity()->getName(), 'responseType' => Response::HTTP_BAD_REQUEST]);
         }
@@ -730,7 +815,7 @@ class ObjectEntityService
                     $objectEntity = $this->saveAttribute($objectEntity, $attribute, $this->twig->createTemplate($attribute->getDefaultValue())->render());
                 } else {
                     // If no value is given when creating a new object, make sure we set a value to null for this attribute.
-                    $objectEntity->getValueByAttribute($attribute)->setValue(null);
+                    $objectEntity->setValue($attribute, null);
                 }
             }
         }
@@ -810,31 +895,33 @@ class ObjectEntityService
     {
         switch ($attribute->getFunction()) {
             case 'id':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getId()->toString());
+                $objectEntity->setValue($attribute, $objectEntity->getId()->toString());
                 // Note: attributes with function = id should also be readOnly and type=string
                 break;
             case 'self':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $objectEntity->setSelf($this->createSelf($objectEntity))->getSelf());
+                $self = $objectEntity->getSelf() ?? $objectEntity->setSelf($this->createSelf($objectEntity))->getSelf();
+                $objectEntity->setValue($attribute, $self);
                 // Note: attributes with function = self should also be readOnly and type=string
                 break;
             case 'uri':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getUri() ?? $objectEntity->setUri($this->createUri($objectEntity))->getUri());
+                $uri = $objectEntity->getUri() ?? $objectEntity->setUri($this->createUri($objectEntity))->getUri();
+                $objectEntity->setValue($attribute, $uri);
                 // Note: attributes with function = uri should also be readOnly and type=string
                 break;
             case 'externalId':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getExternalId());
+                $objectEntity->setValue($attribute, $objectEntity->getExternalId());
                 // Note: attributes with function = externalId should also be readOnly and type=string
                 break;
             case 'dateCreated':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getDateCreated()->format("Y-m-d\TH:i:sP"));
+                $objectEntity->setValue($attribute, $objectEntity->getDateCreated()->format("Y-m-d\TH:i:sP"));
                 // Note: attributes with function = dateCreated should also be readOnly and type=string||date||datetime
                 break;
             case 'dateModified':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getDateModified()->format("Y-m-d\TH:i:sP"));
+                $objectEntity->setValue($attribute, $objectEntity->getDateModified()->format("Y-m-d\TH:i:sP"));
                 // Note: attributes with function = dateModified should also be readOnly and type=string||date||datetime
                 break;
             case 'userName':
-                $objectEntity->getValueByAttribute($attribute)->getValue() ?? $objectEntity->getValueByAttribute($attribute)->setValue($this->getUserName());
+                $objectEntity->getValueObject($attribute)->getValue() ?? $objectEntity->setValue($attribute, $this->getUserName());
                 break;
         }
 
@@ -867,10 +954,10 @@ class ObjectEntityService
 //            throw new GatewayException('message', null, null, ['data' => ['info' => 'info'], 'path' => 'somePath', 'responseType' => Response::HTTP_FORBIDDEN]);
 //        }
 
-        $valueObject = $objectEntity->getValueByAttribute($attribute);
+        $valueObject = $objectEntity->getValueObject($attribute);
 
         // If the value given by the user is empty...
-        if (empty($value)) {
+        if (empty($value) && !(in_array($attribute->getType(), ['bool', 'boolean']) && $value === false)) {
             if ($attribute->getMultiple() && $value === []) {
                 if ($attribute->getType() == 'object' && ($this->request->getMethod() == 'PUT' || $this->request->getMethod() == 'PATCH')) {
                     foreach ($valueObject->getObjects() as $object) {
@@ -1182,7 +1269,7 @@ class ObjectEntityService
         // Make sure we never connect the value of a multiple=false attribute to more than one object!
         if ($attribute->getInversedBy()) {
             // If we have inversedBy on this attribute
-            $inversedByValue = $subObject->getValueByAttribute($attribute->getInversedBy());
+            $inversedByValue = $subObject->getValueObject($attribute->getInversedBy());
             if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
                 // If inversedBy attribute is not multiple it should only have one object connected to it
                 if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
@@ -1726,10 +1813,10 @@ class ObjectEntityService
         foreach ($objectEntity->getEntity()->getAttributes() as $attribute) {
             // todo: With this ===null check we can never set a value to null with a promise.
             // todo: Maybe we should add a new bool to attribute that determines it shouldn't be added if value===null?
-            if (!$attribute->getPersistToGateway() || (!$attribute->getRequired() && $objectEntity->getValueByAttribute($attribute)->getValue() === null)) {
+            if (!$attribute->getPersistToGateway() || (!$attribute->getRequired() && $objectEntity->getValue($attribute) === null)) {
                 continue;
             }
-            $body[$attribute->getName()] = $this->renderValue($objectEntity->getValueByAttribute($attribute), $attribute);
+            $body[$attribute->getName()] = $this->renderValue($objectEntity->getValueObject($attribute), $attribute);
         }
 
         return $body;
