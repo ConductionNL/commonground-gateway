@@ -253,13 +253,24 @@ jobs:
           - name: Up the images
             run: docker compose -f docker-compose.check.yml up -d
           - name: Wait for the containers to run
-            run: sleep 90
+            run: sleep 20
           - name: Dumping the logs
             run: docker-compose -f docker-compose.check.yml logs
           - name: Run Core Postman checks
             uses: matt-ball/newman-action@master
             with:
                 collection: api/postman.json
+                reporters: htmlextra
+                reporter:
+                    htmlextra:
+                        export: tests/results/htmlreport.html
+                        darktheme: true
+        -   name: Output the run Details
+            if: (success() || failure())
+            uses: actions/upload-artifact@v2
+            with:
+                name: RunReports
+                path: tests/results
   Dependencies:
       needs: build
       runs-on: ubuntu-latest
