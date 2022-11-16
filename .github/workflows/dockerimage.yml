@@ -24,6 +24,8 @@ jobs:
       - uses: actions/setup-node@v1
         with:
             node-version: '16'
+      - name: show bin folder
+        run: ls -la api/bin
       - name: Export release code
         if: (success() || failure())
         id: releasecode #version number in a more comprehensible format: 0.1.YearMonthDay in UTC
