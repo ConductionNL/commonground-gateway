@@ -261,10 +261,7 @@ jobs:
             with:
                 collection: api/postman.json
                 reporters: htmlextra
-                reporter:
-                    htmlextra:
-                        export: tests/results/htmlreport.html
-                        darktheme: true
+                reporter: '{ htmlextra: { export: tests/results/htmlreport.html, darktheme } }'
           - name: Output the run Details
             if: (success() || failure())
             uses: actions/upload-artifact@v2
