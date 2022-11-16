@@ -425,10 +425,20 @@ jobs:
         - uses: actions/setup-node@v1
           with:
             node-version: '16'
-        - name: Download artifacts (Docker images) from previous workflows
-          uses: actions/download-artifact@v2
+        - name: Download a single artifact
+          uses: actions/download-artifact@v3
+          with:
+              name: php.tar
+        - name: Download a single artifact
+          uses: actions/download-artifact@v3
+          with:
+              name: nginx.tar
+        - name: Download a single artifact
+          uses: actions/download-artifact@v3
+          with:
+              name: postgres.tar
         - name: Load Docker images from previous workflows
-          run: docker load --input  php/php.tar && docker load --input nginx/nginx.tar && docker load --input postgres/postgres.tar
+          run: docker load --input  php.tar && docker load --input nginx.tar && docker load --input postgres.tar
         - name: Show all images
           run: docker images
         - name: Up the images
