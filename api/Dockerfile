@@ -134,8 +134,7 @@ VOLUME /srv/api/var
 USER commonground-gateway
 
 RUN chmod +x /usr/local/bin/docker-entrypoint; \
-	chmod +x bin/console; \
-	chmod +x bin/phpunit
+	chmod +x bin/console
 
 ENTRYPOINT ["docker-entrypoint"]
 CMD ["php-fpm"]

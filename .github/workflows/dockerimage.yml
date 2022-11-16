@@ -39,9 +39,6 @@ jobs:
           mkdir api/vendor
           chmod +777 api/vendor
           chmod +777 -R api/public
-          chmod +777 -R api/bin
-      - name: show bin folder
-        run: ls -la api/bin
       - name: Setting APP_NAME
         run: |
           export NAME=$(grep APP_NAME= .env | cut -d '=' -f2)
@@ -332,9 +329,11 @@ jobs:
             run: docker compose -f docker-compose.check.yml up -d
           - name: Check contents of bin folder
             run: docker-compose -f docker-compose.check.yml exec -T php ls -la bin
-          - name: Unit  Check
+          - name: Download PHPUnit
             #run: docker-compose exec -T php bin/phpunit
-            run: docker-compose -f docker-compose.check.yml exec -T php bin/phpunit
+            run: docker-compose -f docker-compose.check.yml exec -T php curl -LO https://phar.phpunit.de/phpunit-9.5.phar
+          - name: Run PHPUnit
+            run: docker-compose -f docker-compose.check.yml exec -T php phpunit-9.5.phar
   Fossa:
       needs: build
       runs-on: ubuntu-latest
