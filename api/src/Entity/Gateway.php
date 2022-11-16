@@ -2,8 +2,6 @@
 
 namespace App\Entity;
 
-use App\Entity\Synchronization;
-use App\Entity\CallLog;
 use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
@@ -585,7 +583,7 @@ class Gateway
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true, options={"default":"No calls have been made yet to this source"})
      */
-    private string $status = "No calls have been made yet to this source";
+    private string $status = 'No calls have been made yet to this source';
 
     /**
      * @var ?Datetime The datetime from the last request made to this source
