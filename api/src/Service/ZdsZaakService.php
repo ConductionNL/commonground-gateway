@@ -558,6 +558,8 @@ class ZdsZaakService
         $this->entityManager->persist($zaak);
         $this->entityManager->flush();
 
+        $this->data['response'] = $zdsDocument->toArray();
+
         return $this->data;
     }
 

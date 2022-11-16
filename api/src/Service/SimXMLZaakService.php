@@ -262,7 +262,7 @@ class SimXMLZaakService
                     'titel'                   => $bijlage->getValue('naam'),
                     'bestandsnaam'            => $bijlage->getValue('naam'),
                     'beschrijving'            => $bijlage->getValue('omschrijving'),
-                    'creatieDatum'            => $informatieObjectType->getValue('beginGeldigheid'),
+                    'creatiedatum'            => $informatieObjectType->getValue('beginGeldigheid'),
                     'formaat'                 => $inhoudObject->getValue('contentType'),
                     'taal'                    => 'NLD',
                     'inhoud'                  => $inhoudObject->getValue('content'),
