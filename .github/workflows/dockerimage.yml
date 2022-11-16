@@ -264,7 +264,6 @@ jobs:
                 reporter:
                     htmlextra:
                         export: tests/results/htmlreport.html
-                        darktheme: true
         -   name: Output the run Details
             if: (success() || failure())
             uses: actions/upload-artifact@v2
