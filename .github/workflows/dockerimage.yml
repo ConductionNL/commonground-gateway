@@ -253,7 +253,7 @@ jobs:
           - name: Up the images
             run: docker compose up -d
           - name: Wait for the containers to run
-            run: sleep 45
+            run: sleep 90
           - name: Dumping the logs
             run: docker-compose logs
           - name: Run Core Postman checks
