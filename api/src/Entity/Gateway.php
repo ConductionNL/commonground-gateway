@@ -570,6 +570,86 @@ class Gateway
     private ?array $configuration = [];
 
     /**
+     * @var string The status from the last call made to this source
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="200 OK status received on /api-endpoint"
+     *         }
+     *     }
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true, options={"default":"No calls have been made yet to this source"})
+     */
+    private string $status = 'No calls have been made yet to this source';
+
+    /**
+     * @var ?Datetime The datetime from the last request made to this source
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="datetime",
+     *             "example"="2020-02-15T120:50:00"
+     *         }
+     *     }
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private ?Datetime $lastCall;
+
+    /**
+     * @var ?Datetime The datetime from the last synchronization made to this source
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="datetime",
+     *             "example"="2020-02-15T120:50:00"
+     *         }
+     *     }
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private ?Datetime $lastSync;
+
+    /**
+     * @var int The count of total sync objects from this source
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="integer",
+     *             "example"=52
+     *         }
+     *     }
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="integer", options={"default":0})
+     */
+    private int $objectCount = 0;
+
+    /**
+     * @var Collection The synchronizations of this source
+     *
+     * @Groups({"write"})
+     * @ORM\OneToMany(targetEntity=Synchronization::class, fetch="EXTRA_LAZY", mappedBy="gateway", orphanRemoval=true)
+     */
+    private Collection $synchronizations;
+
+    /**
+     * @var Collection The call logs of this source
+     *
+     * @Groups({"write"})
+     * @ORM\OneToMany(targetEntity=CallLog::class, fetch="EXTRA_LAZY", mappedBy="source", orphanRemoval=true)
+     */
+    private Collection $callLogs;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -593,6 +673,8 @@ class Gateway
         $this->requestLogs = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->subscribers = new ArrayCollection();
+        $this->synchronizations = new ArrayCollection();
+        $this->callLogs = new ArrayCollection();
     }
 
     public function export(): ?array
@@ -987,6 +1069,91 @@ class Gateway
             if ($subscriber->getGateway() === $this) {
                 $subscriber->setGateway(null);
             }
+        }
+
+        return $this;
+    }
+
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function getLastCall(): ?DateTime
+    {
+        return $this->lastCall;
+    }
+
+    public function setLastCall(?DateTime $lastCall): self
+    {
+        $this->lastCall = $lastCall;
+
+        return $this;
+    }
+
+    public function getLastSync(): ?DateTime
+    {
+        return $this->lastSync;
+    }
+
+    public function setLastSync(?DateTime $lastSync): self
+    {
+        $this->lastSync = $lastSync;
+
+        return $this;
+    }
+
+    public function getObjectCount(): int
+    {
+        return $this->synchronizations->count();
+    }
+
+    // Should not be used or needed
+    // public function setObjectCount(int $objectCount): self
+    // {
+    //     $this->objectCount = $objectCount;
+
+    //     return $this;
+    // }
+
+    /**
+     * @return Collection|Synchronization[]
+     */
+    public function getSynchronizations(): Collection
+    {
+        return $this->synchronizations;
+    }
+
+    public function addSynchronization(Synchronization $synchronization): self
+    {
+        if (!$this->synchronizations->contains($synchronization)) {
+            $this->synchronizations[] = $synchronization;
+            $synchronization->setGateway($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|CallLog[]
+     */
+    public function getCallLogs(): Collection
+    {
+        return $this->callLogs;
+    }
+
+    public function addCallLog(CallLog $callLog): self
+    {
+        if (!$this->callLogs->contains($callLog)) {
+            $this->callLogs[] = $callLog;
+            $callLog->setSource($this);
         }
 
         return $this;
