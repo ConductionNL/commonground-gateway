@@ -12,12 +12,17 @@ class ZgwDocumentToVrijbrpHandler implements ActionHandlerInterface
 {
     private ZgwToVrijbrpService $zgwToVrijbrpService;
 
-    public function __construct(ZgwToVrijbrpService $zgwToVrijbrpService)
-    {
-        $this->zgwToVrijbrpService = $zgwToVrijbrpService;
-    }
-
     /**
+     * Wrapper function to prevent service loading on container autowiring
+     *
+     * @param ZgwToVrijbrpService $zgwToVrijbrpService
+     * @return ZgwToVrijbrpService
+     */
+    private function getZgwToVrijbrpService(ZgwToVrijbrpService $zgwToVrijbrpService): ZgwToVrijbrpService{
+        if(isset($this->zgwToVrijbrpService)) {$this->zgwToVrijbrpService = $zgwToVrijbrpService;}
+        return  $this->zgwToVrijbrpService;
+    }
+        /**
      *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
      *
      * @throws array a [json-schema](https://json-schema.org/) that this  action should comply to
@@ -80,6 +85,6 @@ class ZgwDocumentToVrijbrpHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->zgwToVrijbrpService->zgwDocumentToVrijbrpHandler($data, $configuration);
+        return $this->getZgwToVrijbrpService->zgwDocumentToVrijbrpHandler($data, $configuration);
     }
 }
