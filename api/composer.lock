@@ -635,12 +635,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "876e37204baaa17dc696e8b3d6abec24078dc558"
+                "reference": "c87fb8bf01cbe33a223ba8156c6563d7395d2abe"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/876e37204baaa17dc696e8b3d6abec24078dc558",
-                "reference": "876e37204baaa17dc696e8b3d6abec24078dc558",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/c87fb8bf01cbe33a223ba8156c6563d7395d2abe",
+                "reference": "c87fb8bf01cbe33a223ba8156c6563d7395d2abe",
                 "shasum": ""
             },
             "require": {
@@ -694,11 +694,11 @@
                 "symfony"
             ],
             "support": {
-                "email": "ruben@conduction.nl",
+                "email": "info@conduction.nl",
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2022-11-11T13:58:06+00:00"
+            "time": "2022-11-17T13:37:41+00:00"
         },
         {
             "name": "composer/ca-bundle",
