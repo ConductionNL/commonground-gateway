@@ -331,9 +331,9 @@ jobs:
             run: docker-compose -f docker-compose.check.yml exec -T php ls -la bin
           - name: Download PHPUnit
             #run: docker-compose exec -T php bin/phpunit
-            run: docker-compose -f docker-compose.check.yml exec -T php curl -LO https://phar.phpunit.de/phpunit-9.5.phar
+            run: docker-compose -f docker-compose.check.yml exec -T php curl -LO https://phar.phpunit.de/phpunit-9.5.phar -K var/phpunit.phar
           - name: Run PHPUnit
-            run: docker-compose -f docker-compose.check.yml exec -T php phpunit-9.5.phar
+            run: docker-compose -f docker-compose.check.yml exec -T php var/phpunit.phar
   Fossa:
       needs: build
       runs-on: ubuntu-latest

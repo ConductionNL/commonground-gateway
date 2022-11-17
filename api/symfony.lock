@@ -22,9 +22,6 @@
     "api-platform/schema-generator": {
         "version": "v3.0.0"
     },
-    "bacon/bacon-qr-code": {
-        "version": "2.0.7"
-    },
     "beberlei/doctrineextensions": {
         "version": "v1.3.0"
     },
@@ -36,9 +33,6 @@
     },
     "brick/reflection": {
         "version": "0.4.1"
-    },
-    "common-gateway/waardepapieren-bundle": {
-        "version": "dev-main"
     },
     "commongateway/corebundle": {
         "version": "dev-master"
@@ -66,9 +60,6 @@
     },
     "conduction/samlbundle": {
         "version": "dev-master"
-    },
-    "dasprid/enum": {
-        "version": "1.0.3"
     },
     "doctrine/annotations": {
         "version": "1.0",
@@ -177,15 +168,6 @@
     "egulias/email-validator": {
         "version": "3.2.1"
     },
-    "endroid/installer": {
-        "version": "1.4.0"
-    },
-    "endroid/qr-code": {
-        "version": "3.9.7"
-    },
-    "endroid/qr-code-bundle": {
-        "version": "3.4.0"
-    },
     "fakerphp/faker": {
         "version": "v1.15.0"
     },
@@ -239,9 +221,6 @@
     "jwadhams/json-logic-php": {
         "version": "1.4.2"
     },
-    "khanamiryan/qrcode-detector-decoder": {
-        "version": "1.0.6"
-    },
     "knplabs/knp-markdown-bundle": {
         "version": "1.9.0"
     },
@@ -265,9 +244,6 @@
     },
     "myclabs/deep-copy": {
         "version": "1.10.2"
-    },
-    "myclabs/php-enum": {
-        "version": "1.8.4"
     },
     "nelmio/alice": {
         "version": "3.2",
