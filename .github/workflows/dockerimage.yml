@@ -262,8 +262,8 @@ jobs:
             uses: matt-ball/newman-action@master
             with:
                 collection: api/postman.json
-                reporters: '["htmlextra"]'
-                reporter: '{"htmlextra":{"export":"tests/results/runreport1.html"}}'
+                reporters: '["html"]'
+                reporter: '{"html":{"export":"tests/results/runreport1.html"}}'
           - name: Output the run Details
             if: (success() || failure())
             uses: actions/upload-artifact@v2
