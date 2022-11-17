@@ -82,10 +82,15 @@ class ActionSubscriber implements EventSubscriberInterface
             $this->io->newLine();
         }
 
+        $actionRanGood = true;
+
         try {
             $data = $object->run($data, array_merge($action->getConfiguration(), ['actionConditions' => $action->getConditions()]));
         } catch (AsynchronousException $exception) {
             //Do not stop the execution when the asynchronousError is thrown, but throw at the end
+
+            // Something went wrong
+            $actionRanGood = false;
         }
         // timer stoppen
         $stopTimer = microtime(true);
@@ -104,7 +109,8 @@ class ActionSubscriber implements EventSubscriberInterface
         // Let's set some results
         $action->setLastRun(new DateTime());
         $action->setLastRunTime($totalTime);
-        $action->setStatus(true); // this needs some refinement
+        $action->setStatus($actionRanGood);
+
         $this->entityManager->persist($action);
         $this->entityManager->flush();
 
@@ -133,7 +139,7 @@ class ActionSubscriber implements EventSubscriberInterface
             }
         }
 
-        if (JsonLogic::apply($action->getConditions(), $event->getData())) {
+        if (JsonLogic::apply($action->getConditions(), $event->getData()) && $action->getIsActive() == true) {
             $currentCronJobThrow = $this->handleActionIoStart($action, $event);
 
             if (!$action->getAsync()) {
