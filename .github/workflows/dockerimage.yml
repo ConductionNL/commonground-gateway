@@ -263,7 +263,7 @@ jobs:
             with:
                 collection: api/postman.json
                 reporters: htmlextra
-                reporter: "{ \"htmlextra\": { \"export\": \"tests/results/runreport1.html\" } }"
+                reporter: { "htmlextra": { "export": "tests/results/runreport1.html" } }
           - name: Output the run Details
             if: (success() || failure())
             uses: actions/upload-artifact@v2
@@ -329,11 +329,8 @@ jobs:
             run: docker compose -f docker-compose.check.yml up -d
           - name: Check contents of bin folder
             run: docker-compose -f docker-compose.check.yml exec -T php ls -la bin
-          - name: Download PHPUnit
-            #run: docker-compose exec -T php bin/phpunit
-            run: docker-compose -f docker-compose.check.yml exec -T php curl -LO https://phar.phpunit.de/phpunit-9.5.phar -o /var/phpunit.phar
           - name: Run PHPUnit
-            run: docker-compose -f docker-compose.check.yml exec -T php /var/phpunit.phar
+            run: docker-compose exec -T php bin/phpunit
   Fossa:
       needs: build
       runs-on: ubuntu-latest
