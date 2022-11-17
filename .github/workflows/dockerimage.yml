@@ -236,8 +236,10 @@ jobs:
           - uses: actions/setup-node@v1
             with:
                 node-version: '16'
-          - name: Install html reporter
-            run: npm install -g newman-reporter-htmlextra
+          - name: Install newman
+            run: |
+                npm install -g newman
+                npm install -g newman-reporter-htmlextra
           - name: Download a single artifact
             uses: actions/download-artifact@v3
             with:
@@ -261,11 +263,14 @@ jobs:
           - name: Dumping the logs
             run: docker-compose -f docker-compose.check.yml logs
           - name: Run Core Postman checks
-            uses: matt-ball/newman-action@master
-            with:
-                collection: api/postman.json
-                reporters: '["htmlextra"]'
-                reporter: '{"htmlextra":{"export":"tests/results/runreport1.html"}}'
+            run: |
+              newman run api/postman.json -r htmlextra --reporter-htmlextra-export tests/results/htmlreport.html --reporter-htmlextra-darkTheme  > tests/results/runreport1.html
+#          - name: Run Core Postman checks
+#            uses: matt-ball/newman-action@master
+#            with:
+#                collection: api/postman.json
+#                reporters: '["htmlextra"]'
+#                reporter: '{"htmlextra":{"export":"tests/results/runreport1.html"}}'
           - name: Output the run Details
             if: (success() || failure())
             uses: actions/upload-artifact@v2
