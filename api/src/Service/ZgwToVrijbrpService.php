@@ -52,9 +52,14 @@ class ZgwToVrijbrpService
 
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             $childIndex = '';
-            if (in_array(substr_replace($eigenschap['naam'], '', -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding'])) {
+            if (
+                in_array(substr_replace($eigenschap['naam'], '', -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding']) &&
+                $eigenschap['naam'] != 'voornamen' && $eigenschap['naam'] != 'geboortedatum' && $eigenschap['naam'] != 'geslachtsaanduiding'
+            ) {
                 $childIndex = substr($eigenschap['naam'], -1);
                 $childIndexInt = intval($childIndex) - 1;
+            } elseif ($eigenschap['naam'] == 'voornamen' || $eigenschap['naam'] == 'geboortedatum' || $eigenschap['naam'] == 'geslachtsaanduiding') {
+                continue;
             }
             switch ($eigenschap['naam']) {
                 case 'voornamen'.$childIndex:
@@ -71,6 +76,11 @@ class ZgwToVrijbrpService
                 case 'geslachtsnaam':
                     $birthArray['nameSelection']['lastname'] = $eigenschap['waarde'];
                     continue 2;
+                case 'inp.bsn':
+                    $birthArray['mother']['bsn'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'relatie':
+                    $birthArray['qualificationForDeclaringType'] = $eigenschap['waarde'];
             }
         }
 
@@ -78,7 +88,6 @@ class ZgwToVrijbrpService
 
         $birthArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $birthArray['dossier']['dossierId'] = $zaakArray['id'];
-        $birthArray['qualificationForDeclaringType'] = 'MOTHER';
 
         $dateTimeObject = new \DateTime($zaakArray['startdatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
@@ -91,7 +100,6 @@ class ZgwToVrijbrpService
 
         if (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'])) {
             $birthArray['declarant']['bsn'] = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'];
-            $birthArray['mother']['bsn'] = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'];
 
             // Save in gateway (only save when we have a declarant/mother)
             $birthObjectEntity = new ObjectEntity();

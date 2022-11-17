@@ -28,6 +28,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  order={"dateCreated": "DESC"}
  *  )
  *
+ * @ORM\HasLifecycleCallbacks
  * @ORM\Entity(repositoryClass=CallLogRepository::class)
  */
 class CallLog
@@ -50,7 +51,7 @@ class CallLog
      * @var Gateway The source that is requested
      *
      * @Groups({"read","read_secure"})
-     * @ORM\ManyToOne(targetEntity=Gateway::class, cascade={"persist", "remove"})
+     * @ORM\ManyToOne(targetEntity=Gateway::class, cascade={"persist"}, inversedBy="callLogs")
      * @ORM\JoinColumn(nullable=false)
      */
     private Gateway $source;
@@ -128,6 +129,20 @@ class CallLog
      * @ORM\Column(type="datetime", nullable=true)
      */
     private DateTimeInterface $dateModified;
+
+    /**
+     *  @ORM\PrePersist
+     *  @ORM\PreUpdate
+     */
+    public function prePersist()
+    {
+        $this->source->setLastCall(new DateTime());
+        $status = $this->source->getStatus();
+        // If we only have a status code set code if we have code and status text set both
+        isset($this->responseStatusCode) && !empty($this->responseStatusCode) && $status = $this->responseStatusCode;
+        isset($this->responseStatusCode, $this->responseStatus) && !empty($this->responseStatusCode) && !empty($this->responseStatus) && $status = $this->responseStatusCode.' '.$this->responseStatus;
+        $this->source->setStatus($status);
+    }
 
     public function getId(): ?UuidInterface
     {
