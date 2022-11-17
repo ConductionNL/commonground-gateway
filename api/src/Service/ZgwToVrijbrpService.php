@@ -58,7 +58,7 @@ class ZgwToVrijbrpService
             ) {
                 $childIndex = substr($eigenschap['naam'], -1);
                 $childIndexInt = intval($childIndex) - 1;
-            } elseif ($eigenschap['naam'] == 'voornamen' && $eigenschap['naam'] == 'geboortedatum' && $eigenschap['naam'] == 'geslachtsaanduiding') {
+            } elseif ($eigenschap['naam'] == 'voornamen' || $eigenschap['naam'] == 'geboortedatum' || $eigenschap['naam'] == 'geslachtsaanduiding') {
                 continue;
             }
             switch ($eigenschap['naam']) {
