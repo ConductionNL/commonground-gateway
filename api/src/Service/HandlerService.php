@@ -7,6 +7,7 @@ use App\Entity\Endpoint;
 use App\Entity\Handler;
 use App\Event\ActionEvent;
 use App\Exception\GatewayException;
+use CommonGateway\FormIOBundle\Service\FormIOService;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
@@ -21,7 +22,6 @@ use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 use Twig\Environment;
-use CommonGateway\FormIOBundle\Service\FormIOService;
 
 class HandlerService
 {
