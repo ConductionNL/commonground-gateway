@@ -237,7 +237,7 @@ jobs:
             with:
                 node-version: '16'
           - name: Install html reporter
-            run: npm install newman-reporter-htmlextra
+            run: npm install -g newman-reporter-htmlextra
           - name: Download a single artifact
             uses: actions/download-artifact@v3
             with:
