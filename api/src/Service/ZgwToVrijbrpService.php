@@ -161,6 +161,7 @@ class ZgwToVrijbrpService
                     continue 2;
                 case 'geslachtsnaam2':
                     $commitmentArray['partner2']['nameAfterCommitment']['lastname'] = $eigenschap['waarde'];
+                    continue 2;
                 case 'verbintenisType':
                     in_array($eigenschap['waarde'], ['MARRIAGE', 'GPS']) && $commitmentArray['planning']['commitmentType'] = $eigenschap['waarde'];
                     continue 2;
@@ -171,6 +172,12 @@ class ZgwToVrijbrpService
                     continue 2;
                 case 'gor.openbareRuimteNaam':
                     $commitmentArray['location']['name'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'naam1':
+                    $commitmentArray['officials'][0]['name'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'naam2':
+                    $commitmentArray['officials'][1]['name'] = $eigenschap['waarde'];
                     continue 2;
             }
         }
