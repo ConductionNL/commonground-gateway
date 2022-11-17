@@ -153,8 +153,11 @@ class ZgwToVrijbrpService
                     $commitmentArray['partner1']['nameAfterCommitment']['lastname'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geselecteerdNaamgebruik':
-                    $commitmentArray['partner1']['nameAfterCommitment']['nameUseType'] = $eigenschap['waarde'];
-                    $commitmentArray['partner2']['nameAfterCommitment']['nameUseType'] = $eigenschap['waarde'];
+                    if (isset($commitmentArray['partner1']['nameAfterCommitment']['nameUseType'])) {
+                        $commitmentArray['partner2']['nameAfterCommitment']['nameUseType'] = $eigenschap['waarde'];
+                    } else {
+                        $commitmentArray['partner1']['nameAfterCommitment']['nameUseType'] = $eigenschap['waarde'];
+                    }
                     continue 2;
                 case 'bsn2':
                     $commitmentArray['partner2']['bsn'] = $eigenschap['waarde'];
@@ -170,7 +173,7 @@ class ZgwToVrijbrpService
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
                     $commitmentArray['planning']['commitmentDateTime'] = $dateTimeFormatted;
                     continue 2;
-                case 'gor.openbareRuimteNaam':
+                case 'naam':
                     $commitmentArray['location']['name'] = $eigenschap['waarde'];
                     continue 2;
                 case 'naam1':
