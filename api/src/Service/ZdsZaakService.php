@@ -1016,7 +1016,6 @@ class ZdsZaakService
      */
     public function identificationHandler(array $data, array $configuration): array
     {
-
         $result = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
         $zaak = $this->entityManager->getRepository(ObjectEntity::class)->find($result->getValue('zgwZaak'));
 
