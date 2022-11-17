@@ -89,7 +89,7 @@ class Synchronization
      * @var Gateway The gateway (source) of this resource
      *
      * @Groups({"read","write"})
-     * @ORM\ManyToOne(targetEntity=Gateway::class)
+     * @ORM\ManyToOne(targetEntity=Gateway::class, cascade={"persist"}, inversedBy="synchronizations")
      * @ORM\JoinColumn(nullable=false)
      */
     private Gateway $gateway;
@@ -281,6 +281,7 @@ class Synchronization
     public function setLastSynced(?\DateTimeInterface $lastSynced): self
     {
         $this->lastSynced = $lastSynced;
+        isset($this->gateway) && $this->gateway->setLastSync($lastSynced);
 
         return $this;
     }

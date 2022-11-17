@@ -591,6 +591,44 @@
             "time": "2020-10-24T20:01:03+00:00"
         },
         {
+            "name": "common-gateway/formio-bundle",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/FormIOBundle.git",
+                "reference": "cd8e6d5cfc1af363bfcc9d1a3c7a77405c5f1daa"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/FormIOBundle/zipball/cd8e6d5cfc1af363bfcc9d1a3c7a77405c5f1daa",
+                "reference": "cd8e6d5cfc1af363bfcc9d1a3c7a77405c5f1daa",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "default-branch": true,
+            "type": "common-gateway-plugin",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\FormIOBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "FormIO functionality for common gateway",
+            "support": {
+                "issues": "https://github.com/CommonGateway/FormIOBundle/issues",
+                "source": "https://github.com/CommonGateway/FormIOBundle/tree/main"
+            },
+            "time": "2022-11-16T13:35:03+00:00"
+        },
+        {
             "name": "common-gateway/waardepapieren-bundle",
             "version": "dev-main",
             "source": {
@@ -14335,6 +14373,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "common-gateway/formio-bundle": 20,
         "common-gateway/waardepapieren-bundle": 20,
         "commongateway/corebundle": 20,
         "conduction/commongroundbundle": 20,
