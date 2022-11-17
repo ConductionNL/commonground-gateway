@@ -259,7 +259,7 @@ jobs:
           - name: Up the images
             run: docker compose -f docker-compose.check.yml up -d
           - name: Wait for the containers to run
-            run: sleep 20
+            run: sleep 60
           - name: Dumping the logs
             run: docker-compose -f docker-compose.check.yml logs
           - name: Run Core Postman checks
