@@ -195,6 +195,30 @@ class Endpoint
     private ?array $pathArray = [];
 
     /**
+     * @var ?array needs to be refined
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $methods = [];
+
+    /**
+     * @var ?array needs to be refined
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $throws = [];
+
+    /**
+     * @var ?bool needs to be refined
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private ?bool $status = null;
+
+    /**
      * @var Collection|null Properties of this Endpoint
      *
      * @MaxDepth(1)
@@ -339,6 +363,42 @@ class Endpoint
     public function setPath(array $path): self
     {
         $this->path = $path;
+
+        return $this;
+    }
+
+    public function getMethods(): ?array
+    {
+        return $this->methods;
+    }
+
+    public function setMethods(?array $methods): self
+    {
+        $this->methods = $methods;
+
+        return $this;
+    }
+
+    public function getThrows(): ?array
+    {
+        return $this->throws;
+    }
+
+    public function setThrows(?array $throws): self
+    {
+        $this->throws = $throws;
+
+        return $this;
+    }
+
+    public function getStatus(): ?bool
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?bool $status): self
+    {
+        $this->status = $status;
 
         return $this;
     }

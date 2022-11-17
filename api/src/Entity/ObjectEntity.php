@@ -99,6 +99,14 @@ class ObjectEntity
     private $id;
 
     /**
+     * @var ?string The name of this Object (configured from a attribute)
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $name;
+
+    /**
      * @var string The {at sign}id or self->href of this Object.
      *
      * @Groups({"read", "write"})
@@ -266,6 +274,18 @@ class ObjectEntity
     public function setId(string $id): self
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(?string $name): self
+    {
+        $this->name = $name;
 
         return $this;
     }

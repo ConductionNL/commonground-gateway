@@ -125,6 +125,32 @@ class Cronjob
      */
     private $nextRun;
 
+    /**
+     * @var ?bool true if action should be ran
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true, options={"default": null})
+     */
+    private ?bool $isActive = null;
+
+    /**
+     * @var Datetime The moment this resource was created
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="create")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private DateTimeInterface $dateCreated;
+
+    /**
+     * @var Datetime The moment this resource was last Modified
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="update")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private DateTimeInterface $dateModified;
+
     public function getId()
     {
         return $this->id;
@@ -210,6 +236,42 @@ class Cronjob
     public function setNextRun(?DateTimeInterface $nextRun): self
     {
         $this->nextRun = $nextRun;
+
+        return $this;
+    }
+
+    public function getIsActive(): ?bool
+    {
+        return $this->isActive;
+    }
+
+    public function setIsActive(?bool $isActive): self
+    {
+        $this->isActive = $isActive;
+
+        return $this;
+    }
+
+    public function getDateCreated(): ?DateTimeInterface
+    {
+        return $this->dateCreated;
+    }
+
+    public function setDateCreated(?DateTimeInterface $dateCreated): self
+    {
+        $this->dateCreated = $dateCreated;
+
+        return $this;
+    }
+
+    public function getDateModified(): ?DateTimeInterface
+    {
+        return $this->dateModified;
+    }
+
+    public function setDateModified(DateTimeInterface $dateModified): self
+    {
+        $this->dateModified = $dateModified;
 
         return $this;
     }
