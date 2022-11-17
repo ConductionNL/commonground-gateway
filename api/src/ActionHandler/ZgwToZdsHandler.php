@@ -68,6 +68,6 @@ class ZgwToZdsHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->zdsZaakService->ZgwToZdsHandler($data, $configuration);
+        return $this->zdsZaakService->zgwToZdsHandler($data, $configuration);
     }
 }
