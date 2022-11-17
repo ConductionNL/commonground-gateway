@@ -216,8 +216,8 @@ class SynchronizationService
 
         if (isset($this->io)) {
             $totalResults = is_countable($results) ? count($results) : 0;
-            $totalExistingSyncs = is_countable($existingSynchronizations) ? count($existingSynchronizations) : 0 ;
-            $this->io->block("Found $totalResults object".($totalResults == 1 ? "" : "s")." in Source and $totalExistingSyncs existing synchronization".($totalExistingSyncs == 1 ? "" : "s")." in the Gateway. Start syncing all objects found in Source to Gateway objects...");
+            $totalExistingSyncs = is_countable($existingSynchronizations) ? count($existingSynchronizations) : 0;
+            $this->io->block("Found $totalResults object".($totalResults == 1 ? '' : 's')." in Source and $totalExistingSyncs existing synchronization".($totalExistingSyncs == 1 ? '' : 's').' in the Gateway. Start syncing all objects found in Source to Gateway objects...');
             $totalResultsSynced = 0;
         }
         // todo: make this a function?
@@ -252,14 +252,14 @@ class SynchronizationService
                 unset($existingSynchronizations[$key]);
             }
             if (isset($this->io)) {
-                $this->io->text("totalResultsSynced +1 = ".++$totalResultsSynced);
+                $this->io->text('totalResultsSynced +1 = '.++$totalResultsSynced);
                 $this->io->newLine();
             }
         }
 
         if (isset($this->io)) {
-            $totalExistingSyncs = is_countable($existingSynchronizations) ? count($existingSynchronizations) : 0 ;
-            $this->io->block("Synced $totalResultsSynced/$totalResults object".($totalResults == 1 ? "" : "s")." from Source to Gateway. We still have $totalExistingSyncs existing Synchronization".($totalExistingSyncs == 1 ? "" : "s")." for an Object in the Gateway that no longer exist in the Source.".($totalExistingSyncs !== 0 ? " Start deleting these Synchronizations and their objects..." : ""));
+            $totalExistingSyncs = is_countable($existingSynchronizations) ? count($existingSynchronizations) : 0;
+            $this->io->block("Synced $totalResultsSynced/$totalResults object".($totalResults == 1 ? '' : 's')." from Source to Gateway. We still have $totalExistingSyncs existing Synchronization".($totalExistingSyncs == 1 ? '' : 's').' for an Object in the Gateway that no longer exist in the Source.'.($totalExistingSyncs !== 0 ? ' Start deleting these Synchronizations and their objects...' : ''));
         }
 
         // Remove all existing synchronizations (and the objects connected) that we didn't find during sync from source to gateway.
@@ -274,9 +274,10 @@ class SynchronizationService
      * Deletes a Synchronization and its object from the gateway.
      *
      * @param Synchronization $synchronization
-     * @return bool
      *
      * @throws InvalidArgumentException
+     *
+     * @return bool
      */
     private function deleteSyncAndObject(Synchronization $synchronization): bool
     {
@@ -297,6 +298,7 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->warning("{$exception->getMessage()}");
             }
+
             return false;
         }
     }
