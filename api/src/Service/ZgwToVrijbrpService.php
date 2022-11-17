@@ -52,7 +52,10 @@ class ZgwToVrijbrpService
 
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             $childIndex = '';
-            if (in_array(substr_replace($eigenschap['naam'], '', -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding'])) {
+            if (
+                in_array(substr_replace($eigenschap['naam'], '', -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding']) &&
+                $eigenschap['naam'] != 'voornamen' && $eigenschap['naam'] != 'geboortedatum' && $eigenschap['naam'] != 'geslachtsaanduiding'
+            ) {
                 $childIndex = substr($eigenschap['naam'], -1);
                 $childIndexInt = intval($childIndex) - 1;
             }
