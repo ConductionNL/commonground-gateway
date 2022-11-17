@@ -101,7 +101,6 @@ class ZgwToVrijbrpService
         if (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'])) {
             $birthArray['declarant']['bsn'] = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'];
 
-
             // Save in gateway (only save when we have a declarant/mother)
             $birthObjectEntity = new ObjectEntity();
             $birthObjectEntity->setEntity($birthEntity);
