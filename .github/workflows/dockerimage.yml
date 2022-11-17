@@ -169,8 +169,6 @@ jobs:
           - uses: actions/setup-node@v1
             with:
                 node-version: '16'
-          - name: Install html reporter
-            run: npm install newman-reporter-htmlextra
           - name: Download a single artifact
             uses: actions/download-artifact@v3
             with:
@@ -238,6 +236,8 @@ jobs:
           - uses: actions/setup-node@v1
             with:
                 node-version: '16'
+          - name: Install html reporter
+            run: npm install newman-reporter-htmlextra
           - name: Download a single artifact
             uses: actions/download-artifact@v3
             with:
