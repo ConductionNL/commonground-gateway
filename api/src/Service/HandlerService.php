@@ -21,6 +21,7 @@ use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 use Twig\Environment;
+use CommonGateway\FormIOBundle\Service\FormIOService;
 
 class HandlerService
 {
