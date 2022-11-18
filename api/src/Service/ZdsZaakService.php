@@ -372,7 +372,7 @@ class ZdsZaakService
         ) {
             $this->createNewZgwEigenschappen($zdsObject, $zaaktypeObjectEntity, $zaak);
         } else {
-            throw new ErrorException('Cannot create zaakeigenschappen');
+            $this->createZgwZaakEigenschappen($zdsObject, $zaaktypeObjectEntity, $zaak);
         }
 
         if (
