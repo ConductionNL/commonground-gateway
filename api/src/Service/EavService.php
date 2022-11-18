@@ -1276,8 +1276,8 @@ class EavService
                 }
             } else {
                 // @todo QuikFix for error when deleting an object
-                $value = $object->getValue($attribute);
-                $value && $this->em->remove($value);
+                $valueObject = $object->getValueObject($attribute);
+                $valueObject && $this->em->remove($valueObject);
             }
         }
         if ($object->getEntity()->getGateway() && $object->getEntity()->getGateway()->getLocation() && $object->getEntity()->getEndpoint() && $object->getExternalId()) {
@@ -1295,13 +1295,11 @@ class EavService
         // Remove this object from cache
         $this->functionService->removeResultFromCache($object);
 
-        // Send a notification
-//        $this->validationService->notify($object, 'DELETE');
-
         $this->em->remove($object);
         $this->em->flush();
 
-//        $this->em->clear(get_class($object));
+        // Send a notification
+        $this->validationService->notify($object, 'DELETE');
 
         return [];
     }

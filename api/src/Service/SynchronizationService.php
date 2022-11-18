@@ -20,6 +20,7 @@ use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -39,6 +40,7 @@ class SynchronizationService
     private TranslationService $translationService;
     private ObjectEntityService $objectEntityService;
     private ValidatorService $validatorService;
+    private EavService $eavService;
     public array $configuration;
     private array $data;
     private SymfonyStyle $io;
@@ -73,6 +75,7 @@ class SynchronizationService
         $this->objectEntityService = $objectEntityService;
         $this->objectEntityService->addServices($eavService);
         $this->validatorService = $validatorService;
+        $this->eavService = $eavService;
         $this->configuration = [];
         $this->data = [];
         $this->twig = $twig;
@@ -204,6 +207,10 @@ class SynchronizationService
             $this->io = $this->session->get('io');
             $this->io->note('SynchronizationService->SynchronizationCollectionHandler()');
         }
+        $collectionDelete = false;
+        if (array_key_exists('collectionDelete', $this->configuration['apiSource']) && $this->configuration['apiSource']['collectionDelete']) {
+            $collectionDelete = true;
+        }
 
         // todo: i think we need the Action here, because we need to set it with $synchronization->setAction($action) later...
         $gateway = $this->getSourceFromConfig();
@@ -212,18 +219,17 @@ class SynchronizationService
         // Get json/array results based on the type of source
         $results = $this->getObjectsFromSource($gateway);
         // Get all existing synchronizations for the entity+source
-        $existingSynchronizations = $this->entityManager->getRepository('App:Synchronization')->findBy(['gateway' => $gateway, 'entity' => $entity]);
+        $collectionDelete && $existingSynchronizations = $this->entityManager->getRepository('App:Synchronization')->findBy(['gateway' => $gateway, 'entity' => $entity]);
 
         if (isset($this->io)) {
             $totalResults = is_countable($results) ? count($results) : 0;
-            $totalExistingSyncs = is_countable($existingSynchronizations) ? count($existingSynchronizations) : 0;
+            $totalExistingSyncs = $collectionDelete && is_countable($existingSynchronizations) ? count($existingSynchronizations) : 0;
             $this->io->block("Found $totalResults object".($totalResults == 1 ? '' : 's')." in Source and $totalExistingSyncs existing synchronization".($totalExistingSyncs == 1 ? '' : 's').' in the Gateway. Start syncing all objects found in Source to Gateway objects...');
             $totalResultsSynced = 0;
         }
         // todo: make this a function?
         foreach ($results as $result) {
             // @todo this could and should be async (nice to have)
-            isset($this->io) && $this->io->text("totalResultsSynced start = $totalResultsSynced");
 
             // Turn it in a dot array to find the correct data in $result...
             $dot = new Dot($result);
@@ -248,7 +254,7 @@ class SynchronizationService
             $this->entityManager->persist($updatedSynchronization);
             $this->entityManager->flush();
 
-            if (($key = array_search($synchronization, $existingSynchronizations)) !== false) {
+            if ($collectionDelete && ($key = array_search($synchronization, $existingSynchronizations)) !== false) {
                 unset($existingSynchronizations[$key]);
             }
             if (isset($this->io)) {
@@ -258,13 +264,15 @@ class SynchronizationService
         }
 
         if (isset($this->io)) {
-            $totalExistingSyncs = is_countable($existingSynchronizations) ? count($existingSynchronizations) : 0;
+            $totalExistingSyncs = $collectionDelete && is_countable($existingSynchronizations) ? count($existingSynchronizations) : 0;
             $this->io->block("Synced $totalResultsSynced/$totalResults object".($totalResults == 1 ? '' : 's')." from Source to Gateway. We still have $totalExistingSyncs existing Synchronization".($totalExistingSyncs == 1 ? '' : 's').' for an Object in the Gateway that no longer exist in the Source.'.($totalExistingSyncs !== 0 ? ' Start deleting these Synchronizations and their objects...' : ''));
         }
 
-        // Remove all existing synchronizations (and the objects connected) that we didn't find during sync from source to gateway.
-        foreach ($existingSynchronizations as $existingSynchronization) {
-            $this->deleteSyncAndObject($existingSynchronization);
+        if ($collectionDelete) {
+            // Remove all existing synchronizations (and the objects connected) that we didn't find during sync from source to gateway.
+            foreach ($existingSynchronizations as $existingSynchronization) {
+                $this->deleteSyncAndObject($existingSynchronization);
+            }
         }
 
         return $results;
@@ -289,9 +297,14 @@ class SynchronizationService
                 $this->io->text("Deleting Object with id: {$object->getId()->toString()} & Synchronization with id: {$synchronization->getId()->toString()}");
             }
             // This will also delete the sync because of cascade delete
-            $this->objectEntityService->deleteCase($object->getId()->toString(), $data, 'DELETE', $object->getEntity());
+//            $this->objectEntityService->deleteCase($object->getId()->toString(), $data, 'DELETE', $object->getEntity());
 
-            $this->entityManager->flush();
+            // delete object (this will remove this object result from the cache)
+            $this->functionService->removeResultFromCache = [];
+            $data = $this->eavService->handleDelete($object);
+            if (array_key_exists('type', $data) && $data['type'] == 'Forbidden') {
+                throw new GatewayException($data['message'], null, null, ['data' => $data['data'], 'path' => $data['path'], 'responseType' => Response::HTTP_FORBIDDEN]);
+            }
 
             return true;
         } catch (Exception $exception) {
@@ -535,7 +548,7 @@ class SynchronizationService
         $dot = new Dot($pageResult);
         $results = $dot->get($this->configuration['apiSource']['location']['objects'], $pageResult);
 
-        if (array_key_exists('limit', $this->configuration['apiSource']) && count($results) >= $this->configuration['apiSource']['limit']) {
+        if (array_key_exists('sourceLimit', $this->configuration['apiSource']) && count($results) >= $this->configuration['apiSource']['sourceLimit']) {
             $results = array_merge($results, $this->fetchObjectsFromSource($callServiceConfig, $page + 1));
         } elseif (!empty($results) && isset($this->configuration['apiSource']['sourcePaginated']) && $this->configuration['apiSource']['sourcePaginated']) {
             $results = array_merge($results, $this->fetchObjectsFromSource($callServiceConfig, $page + 1));
@@ -753,7 +766,6 @@ class SynchronizationService
             if (isset($this->io)) {
                 //todo: temp, maybe put something else here later
                 $this->io->text("Nothing to sync because source and gateway haven't changed");
-                $this->io->newLine();
             }
             $synchronization = $this->syncThroughComparing($synchronization);
         }
