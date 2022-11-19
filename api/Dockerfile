@@ -119,7 +119,7 @@ COPY public public/
 COPY src src/
 COPY templates templates/
 COPY migrations migrations/
-COPY fixtures fixtures/
+#COPY fixtures fixtures/
 
 RUN set -eux; \
 	mkdir -p var/cache var/log; \
@@ -134,7 +134,7 @@ VOLUME /srv/api/var
 USER commonground-gateway
 
 RUN chmod +x /usr/local/bin/docker-entrypoint; \
-	chmod +x bin/console; \
+	chmod +x bin/console
 
 ENTRYPOINT ["docker-entrypoint"]
 CMD ["php-fpm"]
