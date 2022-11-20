@@ -109,10 +109,9 @@ COPY docker/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 RUN chown -R commonground-gateway:commonground-gateway /usr/local/bin/docker-entrypoint
 RUN chown -R commonground-gateway:commonground-gateway /usr/local/etc/php
 
-
-
 # copy only specifically what we need
 COPY .env ./
+COPY composer.json ./
 COPY bin bin/
 COPY config config/
 COPY public public/

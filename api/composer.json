@@ -25,7 +25,6 @@
         "dompdf/dompdf": "^2",
         "guzzlehttp/guzzle": "6.5.8",
         "guzzlehttp/psr7": "1.9",
-        "hautelook/alice-bundle": "^2.9.0",
         "jwadhams/json-logic-php": "^1.4",
         "nelmio/cors-bundle": "^2.1",
         "phpdocumentor/reflection-docblock": "^5.2",
@@ -103,6 +102,7 @@
         }
     },
     "require-dev": {
+        "hautelook/alice-bundle": "^2.9.0",
         "phpunit/phpunit": "^9.5",
         "symfony/browser-kit": "5.3.*",
         "symfony/css-selector": "5.3.*",
