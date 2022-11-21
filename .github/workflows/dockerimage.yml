@@ -191,16 +191,16 @@ jobs:
             uses: aquasecurity/trivy-action@master
             with:
                 image-ref: php
-                format: 'table'
+                format: 'sarif'
                 ignore-unfixed: true
                 vuln-type: 'os,library'
                 severity: 'CRITICAL,HIGH'
-                output: trivy-results.json
+                output: trivy-results.sarif
           - name: Upload results as artifact
             uses: actions/upload-artifact@v3
             with:
                 name: 'trivy-results'
-                path: trivy-results.json
+                path: trivy-results.sarif
   Gryphe:
       needs: build
       runs-on: ubuntu-latest
@@ -234,6 +234,11 @@ jobs:
                 fail-build: false
                 severity-cutoff: critical
                 output-format: table
+          - name: Upload results as artifact
+            uses: actions/upload-artifact@v3
+            with:
+                name: 'gryphe-results'
+                path: ${{ steps.scan.outputs.sarif }}
   Postman:
       needs: build
       runs-on: ubuntu-latest
