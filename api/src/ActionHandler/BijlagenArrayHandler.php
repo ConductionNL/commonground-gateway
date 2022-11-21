@@ -13,13 +13,18 @@ class BijlagenArrayHandler implements ActionHandlerInterface
     private BijlagenArrayService $bijlagenArrayService;
 
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param BijlagenArrayService $bijlagenArrayService
+     *
      * @return BijlagenArrayService
      */
-    private function getBijlagenArrayService(BijlagenArrayService $bijlagenArrayService):BijlagenArrayService {
-        if(isset($this->bijlagenArrayService)) {$this->bijlagenArrayService = $bijlagenArrayService;}
+    private function getBijlagenArrayService(BijlagenArrayService $bijlagenArrayService): BijlagenArrayService
+    {
+        if (isset($this->bijlagenArrayService)) {
+            $this->bijlagenArrayService = $bijlagenArrayService;
+        }
+
         return  $this->bijlagenArrayService;
     }
 

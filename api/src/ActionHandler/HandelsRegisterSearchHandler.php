@@ -13,13 +13,18 @@ class HandelsRegisterSearchHandler implements ActionHandlerInterface
     private HandelsRegisterSearchService $handelsRegisterSearchService;
 
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param HandelsRegisterSearchService $handelsRegisterSearchService
+     *
      * @return HandelsRegisterSearchService
      */
-    private function getHandelsRegisterSearchService(HandelsRegisterSearchService $handelsRegisterSearchService):HandelsRegisterSearchService {
-        if(isset($this->handelsRegisterSearchService)) {$this->handelsRegisterSearchService = $handelsRegisterSearchService;}
+    private function getHandelsRegisterSearchService(HandelsRegisterSearchService $handelsRegisterSearchService): HandelsRegisterSearchService
+    {
+        if (isset($this->handelsRegisterSearchService)) {
+            $this->handelsRegisterSearchService = $handelsRegisterSearchService;
+        }
+
         return  $this->handelsRegisterSearchService;
     }
 

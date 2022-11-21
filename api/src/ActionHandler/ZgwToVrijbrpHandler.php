@@ -13,13 +13,18 @@ class ZgwToVrijbrpHandler implements ActionHandlerInterface
     private ZgwToVrijbrpService $zgwToVrijbrpService;
 
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param ZgwToVrijbrpService $zgwToVrijbrpService
+     *
      * @return ZgwToVrijbrpService
      */
-    private function getZgwToVrijbrpService(ZgwToVrijbrpService $zgwToVrijbrpService): ZgwToVrijbrpService{
-        if(isset($this->zgwToVrijbrpService)) {$this->zgwToVrijbrpService = $zgwToVrijbrpService;}
+    private function getZgwToVrijbrpService(ZgwToVrijbrpService $zgwToVrijbrpService): ZgwToVrijbrpService
+    {
+        if (isset($this->zgwToVrijbrpService)) {
+            $this->zgwToVrijbrpService = $zgwToVrijbrpService;
+        }
+
         return $this->zgwToVrijbrpService;
     }
 

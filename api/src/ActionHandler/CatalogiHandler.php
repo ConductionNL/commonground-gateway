@@ -9,13 +9,18 @@ class CatalogiHandler implements ActionHandlerInterface
     private CatalogiService $catalogiService;
 
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param CatalogiService $catalogiService
+     *
      * @return CatalogiService
      */
-    private function getCatalogiService(CatalogiService $catalogiService):CatalogiService {
-        if(isset($this->catalogiService)) {$this->catalogiService = $catalogiService;}
+    private function getCatalogiService(CatalogiService $catalogiService): CatalogiService
+    {
+        if (isset($this->catalogiService)) {
+            $this->catalogiService = $catalogiService;
+        }
+
         return  $this->catalogiService;
     }
 
