@@ -868,7 +868,7 @@ class SynchronizationService
         } elseif (array_key_exists('mappingOut', $this->configuration['apiSource'])) {
             $objectArray = $this->translationService->dotHydrator($objectArray, $objectArray, $this->configuration['apiSource']['mappingOut']);
         } elseif (array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
-            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $objectArray);
+            $objectArray = $this->translationService->dotHydrator(array_merge($objectArray, $this->configuration['apiSource']['skeletonOut']), $objectArray, $this->configuration['apiSource']['mappingOut'] ?? []);
         }
 
         // Filter out unwanted properties before converting extern object to a gateway ObjectEntity
