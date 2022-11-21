@@ -8,9 +8,20 @@ class PubliccodeFindRepositoriesThroughOrganizationHandler implements ActionHand
 {
     private PubliccodeService $publiccodeService;
 
-    public function __construct(PubliccodeService $publiccodeService)
+    /**
+     * Wrapper function to prevent service loading on container autowiring.
+     *
+     * @param PubliccodeService $publiccodeService
+     *
+     * @return PubliccodeService
+     */
+    private function getPubliccodeService(PubliccodeService $publiccodeService): PubliccodeService
     {
-        $this->publiccodeService = $publiccodeService;
+        if (isset($this->publiccodeService)) {
+            $this->publiccodeService = $publiccodeService;
+        }
+
+        return  $this->publiccodeService;
     }
 
     public function getConfiguration()
@@ -34,6 +45,6 @@ class PubliccodeFindRepositoriesThroughOrganizationHandler implements ActionHand
 
     public function run(array $data, array $configuration): array
     {
-        return $this->publiccodeService->enrichOrganizationWithRepositoriesHandler($data, $configuration);
+        return $this->getPubliccodeService()->enrichOrganizationWithRepositoriesHandler($data, $configuration);
     }
 }

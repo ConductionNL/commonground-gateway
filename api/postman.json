@@ -1,0 +1,2095 @@
+{
+	"info": {
+		"_postman_id": "c7cc5a6f-0569-405c-a24c-89585ff540a3",
+		"name": "Commonground Gateway Flow",
+		"description": "This Commonground Gateway collection is specifically made to test the admin endpoints and to be included in GitHub repositories.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "326545"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// example using pm.response.to.have\r",
+									"pm.test(\"response is ok\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// example using response assertions\r",
+									"pm.test(\"response should be okay to process\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.not.have.jsonBody(\"error\");\r",
+									"    pm.response.to.not.have.jsonBody(\"errors\");\r",
+									"});\r",
+									"\r",
+									"// example using pm.response.to.be*\r",
+									"pm.test(\"response must be valid and have a body\", function () {\r",
+									"    // assert that the status code is 200\r",
+									"    // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+									"    // assert that the response has a valid JSON body\r",
+									"    pm.response.to.be.withBody;\r",
+									"    pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Set ID\", function () {\r",
+									"    var jsonData = pm.response.json();\r",
+									"    pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+									"    pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+									"    pm.environment.set(\"token\", jsonData.jwtToken);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+									" pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"test@gateway.local\",\r\n    \"password\": \"!ChangeMe!\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{environment}}/api/users/login",
+							"host": [
+								"{{environment}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "EAV (/admin) Copy",
+			"item": [
+				{
+					"name": "Applications",
+					"item": [
+						{
+							"name": "Get Applications",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// example using pm.response.to.have\r",
+											"pm.test(\"response is ok\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"// example using response assertions\r",
+											"pm.test(\"response should be okay to process\", function () {\r",
+											"    pm.response.to.not.be.error;\r",
+											"    pm.response.to.not.have.jsonBody(\"error\");\r",
+											"    pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"});\r",
+											"\r",
+											"// example using pm.response.to.be*\r",
+											"pm.test(\"response must be valid and have a body\", function () {\r",
+											"    // assert that the status code is 200\r",
+											"    // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"    // assert that the response has a valid JSON body\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											" pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{environment}}/admin/applications",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"applications"
+									],
+									"query": [
+										{
+											"key": "name",
+											"value": "referringPerson",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Application",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// example using pm.response.to.have\r",
+											"pm.test(\"response is ok\", function () {\r",
+											"    pm.response.to.have.status(201);\r",
+											"});\r",
+											"\r",
+											"// example using response assertions\r",
+											"pm.test(\"response should be okay to process\", function () {\r",
+											"    pm.response.to.not.be.error;\r",
+											"    pm.response.to.not.have.jsonBody(\"error\");\r",
+											"    pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"});\r",
+											"\r",
+											"// example using pm.response.to.be*\r",
+											"pm.test(\"response must be valid and have a body\", function () {\r",
+											"    // assert that the status code is 200\r",
+											"    // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"    // assert that the response has a valid JSON body\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Set ID\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData.id).not.eq(undefined).and.not.eq(null);  \r",
+											"    pm.environment.set(\"id\", jsonData.id);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											" pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"main application\",\r\n    \"description\": \"\",\r\n    \"domains\": [\r\n        \"zaaksysteem-demo-api.commonground.nu\"\r\n    ],\r\n    \"public\": \"uuid\",\r\n    \"secret\": \"uuid\",\r\n    \"resource\": \"url\",\r\n    \"organization\": \"https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/uuid\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/applications",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"applications"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Application",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// example using pm.response.to.have\r",
+											"pm.test(\"response is ok\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"// example using response assertions\r",
+											"pm.test(\"response should be okay to process\", function () {\r",
+											"    pm.response.to.not.be.error;\r",
+											"    pm.response.to.not.have.jsonBody(\"error\");\r",
+											"    pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"});\r",
+											"\r",
+											"// example using pm.response.to.be*\r",
+											"pm.test(\"response must be valid and have a body\", function () {\r",
+											"    // assert that the status code is 200\r",
+											"    // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"    // assert that the response has a valid JSON body\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											" pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"secret\": \"cfef0635-4756-4131-8b24-e48b7c586afc\",\r\n    \"resource\": \"https://taalhuizen-bisc.commonground.nu/api/v2/uc/users/9efe2681-fc35-40e0-9afa-da7c394e987b\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/applications/{{id}}",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"applications",
+										"{{id}}"
+									],
+									"query": [
+										{
+											"key": "name",
+											"value": "referringPerson",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Collections",
+					"item": [
+						{
+							"name": "Get Collections",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// example using pm.response.to.have\r",
+											"pm.test(\"response is ok\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"// example using response assertions\r",
+											"pm.test(\"response should be okay to process\", function () {\r",
+											"    pm.response.to.not.be.error;\r",
+											"    pm.response.to.not.have.jsonBody(\"error\");\r",
+											"    pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"});\r",
+											"\r",
+											"// example using pm.response.to.be*\r",
+											"pm.test(\"response must be valid and have a body\", function () {\r",
+											"    // assert that the status code is 200\r",
+											"    // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"    // assert that the response has a valid JSON body\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											" pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{environment}}/admin/collections",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"collections"
+									],
+									"query": [
+										{
+											"key": "name",
+											"value": "referringPerson",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Collection",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// example using pm.response.to.have\r",
+											"pm.test(\"response is ok\", function () {\r",
+											"    pm.response.to.have.status(201);\r",
+											"});\r",
+											"\r",
+											"// example using response assertions\r",
+											"pm.test(\"response should be okay to process\", function () {\r",
+											"    pm.response.to.not.be.error;\r",
+											"    pm.response.to.not.have.jsonBody(\"error\");\r",
+											"    pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"});\r",
+											"\r",
+											"// example using pm.response.to.be*\r",
+											"pm.test(\"response must be valid and have a body\", function () {\r",
+											"    // assert that the status code is 200\r",
+											"    // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"    // assert that the response has a valid JSON body\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Set ID\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData.id).not.eq(undefined).and.not.eq(null);  \r",
+											"    pm.environment.set(\"id\", jsonData.id);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											" pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"DRC collection\",\r\n    \"locationOAS\": \"https://raw.githubusercontent.com/VNG-Realisatie/gemma-zaken/master/api-specificatie/drc/1.1.x/openapi.yaml\",\r\n    \"sourceType\": \"GitHub\",\r\n    \"testDataLocation\": \"https://raw.githubusercontent.com/ConductionNL/drc_publiccode/main/data/drc.json\",\r\n    \"loadTestData\": true,\r\n    \"autoLoad\": false\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/collections",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"collections"
+									],
+									"query": [
+										{
+											"key": "name",
+											"value": "referringPerson",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Collection",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// example using pm.response.to.have\r",
+											"pm.test(\"response is ok\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"// example using response assertions\r",
+											"pm.test(\"response should be okay to process\", function () {\r",
+											"    pm.response.to.not.be.error;\r",
+											"    pm.response.to.not.have.jsonBody(\"error\");\r",
+											"    pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"});\r",
+											"\r",
+											"// example using pm.response.to.be*\r",
+											"pm.test(\"response must be valid and have a body\", function () {\r",
+											"    // assert that the status code is 200\r",
+											"    // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"    // assert that the response has a valid JSON body\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											" pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/collections/{{id}}",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"collections",
+										"{{id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Collection",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// example using pm.response.to.have\r",
+											"pm.test(\"response is ok\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"// example using response assertions\r",
+											"pm.test(\"response should be okay to process\", function () {\r",
+											"    pm.response.to.not.be.error;\r",
+											"    pm.response.to.not.have.jsonBody(\"error\");\r",
+											"    pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"});\r",
+											"\r",
+											"// example using pm.response.to.be*\r",
+											"pm.test(\"response must be valid and have a body\", function () {\r",
+											"    // assert that the status code is 200\r",
+											"    // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"    // assert that the response has a valid JSON body\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											" pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"loadTestData\": true\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/collections/{{id}}",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"collections",
+										"{{id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Collection",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// example using pm.response.to.have\r",
+											"pm.test(\"response is ok\", function () {\r",
+											"    pm.response.to.have.status(204);\r",
+											"});\r",
+											"\r",
+											"// example using response assertions\r",
+											"pm.test(\"response should be okay to process\", function () {\r",
+											"    pm.response.to.not.be.error;\r",
+											"    pm.response.to.not.have.jsonBody(\"error\");\r",
+											"    pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											" pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{environment}}/admin/collections/{{id}}",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"collections",
+										"{{id}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Gateways",
+					"item": [
+						{
+							"name": "Gateways",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{environment}}/admin/gateways",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"gateways"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Gateway",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"Example Source\",\r\n    \"location\": \"https://conduction.example.nl/api\",\r\n    \"auth\": \"apikey\",\r\n    \"apikey\": \"66505f8c-a80e-4bad-8678-d48ace4fbe4b\",\r\n    \"documentation\": \"https://conduction.example.nl/api\",\r\n    \"subscribers\": [\"/admin/subscribers/id\"]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/gateways",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"gateways"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Endpoints",
+					"item": [
+						{
+							"name": "Get Endpoints",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// // example using pm.response.to.have\r",
+											"// pm.test(\"response is ok\", function () {\r",
+											"//     pm.response.to.have.status(200);\r",
+											"// });\r",
+											"\r",
+											"// // example using response assertions\r",
+											"// pm.test(\"response should be okay to process\", function () {\r",
+											"//     pm.response.to.not.be.error;\r",
+											"//     pm.response.to.not.have.jsonBody(\"error\");\r",
+											"//     pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"// });\r",
+											"\r",
+											"// // example using pm.response.to.be*\r",
+											"// pm.test(\"response must be valid and have a body\", function () {\r",
+											"//     // assert that the status code is 200\r",
+											"//     // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"//     // assert that the response has a valid JSON body\r",
+											"//     pm.response.to.be.withBody;\r",
+											"//     pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Set ID\", function () {\r",
+											"//     var jsonData = pm.response.json();\r",
+											"//     pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+											"//     pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+											"//     pm.environment.set(\"token\", jsonData.jwtToken);\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											"//  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"// });"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"pathRegex\": \"#^(/weer)$#\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/endpoints",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"endpoints"
+									],
+									"query": [
+										{
+											"key": "name",
+											"value": "referringPerson",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Endpoint",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// // example using pm.response.to.have\r",
+											"// pm.test(\"response is ok\", function () {\r",
+											"//     pm.response.to.have.status(200);\r",
+											"// });\r",
+											"\r",
+											"// // example using response assertions\r",
+											"// pm.test(\"response should be okay to process\", function () {\r",
+											"//     pm.response.to.not.be.error;\r",
+											"//     pm.response.to.not.have.jsonBody(\"error\");\r",
+											"//     pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"// });\r",
+											"\r",
+											"// // example using pm.response.to.be*\r",
+											"// pm.test(\"response must be valid and have a body\", function () {\r",
+											"//     // assert that the status code is 200\r",
+											"//     // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"//     // assert that the response has a valid JSON body\r",
+											"//     pm.response.to.be.withBody;\r",
+											"//     pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Set ID\", function () {\r",
+											"//     var jsonData = pm.response.json();\r",
+											"//     pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+											"//     pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+											"//     pm.environment.set(\"token\", jsonData.jwtToken);\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											"//  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"// });"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"Organization endpoint get collection\",\r\n    \"description\": \"endpoint for organizations\",\r\n    \"path\": [ \"organizations\" ],\r\n    \"pathRegex\": \"^organizations$\",\r\n    \"method\": \"GET\",\r\n    \"operationType\": \"collection\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/endpoints",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"endpoints"
+									],
+									"query": [
+										{
+											"key": "name",
+											"value": "referringPerson",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Endpoint",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// // example using pm.response.to.have\r",
+											"// pm.test(\"response is ok\", function () {\r",
+											"//     pm.response.to.have.status(200);\r",
+											"// });\r",
+											"\r",
+											"// // example using response assertions\r",
+											"// pm.test(\"response should be okay to process\", function () {\r",
+											"//     pm.response.to.not.be.error;\r",
+											"//     pm.response.to.not.have.jsonBody(\"error\");\r",
+											"//     pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"// });\r",
+											"\r",
+											"// // example using pm.response.to.be*\r",
+											"// pm.test(\"response must be valid and have a body\", function () {\r",
+											"//     // assert that the status code is 200\r",
+											"//     // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"//     // assert that the response has a valid JSON body\r",
+											"//     pm.response.to.be.withBody;\r",
+											"//     pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Set ID\", function () {\r",
+											"//     var jsonData = pm.response.json();\r",
+											"//     pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+											"//     pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+											"//     pm.environment.set(\"token\", jsonData.jwtToken);\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											"//  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"// });"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"pathRegex\": \"#^(/weer)$#\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/endpoints/5d3e8845-ddd6-4121-97ba-b0057c94e103",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"endpoints",
+										"5d3e8845-ddd6-4121-97ba-b0057c94e103"
+									],
+									"query": [
+										{
+											"key": "name",
+											"value": "referringPerson",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Endpoint",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"Weer post\",\r\n    \"path\": [\"weer\"],\r\n    \"pathRegex\": \"/#^(weer)$#\",\r\n    \"operationType\": \"collection\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/endpoints",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"endpoints"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Handlers",
+					"item": [
+						{
+							"name": "Get Handlers",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// // example using pm.response.to.have\r",
+											"// pm.test(\"response is ok\", function () {\r",
+											"//     pm.response.to.have.status(200);\r",
+											"// });\r",
+											"\r",
+											"// // example using response assertions\r",
+											"// pm.test(\"response should be okay to process\", function () {\r",
+											"//     pm.response.to.not.be.error;\r",
+											"//     pm.response.to.not.have.jsonBody(\"error\");\r",
+											"//     pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"// });\r",
+											"\r",
+											"// // example using pm.response.to.be*\r",
+											"// pm.test(\"response must be valid and have a body\", function () {\r",
+											"//     // assert that the status code is 200\r",
+											"//     // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"//     // assert that the response has a valid JSON body\r",
+											"//     pm.response.to.be.withBody;\r",
+											"//     pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Set ID\", function () {\r",
+											"//     var jsonData = pm.response.json();\r",
+											"//     pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+											"//     pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+											"//     pm.environment.set(\"token\", jsonData.jwtToken);\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											"//  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"// });"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{environment}}/admin/handlers",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"handlers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Handler",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "// {\r\n//     \"name\": \"Weer Handler\",\r\n//     \"endpoints\": [\"/admin/endpoints/70b11eae-84af-4fac-af06-282a34c4a293\"],\r\n//     \"entity\": \"/admin/entities/a157c9a2-8962-4004-93fa-a064cef017c8\",\r\n//     \"methods\": [\"POST\"],\r\n//     \"sequence\": 0,\r\n//     \"conditions\": \"{}\"\r\n// }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/handlers",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"handlers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Handler",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "// {\r\n//     \"name\": \"Weer Handler\",\r\n//     \"endpoints\": [\"/admin/endpoints/70b11eae-84af-4fac-af06-282a34c4a293\"],\r\n//     \"entity\": \"/admin/entities/a157c9a2-8962-4004-93fa-a064cef017c8\",\r\n//     \"methods\": [\"POST\"],\r\n//     \"sequence\": 0,\r\n//     \"conditions\": \"{}\"\r\n// }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/handlers/56ee6512-0070-468f-b1e3-c5195ce00e79",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"handlers",
+										"56ee6512-0070-468f-b1e3-c5195ce00e79"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Entities",
+					"item": [
+						{
+							"name": "Get Entities",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// // example using pm.response.to.have\r",
+											"// pm.test(\"response is ok\", function () {\r",
+											"//     pm.response.to.have.status(200);\r",
+											"// });\r",
+											"\r",
+											"// // example using response assertions\r",
+											"// pm.test(\"response should be okay to process\", function () {\r",
+											"//     pm.response.to.not.be.error;\r",
+											"//     pm.response.to.not.have.jsonBody(\"error\");\r",
+											"//     pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"// });\r",
+											"\r",
+											"// // example using pm.response.to.be*\r",
+											"// pm.test(\"response must be valid and have a body\", function () {\r",
+											"//     // assert that the status code is 200\r",
+											"//     // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"//     // assert that the response has a valid JSON body\r",
+											"//     pm.response.to.be.withBody;\r",
+											"//     pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Set ID\", function () {\r",
+											"//     var jsonData = pm.response.json();\r",
+											"//     pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+											"//     pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+											"//     pm.environment.set(\"token\", jsonData.jwtToken);\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											"//  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"// });"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/entities",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"entities"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Entity",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// // example using pm.response.to.have\r",
+											"// pm.test(\"response is ok\", function () {\r",
+											"//     pm.response.to.have.status(200);\r",
+											"// });\r",
+											"\r",
+											"// // example using response assertions\r",
+											"// pm.test(\"response should be okay to process\", function () {\r",
+											"//     pm.response.to.not.be.error;\r",
+											"//     pm.response.to.not.have.jsonBody(\"error\");\r",
+											"//     pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"// });\r",
+											"\r",
+											"// // example using pm.response.to.be*\r",
+											"// pm.test(\"response must be valid and have a body\", function () {\r",
+											"//     // assert that the status code is 200\r",
+											"//     // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"//     // assert that the response has a valid JSON body\r",
+											"//     pm.response.to.be.withBody;\r",
+											"//     pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Set ID\", function () {\r",
+											"//     var jsonData = pm.response.json();\r",
+											"//     pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+											"//     pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+											"//     pm.environment.set(\"token\", jsonData.jwtToken);\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											"//  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"// });"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"function\": \"processingLog\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/entities/ab3ef82f-3281-4d20-ad8a-8348dfd8cfdc",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"entities",
+										"ab3ef82f-3281-4d20-ad8a-8348dfd8cfdc"
+									],
+									"query": [
+										{
+											"key": "name",
+											"value": "weer",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Entity",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "// {\r\n//     \"name\": \"Weer Entity\",\r\n//     \"description\": \"Dit endpoint behandled weer\",\r\n//     \"function\": \"log\"\r\n// }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/entities",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"entities"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Attributes",
+					"item": [
+						{
+							"name": "Get Attributes",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// // example using pm.response.to.have\r",
+											"// pm.test(\"response is ok\", function () {\r",
+											"//     pm.response.to.have.status(200);\r",
+											"// });\r",
+											"\r",
+											"// // example using response assertions\r",
+											"// pm.test(\"response should be okay to process\", function () {\r",
+											"//     pm.response.to.not.be.error;\r",
+											"//     pm.response.to.not.have.jsonBody(\"error\");\r",
+											"//     pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"// });\r",
+											"\r",
+											"// // example using pm.response.to.be*\r",
+											"// pm.test(\"response must be valid and have a body\", function () {\r",
+											"//     // assert that the status code is 200\r",
+											"//     // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"//     // assert that the response has a valid JSON body\r",
+											"//     pm.response.to.be.withBody;\r",
+											"//     pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Set ID\", function () {\r",
+											"//     var jsonData = pm.response.json();\r",
+											"//     pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+											"//     pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+											"//     pm.environment.set(\"token\", jsonData.jwtToken);\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											"//  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"// });"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{environment}}/admin/attributes",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"attributes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create Attribute",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// // example using pm.response.to.have\r",
+											"// pm.test(\"response is ok\", function () {\r",
+											"//     pm.response.to.have.status(200);\r",
+											"// });\r",
+											"\r",
+											"// // example using response assertions\r",
+											"// pm.test(\"response should be okay to process\", function () {\r",
+											"//     pm.response.to.not.be.error;\r",
+											"//     pm.response.to.not.have.jsonBody(\"error\");\r",
+											"//     pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"// });\r",
+											"\r",
+											"// // example using pm.response.to.be*\r",
+											"// pm.test(\"response must be valid and have a body\", function () {\r",
+											"//     // assert that the status code is 200\r",
+											"//     // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"//     // assert that the response has a valid JSON body\r",
+											"//     pm.response.to.be.withBody;\r",
+											"//     pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Set ID\", function () {\r",
+											"//     var jsonData = pm.response.json();\r",
+											"//     pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+											"//     pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+											"//     pm.environment.set(\"token\", jsonData.jwtToken);\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											"//  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"// });"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"team\",\r\n    \"type\": \"string\",\r\n    \"entity\":\"/admin/entities/c773c506-8951-4588-ad93-7d9a7824b86c\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/attributes",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"attributes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Attribute",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// // example using pm.response.to.have\r",
+											"// pm.test(\"response is ok\", function () {\r",
+											"//     pm.response.to.have.status(200);\r",
+											"// });\r",
+											"\r",
+											"// // example using response assertions\r",
+											"// pm.test(\"response should be okay to process\", function () {\r",
+											"//     pm.response.to.not.be.error;\r",
+											"//     pm.response.to.not.have.jsonBody(\"error\");\r",
+											"//     pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"// });\r",
+											"\r",
+											"// // example using pm.response.to.be*\r",
+											"// pm.test(\"response must be valid and have a body\", function () {\r",
+											"//     // assert that the status code is 200\r",
+											"//     // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"//     // assert that the response has a valid JSON body\r",
+											"//     pm.response.to.be.withBody;\r",
+											"//     pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Set ID\", function () {\r",
+											"//     var jsonData = pm.response.json();\r",
+											"//     pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+											"//     pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+											"//     pm.environment.set(\"token\", jsonData.jwtToken);\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											"//  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"// });"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"searchable\": true\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/attributes/0466107b-674c-4460-8d10-4dc749069e8f",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"attributes",
+										"0466107b-674c-4460-8d10-4dc749069e8f"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Subscribers",
+					"item": [
+						{
+							"name": "Subscribers",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{environment}}/admin/subscribers",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"subscribers"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Subscriber",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"Test Subscriber\",\r\n    \"description\": \"test\",\r\n    \"method\": \"GET\",\r\n    \"runOrder\": 0,\r\n    \"conditions\": \"{}\",\r\n    \"gateway\": null,\r\n    \"type\": \"externSource\",\r\n    \"endpoint\": null,\r\n    \"asynchronous\": false,\r\n    \"blocking\": true,\r\n    \"mappingIn\": [\r\n        {\r\n            \"key\": \"test\",\r\n            \"value\": \"test\"\r\n        }\r\n    ],\r\n    \"mappingOut\": [\r\n        {\r\n            \"key\": \"test\",\r\n            \"value\": \"test\"\r\n        }\r\n    ],\r\n    \"headers\": [\r\n        {\r\n            \"key\": \"test\",\r\n            \"value\": \"etst\"\r\n        }\r\n    ],\r\n    \"queryParameters\": [\r\n        {\r\n            \"key\": \"test\",\r\n            \"value\": \"test\"\r\n        }\r\n    ],\r\n    \"translationsIn\": [],\r\n    \"translationsOut\": []\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/subscribers",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"subscribers"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Objects",
+					"item": [
+						{
+							"name": "Delete all objects",
+							"item": [
+								{
+									"name": "Get Objects for delete",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"// var jsonData = pm.response.json();\r",
+													"// let items = jsonData['hydra:member'];\r",
+													"\r",
+													"// pm.test(\"\" + jsonData['hydra:totalItems'] + \" Items found\", function () {\r",
+													"//     pm.response.to.have.status(200);\r",
+													"// });\r",
+													"\r",
+													"// if (items.length !== 0) {\r",
+													"//     pm.environment.set(\"delete_object_entity_id\", items[0].id);\r",
+													"//     postman.setNextRequest(\"Delete Object and continue\");\r",
+													"// } else {\r",
+													"//     pm.environment.set(\"finished\", true);\r",
+													"// }\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{environment}}/admin/object_entities",
+											"host": [
+												"{{environment}}"
+											],
+											"path": [
+												"admin",
+												"object_entities"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete Object and continue",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"// if (pm.environment.get('finished')) {\r",
+													"//     pm.environment.unset('finished');\r",
+													"// } else {\r",
+													"//     pm.test(\"response is ok\", function () {\r",
+													"//         pm.response.to.have.status(204);\r",
+													"//     });\r",
+													"//     postman.setNextRequest(\"Get Objects for delete\");\r",
+													"// }"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{environment}}/admin/object_entities/{{delete_object_entity_id}}",
+											"host": [
+												"{{environment}}"
+											],
+											"path": [
+												"admin",
+												"object_entities",
+												"{{delete_object_entity_id}}"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Get Objects",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// // example using pm.response.to.have\r",
+											"// pm.test(\"response is ok\", function () {\r",
+											"//     pm.response.to.have.status(200);\r",
+											"// });\r",
+											"\r",
+											"// // example using response assertions\r",
+											"// pm.test(\"response should be okay to process\", function () {\r",
+											"//     pm.response.to.not.be.error;\r",
+											"//     pm.response.to.not.have.jsonBody(\"error\");\r",
+											"//     pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"// });\r",
+											"\r",
+											"// // example using pm.response.to.be*\r",
+											"// pm.test(\"response must be valid and have a body\", function () {\r",
+											"//     // assert that the status code is 200\r",
+											"//     // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"//     // assert that the response has a valid JSON body\r",
+											"//     pm.response.to.be.withBody;\r",
+											"//     pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Set ID\", function () {\r",
+											"//     var jsonData = pm.response.json();\r",
+											"//     pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+											"//     pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+											"//     pm.environment.set(\"token\", jsonData.jwtToken);\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											"//  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"// });"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{environment}}/admin/object_entities",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"object_entities"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Object",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// // example using pm.response.to.have\r",
+											"// pm.test(\"response is ok\", function () {\r",
+											"//     pm.response.to.have.status(200);\r",
+											"// });\r",
+											"\r",
+											"// // example using response assertions\r",
+											"// pm.test(\"response should be okay to process\", function () {\r",
+											"//     pm.response.to.not.be.error;\r",
+											"//     pm.response.to.not.have.jsonBody(\"error\");\r",
+											"//     pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"// });\r",
+											"\r",
+											"// // example using pm.response.to.be*\r",
+											"// pm.test(\"response must be valid and have a body\", function () {\r",
+											"//     // assert that the status code is 200\r",
+											"//     // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"//     // assert that the response has a valid JSON body\r",
+											"//     pm.response.to.be.withBody;\r",
+											"//     pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Set ID\", function () {\r",
+											"//     var jsonData = pm.response.json();\r",
+											"//     pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+											"//     pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+											"//     pm.environment.set(\"token\", jsonData.jwtToken);\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											"//  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"// });"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"owner\": \"02952533-f45f-461b-b15d-4a5c31784b1f\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/object_entities/160bf7e7-9cb2-4321-b4d7-dd8375b4d8c4",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"object_entities",
+										"160bf7e7-9cb2-4321-b4d7-dd8375b4d8c4"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Sync Object",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{environment}}/admin/object_entities/7c137b6d-201f-4d69-8a12-437f96078d30/sync",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"object_entities",
+										"7c137b6d-201f-4d69-8a12-437f96078d30",
+										"sync"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Values",
+					"item": [
+						{
+							"name": "Get Values",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// // example using pm.response.to.have\r",
+											"// pm.test(\"response is ok\", function () {\r",
+											"//     pm.response.to.have.status(200);\r",
+											"// });\r",
+											"\r",
+											"// // example using response assertions\r",
+											"// pm.test(\"response should be okay to process\", function () {\r",
+											"//     pm.response.to.not.be.error;\r",
+											"//     pm.response.to.not.have.jsonBody(\"error\");\r",
+											"//     pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"// });\r",
+											"\r",
+											"// // example using pm.response.to.be*\r",
+											"// pm.test(\"response must be valid and have a body\", function () {\r",
+											"//     // assert that the status code is 200\r",
+											"//     // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"//     // assert that the response has a valid JSON body\r",
+											"//     pm.response.to.be.withBody;\r",
+											"//     pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Set ID\", function () {\r",
+											"//     var jsonData = pm.response.json();\r",
+											"//     pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+											"//     pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+											"//     pm.environment.set(\"token\", jsonData.jwtToken);\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											"//  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"// });"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{environment}}/admin/object_entities",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"object_entities"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Value",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// // example using pm.response.to.have\r",
+											"// pm.test(\"response is ok\", function () {\r",
+											"//     pm.response.to.have.status(200);\r",
+											"// });\r",
+											"\r",
+											"// // example using response assertions\r",
+											"// pm.test(\"response should be okay to process\", function () {\r",
+											"//     pm.response.to.not.be.error;\r",
+											"//     pm.response.to.not.have.jsonBody(\"error\");\r",
+											"//     pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"// });\r",
+											"\r",
+											"// // example using pm.response.to.be*\r",
+											"// pm.test(\"response must be valid and have a body\", function () {\r",
+											"//     // assert that the status code is 200\r",
+											"//     // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"//     // assert that the response has a valid JSON body\r",
+											"//     pm.response.to.be.withBody;\r",
+											"//     pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Set ID\", function () {\r",
+											"//     var jsonData = pm.response.json();\r",
+											"//     pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+											"//     pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+											"//     pm.environment.set(\"token\", jsonData.jwtToken);\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											"//  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"// });"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"stringValue\": \"123\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/values/c558e115-b6a4-4549-95b4-4dfbc1987587",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"values",
+										"c558e115-b6a4-4549-95b4-4dfbc1987587"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Documents",
+					"item": [
+						{
+							"name": "Get Documents",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// // example using pm.response.to.have\r",
+											"// pm.test(\"response is ok\", function () {\r",
+											"//     pm.response.to.have.status(200);\r",
+											"// });\r",
+											"\r",
+											"// // example using response assertions\r",
+											"// pm.test(\"response should be okay to process\", function () {\r",
+											"//     pm.response.to.not.be.error;\r",
+											"//     pm.response.to.not.have.jsonBody(\"error\");\r",
+											"//     pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"// });\r",
+											"\r",
+											"// // example using pm.response.to.be*\r",
+											"// pm.test(\"response must be valid and have a body\", function () {\r",
+											"//     // assert that the status code is 200\r",
+											"//     // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"//     // assert that the response has a valid JSON body\r",
+											"//     pm.response.to.be.withBody;\r",
+											"//     pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Set ID\", function () {\r",
+											"//     var jsonData = pm.response.json();\r",
+											"//     pm.expect(jsonData.jwtToken).not.eq(undefined).and.not.eq(null);\r",
+											"//     pm.collectionVariables.set(\"token\", jsonData.jwtToken);    \r",
+											"//     pm.environment.set(\"token\", jsonData.jwtToken);\r",
+											"// });\r",
+											"\r",
+											"// pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											"//  pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"// });"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"username\": \"test+biscadmin+scenario@conduction.nl\",\r\n    \"password\": \"kXoTXzgZ6toaP8U(uwp$\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/documents",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"documents"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Logs",
+					"item": [
+						{
+							"name": "Get logs",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "localhost/admin/logs",
+									"host": [
+										"localhost"
+									],
+									"path": [
+										"admin",
+										"logs"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Log",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"type\": \"out\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/logs/5b34fa63-65e1-43bb-82aa-9ec2b48e0622",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"logs",
+										"5b34fa63-65e1-43bb-82aa-9ec2b48e0622"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Logout Copy",
+			"item": [
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// example using pm.response.to.have\r",
+									"pm.test(\"response is ok\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"// example using response assertions\r",
+									"pm.test(\"response should be okay to process\", function () {\r",
+									"    pm.response.to.not.be.error;\r",
+									"    pm.response.to.not.have.jsonBody(\"error\");\r",
+									"    pm.response.to.not.have.jsonBody(\"errors\");\r",
+									"});\r",
+									"\r",
+									"// example using pm.response.to.be*\r",
+									"pm.test(\"response must be valid and have a body\", function () {\r",
+									"    // assert that the status code is 200\r",
+									"    // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+									"    // assert that the response has a valid JSON body\r",
+									"    pm.response.to.be.withBody;\r",
+									"    pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+									" pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{environment}}/api/users/logout",
+							"host": [
+								"{{environment}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Zaken Copy",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{environment}}/api/zrc/zaken",
+					"host": [
+						"{{environment}}"
+					],
+					"path": [
+						"api",
+						"zrc",
+						"zaken"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "environment",
+			"value": "http://localhost",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "maxResponseTime",
+			"value": "3000",
+			"type": "string"
+		}
+	]
+}

@@ -13,14 +13,20 @@ use Twig\Error\SyntaxError;
 
 class SynchronizationCollectionHandler implements ActionHandlerInterface
 {
-    private SynchronizationService $synchronizationService;
-
     /**
+     * Wrapper function to prevent service loading on container autowiring.
+     *
      * @param SynchronizationService $synchronizationService
+     *
+     * @return SynchronizationService
      */
-    public function __construct(SynchronizationService $synchronizationService)
+    private function getSynchronizationService(ZgwToVrijbrpService $synchronizationService)
     {
-        $this->synchronizationService = $synchronizationService;
+        if (isset($this->synchronizationService)) {
+            $this->synchronizationService = $synchronizationService;
+        }
+
+        return  $this->synchronizationService;
     }
 
     /**
@@ -243,7 +249,7 @@ class SynchronizationCollectionHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        $this->synchronizationService->SynchronizationCollectionHandler($data, $configuration);
+        $this->getSynchronizationService->SynchronizationCollectionHandler($data, $configuration);
 
         return $data;
     }

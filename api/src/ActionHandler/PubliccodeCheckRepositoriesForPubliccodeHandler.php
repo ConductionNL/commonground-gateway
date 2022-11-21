@@ -6,11 +6,20 @@ use App\Service\PubliccodeService;
 
 class PubliccodeCheckRepositoriesForPubliccodeHandler implements ActionHandlerInterface
 {
-    private PubliccodeService $publiccodeService;
-
-    public function __construct(PubliccodeService $publiccodeService)
+    /**
+     * Wrapper function to prevent service loading on container autowiring.
+     *
+     * @param PubliccodeService $publiccodeService
+     *
+     * @return PubliccodeService
+     */
+    private function getPubliccodeService(PubliccodeService $publiccodeService): PubliccodeService
     {
-        $this->publiccodeService = $publiccodeService;
+        if (isset($this->publiccodeService)) {
+            $this->publiccodeService = $publiccodeService;
+        }
+
+        return  $this->publiccodeService;
     }
 
     public function getConfiguration()
@@ -46,6 +55,6 @@ class PubliccodeCheckRepositoriesForPubliccodeHandler implements ActionHandlerIn
 
     public function run(array $data, array $configuration): array
     {
-        return $this->publiccodeService->enrichPubliccodeHandler($data, $configuration);
+        return $this->getPubliccodeService()->enrichPubliccodeHandler($data, $configuration);
     }
 }

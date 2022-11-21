@@ -12,9 +12,20 @@ class IdentificationHandler implements ActionHandlerInterface
 {
     private ZdsZaakService $zdsZaakService;
 
-    public function __construct(ZdsZaakService $zdsZaakService)
+    /**
+     * Wrapper function to prevent service loading on container autowiring.
+     *
+     * @param ZdsZaakService $zdsZaakService
+     *
+     * @return ZdsZaakService
+     */
+    private function getZdsZaakService(ZdsZaakService $zdsZaakService): ZdsZaakService
     {
-        $this->zdsZaakService = $zdsZaakService;
+        if (isset($this->zdsZaakService)) {
+            $this->zdsZaakService = $zdsZaakService;
+        }
+
+        return  $this->zdsZaakService;
     }
 
     /**
@@ -56,6 +67,6 @@ class IdentificationHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->zdsZaakService->identificationHandler($data, $configuration);
+        return $this->getZdsZaakService()->identificationHandler($data, $configuration);
     }
 }

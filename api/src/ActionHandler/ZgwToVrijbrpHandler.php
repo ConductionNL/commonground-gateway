@@ -12,9 +12,20 @@ class ZgwToVrijbrpHandler implements ActionHandlerInterface
 {
     private ZgwToVrijbrpService $zgwToVrijbrpService;
 
-    public function __construct(ZgwToVrijbrpService $zgwToVrijbrpService)
+    /**
+     * Wrapper function to prevent service loading on container autowiring.
+     *
+     * @param ZgwToVrijbrpService $zgwToVrijbrpService
+     *
+     * @return ZgwToVrijbrpService
+     */
+    private function getZgwToVrijbrpService(ZgwToVrijbrpService $zgwToVrijbrpService): ZgwToVrijbrpService
     {
-        $this->zgwToVrijbrpService = $zgwToVrijbrpService;
+        if (isset($this->zgwToVrijbrpService)) {
+            $this->zgwToVrijbrpService = $zgwToVrijbrpService;
+        }
+
+        return $this->zgwToVrijbrpService;
     }
 
     /**
@@ -80,6 +91,6 @@ class ZgwToVrijbrpHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->zgwToVrijbrpService->zgwToVrijbrpHandler($data, $configuration);
+        return $this->getzgwToVrijbrpService()->zgwToVrijbrpHandler($data, $configuration);
     }
 }

@@ -8,9 +8,20 @@ class LarpingHandler implements ActionHandlerInterface
 {
     private LarpingService $larpingService;
 
-    public function __construct(LarpingService $larpingService)
+    /**
+     * Wrapper function to prevent service loading on container autowiring.
+     *
+     * @param LarpingService $larpingService
+     *
+     * @return LarpingService
+     */
+    private function getLarpingService(LarpingService $larpingService): LarpingService
     {
-        $this->larpingService = $larpingService;
+        if (isset($this->larpingService)) {
+            $this->larpingService = $larpingService;
+        }
+
+        return  $this->larpingService;
     }
 
     /**
@@ -56,6 +67,6 @@ class LarpingHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->larpingService->LarpingHandler($data, $configuration);
+        return $this->getLarpingService()->LarpingHandler($data, $configuration);
     }
 }

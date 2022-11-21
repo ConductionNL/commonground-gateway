@@ -1206,7 +1206,7 @@ class Gateway
         return $this->configuration;
     }
 
-    public function setConfiguration(?array $configuration = []): self
+    public function setConfiguration(?array $configuration): self
     {
         $this->configuration = $configuration;
 

@@ -22,9 +22,6 @@
     "api-platform/schema-generator": {
         "version": "v3.0.0"
     },
-    "bacon/bacon-qr-code": {
-        "version": "2.0.7"
-    },
     "beberlei/doctrineextensions": {
         "version": "v1.3.0"
     },
@@ -38,9 +35,6 @@
         "version": "0.4.1"
     },
     "common-gateway/formio-bundle": {
-        "version": "dev-main"
-    },
-    "common-gateway/waardepapieren-bundle": {
         "version": "dev-main"
     },
     "commongateway/corebundle": {
@@ -69,9 +63,6 @@
     },
     "conduction/samlbundle": {
         "version": "dev-master"
-    },
-    "dasprid/enum": {
-        "version": "1.0.3"
     },
     "doctrine/annotations": {
         "version": "1.0",
@@ -180,15 +171,6 @@
     "egulias/email-validator": {
         "version": "3.2.1"
     },
-    "endroid/installer": {
-        "version": "1.4.0"
-    },
-    "endroid/qr-code": {
-        "version": "3.9.7"
-    },
-    "endroid/qr-code-bundle": {
-        "version": "3.4.0"
-    },
     "fakerphp/faker": {
         "version": "v1.15.0"
     },
@@ -242,9 +224,6 @@
     "jwadhams/json-logic-php": {
         "version": "1.4.2"
     },
-    "khanamiryan/qrcode-detector-decoder": {
-        "version": "1.0.6"
-    },
     "knplabs/knp-markdown-bundle": {
         "version": "1.9.0"
     },
@@ -268,9 +247,6 @@
     },
     "myclabs/deep-copy": {
         "version": "1.10.2"
-    },
-    "myclabs/php-enum": {
-        "version": "1.8.4"
     },
     "nelmio/alice": {
         "version": "3.2",
@@ -306,12 +282,6 @@
     "paragonie/random_compat": {
         "version": "v9.99.100"
     },
-    "phar-io/manifest": {
-        "version": "2.0.3"
-    },
-    "phar-io/version": {
-        "version": "3.2.1"
-    },
     "phenx/php-font-lib": {
         "version": "0.5.4"
     },
@@ -335,21 +305,6 @@
     },
     "phpspec/prophecy": {
         "version": "v1.15.0"
-    },
-    "phpunit/php-code-coverage": {
-        "version": "9.2.7"
-    },
-    "phpunit/php-file-iterator": {
-        "version": "3.0.6"
-    },
-    "phpunit/php-invoker": {
-        "version": "3.1.1"
-    },
-    "phpunit/php-text-template": {
-        "version": "2.0.4"
-    },
-    "phpunit/php-timer": {
-        "version": "5.0.3"
     },
     "phpunit/phpunit": {
         "version": "9.5",
@@ -416,53 +371,17 @@
     "sabberworm/php-css-parser": {
         "version": "8.4.0"
     },
-    "sebastian/cli-parser": {
-        "version": "1.0.1"
-    },
-    "sebastian/code-unit": {
-        "version": "1.0.8"
-    },
-    "sebastian/code-unit-reverse-lookup": {
-        "version": "2.0.3"
-    },
     "sebastian/comparator": {
         "version": "4.0.6"
-    },
-    "sebastian/complexity": {
-        "version": "2.0.2"
     },
     "sebastian/diff": {
         "version": "4.0.4"
     },
-    "sebastian/environment": {
-        "version": "5.1.4"
-    },
     "sebastian/exporter": {
         "version": "4.0.3"
     },
-    "sebastian/global-state": {
-        "version": "5.0.5"
-    },
-    "sebastian/lines-of-code": {
-        "version": "1.0.3"
-    },
-    "sebastian/object-enumerator": {
-        "version": "4.0.4"
-    },
-    "sebastian/object-reflector": {
-        "version": "2.0.4"
-    },
     "sebastian/recursion-context": {
         "version": "4.0.4"
-    },
-    "sebastian/resource-operations": {
-        "version": "3.0.3"
-    },
-    "sebastian/type": {
-        "version": "2.3.4"
-    },
-    "sebastian/version": {
-        "version": "3.0.2"
     },
     "setono/cron-expression-bundle": {
         "version": "v1.5.0"
@@ -833,9 +752,6 @@
             "version": "1.0",
             "ref": "fe5a50faf580eb58f08ada2abe8afbd2d4941e05"
         }
-    },
-    "theseer/tokenizer": {
-        "version": "1.2.1"
     },
     "twig/twig": {
         "version": "v3.3.2"

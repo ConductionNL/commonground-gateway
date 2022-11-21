@@ -12,9 +12,20 @@ class MapZaakTypeHandler implements ActionHandlerInterface
 {
     private MapZaakTypeService $mapZaakTypeService;
 
-    public function __construct(MapZaakTypeService $mapZaakTypeService)
+    /**
+     * Wrapper function to prevent service loading on container autowiring.
+     *
+     * @param MapZaakTypeService $mapZaakTypeService
+     *
+     * @return MapZaakTypeService
+     */
+    private function getMapZaakTypeService(MapZaakTypeService $mapZaakTypeService): MapZaakTypeService
     {
-        $this->mapZaakTypeService = $mapZaakTypeService;
+        if (isset($this->mapZaakTypeService)) {
+            $this->mapZaakTypeService = $mapZaakTypeService;
+        }
+
+        return  $this->mapZaakTypeService;
     }
 
     /**
@@ -62,6 +73,6 @@ class MapZaakTypeHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->mapZaakTypeService->mapZaakTypeHandler($data, $configuration);
+        return $this->getMapZaakTypeService()->mapZaakTypeHandler($data, $configuration);
     }
 }

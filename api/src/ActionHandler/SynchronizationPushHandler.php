@@ -7,14 +7,20 @@ use App\Service\SynchronizationService;
 
 class SynchronizationPushHandler implements ActionHandlerInterface
 {
-    private SynchronizationService $synchronizationService;
-
     /**
+     * Wrapper function to prevent service loading on container autowiring.
+     *
      * @param SynchronizationService $synchronizationService
+     *
+     * @return SynchronizationService
      */
-    public function __construct(SynchronizationService $synchronizationService)
+    private function getSynchronizationService(ZgwToVrijbrpService $synchronizationService)
     {
-        $this->synchronizationService = $synchronizationService;
+        if (isset($this->synchronizationService)) {
+            $this->synchronizationService = $synchronizationService;
+        }
+
+        return  $this->synchronizationService;
     }
 
     /**
@@ -237,7 +243,7 @@ class SynchronizationPushHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        $this->synchronizationService->synchronisationPushHandler($data, $configuration);
+        $this->getSynchronizationService->synchronisationPushHandler($data, $configuration);
 
         return $data;
     }
