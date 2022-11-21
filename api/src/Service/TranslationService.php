@@ -3,8 +3,8 @@
 namespace App\Service;
 
 use Adbar\Dot;
-use App\Entity\Synchronization;
 use App\Entity\Gateway as Source;
+use App\Entity\Synchronization;
 use CommonGateway\CoreBundle\Service\CallService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -106,7 +106,6 @@ class TranslationService
     public function iterateNumericArrays(array $mapping, Dot $source): array
     {
         foreach ($mapping as $replace => $search) {
-
             $mapping = $this->addNumericKeysRecursive($search, $replace, $source, $mapping);
         }
 
@@ -141,13 +140,14 @@ class TranslationService
 
         $i = 0;
         while ($split[$i]) {
-            $baseUrl .= $baseUrl ? '/' . $split[$i] : $split[$i];
-            $sources = $this->entityManager->getRepository(Source::class)->findBy(['location' => "https://".$baseUrl]);
-            if($sources && $sources[0] instanceof Source) {
+            $baseUrl .= $baseUrl ? '/'.$split[$i] : $split[$i];
+            $sources = $this->entityManager->getRepository(Source::class)->findBy(['location' => 'https://'.$baseUrl]);
+            if ($sources && $sources[0] instanceof Source) {
                 return $sources[0];
             }
             $i++;
         }
+
         return null;
     }
 
@@ -155,7 +155,7 @@ class TranslationService
     {
         $source = $this->getSourceFromUrl($url);
 
-        if(!$source) {
+        if (!$source) {
             return null;
         }
 
@@ -221,7 +221,7 @@ class TranslationService
                 $destination[$replace] = $datum->format('Y-m-d\TH:i:s');
             } elseif ($format == 'uuidFromUrl') {
                 $destination[$replace] = $this->getUuidFromUrl($source[$search]) ?? ($destination[$replace]) ?? null;
-            }elseif ($format == 'download') {
+            } elseif ($format == 'download') {
                 $destination[$replace] = $this->getDataFromUrl($source[$search]);
             } elseif (strpos($format, 'concatenation') !== false) {
                 $separator = substr($format, strlen('concatenation') + 1);

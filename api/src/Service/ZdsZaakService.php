@@ -238,19 +238,20 @@ class ZdsZaakService
 
     public function vestigingToNietNatuurlijkPersoon(ObjectEntity $vestiging, ObjectEntity $zdsObject): array
     {
-        if($vestiging->getValue('vestigingsNummer')) {
+        if ($vestiging->getValue('vestigingsNummer')) {
             return [
                 'annIdentificatie'  => $vestiging->getValue('vestigingsNummer'),
             ];
         } else {
-            foreach($zdsObject->getValue('extraElementen') as $extraElement) {
-                if($extraElement['@naam'] == 'kvkNummer') {
+            foreach ($zdsObject->getValue('extraElementen') as $extraElement) {
+                if ($extraElement['@naam'] == 'kvkNummer') {
                     return [
-                        'annIdentificatie' => $extraElement['#']
+                        'annIdentificatie' => $extraElement['#'],
                     ];
                 }
             }
         }
+
         return [];
     }
 
@@ -258,19 +259,19 @@ class ZdsZaakService
     {
         $toelichtingen = [];
         $toelichtingArray = explode('|', $toelichting);
-        foreach($toelichtingArray as $field) {
+        foreach ($toelichtingArray as $field) {
             $field = explode(':', $field);
-            if($field[0] == 'sub.emailadres') {
+            if ($field[0] == 'sub.emailadres') {
                 $email = trim($field[1]);
             } else {
                 $toelichtingen[] = trim($field[1]);
             }
         }
-        if(isset($email)){
-            while(count($toelichtingen) < 2) {
+        if (isset($email)) {
+            while (count($toelichtingen) < 2) {
                 $toelichtingen[] = null;
             }
-            $toelichtingen = array_merge(array_slice($toelichtingen, 0,2), [$email], array_slice($toelichtingen, 2));
+            $toelichtingen = array_merge(array_slice($toelichtingen, 0, 2), [$email], array_slice($toelichtingen, 2));
         }
 
         return implode('|', $toelichtingen);
@@ -1082,7 +1083,6 @@ class ZdsZaakService
         $now = new \DateTime();
         $creatiedatum = new DateTime($document->getValue('creatiedatum'));
 
-
         $zdsObject = new ObjectEntity($zds->getAttributeObject('object')->getObject());
         $zdsObject->setValue('identificatie', $document->getValue('identificatie'));
         $zdsObject->setValue('dctOmschrijving', $document->getValue('beschrijving'));
@@ -1096,7 +1096,7 @@ class ZdsZaakService
         $zdsObject->setValue('vertrouwelijkAanduiding', $document->getValue('vertrouwelijkAanduiding'));
         $zdsObject->setValue('auteur', $document->getValue('auteur'));
         $zdsObject->setValue('inhoud', $document->getValue('inhoud'));
-        if($zaak) {
+        if ($zaak) {
             $zdsObject->setValue('isRelevantVoor', $this->getIsRelevantVoor($zaak, $zdsObject));
         }
 
@@ -1110,18 +1110,17 @@ class ZdsZaakService
         $this->data = $data;
         $this->configuration = $configuration;
 
-
         $zdsEntity = $this->entityManager->getRepository(Entity::class)->find($this->configuration['zdsEntityId']);
         $documentEntity = $this->entityManager->getRepository(Entity::class)->find($this->configuration['documentEntityId']);
         $result = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['response']['id']);
         $zgwZaak = $result->getValue('zgwZaak');
 
-        if($zgwZaak){
+        if ($zgwZaak) {
             $zaak = $this->entityManager->getRepository(ObjectEntity::class)->find($zgwZaak->getId());
         } else {
             $zaak = null;
         }
-        if($result->getValue('zgwDocumenten')) {
+        if ($result->getValue('zgwDocumenten')) {
             foreach ($result->getValue('zgwDocumenten') as $document) {
                 if (!$document instanceof ObjectEntity) {
                     continue;
