@@ -383,6 +383,11 @@ jobs:
                 api-key: ${{secrets.fossaApiKey}}
                 container: php
                 debug: true
+          - name: Upload results as artifact
+            uses: actions/upload-artifact@v3
+            with:
+                name: 'fossa-results'
+                path: ./fossa.debug.json.gz
   Snyk:
       needs: build
       runs-on: ubuntu-latest
