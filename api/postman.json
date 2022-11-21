@@ -217,6 +217,60 @@
 							"response": []
 						},
 						{
+							"name": "Get Application",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// example using pm.response.to.have\r",
+											"pm.test(\"response is ok\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"// example using response assertions\r",
+											"pm.test(\"response should be okay to process\", function () {\r",
+											"    pm.response.to.not.be.error;\r",
+											"    pm.response.to.not.have.jsonBody(\"error\");\r",
+											"    pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"});\r",
+											"\r",
+											"// example using pm.response.to.be*\r",
+											"pm.test(\"response must be valid and have a body\", function () {\r",
+											"    // assert that the status code is 200\r",
+											"    // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"    // assert that the response has a valid JSON body\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											" pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{environment}}/admin/applications/{{id}}",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"applications",
+										"{{id}}"
+									],
+									"query": []
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "Update Application",
 							"event": [
 								{
@@ -281,6 +335,60 @@
 											"disabled": true
 										}
 									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Application",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// example using pm.response.to.have\r",
+											"pm.test(\"response is ok\", function () {\r",
+											"    pm.response.to.have.status(200);\r",
+											"});\r",
+											"\r",
+											"// example using response assertions\r",
+											"pm.test(\"response should be okay to process\", function () {\r",
+											"    pm.response.to.not.be.error;\r",
+											"    pm.response.to.not.have.jsonBody(\"error\");\r",
+											"    pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"});\r",
+											"\r",
+											"// example using pm.response.to.be*\r",
+											"pm.test(\"response must be valid and have a body\", function () {\r",
+											"    // assert that the status code is 200\r",
+											"    // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"    // assert that the response has a valid JSON body\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											" pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{environment}}/admin/applications/{{id}}",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"applications",
+										"{{id}}"
+									],
+									"query": []
 								}
 							},
 							"response": []
