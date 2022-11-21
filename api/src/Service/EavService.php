@@ -1268,12 +1268,11 @@ class EavService
                             $this->handleDelete($subObject, $maxDepth);
                         }
                     }
-                } else {
-                    $subObject = $object->getValue($attribute);
-                    if ($subObject instanceof ObjectEntity && !$maxDepth->contains($subObject)) {
-                        $this->handleDelete($subObject, $maxDepth);
-                    }
                 }
+            } else {
+                // @todo QuikFix for error when deleting an object
+                $valueObject = $object->getValueObject($attribute);
+                $valueObject && $this->em->remove($valueObject);
             }
         }
         if ($object->getEntity()->getGateway() && $object->getEntity()->getGateway()->getLocation() && $object->getEntity()->getEndpoint() && $object->getExternalId()) {
