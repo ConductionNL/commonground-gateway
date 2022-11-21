@@ -295,7 +295,7 @@ class SynchronizationService
             $this->entityManager->persist($updatedSynchronization);
             $this->entityManager->flush();
 
-            if ($config['collectionDelete'] && ($key = array_search($synchronization, $config['$existingSynchronizations'])) !== false) {
+            if ($config['collectionDelete'] && ($key = array_search($synchronization, $config['existingSynchronizations'])) !== false) {
                 unset($config['$existingSynchronizations'][$key]);
             }
             if (isset($this->io)) {
