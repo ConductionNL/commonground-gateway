@@ -8,6 +8,14 @@
 #        sourceType: github
 #        locationOAS: https://raw.githubusercontent.com/ConductionNL/contactcatalogus/master/api/public/schema/openapi.yaml
 
+# Applications
+App\Entity\Application:
+    # Localhost Application
+    localhost:
+        name: "Main application"
+        domains: ["http://localhost"]
+        public: 6c287220-50ac-4ff3-8974-0d9dc8b4ceeb
+
 # Entities
 App\Entity\Entity:
     # Organization Entity
@@ -856,6 +864,7 @@ App\Entity\Cronjob:
         throws: 
             - 'commongateway.cronjob.trigger'
         data: []
+        isActive: true
 
 #App\Entity\Action:
 #    NotificationAction:
