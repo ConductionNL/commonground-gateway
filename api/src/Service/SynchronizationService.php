@@ -296,7 +296,7 @@ class SynchronizationService
             $this->entityManager->flush();
 
             if ($config['collectionDelete'] && ($key = array_search($synchronization, $config['existingSynchronizations'])) !== false) {
-                unset($config['$existingSynchronizations'][$key]);
+                unset($config['existingSynchronizations'][$key]);
             }
             if (isset($this->io)) {
                 $this->io->text('totalResultsSynced +1 = '.++$config['totalResultsSynced']);
