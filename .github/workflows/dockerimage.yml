@@ -234,11 +234,11 @@ jobs:
                 fail-build: false
                 severity-cutoff: critical
                 output-format: table
-          - name: Upload results as artifact
-            uses: actions/upload-artifact@v3
-            with:
-                name: 'gryphe-results'
-                path: '${{ steps.scan.outputs.sarif }}'
+          # - name: Upload results as artifact
+          #   uses: actions/upload-artifact@v3
+          #   with:
+          #       name: 'gryphe-results'
+          #       path: '${{ steps.scan.outputs.sarif }}'
   Postman:
       needs: build
       runs-on: ubuntu-latest
