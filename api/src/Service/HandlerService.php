@@ -119,6 +119,19 @@ class HandlerService
 
         // @todo creat logicdata, generalvaribales uit de translationservice
 
+        $this->stopwatch->start('handleThrows', 'handleEndpoint');
+        // Lets fire the throws
+        foreach ($endpoint->getThrows() as $key => $throw) {
+            $actionEvent = new ActionEvent($throw, []);
+            $this->eventDispatcher->dispatch($actionEvent, $actionEvent->getType());
+        }
+        $this->stopwatch->stop('handleThrows');
+        // If any of the throws gave a responce lets use that instead of continuing to the old handelrs
+        if($responce = $session->get('responce', false)){
+            return $responce;
+        }
+
+
         $this->stopwatch->start('handleHandlers', 'handleEndpoint');
         foreach ($endpoint->getHandlers() as $handler) {
             // Check if handler should be used for this method
