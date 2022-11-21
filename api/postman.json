@@ -91,6 +91,73 @@
 					"name": "Applications",
 					"item": [
 						{
+							"name": "Create Application",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"// example using pm.response.to.have\r",
+											"pm.test(\"response is ok\", function () {\r",
+											"    pm.response.to.have.status(201);\r",
+											"});\r",
+											"\r",
+											"// example using response assertions\r",
+											"pm.test(\"response should be okay to process\", function () {\r",
+											"    pm.response.to.not.be.error;\r",
+											"    pm.response.to.not.have.jsonBody(\"error\");\r",
+											"    pm.response.to.not.have.jsonBody(\"errors\");\r",
+											"});\r",
+											"\r",
+											"// example using pm.response.to.be*\r",
+											"pm.test(\"response must be valid and have a body\", function () {\r",
+											"    // assert that the status code is 200\r",
+											"    // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
+											"    // assert that the response has a valid JSON body\r",
+											"    pm.response.to.be.withBody;\r",
+											"    pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Set ID\", function () {\r",
+											"    var jsonData = pm.response.json();\r",
+											"    pm.expect(jsonData.id).not.eq(undefined).and.not.eq(null);  \r",
+											"    pm.environment.set(\"appId\", jsonData.id);\r",
+											"});\r",
+											"\r",
+											"pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
+											" pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"name\": \"main application\",\r\n    \"description\": \"\",\r\n    \"domains\": [\r\n        \"zaaksysteem-demo-api.commonground.nu\"\r\n    ],\r\n    \"public\": \"6c287220-50ac-4ff3-8974-0d9dc8b4ceeb\",\r\n    \"secret\": \"uuid\",\r\n    \"resource\": \"url\",\r\n    \"organization\": \"https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/uuid\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{environment}}/admin/applications",
+									"host": [
+										"{{environment}}"
+									],
+									"path": [
+										"admin",
+										"applications"
+									]
+								}
+							},
+							"response": []
+						},
+						{
 							"name": "Get Applications",
 							"event": [
 								{
@@ -144,73 +211,6 @@
 											"value": "referringPerson",
 											"disabled": true
 										}
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "Create Application",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"// example using pm.response.to.have\r",
-											"pm.test(\"response is ok\", function () {\r",
-											"    pm.response.to.have.status(201);\r",
-											"});\r",
-											"\r",
-											"// example using response assertions\r",
-											"pm.test(\"response should be okay to process\", function () {\r",
-											"    pm.response.to.not.be.error;\r",
-											"    pm.response.to.not.have.jsonBody(\"error\");\r",
-											"    pm.response.to.not.have.jsonBody(\"errors\");\r",
-											"});\r",
-											"\r",
-											"// example using pm.response.to.be*\r",
-											"pm.test(\"response must be valid and have a body\", function () {\r",
-											"    // assert that the status code is 200\r",
-											"    // pm.response.to.be.created; // info, success, redirection, clientError,  serverError, are other variants\r",
-											"    // assert that the response has a valid JSON body\r",
-											"    pm.response.to.be.withBody;\r",
-											"    pm.response.to.be.json; // this assertion also checks if a body  exists, so the above check is not needed\r",
-											"});\r",
-											"\r",
-											"pm.test(\"Set ID\", function () {\r",
-											"    var jsonData = pm.response.json();\r",
-											"    pm.expect(jsonData.id).not.eq(undefined).and.not.eq(null);  \r",
-											"    pm.environment.set(\"id\", jsonData.id);\r",
-											"});\r",
-											"\r",
-											"pm.test(\"Response time is less than \"+pm.collectionVariables.get(\"maxResponseTime\")+\"ms\", () => {\r",
-											" pm.expect(pm.response.responseTime).to.be.below(parseInt(pm.collectionVariables.get(\"maxResponseTime\")));\r",
-											"});"
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"request": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"name\": \"main application\",\r\n    \"description\": \"\",\r\n    \"domains\": [\r\n        \"zaaksysteem-demo-api.commonground.nu\"\r\n    ],\r\n    \"public\": \"uuid\",\r\n    \"secret\": \"uuid\",\r\n    \"resource\": \"url\",\r\n    \"organization\": \"https://taalhuizen-bisc.commonground.nu/api/v1/cc/organizations/uuid\"\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
-										}
-									}
-								},
-								"url": {
-									"raw": "{{environment}}/admin/applications",
-									"host": [
-										"{{environment}}"
-									],
-									"path": [
-										"admin",
-										"applications"
 									]
 								}
 							},
