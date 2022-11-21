@@ -3187,7 +3187,7 @@
 		},
 		{
 			"key": "maxResponseTime",
-			"value": "3000",
+			"value": "15000",
 			"type": "string"
 		}
 	]
