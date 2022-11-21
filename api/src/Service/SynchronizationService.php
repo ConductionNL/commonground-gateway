@@ -170,11 +170,11 @@ class SynchronizationService
 
         // Dot the data array and try to find id in it
         $dot = new Dot($responseData);
-        $id = $dot->get($this->configuration['apiSource']['location']['idField']);
+        $id = $dot->get($this->configuration['apiSource']['webhook']['idField']);
 
         // If we have a complete object we can use that to sync
-        if (array_key_exists('object', $this->configuration['apiSource']['location'])) {
-            $sourceObject = $dot->get($this->configuration['apiSource']['location']['object'], $responseData); // todo should default be $data or [] ?
+        if (array_key_exists('object', $this->configuration['apiSource']['webhook'])) {
+            $sourceObject = $dot->get($this->configuration['apiSource']['webhook']['object'], $responseData); // todo should default be $data or [] ?
         } else {
             //todo: find object from source by $id ?
         }
