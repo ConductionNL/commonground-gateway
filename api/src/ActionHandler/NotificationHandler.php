@@ -9,13 +9,18 @@ class NotificationHandler implements ActionHandlerInterface
     private NotificationService $notificationService;
 
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param NotificationService $notificationService
+     *
      * @return NotificationService
      */
-    private function getNotificationService(NotificationService $notificationService):NotificationService {
-        if(isset($this->notificationService)) {$this->notificationService = $notificationService;}
+    private function getNotificationService(NotificationService $notificationService): NotificationService
+    {
+        if (isset($this->notificationService)) {
+            $this->notificationService = $notificationService;
+        }
+
         return  $this->notificationService;
     }
 

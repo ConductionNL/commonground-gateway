@@ -13,13 +13,18 @@ class MapSimXMLHandler implements ActionHandlerInterface
     private MapSimXMLService $mapSimXMLService;
 
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param MapSimXMLService $mapSimXMLService
+     *
      * @return MapSimXMLService
      */
-    private function getMapSimXMLService(MapSimXMLService $mapSimXMLService):MapSimXMLService {
-        if(isset($this->mapSimXMLService)) {$this->mapSimXMLService = $mapSimXMLService;}
+    private function getMapSimXMLService(MapSimXMLService $mapSimXMLService): MapSimXMLService
+    {
+        if (isset($this->mapSimXMLService)) {
+            $this->mapSimXMLService = $mapSimXMLService;
+        }
+
         return  $this->mapSimXMLService;
     }
 

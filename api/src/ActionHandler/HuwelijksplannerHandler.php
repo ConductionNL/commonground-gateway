@@ -9,13 +9,18 @@ class HuwelijksplannerHandler implements ActionHandlerInterface
     private HuwelijksplannerService $huwelijksplannerService;
 
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param HuwelijksplannerService $huwelijksplannerService
+     *
      * @return HuwelijksplannerService
      */
-    private function getHuwelijksplannerService(HuwelijksplannerService $huwelijksplannerService):HuwelijksplannerService {
-        if(isset($this->huwelijksplannerService)) {$this->huwelijksplannerService = $huwelijksplannerService;}
+    private function getHuwelijksplannerService(HuwelijksplannerService $huwelijksplannerService): HuwelijksplannerService
+    {
+        if (isset($this->huwelijksplannerService)) {
+            $this->huwelijksplannerService = $huwelijksplannerService;
+        }
+
         return  $this->huwelijksplannerService;
     }
 

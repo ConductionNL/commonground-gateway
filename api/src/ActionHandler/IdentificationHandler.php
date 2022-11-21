@@ -13,13 +13,18 @@ class IdentificationHandler implements ActionHandlerInterface
     private ZdsZaakService $zdsZaakService;
 
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param ZdsZaakService $zdsZaakService
+     *
      * @return ZdsZaakService
      */
-    private function getZdsZaakService(ZdsZaakService $zdsZaakService):ZdsZaakService {
-        if(isset($this->zdsZaakService)) {$this->zdsZaakService = $zdsZaakService;}
+    private function getZdsZaakService(ZdsZaakService $zdsZaakService): ZdsZaakService
+    {
+        if (isset($this->zdsZaakService)) {
+            $this->zdsZaakService = $zdsZaakService;
+        }
+
         return  $this->zdsZaakService;
     }
 

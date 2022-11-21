@@ -9,16 +9,20 @@ class LarpingHandler implements ActionHandlerInterface
     private LarpingService $larpingService;
 
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param LarpingService $larpingService
+     *
      * @return LarpingService
      */
-    private function getLarpingService(LarpingService $larpingService):LarpingService {
-        if(isset($this->larpingService)) {$this->larpingService = $larpingService;}
+    private function getLarpingService(LarpingService $larpingService): LarpingService
+    {
+        if (isset($this->larpingService)) {
+            $this->larpingService = $larpingService;
+        }
+
         return  $this->larpingService;
     }
-
 
     /**
      *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.

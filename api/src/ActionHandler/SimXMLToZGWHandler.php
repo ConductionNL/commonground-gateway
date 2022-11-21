@@ -10,13 +10,18 @@ class SimXMLToZGWHandler implements ActionHandlerInterface
     private SimXMLZaakService $simXMLZaakService;
 
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param SimXMLZaakService $simXMLZaakService
+     *
      * @return SimXMLZaakService
      */
-    private function getSimXMLZaakService(SimXMLZaakService $simXMLZaakService):SimXMLZaakService {
-        if(isset($this->simXMLZaakService)) {$this->simXMLZaakService = $simXMLZaakService;}
+    private function getSimXMLZaakService(SimXMLZaakService $simXMLZaakService): SimXMLZaakService
+    {
+        if (isset($this->simXMLZaakService)) {
+            $this->simXMLZaakService = $simXMLZaakService;
+        }
+
         return  $this->simXMLZaakService;
     }
 
