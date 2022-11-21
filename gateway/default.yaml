@@ -15,7 +15,7 @@ App\Entity\Application:
         name: "Main application"
         description: "This application is mainly used for local development and the github postman workflow. This application can be removed from your online environment or removed from the fixtures before loading them into the environment."
         domains: ["http://localhost"]
-        public: 6c287220-50ac-4ff3-8974-0d9dc8b4ceeb
+        publicKey: 6c287220-50ac-4ff3-8974-0d9dc8b4ceeb
 
 # Entities
 App\Entity\Entity:
