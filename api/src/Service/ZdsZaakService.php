@@ -567,8 +567,7 @@ class ZdsZaakService
         $document->setValue('beschrijving', $zdsObject->getValue('dctOmschrijving'));
         $document->setValue('informatieobjecttype', $informatieobjecttypenObjectEntity->getValue('url'));
         $document->setValue('vertrouwelijkheidaanduiding', $informatieobjecttypenObjectEntity->getValue('vertrouwelijkheidaanduiding'));
-
-        //        $document->setValue('indicatieGebruiksrecht', $zdsObject->getValue(''));
+        $document->setValue('indicatieGebruiksrecht', 'JA');
         //        $document->setValue('bestandsnaam', $zdsObject->getValue(''));
         //        $document->setValue('ontvangstdatum', $zdsObject->getValue(''));
         //        $document->setValue('verzenddatum', $zdsObject->getValue('')); // stuurgegevens.tijdstipBericht
@@ -807,7 +806,7 @@ class ZdsZaakService
         $heeftRelevant = [];
         foreach ($documenten as $document) {
             $enkelvoudigInformatieObject = $document->getValue('informatieobject');
-            if (!$enkelvoudigInformatieObject) {
+            if (!$enkelvoudigInformatieObject || $enkelvoudigInformatieObject->getValue('indicatieGebruiksrecht') !== 'JA') {
                 continue;
             }
             $createDate = new DateTime($enkelvoudigInformatieObject->getValue('creatiedatum'));
