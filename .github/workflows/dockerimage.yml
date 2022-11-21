@@ -273,6 +273,8 @@ jobs:
             run: sleep 60
           - name: Dumping the logs
             run: docker-compose -f docker-compose.check.yml logs
+          - name: Load fixtures
+            run: docker-compose exec php bin/console hautelook:fixtures:load -n
           - name: Run Core Postman checks
             run: |
               mkdir tests
