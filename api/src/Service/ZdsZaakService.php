@@ -244,9 +244,9 @@ class ZdsZaakService
             ];
         } else {
             foreach ($zdsObject->getValue('extraElementen') as $extraElement) {
-                if ($extraElement['@naam'] == 'kvkNummer') {
+                if ($extraElement->getValue('@naam') == 'kvkNummer') {
                     return [
-                        'annIdentificatie' => $extraElement['#'],
+                        'annIdentificatie' => $extraElement->getValue('#'),
                     ];
                 }
             }
