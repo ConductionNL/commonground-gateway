@@ -20,7 +20,6 @@ use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -230,11 +229,11 @@ class SynchronizationService
         }
 
         $loopResults = $this->loopThroughCollectionResults($results, [
-            'gateway' => $gateway,
-            'entity' => $entity,
-            'collectionDelete' => $collectionDelete,
+            'gateway'                  => $gateway,
+            'entity'                   => $entity,
+            'collectionDelete'         => $collectionDelete,
             'existingSynchronizations' => $existingSynchronizations ?? null,
-            'totalResultsSynced' => $totalResultsSynced ?? null
+            'totalResultsSynced'       => $totalResultsSynced ?? null,
         ]);
 
         if (isset($this->io)) {
@@ -259,13 +258,13 @@ class SynchronizationService
      * Loops through all objects gathered from a Source with the SynchronizationCollectionHandler function.
      *
      * @param array $results The array of objects / $results we got from a source.
-     * @param array $config A configuration array with data used by this function. This array must contain the following keys:
-     * 'gateway', 'entity', 'collectionDelete', 'existingSynchronizations', 'totalResultsSynced'.
+     * @param array $config  A configuration array with data used by this function. This array must contain the following keys:
+     *                       'gateway', 'entity', 'collectionDelete', 'existingSynchronizations', 'totalResultsSynced'.
      *
      * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException|LoaderError|SyntaxError|GuzzleException
      *
      * @return array An array containing the 'existingSynchronizations' (an array of all existing synchronization that do exist in the gateway but aren't re-synced yet)
-     * and 'totalResultsSynced' (a count of how many objects we have synced)
+     *               and 'totalResultsSynced' (a count of how many objects we have synced)
      */
     private function loopThroughCollectionResults(array $results, array $config): array
     {
@@ -307,7 +306,7 @@ class SynchronizationService
 
         return [
             'existingSynchronizations' => $config['$existingSynchronizations'],
-            'totalResultsSynced' => $config['totalResultsSynced']
+            'totalResultsSynced'       => $config['totalResultsSynced'],
         ];
     }
 
