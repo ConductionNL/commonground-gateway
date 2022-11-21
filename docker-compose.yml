@@ -8,7 +8,6 @@ x-cache:
 
 services:  
   ui:
-    &nginx
     image: ghcr.io/conductionnl/gateway-ui:stag
     depends_on:
       - api        
