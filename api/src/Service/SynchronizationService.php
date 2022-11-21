@@ -305,7 +305,7 @@ class SynchronizationService
         }
 
         return [
-            'existingSynchronizations' => $config['$existingSynchronizations'],
+            'existingSynchronizations' => $config['existingSynchronizations'],
             'totalResultsSynced'       => $config['totalResultsSynced'],
         ];
     }
