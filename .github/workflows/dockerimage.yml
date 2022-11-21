@@ -238,7 +238,7 @@ jobs:
             uses: actions/upload-artifact@v3
             with:
                 name: 'gryphe-results'
-                path: ${{ steps.scan.outputs.sarif }}
+                path: '${{ steps.scan.outputs.sarif }}'
   Postman:
       needs: build
       runs-on: ubuntu-latest
