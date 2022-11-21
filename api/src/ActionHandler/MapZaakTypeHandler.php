@@ -13,13 +13,18 @@ class MapZaakTypeHandler implements ActionHandlerInterface
     private MapZaakTypeService $mapZaakTypeService;
 
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param MapZaakTypeService $mapZaakTypeService
+     *
      * @return MapZaakTypeService
      */
-    private function getMapZaakTypeService(MapZaakTypeService $mapZaakTypeService):MapZaakTypeService {
-        if(isset($this->mapZaakTypeService)) {$this->mapZaakTypeService = $mapZaakTypeService;}
+    private function getMapZaakTypeService(MapZaakTypeService $mapZaakTypeService): MapZaakTypeService
+    {
+        if (isset($this->mapZaakTypeService)) {
+            $this->mapZaakTypeService = $mapZaakTypeService;
+        }
+
         return  $this->mapZaakTypeService;
     }
 

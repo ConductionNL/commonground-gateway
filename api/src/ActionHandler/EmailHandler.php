@@ -13,13 +13,18 @@ class EmailHandler implements ActionHandlerInterface
     private EmailService $emailService;
 
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param EmailService $emailService
+     *
      * @return EmailService
      */
-    private function getEmailService(EmailService $emailService):EmailService {
-        if(isset($this->emailService)) {$this->emailService = $emailService;}
+    private function getEmailService(EmailService $emailService): EmailService
+    {
+        if (isset($this->emailService)) {
+            $this->emailService = $emailService;
+        }
+
         return  $this->emailService;
     }
 

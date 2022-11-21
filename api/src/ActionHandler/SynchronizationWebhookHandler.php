@@ -10,15 +10,19 @@ use Respect\Validation\Exceptions\ComponentException;
 
 class SynchronizationWebhookHandler implements ActionHandlerInterface
 {
-
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param SynchronizationService $synchronizationService
+     *
      * @return SynchronizationService
      */
-    private function getSynchronizationService(ZgwToVrijbrpService $synchronizationService){
-        if(isset($this->synchronizationService)) {$this->synchronizationService = $synchronizationService;}
+    private function getSynchronizationService(ZgwToVrijbrpService $synchronizationService)
+    {
+        if (isset($this->synchronizationService)) {
+            $this->synchronizationService = $synchronizationService;
+        }
+
         return  $this->synchronizationService;
     }
 

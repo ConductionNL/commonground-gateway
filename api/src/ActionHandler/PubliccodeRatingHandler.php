@@ -9,13 +9,18 @@ class PubliccodeRatingHandler implements ActionHandlerInterface
     private PubliccodeService $publiccodeService;
 
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param PubliccodeService $publiccodeService
+     *
      * @return PubliccodeService
      */
-    private function getPubliccodeService(PubliccodeService $publiccodeService):PubliccodeService {
-        if(isset($this->publiccodeService)) {$this->publiccodeService = $publiccodeService;}
+    private function getPubliccodeService(PubliccodeService $publiccodeService): PubliccodeService
+    {
+        if (isset($this->publiccodeService)) {
+            $this->publiccodeService = $publiccodeService;
+        }
+
         return  $this->publiccodeService;
     }
 

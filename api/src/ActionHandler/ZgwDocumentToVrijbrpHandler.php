@@ -13,16 +13,22 @@ class ZgwDocumentToVrijbrpHandler implements ActionHandlerInterface
     private ZgwToVrijbrpService $zgwToVrijbrpService;
 
     /**
-     * Wrapper function to prevent service loading on container autowiring
+     * Wrapper function to prevent service loading on container autowiring.
      *
      * @param ZgwToVrijbrpService $zgwToVrijbrpService
+     *
      * @return ZgwToVrijbrpService
      */
-    private function getZgwToVrijbrpService(ZgwToVrijbrpService $zgwToVrijbrpService): ZgwToVrijbrpService{
-        if(isset($this->zgwToVrijbrpService)) {$this->zgwToVrijbrpService = $zgwToVrijbrpService;}
+    private function getZgwToVrijbrpService(ZgwToVrijbrpService $zgwToVrijbrpService): ZgwToVrijbrpService
+    {
+        if (isset($this->zgwToVrijbrpService)) {
+            $this->zgwToVrijbrpService = $zgwToVrijbrpService;
+        }
+
         return  $this->zgwToVrijbrpService;
     }
-        /**
+
+    /**
      *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
      *
      * @throws array a [json-schema](https://json-schema.org/) that this  action should comply to
