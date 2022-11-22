@@ -255,8 +255,11 @@ class ZdsZaakService
         return [];
     }
 
-    public function sortToelichting(string $toelichting): string
+    public function sortToelichting(?string $toelichting = null): ?string
     {
+        if (!$toelichting) {
+            return null;
+        }
         $toelichtingen = [];
         $toelichtingArray = explode('|', $toelichting);
         foreach ($toelichtingArray as $field) {
