@@ -1149,9 +1149,9 @@ class EavService
     /**
      * This is a quick fix for a problem where filtering would return to many result if we are filtering on a value
      * that is also present in a subobject of the main $object we are filtering on.
-     * todo: remove this function
+     * todo: remove this function.
      *
-     * @param array $query The query/filters we need to check.
+     * @param array        $query  The query/filters we need to check.
      * @param ObjectEntity $object The object to check.
      *
      * @return bool true by default, false if filtering wasn't done correctly and this object should not be shown in the results.
@@ -1166,6 +1166,7 @@ class EavService
                 }
             }
         }
+
         return true;
     }
 
