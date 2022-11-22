@@ -146,11 +146,15 @@ class ZgwToVrijbrpService
                     $commitmentArray['dossier']['description'] = $eigenschap['waarde'];
                     $commitmentArray['dossier']['type']['description'] = $eigenschap['waarde'];
                     continue 2;
-                case 'bsn1':
-                    $commitmentArray['partner1']['bsn'] = $eigenschap['waarde'];
-                    continue 2;
                 case 'geslachtsnaam1':
                     $commitmentArray['partner1']['nameAfterCommitment']['lastname'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'inp.bsn':
+                    if (isset($commitmentArray['partner1']['bsn'])) {
+                        $commitmentArray['partner2']['bsn'] = $eigenschap['waarde'];
+                    } else {
+                        $commitmentArray['partner1']['bsn'] = $eigenschap['waarde'];
+                    }
                     continue 2;
                 case 'geselecteerdNaamgebruik':
                     if (isset($commitmentArray['partner1']['nameAfterCommitment']['nameUseType'])) {
@@ -159,8 +163,11 @@ class ZgwToVrijbrpService
                         $commitmentArray['partner1']['nameAfterCommitment']['nameUseType'] = $eigenschap['waarde'];
                     }
                     continue 2;
+                case 'bsn1':
+                    $commitmentArray['witnesses'][1]['bsn'] = $eigenschap['waarde'];
+                    continue 2;
                 case 'bsn2':
-                    $commitmentArray['partner2']['bsn'] = $eigenschap['waarde'];
+                    $commitmentArray['witnesses'][1]['bsn'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geslachtsnaam2':
                     $commitmentArray['partner2']['nameAfterCommitment']['lastname'] = $eigenschap['waarde'];

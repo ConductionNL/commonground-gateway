@@ -124,7 +124,7 @@ class Synchronization
      * @Groups({"read","write"})
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private ?DateTimeInterface $sourceLastChanged;
+    private ?DateTimeInterface $sourceLastChanged = null;
 
     /**
      * @var ?DateTimeInterface The moment this resource was last checked
