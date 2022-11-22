@@ -106,6 +106,7 @@ class PubliccodeService
             $component->setValue('platforms', $publiccode['platforms'] ?? null);
             $component->setValue('categories', $publiccode['categories'] ?? null);
             $component->setValue('developmentStatus', $publiccode['developmentStatus'] ?? null);
+            $repository->setValue('url', $publiccode['url'] ?? null);
 
 //            $component->setValue('releaseDate', $publiccode['releaseDate']);
 //            $component->setValue('dependsOn', $publiccode['dependsOn']['open']['name']);
