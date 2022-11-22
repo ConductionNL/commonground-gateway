@@ -365,7 +365,7 @@
 #                     object_bron: Smoelenboek
 #                     title: medewerker
 #                unavailablePropertiesOut:
-#                    - calendar
+#                    - availabilities
 #                    - contact
 #                    - department
 #                    - description
