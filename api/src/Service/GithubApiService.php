@@ -271,14 +271,14 @@ class GithubApiService
         $response = null;
 
         try {
-            $response = $this->githubusercontent->request('GET', $organizationName . '/' . $repositoryName . '/main/publiccode.yaml');
+            $response = $this->githubusercontent->request('GET', $organizationName.'/'.$repositoryName.'/main/publiccode.yaml');
         } catch (ClientException $exception) {
             var_dump($exception->getMessage());
         }
 
         if ($response == null) {
             try {
-                $response = $this->githubusercontent->request('GET', $organizationName . '/' . $repositoryName . '/master/publiccode.yaml');
+                $response = $this->githubusercontent->request('GET', $organizationName.'/'.$repositoryName.'/master/publiccode.yaml');
             } catch (ClientException $exception) {
                 var_dump($exception->getMessage());
 
@@ -288,7 +288,7 @@ class GithubApiService
 
         if ($response == null) {
             try {
-                $response = $this->githubusercontent->request('GET', $organizationName . '/' . $repositoryName . '/main/publiccode.yml');
+                $response = $this->githubusercontent->request('GET', $organizationName.'/'.$repositoryName.'/main/publiccode.yml');
             } catch (ClientException $exception) {
                 var_dump($exception->getMessage());
 
@@ -298,7 +298,7 @@ class GithubApiService
 
         if ($response == null) {
             try {
-                $response = $this->githubusercontent->request('GET', $organizationName . '/' . $repositoryName . '/master/publiccode.yml');
+                $response = $this->githubusercontent->request('GET', $organizationName.'/'.$repositoryName.'/master/publiccode.yml');
             } catch (ClientException $exception) {
                 var_dump($exception->getMessage());
 
