@@ -257,7 +257,7 @@ class ZdsZaakService
 
     public function sortToelichting(?string $toelichting = null): ?string
     {
-        if(!$toelichting) {
+        if (!$toelichting) {
             return null;
         }
         $toelichtingen = [];
