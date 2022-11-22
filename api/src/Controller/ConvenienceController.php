@@ -248,8 +248,7 @@ class ConvenienceController extends AbstractController
      */
     public function githubEvents(Request $request): Response
     {
-
-        if (!$content = json_decode($request->request->get('payload'), true)){
+        if (!$content = json_decode($request->request->get('payload'), true)) {
 //            var_dump($content = $this->handlerService->getDataFromRequest());
 
             return $this->publiccodeService->updateRepositoryWithEventResponse($this->handlerService->getDataFromRequest());
