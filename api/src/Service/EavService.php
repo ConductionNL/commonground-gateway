@@ -1124,21 +1124,11 @@ class EavService
                 $object = $object[0];
                 // $object['stringValue'] contains the value we are ordering on.
             }
-            // todo: remove the following if !empty($query) statement and the content in it.
+            // todo: remove the following function
             // This is a quick fix for a problem where filtering would return to many result if we are filtering on a value...
             // ...that is also present in a subobject of the main $object we are filtering on.
-            if (!empty($query) && $object instanceof ObjectEntity) {
-                $resultDot = new Dot($object->toArray());
-                $continue = false;
-                foreach ($query as $filter => $value) {
-                    if ($resultDot->get($filter) != $value) {
-                        $continue = true;
-                        break;
-                    }
-                }
-                if ($continue) {
-                    continue;
-                }
+            if (!$this->checkIfFilteredCorrectly($query, $object)) {
+                continue;
             }
             $result = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
             $results[] = $result;
@@ -1154,6 +1144,29 @@ class EavService
 
         // If not lets make it pretty
         return $this->handlePagination($acceptType, $entity, $results, $repositoryResult['total'], $limit, $offset);
+    }
+
+    /**
+     * This is a quick fix for a problem where filtering would return to many result if we are filtering on a value
+     * that is also present in a subobject of the main $object we are filtering on.
+     * todo: remove this function
+     *
+     * @param array $query The query/filters we need to check.
+     * @param ObjectEntity $object The object to check.
+     *
+     * @return bool true by default, false if filtering wasn't done correctly and this object should not be shown in the results.
+     */
+    private function checkIfFilteredCorrectly(array $query, ObjectEntity $object): bool
+    {
+        if (!empty($query)) {
+            $resultDot = new Dot($object->toArray());
+            foreach ($query as $filter => $value) {
+                if ($resultDot->get($filter) != $value) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /**
