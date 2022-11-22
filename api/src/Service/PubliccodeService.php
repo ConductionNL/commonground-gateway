@@ -294,6 +294,7 @@ class PubliccodeService
                     }
 
                     $repository = $this->setRepositoryWithGithubInfo($repository, $github);
+
                     $this->entityManager->flush();
 
                     return $repository;
@@ -320,7 +321,9 @@ class PubliccodeService
         $ownsRepositories = [];
         if ($owns = $organisation->getValue('owns')) {
             foreach ($owns as $repositoryUrl) {
-                $repository = $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+                if (!$repository = $this->getOrganisationRepos($repositoryUrl, $repositoryEntity)) {
+                    return $organisation;
+                }
                 $ownsRepositories[] = $repository->getId()->toString();
             }
         }
@@ -329,7 +332,9 @@ class PubliccodeService
         $usesRepositories = [];
         if ($uses = $organisation->getValue('uses')) {
             foreach ($uses as $repositoryUrl) {
-                $repository = $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+                if (!$repository = $this->getOrganisationRepos($repositoryUrl, $repositoryEntity)) {
+                    return $organisation;
+                }
                 $usesRepositories[] = $repository->getId()->toString();
             }
         }
@@ -338,7 +343,9 @@ class PubliccodeService
         $supportsRepositories = [];
         if ($supports = $organisation->getValue('supports')) {
             foreach ($supports as $repositoryUrl) {
-                $repository = $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+                if (!$repository = $this->getOrganisationRepos($repositoryUrl, $repositoryEntity)) {
+                    return $organisation;
+                }
                 $supportsRepositories[] = $repository->getId()->toString();
             }
         }
