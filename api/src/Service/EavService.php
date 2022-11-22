@@ -1124,7 +1124,24 @@ class EavService
                 $object = $object[0];
                 // $object['stringValue'] contains the value we are ordering on.
             }
-            $results[] = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
+            // todo: remove the following if !empty($query) statement and the content in it.
+            // This is a quick fix for a problem where filtering would return to many result if we are filtering on a value...
+            // ...that is also present in a subobject of the main $object we are filtering on.
+            if (!empty($query) && $object instanceof ObjectEntity) {
+                $resultDot = new Dot($object->toArray());
+                $continue = false;
+                foreach ($query as $filter => $value) {
+                    if ($resultDot->get($filter) != $value) {
+                        $continue = true;
+                        break;
+                    }
+                }
+                if ($continue) {
+                    continue;
+                }
+            }
+            $result = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
+            $results[] = $result;
             $this->stopwatch->lap('renderResults');
         }
         $this->stopwatch->stop('renderResults');
