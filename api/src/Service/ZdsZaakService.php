@@ -255,8 +255,11 @@ class ZdsZaakService
         return [];
     }
 
-    public function sortToelichting(string $toelichting): string
+    public function sortToelichting(?string $toelichting = null): ?string
     {
+        if (!$toelichting) {
+            return null;
+        }
         $toelichtingen = [];
         $toelichtingArray = explode('|', $toelichting);
         foreach ($toelichtingArray as $field) {
@@ -567,7 +570,7 @@ class ZdsZaakService
         $document->setValue('beschrijving', $zdsObject->getValue('dctOmschrijving'));
         $document->setValue('informatieobjecttype', $informatieobjecttypenObjectEntity->getValue('url'));
         $document->setValue('vertrouwelijkheidaanduiding', $informatieobjecttypenObjectEntity->getValue('vertrouwelijkheidaanduiding'));
-//        $document->setValue('indicatieGebruiksrecht', true);
+        $document->setValue('indicatieGebruiksrecht', true);
         //        $document->setValue('bestandsnaam', $zdsObject->getValue(''));
         //        $document->setValue('ontvangstdatum', $zdsObject->getValue(''));
         //        $document->setValue('verzenddatum', $zdsObject->getValue('')); // stuurgegevens.tijdstipBericht
@@ -806,7 +809,7 @@ class ZdsZaakService
         $heeftRelevant = [];
         foreach ($documenten as $document) {
             $enkelvoudigInformatieObject = $document->getValue('informatieobject');
-            if (!$enkelvoudigInformatieObject /*|| !$enkelvoudigInformatieObject->getValue('indicatieGebruiksrecht')*/) {
+            if (!$enkelvoudigInformatieObject || !$enkelvoudigInformatieObject->getValue('indicatieGebruiksrecht')) {
                 continue;
             }
             $createDate = new DateTime($enkelvoudigInformatieObject->getValue('creatiedatum'));
