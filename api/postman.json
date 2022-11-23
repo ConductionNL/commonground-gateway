@@ -1733,7 +1733,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "// {\r\n//     \"name\": \"Weer Handler\",\r\n//     \"endpoints\": [\"/admin/endpoints/70b11eae-84af-4fac-af06-282a34c4a293\"],\r\n//     \"entity\": \"/admin/entities/a157c9a2-8962-4004-93fa-a064cef017c8\",\r\n//     \"methods\": [\"POST\"],\r\n//     \"sequence\": 0,\r\n//     \"conditions\": \"{}\"\r\n// }",
+									"raw": "{\r\n    \"name\": \"Weer Handler updated\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -3041,14 +3041,14 @@
 								"method": "DELETE",
 								"header": [],
 								"url": {
-									"raw": "{{environment}}/admin/endpoints/{{id}}",
+									"raw": "{{environment}}/admin/endpoints/{{endpointId}}",
 									"host": [
 										"{{environment}}"
 									],
 									"path": [
 										"admin",
 										"endpoints",
-										"{{id}}"
+										"{{endpointId}}"
 									]
 								}
 							},
