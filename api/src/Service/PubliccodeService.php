@@ -129,6 +129,7 @@ class PubliccodeService
             $component->setValue('description', $description);
             $this->entityManager->persist($description);
 
+            $component->setValue('url', $repository);
             $this->entityManager->persist($component);
             $repository->setValue('component', $component);
             $this->entityManager->persist($repository);
