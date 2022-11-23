@@ -7,6 +7,7 @@ use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Entity\Value;
+use App\Exception\AsynchronousException;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -244,9 +245,9 @@ class ZdsZaakService
             ];
         } else {
             foreach ($zdsObject->getValue('extraElementen') as $extraElement) {
-                if ($extraElement['@naam'] == 'kvkNummer') {
+                if ($extraElement->getValue('@naam') == 'kvkNummer') {
                     return [
-                        'annIdentificatie' => $extraElement['#'],
+                        'annIdentificatie' => $extraElement->getValue('#'),
                     ];
                 }
             }
@@ -255,8 +256,11 @@ class ZdsZaakService
         return [];
     }
 
-    public function sortToelichting(string $toelichting): string
+    public function sortToelichting(?string $toelichting = null): ?string
     {
+        if (!$toelichting) {
+            return null;
+        }
         $toelichtingen = [];
         $toelichtingArray = explode('|', $toelichting);
         foreach ($toelichtingArray as $field) {
@@ -567,8 +571,7 @@ class ZdsZaakService
         $document->setValue('beschrijving', $zdsObject->getValue('dctOmschrijving'));
         $document->setValue('informatieobjecttype', $informatieobjecttypenObjectEntity->getValue('url'));
         $document->setValue('vertrouwelijkheidaanduiding', $informatieobjecttypenObjectEntity->getValue('vertrouwelijkheidaanduiding'));
-
-        //        $document->setValue('indicatieGebruiksrecht', $zdsObject->getValue(''));
+//        $document->setValue('indicatieGebruiksrecht', true);
         //        $document->setValue('bestandsnaam', $zdsObject->getValue(''));
         //        $document->setValue('ontvangstdatum', $zdsObject->getValue(''));
         //        $document->setValue('verzenddatum', $zdsObject->getValue('')); // stuurgegevens.tijdstipBericht
@@ -590,6 +593,7 @@ class ZdsZaakService
         $this->entityManager->flush();
 
         $this->data['response'] = $zdsDocument->toArray();
+        $this->data['enkelvoudigInformatieObject'] = $document->getId();
 
         return $this->data;
     }
@@ -807,7 +811,7 @@ class ZdsZaakService
         $heeftRelevant = [];
         foreach ($documenten as $document) {
             $enkelvoudigInformatieObject = $document->getValue('informatieobject');
-            if (!$enkelvoudigInformatieObject) {
+            if (!$enkelvoudigInformatieObject || !$enkelvoudigInformatieObject->getValue('indicatieGebruiksrecht')) {
                 continue;
             }
             $createDate = new DateTime($enkelvoudigInformatieObject->getValue('creatiedatum'));
@@ -1184,5 +1188,37 @@ class ZdsZaakService
         $this->entityManager->flush();
 
         return $this->data;
+    }
+
+    /**
+     * @param array $configuration
+     * @param array $data
+     * @TODO: move this to a ZGW service
+     */
+    public function creeerGebruiksrechtHandler(array $data, array $configuration): array
+    {
+        $gebruiksrechtEntity = $this->entityManager->getRepository('App:Entity')->find($configuration['gebruiksrechtEntityId']);
+
+        if (
+            isset($data['enkelvoudigInformatieObject']) &&
+            $document = $this->entityManager->getRepository('App:ObjectEntity')->find($data['enkelvoudigInformatieObject'])
+        ) {
+            if ($document->getValue('indicatieGebruiksrecht')) {
+                return $data;
+            } elseif (!$document->getValue('url')) {
+                throw new AsynchronousException('enkelvoudigInformatieObject has not yet been synced');
+            }
+            $now = new DateTime();
+            $gebruiksrecht = new ObjectEntity($gebruiksrechtEntity);
+            $gebruiksrecht->setValue('informatieobject', $document->getValue('url'));
+            $gebruiksrecht->setValue('startdatum', $now->format(DateTime::ISO8601));
+            $gebruiksrecht->setValue('omschrijvingVoorwaarden', 'document uploaded by initiator');
+            $this->entityManager->persist($gebruiksrecht);
+            $document->setValue('indicatieGebruiksrecht', true);
+            $this->entityManager->persist($document);
+            $this->entityManager->flush();
+        }
+
+        return $data;
     }
 }

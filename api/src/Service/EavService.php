@@ -1124,7 +1124,14 @@ class EavService
                 $object = $object[0];
                 // $object['stringValue'] contains the value we are ordering on.
             }
-            $results[] = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
+            // todo: remove the following function
+            // This is a quick fix for a problem where filtering would return to many result if we are filtering on a value...
+            // ...that is also present in a subobject of the main $object we are filtering on.
+//            if (!$this->checkIfFilteredCorrectly($query, $object)) {
+//                continue;
+//            }
+            $result = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
+            $results[] = $result;
             $this->stopwatch->lap('renderResults');
         }
         $this->stopwatch->stop('renderResults');
@@ -1137,6 +1144,30 @@ class EavService
 
         // If not lets make it pretty
         return $this->handlePagination($acceptType, $entity, $results, $repositoryResult['total'], $limit, $offset);
+    }
+
+    /**
+     * This is a quick fix for a problem where filtering would return to many result if we are filtering on a value
+     * that is also present in a subobject of the main $object we are filtering on.
+     * todo: remove this function.
+     *
+     * @param array        $query  The query/filters we need to check.
+     * @param ObjectEntity $object The object to check.
+     *
+     * @return bool true by default, false if filtering wasn't done correctly and this object should not be shown in the results.
+     */
+    private function checkIfFilteredCorrectly(array $query, ObjectEntity $object): bool
+    {
+        if (!empty($query)) {
+            $resultDot = new Dot($object->toArray());
+            foreach ($query as $filter => $value) {
+                if ($resultDot->get($filter) != $value) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
