@@ -7,6 +7,7 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
 class GithubApiService
@@ -200,7 +201,15 @@ class GithubApiService
             return null;
         }
 
-        return Yaml::parse($response->getBody()->getContents());
+        try {
+            $github = Yaml::parse($response->getBody()->getContents());
+        } catch (ParseException $exception) {
+            var_dump($exception->getMessage());
+
+            return null;
+        }
+
+        return $github;
     }
 
     /**
@@ -236,7 +245,15 @@ class GithubApiService
             }
         }
 
-        return Yaml::parse($response->getBody()->getContents());
+        try {
+            $openCatalogi = Yaml::parse($response->getBody()->getContents());
+        } catch (ParseException $exception) {
+            var_dump($exception->getMessage());
+
+            return null;
+        }
+
+        return $openCatalogi;
     }
 
     /**
@@ -289,7 +306,15 @@ class GithubApiService
             }
         }
 
-        return Yaml::parse($response->getBody()->getContents());
+        try {
+            $publiccode = Yaml::parse($response->getBody()->getContents());
+        } catch (ParseException $exception) {
+            var_dump($exception->getMessage());
+
+            return null;
+        }
+
+        return $publiccode;
     }
 
     /**
@@ -311,14 +336,18 @@ class GithubApiService
         } catch (ClientException $exception) {
             var_dump($exception->getMessage());
 
-            return new Response(
-                $exception,
-                Response::HTTP_BAD_REQUEST,
-                ['content-type' => 'json']
-            );
+            return null;
         }
 
-        return Yaml::parse($response->getBody()->getContents());
+        try {
+            $publiccode = Yaml::parse($response->getBody()->getContents());
+        } catch (ParseException $exception) {
+            var_dump($exception->getMessage());
+
+            return null;
+        }
+
+        return $publiccode;
     }
 
     /**
