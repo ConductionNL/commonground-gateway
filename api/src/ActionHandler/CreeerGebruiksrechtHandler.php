@@ -4,7 +4,6 @@ namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
 use App\Service\ZdsZaakService;
-use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 
