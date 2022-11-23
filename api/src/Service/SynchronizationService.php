@@ -209,7 +209,7 @@ class SynchronizationService
             $this->io->note('SynchronizationService->SynchronizationCollectionHandler()');
         }
         $collectionDelete = false;
-        if (array_key_exists('collectionDelete', $this->configuration['apiSource']) && $this->configuration['apiSource']['collectionDelete']) {
+        if (isset($this->configuration['apiSource']['collectionDelete']) && array_key_exists('collectionDelete', $this->configuration['apiSource']) && $this->configuration['apiSource']['collectionDelete']) {
             $collectionDelete = true;
         }
 
@@ -224,7 +224,7 @@ class SynchronizationService
         if (isset($this->io)) {
             $totalResults = is_countable($results) ? count($results) : 0;
             $totalExistingSyncs = $collectionDelete && is_countable($existingSynchronizations) ? count($existingSynchronizations) : 0;
-            $this->io->block("Found $totalResults object".($totalResults == 1 ? '' : 's')." in Source and $totalExistingSyncs existing synchronization".($totalExistingSyncs == 1 ? '' : 's').' in the Gateway. Start syncing all objects found in Source to Gateway objects...');
+            $this->io->block("Found $totalResults object" . ($totalResults == 1 ? '' : 's') . " in Source and $totalExistingSyncs existing synchronization" . ($totalExistingSyncs == 1 ? '' : 's') . ' in the Gateway. Start syncing all objects found in Source to Gateway objects...');
             $totalResultsSynced = 0;
         }
 
@@ -238,9 +238,9 @@ class SynchronizationService
 
         if (isset($this->io)) {
             $totalExistingSyncs = $collectionDelete && is_countable($loopResults['existingSynchronizations']) ? count($loopResults['existingSynchronizations']) : 0;
-            $this->io->block("Synced {$loopResults['totalResultsSynced']}/$totalResults object".($totalResults == 1 ? '' : 's').
-                " from Source to Gateway. We still have $totalExistingSyncs existing Synchronization".($totalExistingSyncs == 1 ? '' : 's').
-                ' for an Object in the Gateway that no longer exist in the Source.'.
+            $this->io->block("Synced {$loopResults['totalResultsSynced']}/$totalResults object" . ($totalResults == 1 ? '' : 's') .
+                " from Source to Gateway. We still have $totalExistingSyncs existing Synchronization" . ($totalExistingSyncs == 1 ? '' : 's') .
+                ' for an Object in the Gateway that no longer exist in the Source.' .
                 ($totalExistingSyncs !== 0 ? ' Start deleting these Synchronizations and their objects...' : ''));
         }
 
@@ -274,10 +274,10 @@ class SynchronizationService
             // Turn it in a dot array to find the correct data in $result...
             $dot = new Dot($result);
             // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
-            $id = $dot->get($this->configuration['apiSource']['location']['idField']);
+            $id = $dot->get($this->configuration['apiSource']['location']['idField'] ?? 'id');
 
             // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-            array_key_exists('object', $this->configuration['apiSource']['location']) && $result = $dot->get($this->configuration['apiSource']['location']['object'], $result);
+            $result = $dot->get($this->configuration['apiSource']['location']['object'] ?? null, $result);
 
             // Lets grab the sync object, if we don't find an existing one, this will create a new one:
             $synchronization = $this->findSyncBySource($config['gateway'], $config['entity'], $id);
@@ -299,7 +299,7 @@ class SynchronizationService
                 unset($config['existingSynchronizations'][$key]);
             }
             if (isset($this->io)) {
-                $this->io->text('totalResultsSynced +1 = '.++$config['totalResultsSynced']);
+                $this->io->text('totalResultsSynced +1 = ' . ++$config['totalResultsSynced']);
                 $this->io->newLine();
             }
         }
@@ -445,7 +445,7 @@ class SynchronizationService
             $id = null;
         }
 
-        return $location.($id ? '/'.$id : '');
+        return $location . ($id ? '/' . $id : '');
     }
 
     /**
@@ -520,7 +520,7 @@ class SynchronizationService
             $this->io = $this->session->get('io');
         }
         if (isset($this->io)) {
-            $errorMessage = ($config['message']['preMessage'] ?? '').$exception->getMessage().($config['message']['postMessage'] ?? '');
+            $errorMessage = ($config['message']['preMessage'] ?? '') . $exception->getMessage() . ($config['message']['postMessage'] ?? '');
             (isset($config['message']['type']) && $config['message']['type'] === 'error') ?
                 $this->io->error($errorMessage) : $this->io->warning($errorMessage);
             isset($config['file']) && $this->io->block("File: {$exception->getFile()}");
@@ -545,7 +545,7 @@ class SynchronizationService
         if (is_array($callServiceConfig['query'])) {
             $query = array_merge($callServiceConfig['query'], $page !== 1 ? ['page' => $page] : []);
         } else {
-            $query = $callServiceConfig['query'].'&page='.$page;
+            $query = $callServiceConfig['query'] . '&page=' . $page;
         }
 
         try {
@@ -562,7 +562,7 @@ class SynchronizationService
                     'headers' => $callServiceConfig['headers'],
                 ]
             );
-        } catch (Exception|GuzzleException $exception) {
+        } catch (Exception | GuzzleException $exception) {
             // If no next page with this $page exists...
             $this->ioCatchException($exception, ['line', 'file', 'message' => [
                 'preMessage' => '(This might just be the final page!) - Error while doing fetchObjectsFromSource: ',
@@ -574,7 +574,7 @@ class SynchronizationService
         $pageResult = $this->callService->decodeResponse($callServiceConfig['gateway'], $response);
 
         $dot = new Dot($pageResult);
-        $results = $dot->get($this->configuration['apiSource']['location']['objects'], $pageResult);
+        $results = $dot->get($this->configuration['apiSource']['location']['objects'] ?? null, $pageResult);
 
         if (array_key_exists('sourceLimit', $this->configuration['apiSource']) && count($results) >= $this->configuration['apiSource']['sourceLimit']) {
             $results = array_merge($results, $this->fetchObjectsFromSource($callServiceConfig, $page + 1));
@@ -614,7 +614,7 @@ class SynchronizationService
                     'headers' => $callServiceConfig['headers'],
                 ]
             );
-        } catch (Exception|GuzzleException $exception) {
+        } catch (Exception | GuzzleException $exception) {
             $this->ioCatchException($exception, ['line', 'file', 'message' => [
                 'preMessage' => 'Error while doing getSingleFromSource: ',
             ]]);
@@ -629,7 +629,7 @@ class SynchronizationService
         //        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
 
         // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-        return $dot->get($this->configuration['apiSource']['location']['object'], $result);
+        return $dot->get($this->configuration['apiSource']['location']['object'] ?? null, $result);
     }
 
     /**
@@ -925,7 +925,7 @@ class SynchronizationService
         // The prefixes to add in the format 'field' => 'prefix'
         $prefixes = $this->configuration['apiSource']['prefixFieldsOut'];
         foreach ($prefixes as $id => $prefix) {
-            $objectArray[$id] = $prefix.$objectArray[$id];
+            $objectArray[$id] = $prefix . $objectArray[$id];
         }
 
         return $objectArray;
@@ -1034,8 +1034,8 @@ class SynchronizationService
         $synchronization->setLastSynced($now);
         $synchronization->setSourceLastChanged($now);
         $synchronization->setLastChecked($now); //todo this should not be here but only in the handleSync function. But this needs to be here because we call the syncToSource function instead of handleSync function
-        if ($body->has($this->configuration['apiSource']['location']['idField'])) {
-            $synchronization->setSourceId($body->get($this->configuration['apiSource']['location']['idField']));
+        if ($body->has($this->configuration['apiSource']['location']['idField'] ?? 'id')) {
+            $synchronization->setSourceId($body->get($this->configuration['apiSource']['location']['idField'] ?? 'id'));
         }
         $synchronization->setHash(hash('sha384', serialize($body->jsonSerialize())));
 
@@ -1125,7 +1125,7 @@ class SynchronizationService
                     'headers' => $callServiceConfig['headers'],
                 ]
             );
-        } catch (Exception|GuzzleException $exception) {
+        } catch (Exception | GuzzleException $exception) {
             $this->ioCatchException($exception, ['line', 'file', 'message' => [
                 'preMessage' => 'Error while doing syncToSource: ',
             ]]);
@@ -1205,7 +1205,7 @@ class SynchronizationService
         $sourceObjectDot = new Dot($sourceObject);
 
         $object = $this->populateObject($sourceObject, $object, $method);
-        $object->setUri($synchronization->getGateway()->getLocation().$this->getCallServiceEndpoint($synchronization->getSourceId()));
+        $object->setUri($synchronization->getGateway()->getLocation() . $this->getCallServiceEndpoint($synchronization->getSourceId()));
         if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
             $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
         }
