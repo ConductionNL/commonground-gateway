@@ -593,7 +593,7 @@ class ZdsZaakService
         $this->entityManager->flush();
 
         $this->data['response'] = $zdsDocument->toArray();
-        $this->data['enkelvoudigInformatieObject'] = $zdsObject->getId();
+        $this->data['enkelvoudigInformatieObject'] = $document->getId();
 
         return $this->data;
     }
