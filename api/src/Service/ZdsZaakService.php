@@ -1195,33 +1195,30 @@ class ZdsZaakService
      * @param array $data
      * @TODO: move this to a ZGW service
      */
-    public function creeerGebruiksrechtHandler (array $data, array $configuration): array
+    public function creeerGebruiksrechtHandler(array $data, array $configuration): array
     {
-        $gebruiksrechtEntity = $this->entityManager->getRepository("App:Entity")->find($configuration['gebruiksrechtEntityId']);
+        $gebruiksrechtEntity = $this->entityManager->getRepository('App:Entity')->find($configuration['gebruiksrechtEntityId']);
 
-
-        if(
+        if (
             isset($data['enkelvoudigInformatieObject']) &&
-            $document = $this->entityManager->getRepository("App:ObjectEntity")->find($data['enkelvoudigInformatieObject'])
+            $document = $this->entityManager->getRepository('App:ObjectEntity')->find($data['enkelvoudigInformatieObject'])
         ) {
             if ($document->getValue('indicatieGebruiksrecht')) {
                 return $data;
-            } elseif(!$document->getValue('url')) {
+            } elseif (!$document->getValue('url')) {
                 throw new AsynchronousException('enkelvoudigInformatieObject has not yet been synced');
             }
             $now = new DateTime();
             $gebruiksrecht = new ObjectEntity($gebruiksrechtEntity);
-            $gebruiksrecht->setValue("informatieobject", $document->getValue('url'));
-            $gebruiksrecht->setValue("startdatum", $now->format(DateTime::ISO8601));
-            $gebruiksrecht->setValue("omschrijvingVoorwaarden", "document uploaded by initiator");
+            $gebruiksrecht->setValue('informatieobject', $document->getValue('url'));
+            $gebruiksrecht->setValue('startdatum', $now->format(DateTime::ISO8601));
+            $gebruiksrecht->setValue('omschrijvingVoorwaarden', 'document uploaded by initiator');
             $this->entityManager->persist($gebruiksrecht);
             $document->setValue('indicatieGebruiksrecht', true);
             $this->entityManager->persist($document);
             $this->entityManager->flush();
-
         }
 
         return $data;
-
     }
 }
