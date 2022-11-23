@@ -1349,7 +1349,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"name\": \"Weer Entity\",\r\n    \"description\": \"Dit endpoint behandled weer\",\r\n    \"function\": \"log\"\r\n}",
+									"raw": "{\r\n    \"name\": \"Pet\",\r\n    \"description\": \"Swagger PetStore Pet schema\",\r\n    \"function\": \"noFunction\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2323,7 +2323,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{{\r\n    \"name\": \"Test Subscriber updated\"\r\n}",
+									"raw": "{\r\n    \"name\": \"Test Subscriber updated\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2997,13 +2997,13 @@
 								"method": "DELETE",
 								"header": [],
 								"url": {
-									"raw": "{{environment}}/admin/collections/{{appId}}",
+									"raw": "{{environment}}/admin/applications/{{appId}}",
 									"host": [
 										"{{environment}}"
 									],
 									"path": [
 										"admin",
-										"collections",
+										"applications",
 										"{{appId}}"
 									]
 								}
