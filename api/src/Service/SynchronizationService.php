@@ -209,7 +209,7 @@ class SynchronizationService
             $this->io->note('SynchronizationService->SynchronizationCollectionHandler()');
         }
         $collectionDelete = false;
-        if (array_key_exists('collectionDelete', $this->configuration['apiSource']) && $this->configuration['apiSource']['collectionDelete']) {
+        if (isset($this->configuration['apiSource']['collectionDelete']) && array_key_exists('collectionDelete', $this->configuration['apiSource']) && $this->configuration['apiSource']['collectionDelete']) {
             $collectionDelete = true;
         }
 
@@ -274,10 +274,10 @@ class SynchronizationService
             // Turn it in a dot array to find the correct data in $result...
             $dot = new Dot($result);
             // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
-            $id = $dot->get($this->configuration['apiSource']['location']['idField']);
+            $id = $dot->get($this->configuration['apiSource']['location']['idField'] ?? 'id');
 
             // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-            array_key_exists('object', $this->configuration['apiSource']['location']) && $result = $dot->get($this->configuration['apiSource']['location']['object'], $result);
+            $result = $dot->get($this->configuration['apiSource']['location']['object'] ?? null, $result);
 
             // Lets grab the sync object, if we don't find an existing one, this will create a new one:
             $synchronization = $this->findSyncBySource($config['gateway'], $config['entity'], $id);
@@ -574,7 +574,7 @@ class SynchronizationService
         $pageResult = $this->callService->decodeResponse($callServiceConfig['gateway'], $response);
 
         $dot = new Dot($pageResult);
-        $results = $dot->get($this->configuration['apiSource']['location']['objects'], $pageResult);
+        $results = $dot->get($this->configuration['apiSource']['location']['objects'] ?? null, $pageResult);
 
         if (array_key_exists('sourceLimit', $this->configuration['apiSource']) && count($results) >= $this->configuration['apiSource']['sourceLimit']) {
             $results = array_merge($results, $this->fetchObjectsFromSource($callServiceConfig, $page + 1));
@@ -629,7 +629,7 @@ class SynchronizationService
         //        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
 
         // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-        return $dot->get($this->configuration['apiSource']['location']['object'], $result);
+        return $dot->get($this->configuration['apiSource']['location']['object'] ?? null, $result);
     }
 
     /**
@@ -1034,8 +1034,8 @@ class SynchronizationService
         $synchronization->setLastSynced($now);
         $synchronization->setSourceLastChanged($now);
         $synchronization->setLastChecked($now); //todo this should not be here but only in the handleSync function. But this needs to be here because we call the syncToSource function instead of handleSync function
-        if ($body->has($this->configuration['apiSource']['location']['idField'])) {
-            $synchronization->setSourceId($body->get($this->configuration['apiSource']['location']['idField']));
+        if ($body->has($this->configuration['apiSource']['location']['idField'] ?? 'id')) {
+            $synchronization->setSourceId($body->get($this->configuration['apiSource']['location']['idField'] ?? 'id'));
         }
         $synchronization->setHash(hash('sha384', serialize($body->jsonSerialize())));
 
