@@ -4,15 +4,10 @@
 
 namespace App\Controller;
 
-use App\Service\AuthenticationService;
 use CommonGateway\CoreBundle\Service\ComposerService;
-use Doctrine\ORM\EntityManagerInterface;
-use GuzzleHttp\Exception\ClientException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -52,7 +47,6 @@ class PluginController extends AbstractController
         return new Response(json_encode($plugins), $status, ['Content-type' => 'application/json']);
     }
 
-
     /**
      * @Route("/available", methods={"GET"})
      */
@@ -62,7 +56,7 @@ class PluginController extends AbstractController
 
         $search = $request->query->get('search', 'a');
 
-        $plugins = $this->composerService->search($search, ['--type=common-gateway-plugin'] );
+        $plugins = $this->composerService->search($search, ['--type=common-gateway-plugin']);
 
         return new Response(json_encode($plugins), $status, ['Content-type' => 'application/json']);
     }
@@ -88,8 +82,8 @@ class PluginController extends AbstractController
     {
         $status = 200;
 
-        if(!$packadge = $request->query->get('plugin', false)){
-            return new Response("No plugin provided as query parameters", 400, ['Content-type' => 'application/json']);
+        if (!$packadge = $request->query->get('plugin', false)) {
+            return new Response('No plugin provided as query parameters', 400, ['Content-type' => 'application/json']);
         }
 
         $plugins = $this->composerService->require($packadge);
@@ -104,8 +98,8 @@ class PluginController extends AbstractController
     {
         $status = 200;
 
-        if(!$packadge = $request->query->get('plugin', false)){
-            return new Response("No plugin provided as query parameters", 400, ['Content-type' => 'application/json']);
+        if (!$packadge = $request->query->get('plugin', false)) {
+            return new Response('No plugin provided as query parameters', 400, ['Content-type' => 'application/json']);
         }
 
         $plugins = $this->composerService->upgrade($packadge);
@@ -120,8 +114,8 @@ class PluginController extends AbstractController
     {
         $status = 200;
 
-        if(!$packadge = $request->query->get('plugin', false)){
-            return new Response("No plugin provided as query parameters", 400, ['Content-type' => 'application/json']);
+        if (!$packadge = $request->query->get('plugin', false)) {
+            return new Response('No plugin provided as query parameters', 400, ['Content-type' => 'application/json']);
         }
 
         $plugins = $this->composerService->remove($packadge);
