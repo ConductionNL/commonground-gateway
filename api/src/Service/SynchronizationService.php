@@ -405,7 +405,7 @@ class SynchronizationService
     /**
      * Determines the configuration for using the callservice for the source given.
      *
-     * @param Source     $source     The source to call
+     * @param Source      $source      The source to call
      * @param string|null $id          The id to request (optional)
      * @param array|null  $objectArray
      *
@@ -416,7 +416,7 @@ class SynchronizationService
     private function getCallServiceConfig(Source $source, string $id = null, ?array $objectArray = []): array
     {
         return [
-            'source'   => $source,
+            'source'    => $source,
             'endpoint'  => $this->getCallServiceEndpoint($id, $objectArray),
             'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService($id), //todo maybe array_merge instead of ??
             'headers'   => array_merge(
@@ -493,9 +493,9 @@ class SynchronizationService
      *
      * @param Source $source The source to get the data from
      *
-     * @return array The results found on the source
      *@throws LoaderError|SyntaxError|GuzzleException
      *
+     * @return array The results found on the source
      */
     private function getObjectsFromSource(Source $source): array
     {
@@ -504,7 +504,7 @@ class SynchronizationService
             $this->io->definitionList(
                 'getObjectsFromSource with this callServiceConfig data',
                 new TableSeparator(),
-                ['Source'   => "Source \"{$source->getName()}\" ({$source->getId()->toString()})"],
+                ['Source'    => "Source \"{$source->getName()}\" ({$source->getId()->toString()})"],
                 ['Endpoint'  => $callServiceConfig['endpoint']],
                 ['Query'     => is_array($callServiceConfig['query']) ? "[{$this->objectEntityService->implodeMultiArray($callServiceConfig['query'])}]" : $callServiceConfig['query']],
                 ['Headers'   => is_array($callServiceConfig['headers']) ? "[{$this->objectEntityService->implodeMultiArray($callServiceConfig['headers'])}]" : $callServiceConfig['headers']],
@@ -654,8 +654,8 @@ class SynchronizationService
      * Finds a synchronisation object if it exists for the current object in the source, or creates one if it doesn't exist.
      *
      * @param Source $source   The source that is requested
-     * @param Entity  $entity   The entity that is requested
-     * @param string  $sourceId The id of the object in the source
+     * @param Entity $entity   The entity that is requested
+     * @param string $sourceId The id of the object in the source
      *
      * @return Synchronization|null A synchronisation object related to the object in the source
      */
@@ -689,7 +689,7 @@ class SynchronizationService
      * Finds a synchronisation object if it exists for the current object in the gateway, or creates one if it doesn't exist.
      *
      * @param ObjectEntity $objectEntity The current object in the gateway
-     * @param Source      $source       The current source
+     * @param Source       $source       The current source
      * @param Entity       $entity       The current entity
      *
      * @return Synchronization|null A synchronisation object related to the object in the gateway

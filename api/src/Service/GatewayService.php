@@ -50,7 +50,7 @@ class GatewayService
         $source = $this->retrieveSource($name);
         if (!$source->getIsEnabled()) {
             return new Response(
-                json_encode(["Message" => "This Source is not enabled: {$name}"]),
+                json_encode(['Message' => "This Source is not enabled: {$name}"]),
                 Response::HTTP_OK,
                 ['content-type' => 'application/json']
             );
@@ -209,9 +209,9 @@ class GatewayService
      *
      * @param $source string Name of the Source used to search for the object.
      *
-     * @return Source The retrieved Source object.
      *@throws NotFoundHttpException If there is no Source object found with the provided name.
      *
+     * @return Source The retrieved Source object.
      */
     public function retrieveSource(string $source): Source
     {
