@@ -9,7 +9,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ServerException;
-use GuzzleHttp\Psr7\Request;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -62,7 +61,7 @@ class ProxySubscriber implements EventSubscriberInterface
         try {
             $result = $this->callService->call(
                 $source,
-                '/' . ($event->getRequest()->attributes->get('endpoint') ?? ''),
+                '/'.($event->getRequest()->attributes->get('endpoint') ?? ''),
                 $event->getRequest()->headers->get('x-method') ?? $event->getRequest()->getMethod(),
                 array_merge([
                     'headers' => $headers,
@@ -70,7 +69,7 @@ class ProxySubscriber implements EventSubscriberInterface
                     'body'    => $event->getRequest()->getContent(),
                 ], $source->getConfiguration())
             );
-        } catch (ServerException | ClientException | RequestException $e) {
+        } catch (ServerException|ClientException|RequestException $e) {
             $result = $e->getResponse();
 
             // If error catched dont pass event->getHeaders (causes infinite loop)
