@@ -665,7 +665,7 @@ class ZdsZaakService
         // @todo als er s'n sterke behoefte is om deze dingen meteen te kunnen zetten mogen ze in een magic constructor
         $synchronization->setObject($objectEntity);
         $synchronization->setEntity($objectEntity->getEntity());
-        $synchronization->setGateway($zrcSource);
+        $synchronization->setSource($zrcSource);
 
         //TODO: is this right this way? Feels very hardcoded
         //TODO: use twig parser on this instead

@@ -1127,9 +1127,9 @@ class EavService
             // todo: remove the following function
             // This is a quick fix for a problem where filtering would return to many result if we are filtering on a value...
             // ...that is also present in a subobject of the main $object we are filtering on.
-//            if (!$this->checkIfFilteredCorrectly($query, $object)) {
-//                continue;
-//            }
+            if (!$this->checkIfFilteredCorrectly($query, $object)) {
+                continue;
+            }
             $result = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
             $results[] = $result;
             $this->stopwatch->lap('renderResults');
@@ -1158,10 +1158,16 @@ class EavService
      */
     private function checkIfFilteredCorrectly(array $query, ObjectEntity $object): bool
     {
+        unset(
+            $query['search'], $query['_search'],
+            $query['fields'], $query['_fields'],
+            $query['extend'], $query['_extend']
+        );
         if (!empty($query)) {
             $resultDot = new Dot($object->toArray());
             foreach ($query as $filter => $value) {
-                if ($resultDot->get($filter) != $value) {
+                $filter = str_replace('|valueScopeFilter', '', $filter);
+                if ($resultDot->get($filter) !== null && $resultDot->get($filter) != $value) {
                     return false;
                 }
             }
@@ -1307,7 +1313,7 @@ class EavService
                 }
             }
         }
-        if ($object->getEntity()->getGateway() && $object->getEntity()->getGateway()->getLocation() && $object->getEntity()->getEndpoint() && $object->getExternalId()) {
+        if ($object->getEntity()->getSource() && $object->getEntity()->getSource()->getLocation() && $object->getEntity()->getEndpoint() && $object->getExternalId()) {
             if ($resource = $this->commonGroundService->isResource($object->getUri())) {
                 $this->commonGroundService->deleteResource(null, $object->getUri()); // could use $resource instead?
             }
@@ -1354,7 +1360,7 @@ class EavService
         $this->em->clear();
         //TODO: test and make sure extern objects are not created after an error, and if they are, maybe add this;
         //        var_dump($createdObject->getUri());
-        //        if ($createdObject->getEntity()->getGateway() && $createdObject->getEntity()->getGateway()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
+        //        if ($createdObject->getEntity()->getSource() && $createdObject->getEntity()->getSource()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
         //            try {
         //                $resource = $this->commonGroundService->getResource($createdObject->getUri(), [], false);
         //                var_dump('Delete extern object for: '.$createdObject->getEntity()->getName());
