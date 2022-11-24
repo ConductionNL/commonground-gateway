@@ -203,6 +203,13 @@ class ZgwToVrijbrpService
             }
         }
 
+        if(!isset($commitmentArray['partner2']['nameAfterCommitment']['nameUseType'])){
+            $commitmentArray['partner2']['nameAfterCommitment']['nameUseType'] = 'N';
+        }
+        if(!isset($commitmentArray['partner1']['nameAfterCommitment']['nameUseType'])) {
+            $commitmentArray['partner1']['nameAfterCommitment']['nameUseType'] = 'N';
+        }
+
         if (!isset($commitmentArray['partner2']['bsn'])) {
             $commitmentArray['partner2']['bsn'] = $this->getInitiatorBsn($zaakArray);
         }
