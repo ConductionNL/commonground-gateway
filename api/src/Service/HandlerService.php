@@ -7,6 +7,7 @@ use App\Entity\Endpoint;
 use App\Entity\Handler;
 use App\Event\ActionEvent;
 use App\Exception\GatewayException;
+use CommonGateway\FormIOBundle\Service\FormIOService;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
@@ -159,7 +160,7 @@ class HandlerService
     {
         $path = $this->cutPath($endpoint->getPath());
 
-        return $this->gatewayService->processGateway($handler->getProxyGateway(), $path, $method, $this->request->getContent(), $this->request->query->all(), $this->request->headers->all());
+        return $this->gatewayService->processSource($handler->getProxyGateway(), $path, $method, $this->request->getContent(), $this->request->query->all(), $this->request->headers->all());
     }
 
     public function getMethodOverrides(string &$method, ?string &$operationType, Handler $handler)

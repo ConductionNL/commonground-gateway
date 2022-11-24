@@ -22,4 +22,6 @@ return [
     CommonGateway\CoreBundle\CoreBundle::class                                 => ['all' => true],
     Endroid\QrCodeBundle\EndroidQrCodeBundle::class                            => ['all' => true],
     CommonGateway\WaardepapierenBundle\WaardepapierenBundle::class             => ['all' => true],
+    CommonGateway\FormIOBundle\FormIOBundle::class                             => ['all' => true],
+
 ];

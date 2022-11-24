@@ -40,7 +40,7 @@ class GatewaySubscriber implements EventSubscriberInterface
             return;
         }
 
-        $response = $this->gatewayService->processGateway(
+        $response = $this->gatewayService->processSource(
             $event->getRequest()->attributes->get('name'),
             $event->getRequest()->attributes->get('endpoint'),
             $event->getRequest()->getMethod(),

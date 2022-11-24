@@ -253,6 +253,14 @@ class Gateway
     private string $location;
 
     /**
+     * @var bool true if this Source is enabled and can be used.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", options={"default": true})
+     */
+    private bool $isEnabled = true;
+
+    /**
      * @var string The type of this gatewat
      *
      * @Assert\NotNull
@@ -750,6 +758,18 @@ class Gateway
         return $this;
     }
 
+    public function getIsEnabled(): ?bool
+    {
+        return $this->isEnabled;
+    }
+
+    public function setIsEnabled(bool $isEnabled): self
+    {
+        $this->isEnabled = $isEnabled;
+
+        return $this;
+    }
+
     public function getAuthorizationHeader(): ?string
     {
         return $this->authorizationHeader;
@@ -918,7 +938,7 @@ class Gateway
     {
         if (!$this->responceLogs->contains($responceLog)) {
             $this->responceLogs[] = $responceLog;
-            $responceLog->setGateway($this);
+            $responceLog->setSource($this);
         }
 
         return $this;
@@ -928,8 +948,8 @@ class Gateway
     {
         if ($this->responceLogs->removeElement($responceLog)) {
             // set the owning side to null (unless already changed)
-            if ($responceLog->getGateway() === $this) {
-                $responceLog->setGateway(null);
+            if ($responceLog->getSource() === $this) {
+                $responceLog->setSource(null);
             }
         }
 
@@ -996,7 +1016,7 @@ class Gateway
     {
         if (!$this->requestLogs->contains($requestLog)) {
             $this->requestLogs[] = $requestLog;
-            $requestLog->setGateway($this);
+            $requestLog->setSource($this);
         }
 
         return $this;
@@ -1006,8 +1026,8 @@ class Gateway
     {
         if ($this->requestLogs->removeElement($requestLog)) {
             // set the owning side to null (unless already changed)
-            if ($requestLog->getGateway() === $this) {
-                $requestLog->setGateway(null);
+            if ($requestLog->getSource() === $this) {
+                $requestLog->setSource(null);
             }
         }
 
@@ -1056,7 +1076,7 @@ class Gateway
     {
         if (!$this->subscribers->contains($subscriber)) {
             $this->subscribers[] = $subscriber;
-            $subscriber->setGateway($this);
+            $subscriber->setSource($this);
         }
 
         return $this;
@@ -1066,8 +1086,8 @@ class Gateway
     {
         if ($this->subscribers->removeElement($subscriber)) {
             // set the owning side to null (unless already changed)
-            if ($subscriber->getGateway() === $this) {
-                $subscriber->setGateway(null);
+            if ($subscriber->getSource() === $this) {
+                $subscriber->setSource(null);
             }
         }
 
@@ -1135,7 +1155,7 @@ class Gateway
     {
         if (!$this->synchronizations->contains($synchronization)) {
             $this->synchronizations[] = $synchronization;
-            $synchronization->setGateway($this);
+            $synchronization->setSource($this);
         }
 
         return $this;

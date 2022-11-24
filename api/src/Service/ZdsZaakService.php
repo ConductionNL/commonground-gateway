@@ -7,6 +7,7 @@ use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Entity\Value;
+use App\Exception\AsynchronousException;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -203,7 +204,7 @@ class ZdsZaakService
                 continue;
             }
             // Extra element doesn't exist in eigenschappen
-            $zaak->setValue('toelichting', "{$zaak->getValue('toelichting')}|{$extraElement->getValue('#')}"); //If the name of the attribute is desirable, add this to the string: {$extraElement->getValue('@naam')}:
+            $zaak->setValue('toelichting', $zaak->getValue('toelichting') ? "{$zaak->getValue('toelichting')}|{$extraElement->getValue('@naam')}: {$extraElement->getValue('#')}" : "{$extraElement->getValue('@naam')}: {$extraElement->getValue('#')}");
         }
         $zaak->setValue('eigenschappen', $zaakEigenschappen);
     }
@@ -236,13 +237,48 @@ class ZdsZaakService
         $zaak->setValue('rollen', $rol);
     }
 
-    public function vestigingToOrganisatorischeEenheid(ObjectEntity $vestiging): array
+    public function vestigingToNietNatuurlijkPersoon(ObjectEntity $vestiging, ObjectEntity $zdsObject): array
     {
-        return [
-            'identificatie'  => $vestiging->getValue('vestigingsNummer'),
-            'naam'		         => $vestiging->getValue('handelsnaam'),
-            'isGehuisvestIn' => $vestiging->getValue('verblijfsadres')->getValue('wplWoonplaatsNaam'),
-        ];
+        if ($vestiging->getValue('vestigingsNummer')) {
+            return [
+                'annIdentificatie'  => $vestiging->getValue('vestigingsNummer'),
+            ];
+        } else {
+            foreach ($zdsObject->getValue('extraElementen') as $extraElement) {
+                if ($extraElement->getValue('@naam') == 'kvkNummer') {
+                    return [
+                        'annIdentificatie' => $extraElement->getValue('#'),
+                    ];
+                }
+            }
+        }
+
+        return [];
+    }
+
+    public function sortToelichting(?string $toelichting = null): ?string
+    {
+        if (!$toelichting) {
+            return null;
+        }
+        $toelichtingen = [];
+        $toelichtingArray = explode('|', $toelichting);
+        foreach ($toelichtingArray as $field) {
+            $field = explode(':', $field);
+            if ($field[0] == 'sub.emailadres') {
+                $email = trim($field[1]);
+            } else {
+                $toelichtingen[] = trim($field[1]);
+            }
+        }
+        if (isset($email)) {
+            while (count($toelichtingen) < 2) {
+                $toelichtingen[] = null;
+            }
+            $toelichtingen = array_merge(array_slice($toelichtingen, 0, 2), [$email], array_slice($toelichtingen, 2));
+        }
+
+        return implode('|', $toelichtingen);
     }
 
     /**
@@ -265,7 +301,7 @@ class ZdsZaakService
             $rol->setValue('roltype', $roltype);
             $rol->setValue('omschrijving', $roltype->getValue('omschrijving'));
             $rol->setValue('omschrijvingGeneriek', $roltype->getValue('omschrijvingGeneriek'));
-            $rol->setValue('roltoelichting', $zaak->getValue('toelichting'));
+            $rol->setValue('roltoelichting', $this->sortToelichting($zaak->getValue('toelichting')));
 
             if ($natuurlijkPersoonObject = $heeftAlsInitiatorObject->getValue('natuurlijkPersoon')) {
                 $rol->setValue('betrokkeneIdentificatie', $natuurlijkPersoonObject->toArray());
@@ -273,9 +309,8 @@ class ZdsZaakService
             }
 
             if ($heeftAlsInitiatorObject->getValue('vestiging')->getValue('vestigingsNummer') || $heeftAlsInitiatorObject->getValue('vestiging')->getValue('handelsnaam')) {
-                $rol->setValue('betrokkeneIdentificatie', $this->vestigingToOrganisatorischeEenheid($heeftAlsInitiatorObject->getValue('vestiging')));
-                $rol->setValue('betrokkeneType', 'organisatorische_eenheid');
-                $this->synchronizationService->setApplicationAndOrganization($rol->getValue('betrokkeneIdentificatie'));
+                $rol->setValue('betrokkeneIdentificatie', $this->vestigingToNietNatuurlijkPersoon($heeftAlsInitiatorObject->getValue('vestiging'), $zdsObject));
+                $rol->setValue('betrokkeneType', 'niet_natuurlijk_persoon');
             }
 
             $this->entityManager->persist($rol);
@@ -372,7 +407,7 @@ class ZdsZaakService
         ) {
             $this->createNewZgwEigenschappen($zdsObject, $zaaktypeObjectEntity, $zaak);
         } else {
-            throw new ErrorException('Cannot create zaakeigenschappen');
+            $this->createZgwZaakEigenschappen($zdsObject, $zaaktypeObjectEntity, $zaak);
         }
 
         if (
@@ -517,9 +552,9 @@ class ZdsZaakService
                     $informatieobjecttypenObjectEntity = $informatieObjectType;
                     break;
                 }
-                if (is_array($informatieObjectTypeEntity) && !isset($this->configuration['enrichData'])) {
-                    throw new ErrorException('The zaaktypen-informatieobjecttypen with omschrijving: '.$zdsObject->getValue('dctOmschrijving').' can\'t be found');
-                }
+            }
+            if (is_array($informatieobjecttypenObjectEntity) && (!isset($this->configuration['enrichData']) || $this->configuration['enrichData'] == false)) {
+                throw new ErrorException('The zaaktypen-informatieobjecttypen with omschrijving: '.$zdsObject->getValue('dctOmschrijving').' can\'t be found');
             }
         }
 
@@ -536,8 +571,7 @@ class ZdsZaakService
         $document->setValue('beschrijving', $zdsObject->getValue('dctOmschrijving'));
         $document->setValue('informatieobjecttype', $informatieobjecttypenObjectEntity->getValue('url'));
         $document->setValue('vertrouwelijkheidaanduiding', $informatieobjecttypenObjectEntity->getValue('vertrouwelijkheidaanduiding'));
-
-        //        $document->setValue('indicatieGebruiksrecht', $zdsObject->getValue(''));
+//        $document->setValue('indicatieGebruiksrecht', true);
         //        $document->setValue('bestandsnaam', $zdsObject->getValue(''));
         //        $document->setValue('ontvangstdatum', $zdsObject->getValue(''));
         //        $document->setValue('verzenddatum', $zdsObject->getValue('')); // stuurgegevens.tijdstipBericht
@@ -559,6 +593,7 @@ class ZdsZaakService
         $this->entityManager->flush();
 
         $this->data['response'] = $zdsDocument->toArray();
+        $this->data['enkelvoudigInformatieObject'] = $document->getId();
 
         return $this->data;
     }
@@ -630,7 +665,7 @@ class ZdsZaakService
         // @todo als er s'n sterke behoefte is om deze dingen meteen te kunnen zetten mogen ze in een magic constructor
         $synchronization->setObject($objectEntity);
         $synchronization->setEntity($objectEntity->getEntity());
-        $synchronization->setGateway($zrcSource);
+        $synchronization->setSource($zrcSource);
 
         //TODO: is this right this way? Feels very hardcoded
         //TODO: use twig parser on this instead
@@ -776,7 +811,7 @@ class ZdsZaakService
         $heeftRelevant = [];
         foreach ($documenten as $document) {
             $enkelvoudigInformatieObject = $document->getValue('informatieobject');
-            if (!$enkelvoudigInformatieObject) {
+            if (!$enkelvoudigInformatieObject || !$enkelvoudigInformatieObject->getValue('indicatieGebruiksrecht')) {
                 continue;
             }
             $createDate = new DateTime($enkelvoudigInformatieObject->getValue('creatiedatum'));
@@ -894,7 +929,6 @@ class ZdsZaakService
     public function zgwToZdsHandler(array $data, array $configuration): array
     {
         $this->configuration = $configuration;
-
         $result = $this->entityManager->getRepository('App:ObjectEntity')->find($data['response']['id']);
 
         $zakenEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['zaakEntityId']);
@@ -921,7 +955,7 @@ class ZdsZaakService
             $result = $result->toArray();
             $result['object'] = $zaken;
             $data['response'] = $result;
-        } elseif ($result->getValue('Body') && $result->getValue('zgwZaak')) {
+        } elseif ($result->getValue('body') && $result->getValue('zgwZaak')) {
             $rollen = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($rolEntity, ['omschrijvingGeneriek' => 'initiator'], ['_dateCreated' => 'DESC'], 0, 250);
             $zaak = $this->entityManager->getRepository(ObjectEntity::class)->find($result->getValue('zgwZaak'));
             foreach ($rollen as $rol) {
@@ -935,6 +969,7 @@ class ZdsZaakService
             $zds->setValue('stuurgegevens', $this->getStuurgegevensFromSimXML($result, 'ZAK'));
             $zds = $this->getExtraElementen($zds, $zaak);
             $this->entityManager->persist($zds);
+
             $this->entityManager->flush();
         }
 
@@ -1026,8 +1061,8 @@ class ZdsZaakService
             $this->entityManager->persist($zaak);
         } else {
             $messageType = 'genereerDocumentIdentificatie';
-            foreach ($result->getValue('zgwDocumenten') as $documentId) {
-                $document = $this->entityManager->getRepository(ObjectEntity::class)->find($documentId);
+            foreach ($result->getValue('zgwDocumenten') as $zgwDocument) {
+                $document = $this->entityManager->getRepository(ObjectEntity::class)->find($zgwDocument->getId());
                 $document->getValue('identificatie') ?: $document->setValue('identificatie', $this->getIdentificationForObject($messageType));
                 $this->entityManager->persist($document);
             }
@@ -1037,7 +1072,7 @@ class ZdsZaakService
         return $data;
     }
 
-    public function getIsRelevantVoor(ObjectEntity $document, ObjectEntity $zaak, ObjectEntity $zdsObject): ObjectEntity
+    public function getIsRelevantVoor(ObjectEntity $zaak, ObjectEntity $zdsObject): ObjectEntity
     {
         $zdsIsRelevantVoor = new ObjectEntity($zdsObject->getAttributeObject('isRelevantVoor')->getObject());
         $zdsIsRelevantVoor->setValue('identificatie', $zaak->getValue('identificatie'));
@@ -1047,23 +1082,27 @@ class ZdsZaakService
         return $zdsIsRelevantVoor;
     }
 
-    public function getDocumentObject(ObjectEntity $zds, ObjectEntity $document, ObjectEntity $zaak): ObjectEntity
+    public function getDocumentObject(ObjectEntity $zds, ObjectEntity $document, ?ObjectEntity $zaak): ObjectEntity
     {
         $now = new \DateTime();
+        $creatiedatum = new DateTime($document->getValue('creatiedatum'));
+
         $zdsObject = new ObjectEntity($zds->getAttributeObject('object')->getObject());
-        $zdsObject->setValue('identificatie', $document->getValue('informatieobject')->getValue('identificatie'));
-        $zdsObject->setValue('dctOmschrijving', $document->getValue('informatieobject')->getValue('beschrijving'));
-        $zdsObject->setValue('creatiedatum', $now->format('Ymd'));
+        $zdsObject->setValue('identificatie', $document->getValue('identificatie'));
+        $zdsObject->setValue('dctOmschrijving', $document->getValue('beschrijving'));
+        $zdsObject->setValue('creatiedatum', $creatiedatum->format('Ymd'));
         $zdsObject->setValue('ontvangstdatum', $now->format('Ymd'));
-        $zdsObject->setValue('titel', $document->getValue('informatieobject')->getValue('titel'));
-        $zdsObject->setValue('beschrijving', $document->getValue('informatieobject')->getValue('beschrijving'));
-        $zdsObject->setValue('formaat', $document->getValue('informatieobject')->getValue('formaat'));
-        $zdsObject->setValue('taal', $document->getValue('informatieobject')->getValue('taal'));
-        $zdsObject->setValue('status', $document->getValue('informatieobject')->getValue('status'));
-        $zdsObject->setValue('vertrouwelijkAanduiding', $document->getValue('informatieobject')->getValue('vertrouwelijkAanduiding'));
-        $zdsObject->setValue('auteur', $document->getValue('informatieobject')->getValue('auteur'));
-        $zdsObject->setValue('inhoud', $document->getValue('informatieobject')->getValue('inhoud'));
-        $zdsObject->setValue('isRelevantVoor', $this->getIsRelevantVoor($document, $zaak, $zdsObject));
+        $zdsObject->setValue('titel', $document->getValue('titel'));
+        $zdsObject->setValue('beschrijving', $document->getValue('beschrijving'));
+        $zdsObject->setValue('formaat', $document->getValue('formaat'));
+        $zdsObject->setValue('taal', $document->getValue('taal'));
+        $zdsObject->setValue('status', $document->getValue('status'));
+        $zdsObject->setValue('vertrouwelijkAanduiding', $document->getValue('vertrouwelijkAanduiding'));
+        $zdsObject->setValue('auteur', $document->getValue('auteur'));
+        $zdsObject->setValue('inhoud', $document->getValue('inhoud'));
+        if ($zaak) {
+            $zdsObject->setValue('isRelevantVoor', $this->getIsRelevantVoor($zaak, $zdsObject));
+        }
 
         $this->entityManager->persist($zdsObject);
 
@@ -1075,20 +1114,43 @@ class ZdsZaakService
         $this->data = $data;
         $this->configuration = $configuration;
 
-        $objectInformatieObjectEntity = $this->entityManager->getRepository(Entity::class)->find($this->configuration['documentEntityId']);
+        $zdsEntity = $this->entityManager->getRepository(Entity::class)->find($this->configuration['zdsEntityId']);
+        $documentEntity = $this->entityManager->getRepository(Entity::class)->find($this->configuration['documentEntityId']);
         $result = $this->entityManager->getRepository('App:ObjectEntity')->find($this->data['response']['id']);
-        $documenten = $this->entityManager->getRepository(ObjectEntity::class)->findByEntity($objectInformatieObjectEntity, ['object' => $result->getValue('zgwZaak')], ['_dateCreated' => 'DESC'], 0, 250);
-        $zaak = $this->entityManager->getRepository(ObjectEntity::class)->find($result->getValue('zgwZaak'));
-        foreach ($documenten as $document) {
-            $zds = new ObjectEntity($this->entityManager->getRepository(Entity::class)->find($this->configuration['zdsEntityId']));
+        $zgwZaak = $result->getValue('zgwZaak');
+
+        if ($zgwZaak) {
+            $zaak = $this->entityManager->getRepository(ObjectEntity::class)->find($zgwZaak->getId());
+        } else {
+            $zaak = null;
+        }
+        if ($result->getValue('zgwDocumenten')) {
+            foreach ($result->getValue('zgwDocumenten') as $document) {
+                if (!$document instanceof ObjectEntity) {
+                    continue;
+                }
+
+                $zds = new ObjectEntity($zdsEntity);
+                $zds->setValue('referentienummer', Uuid::uuid4());
+                $zds->setValue('object', $this->getDocumentObject($zds, $document, $zaak));
+                $zds->setValue('stuurgegevens', $this->getStuurgegevensFromSimXML($result, 'EDC'));
+                $this->synchronizationService->setApplicationAndOrganization($zds);
+                $zds->getEntity()->addObjectEntity($zds);
+                $this->entityManager->persist($zds);
+                $this->entityManager->flush();
+                $this->data['response'] = $zds->toArray();
+            }
+        } elseif ($result->getValue('object')->getValue('identificatie')) {
+            $document = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($documentEntity, ['identificatie' => $result->getValue('object')->getValue('identificatie')])[0];
+            $zds = new ObjectEntity($zdsEntity);
             $zds->setValue('referentienummer', Uuid::uuid4());
             $zds->setValue('object', $this->getDocumentObject($zds, $document, $zaak));
-
             $zds->setValue('stuurgegevens', $this->getStuurgegevensFromSimXML($result, 'EDC'));
             $this->synchronizationService->setApplicationAndOrganization($zds);
             $zds->getEntity()->addObjectEntity($zds);
             $this->entityManager->persist($zds);
             $this->entityManager->flush();
+            $this->data['response'] = $zds->toArray();
         }
 
         return $this->data;
@@ -1126,5 +1188,37 @@ class ZdsZaakService
         $this->entityManager->flush();
 
         return $this->data;
+    }
+
+    /**
+     * @param array $configuration
+     * @param array $data
+     * @TODO: move this to a ZGW service
+     */
+    public function creeerGebruiksrechtHandler(array $data, array $configuration): array
+    {
+        $gebruiksrechtEntity = $this->entityManager->getRepository('App:Entity')->find($configuration['gebruiksrechtEntityId']);
+
+        if (
+            isset($data['enkelvoudigInformatieObject']) &&
+            $document = $this->entityManager->getRepository('App:ObjectEntity')->find($data['enkelvoudigInformatieObject'])
+        ) {
+            if ($document->getValue('indicatieGebruiksrecht')) {
+                return $data;
+            } elseif (!$document->getValue('url')) {
+                throw new AsynchronousException('enkelvoudigInformatieObject has not yet been synced');
+            }
+            $now = new DateTime();
+            $gebruiksrecht = new ObjectEntity($gebruiksrechtEntity);
+            $gebruiksrecht->setValue('informatieobject', $document->getValue('url'));
+            $gebruiksrecht->setValue('startdatum', $now->format(DateTime::ISO8601));
+            $gebruiksrecht->setValue('omschrijvingVoorwaarden', 'document uploaded by initiator');
+            $this->entityManager->persist($gebruiksrecht);
+            $document->setValue('indicatieGebruiksrecht', true);
+            $this->entityManager->persist($document);
+            $this->entityManager->flush();
+        }
+
+        return $data;
     }
 }

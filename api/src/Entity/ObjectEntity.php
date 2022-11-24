@@ -1001,9 +1001,9 @@ class ObjectEntity
                 $synchronizations[] = [
                     'id'      => $synchronization->getId()->toString(),
                     'gateway' => [
-                        'id'       => $synchronization->getGateway()->getId()->toString(),
-                        'name'     => $synchronization->getGateway()->getName(),
-                        'location' => $synchronization->getGateway()->getLocation(),
+                        'id'       => $synchronization->getSource()->getId()->toString(),
+                        'name'     => $synchronization->getSource()->getName(),
+                        'location' => $synchronization->getSource()->getLocation(),
                     ],
                     'endpoint'          => $synchronization->getEndpoint(),
                     'sourceId'          => $synchronization->getSourceId(),

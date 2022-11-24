@@ -55,21 +55,26 @@ class ProxySubscriber implements EventSubscriberInterface
             return;
         }
 
+        $headers = array_merge_recursive($source->getHeaders(), $event->getRequest()->headers->all());
+        unset($headers['authorization']);
+
         try {
             $result = $this->callService->call(
                 $source,
-                '/'.$event->getRequest()->attributes->get('endpoint'),
-                $event->getRequest()->getMethod(),
+                '/'.($event->getRequest()->attributes->get('endpoint') ?? ''),
+                $event->getRequest()->headers->get('x-method') ?? $event->getRequest()->getMethod(),
                 array_merge([
-                    'headers' => array_merge_recursive($source->getHeaders(), $event->getRequest()->headers->all()),
+                    'headers' => $headers,
                     'query'   => $event->getRequest()->query->all(),
                     'body'    => $event->getRequest()->getContent(),
                 ], $source->getConfiguration())
             );
         } catch (ServerException|ClientException|RequestException $e) {
             $result = $e->getResponse();
-        }
 
-        $event->setResponse(new Response($result->getBody()->getContents(), $result->getStatusCode(), $result->getHeaders()));
+            // If error catched dont pass event->getHeaders (causes infinite loop)
+            $wentWrong = true;
+        }
+        $event->setResponse(new Response($result->getBody()->getContents(), $result->getStatusCode(), !isset($wentWrong) ? $result->getHeaders() : []));
     }
 }

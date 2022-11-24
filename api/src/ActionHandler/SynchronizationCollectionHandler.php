@@ -31,12 +31,18 @@ class SynchronizationCollectionHandler implements ActionHandlerInterface
     public function getConfiguration(): array
     {
         return [
-            '$id'        => 'https://example.com/person.schema.json',
-            '$schema'    => 'https://json-schema.org/draft/2020-12/schema',
-            'title'      => 'SynchronizationCollectionHandler',
-            'description'=> '',
-            'required'   => ['source', 'entity', 'idField'],
-            'properties' => [
+            '$id'         => 'https://example.com/person.schema.json',
+            '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
+            'title'       => 'SynchronizationCollectionHandler',
+            'description' => '',
+            'required'    => ['source', 'entity', 'idField'],
+            'properties'  => [
+                'location' => [
+                    'type'        => 'string',
+                    'description' => 'The subpath to sync from',
+                    'example'     => '/subpath',
+                    'required'    => true,
+                ],
                 'source' => [
                     'type'        => 'uuid',
                     'description' => 'The source to sync from',

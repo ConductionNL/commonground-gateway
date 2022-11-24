@@ -4,11 +4,10 @@ namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
 use App\Service\ZdsZaakService;
-use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 
-class ZgwToZdsHandler implements ActionHandlerInterface
+class CreeerGebruiksrechtHandler implements ActionHandlerInterface
 {
     private ZdsZaakService $zdsZaakService;
 
@@ -27,25 +26,13 @@ class ZgwToZdsHandler implements ActionHandlerInterface
         return [
             '$id'         => 'https://example.com/person.schema.json',
             '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
-            'title'       => 'ZgwToZdsHandler',
-            'description' => 'This handler posts zaak eigenschappen from ZDS to ZGW',
-            'required'    => ['zaakEntityId', 'rolEntityId', 'zdsEntityId'],
+            'title'       => 'CreeerGebruiksrechtHandler',
+            'description' => 'This handler posts a zaak document from ZDS to ZGW',
+            'required'    => ['informatieObjectTypeEntityId', 'enkelvoudigInformatieObjectEntityId', 'zaakTypeInformatieObjectTypeEntityId'],
             'properties'  => [
-                'zaakEntityId' => [
+                'gebruiksrechtEntityId' => [
                     'type'        => 'uuid',
-                    'description' => 'The uuid of the zaak entity',
-                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true,
-                ],
-                'rolEntityId' => [
-                    'type'        => 'uuid',
-                    'description' => 'The uuid of the rol entity',
-                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
-                    'required'    => true,
-                ],
-                'zdsEntityId' => [
-                    'type'        => 'uuid',
-                    'description' => 'The uuid of the zds entity',
+                    'description' => 'The uuid of the Gebruiksrecht entity',
                     'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
                     'required'    => true,
                 ],
@@ -60,7 +47,6 @@ class ZgwToZdsHandler implements ActionHandlerInterface
      * @param array $configuration The configuration of the action
      *
      * @throws GatewayException
-     * @throws CacheException
      * @throws InvalidArgumentException
      * @throws ComponentException
      *
@@ -68,6 +54,6 @@ class ZgwToZdsHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->zdsZaakService->zgwToZdsHandler($data, $configuration);
+        return $this->zdsZaakService->creeerGebruiksrechtHandler($data, $configuration);
     }
 }

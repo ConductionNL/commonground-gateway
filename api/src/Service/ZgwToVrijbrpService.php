@@ -52,9 +52,14 @@ class ZgwToVrijbrpService
 
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             $childIndex = '';
-            if (in_array(substr_replace($eigenschap['naam'], '', -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding'])) {
+            if (
+                in_array(substr_replace($eigenschap['naam'], '', -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding']) &&
+                $eigenschap['naam'] != 'voornamen' && $eigenschap['naam'] != 'geboortedatum' && $eigenschap['naam'] != 'geslachtsaanduiding'
+            ) {
                 $childIndex = substr($eigenschap['naam'], -1);
                 $childIndexInt = intval($childIndex) - 1;
+            } elseif ($eigenschap['naam'] == 'voornamen' || $eigenschap['naam'] == 'geboortedatum' || $eigenschap['naam'] == 'geslachtsaanduiding') {
+                continue;
             }
             switch ($eigenschap['naam']) {
                 case 'voornamen'.$childIndex:
@@ -71,6 +76,11 @@ class ZgwToVrijbrpService
                 case 'geslachtsnaam':
                     $birthArray['nameSelection']['lastname'] = $eigenschap['waarde'];
                     continue 2;
+                case 'inp.bsn':
+                    $birthArray['mother']['bsn'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'relatie':
+                    $birthArray['qualificationForDeclaringType'] = $eigenschap['waarde'];
             }
         }
 
@@ -78,7 +88,6 @@ class ZgwToVrijbrpService
 
         $birthArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $birthArray['dossier']['dossierId'] = $zaakArray['id'];
-        $birthArray['qualificationForDeclaringType'] = 'MOTHER';
 
         $dateTimeObject = new \DateTime($zaakArray['startdatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
@@ -91,7 +100,6 @@ class ZgwToVrijbrpService
 
         if (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'])) {
             $birthArray['declarant']['bsn'] = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'];
-            $birthArray['mother']['bsn'] = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'];
 
             // Save in gateway (only save when we have a declarant/mother)
             $birthObjectEntity = new ObjectEntity();
@@ -106,6 +114,17 @@ class ZgwToVrijbrpService
         }
 
         return $this->data;
+    }
+
+    private function getInitiatorBsn(array $zaakArray): ?string
+    {
+        foreach ($zaakArray['rollen'] as $rol) {
+            if ($rol['omschrijvingGeneriek'] == 'initiator' && $rol['betrokkeneType'] == 'natuurlijk_persoon') {
+                return $rol['betrokkeneIdentificatie']['inpBsn'];
+            }
+        }
+
+        return null;
     }
 
     private function createCommitmentObject(array $zaakArray): array
@@ -138,21 +157,32 @@ class ZgwToVrijbrpService
                     $commitmentArray['dossier']['description'] = $eigenschap['waarde'];
                     $commitmentArray['dossier']['type']['description'] = $eigenschap['waarde'];
                     continue 2;
-                case 'bsn1':
-                    $commitmentArray['partner1']['bsn'] = $eigenschap['waarde'];
-                    continue 2;
                 case 'geslachtsnaam1':
                     $commitmentArray['partner1']['nameAfterCommitment']['lastname'] = $eigenschap['waarde'];
                     continue 2;
+                case 'inp.bsn':
+                    if (isset($commitmentArray['partner1']['bsn'])) {
+                        $commitmentArray['partner2']['bsn'] = $eigenschap['waarde'];
+                    } else {
+                        $commitmentArray['partner1']['bsn'] = $eigenschap['waarde'];
+                    }
+                    continue 2;
                 case 'geselecteerdNaamgebruik':
-                    $commitmentArray['partner1']['nameAfterCommitment']['nameUseType'] = $eigenschap['waarde'];
-                    $commitmentArray['partner2']['nameAfterCommitment']['nameUseType'] = $eigenschap['waarde'];
+                    if (isset($commitmentArray['partner1']['nameAfterCommitment']['nameUseType'])) {
+                        $commitmentArray['partner2']['nameAfterCommitment']['nameUseType'] = $eigenschap['waarde'];
+                    } else {
+                        $commitmentArray['partner1']['nameAfterCommitment']['nameUseType'] = $eigenschap['waarde'];
+                    }
+                    continue 2;
+                case 'bsn1':
+                    $commitmentArray['witnesses'][1]['bsn'] = $eigenschap['waarde'];
                     continue 2;
                 case 'bsn2':
-                    $commitmentArray['partner2']['bsn'] = $eigenschap['waarde'];
+                    $commitmentArray['witnesses'][1]['bsn'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geslachtsnaam2':
                     $commitmentArray['partner2']['nameAfterCommitment']['lastname'] = $eigenschap['waarde'];
+                    continue 2;
                 case 'verbintenisType':
                     in_array($eigenschap['waarde'], ['MARRIAGE', 'GPS']) && $commitmentArray['planning']['commitmentType'] = $eigenschap['waarde'];
                     continue 2;
@@ -161,10 +191,20 @@ class ZgwToVrijbrpService
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
                     $commitmentArray['planning']['commitmentDateTime'] = $dateTimeFormatted;
                     continue 2;
-                case 'gor.openbareRuimteNaam':
+                case 'naam':
                     $commitmentArray['location']['name'] = $eigenschap['waarde'];
                     continue 2;
+                case 'naam1':
+                    $commitmentArray['officials'][0]['name'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'naam2':
+                    $commitmentArray['officials'][1]['name'] = $eigenschap['waarde'];
+                    continue 2;
             }
+        }
+
+        if (!isset($commitmentArray['partner2']['bsn'])) {
+            $commitmentArray['partner2']['bsn'] = $this->getInitiatorBsn($zaakArray);
         }
 
         $commitmentArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
@@ -621,7 +661,17 @@ class ZgwToVrijbrpService
         }
 
         $meeEmigranten = [];
+
+        $meeEmigranten[] = [
+            'burgerservicenummer'  => key_exists('bsn', $zaakEigenschappen) && $zaakEigenschappen['bsn'] !== null ? $zaakEigenschappen['bsn'] : $bsn,
+            'omschrijvingAangifte' => 'G',
+            'duur'                 => 'l',
+        ];
+
         foreach ($meeverhuizende_gezinsleden as $meeverhuizende_gezinslid) {
+            if (!$meeverhuizende_gezinslid['bsn']) {
+                continue;
+            }
             $meeEmigranten[] = [
                 'burgerservicenummer'  => key_exists('bsn', $meeverhuizende_gezinslid) ? $meeverhuizende_gezinslid['bsn'] : null,
                 'omschrijvingAangifte' => key_exists('rol', $meeverhuizende_gezinslid) ? $meeverhuizende_gezinslid['rol'] : null,
