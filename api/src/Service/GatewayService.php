@@ -3,7 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Application;
-use App\Entity\Gateway;
+use App\Entity\Gateway as Source;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -34,30 +34,37 @@ class GatewayService
     }
 
     /**
-     * Processes the call to the Gateway and returns the response.
+     * Processes the call to the Source and returns the response.
      *
-     * @param string $name     Name of the Gateway.
-     * @param string $endpoint Endpoint of the Gateway to send the request to.
-     * @param string $method   Method to use against the Gateway.
-     * @param string $content  Content to send to the Gateway.
-     * @param array  $query    Query parameters to send to the Gateway.
+     * @param string $name     Name of the Source.
+     * @param string $endpoint Endpoint of the Source to send the request to.
+     * @param string $method   Method to use against the Source.
+     * @param string $content  Content to send to the Source.
+     * @param array  $query    Query parameters to send to the Source.
      *
-     * @return Response Created response received from Gateway or error received from Gateway.
+     * @return Response Created response received from Source or error received from Source.
      */
-    public function processGateway(string $name, string $endpoint, string $method, string $content, array $query, array $headers): Response
+    public function processSource(string $name, string $endpoint, string $method, string $content, array $query, array $headers): Response
     {
 //        $this->checkAuthentication();
-        $gateway = $this->retrieveGateway($name);
-        $this->checkGateway($gateway);
-        $component = $this->gatewayToArray($gateway);
-        $url = $gateway->getLocation().'/'.$endpoint;
+        $source = $this->retrieveSource($name);
+        if (!$source->getIsEnabled()) {
+            return new Response(
+                json_encode(["Message" => "This Source is not enabled: {$name}"]),
+                Response::HTTP_OK,
+                ['content-type' => 'application/json']
+            );
+        }
+        $this->checkSource($source);
+        $component = $this->sourceToArray($source);
+        $url = $source->getLocation().'/'.$endpoint;
 
-        $newHeaders = $gateway->getHeaders();
+        $newHeaders = $source->getHeaders();
         $newHeaders['accept'] = $headers['accept'][0];
 
         //update query params
-        if (array_key_exists('query', $gateway->getTranslationConfig())) {
-            $query = array_merge($query, $gateway->getTranslationConfig()['query']);
+        if (array_key_exists('query', $source->getTranslationConfig())) {
+            $query = array_merge($query, $source->getTranslationConfig()['query']);
         }
 
         //translate query params
@@ -143,54 +150,54 @@ class GatewayService
     }
 
     /**
-     * Creates array from Gateway object to be used by common ground service.
+     * Creates array from Source object to be used by common ground service.
      *
-     * @param Gateway $gateway The Gateway object.
+     * @param Source $source The Source object.
      *
-     * @return array Created array from the Gateway object.
+     * @return array Created array from the Source object.
      */
-    public function gatewayToArray(Gateway $gateway): array
+    public function sourceToArray(Source $source): array
     {
         $result = [
-            'auth'                  => $gateway->getAuth(),
-            'authorizationHeader'   => $gateway->getAuthorizationHeader(),
-            'passthroughMethod'     => $gateway->getAuthorizationPassthroughMethod(),
-            'location'              => $gateway->getLocation(),
-            'apikey'                => $gateway->getApiKey(),
-            'jwt'                   => $gateway->getJwt(),
-            'secret'                => $gateway->getSecret(),
-            'id'                    => $gateway->getJwtId(),
-            'locale'                => $gateway->getLocale(),
-            'accept'                => $gateway->getAccept(),
-            'username'              => $gateway->getUsername(),
-            'password'              => $gateway->getPassword(),
+            'auth'                  => $source->getAuth(),
+            'authorizationHeader'   => $source->getAuthorizationHeader(),
+            'passthroughMethod'     => $source->getAuthorizationPassthroughMethod(),
+            'location'              => $source->getLocation(),
+            'apikey'                => $source->getApiKey(),
+            'jwt'                   => $source->getJwt(),
+            'secret'                => $source->getSecret(),
+            'id'                    => $source->getJwtId(),
+            'locale'                => $source->getLocale(),
+            'accept'                => $source->getAccept(),
+            'username'              => $source->getUsername(),
+            'password'              => $source->getPassword(),
         ];
 
         return array_filter($result);
     }
 
     /**
-     * Checks if the Gateway object is valid.
+     * Checks if the Source object is valid.
      *
-     * @param Gateway $gateway The Gateway object that needs to be checked.
+     * @param Source $source The Source object that needs to be checked.
      *
-     * @throws BadRequestHttpException If the Gateway object is not valid.
+     * @throws BadRequestHttpException If the Source object is not valid.
      */
-    public function checkGateway(Gateway $gateway): void
+    public function checkSource(Source $source): void
     {
-        switch ($gateway->getAuth()) {
+        switch ($source->getAuth()) {
             case 'jwt':
-                if ($gateway->getJwtId() == null || $gateway->getSecret() == null) {
+                if ($source->getJwtId() == null || $source->getSecret() == null) {
                     throw new BadRequestHttpException('jwtid and secret are required for auth type: jwt');
                 }
                 break;
             case 'apikey':
-                if ($gateway->getApiKey() == null) {
+                if ($source->getApiKey() == null) {
                     throw new BadRequestHttpException('ApiKey is required for auth type: apikey');
                 }
                 break;
             case 'username-password':
-                if ($gateway->getUsername() == null || $gateway->getPassword() == null) {
+                if ($source->getUsername() == null || $source->getPassword() == null) {
                     throw new BadRequestHttpException('Username and password are required for auth type: username-password');
                 }
                 break;
@@ -198,27 +205,27 @@ class GatewayService
     }
 
     /**
-     * Tries to retrieve the Gateway object with entity manager.
+     * Tries to retrieve the Source object with entity manager.
      *
-     * @param $gateway string Name of the Gateway used to search for the object.
+     * @param $source string Name of the Source used to search for the object.
      *
-     * @throws NotFoundHttpException If there is no Gateway object found with the provided name.
+     * @return Source The retrieved Source object.
+     *@throws NotFoundHttpException If there is no Source object found with the provided name.
      *
-     * @return Gateway The retrieved Gateway object.
      */
-    public function retrieveGateway(string $gateway): Gateway
+    public function retrieveSource(string $source): Source
     {
-        if (strpos($gateway, '.') && $renderType = explode('.', $gateway)) {
-            $gateway = $renderType[0];
+        if (strpos($source, '.') && $renderType = explode('.', $source)) {
+            $source = $renderType[0];
         }
 
-        $gateways = $this->entityManager->getRepository('App\Entity\Gateway')->findBy(['name' => $gateway]);
+        $sources = $this->entityManager->getRepository('App\Entity\Gateway')->findBy(['name' => $source]);
 
-        if (count($gateways) == 0 || !$gateways[0] instanceof Gateway) {
-            throw new NotFoundHttpException('Unable to find Gateway');
+        if (count($sources) == 0 || !$sources[0] instanceof Source) {
+            throw new NotFoundHttpException('Unable to find Source');
         }
 
-        return $gateways[0];
+        return $sources[0];
     }
 
     /**
@@ -227,7 +234,7 @@ class GatewayService
      * @param Response $response  The response to turn into a download.
      * @param string   $extension The extension of the requested file e.g. csv
      *
-     * @return Response The retrieved Gateway object.
+     * @return Response The retrieved Source object.
      */
     public function retrieveExport(Response $response, $extension, $fileName): Response
     {

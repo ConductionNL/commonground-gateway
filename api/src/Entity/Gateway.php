@@ -253,6 +253,14 @@ class Gateway
     private string $location;
 
     /**
+     * @var bool true if this Source is enabled and can be used.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", options={"default": true})
+     */
+    private bool $isEnabled = true;
+
+    /**
      * @var string The type of this gatewat
      *
      * @Assert\NotNull
@@ -746,6 +754,18 @@ class Gateway
     public function setLocation(string $location): self
     {
         $this->location = $location;
+
+        return $this;
+    }
+
+    public function getIsEnabled(): ?bool
+    {
+        return $this->isEnabled;
+    }
+
+    public function setIsEnabled(bool $isEnabled): self
+    {
+        $this->isEnabled = $isEnabled;
 
         return $this;
     }

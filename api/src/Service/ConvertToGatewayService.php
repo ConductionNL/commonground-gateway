@@ -52,7 +52,7 @@ class ConvertToGatewayService
     public function convertEntityObjects(Entity $entity, $query)
     {
         // Make sure we have a gateway and endpoint on this Entity.
-        if (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
+        if (!$entity->getSource() || !$entity->getSource()->getLocation() || !$entity->getEndpoint() || !$entity->getSource()->getIsEnabled()) {
             return null; //Or false or error?
         }
 
@@ -151,7 +151,7 @@ class ConvertToGatewayService
     public function convertToGatewayObject(Entity $entity, ?array $body, string $id = null, Value $subresourceOf = null, ?ObjectEntity $objectEntity = null, string $url = null, array $sessionData = []): ?ObjectEntity
     {
         // Always make sure we have a gateway and endpoint on this Entity.
-        if (!$url && (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint())) {
+        if (!$url && (!$entity->getSource() || !$entity->getSource()->getLocation() || !$entity->getEndpoint() || !$entity->getSource()->getIsEnabled())) {
 //            var_dump('No url or gateway+endpoint');
             return null; //Or false or error? //todo?
         }
