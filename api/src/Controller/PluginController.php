@@ -114,7 +114,7 @@ class PluginController extends AbstractController
     }
 
     /**
-     * @Route("/remove", methods={"POST"})
+     * @Route("/remove", methods={"DELETE"})
      */
     public function removeAction(Request $request)
     {
@@ -128,9 +128,4 @@ class PluginController extends AbstractController
 
         return new Response(json_encode($plugins), $status, ['Content-type' => 'application/json']);
     }
-
-
-
-
-
 }
