@@ -180,9 +180,9 @@ class Action
      * @var ?bool true if action should be ran
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="boolean", nullable=true, options={"default": null})
+     * @ORM\Column(type="boolean", nullable=true, options={"default": true})
      */
-    private ?bool $isActive = null;
+    private ?bool $isEnabled = true;
 
     /**
      * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="action", orphanRemoval=true, fetch="EXTRA_LAZY")
@@ -394,14 +394,14 @@ class Action
         return $this;
     }
 
-    public function getIsActive(): ?bool
+    public function getIsEnabled(): ?bool
     {
-        return $this->isActive;
+        return $this->isEnabled;
     }
 
-    public function setIsActive(?bool $isActive): self
+    public function setIsEnabled(?bool $isEnabled): self
     {
-        $this->isActive = $isActive;
+        $this->isEnabled = $isEnabled;
 
         return $this;
     }

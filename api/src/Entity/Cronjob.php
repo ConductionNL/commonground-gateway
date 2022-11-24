@@ -240,12 +240,12 @@ class Cronjob
         return $this;
     }
 
-    public function getIsActive(): ?bool
+    public function getIsEnabled(): ?bool
     {
         return $this->isEnabled;
     }
 
-    public function setIsActive(?bool $isEnabled): self
+    public function setIsEnabled(?bool $isEnabled): self
     {
         $this->isEnabled = $isEnabled;
 
