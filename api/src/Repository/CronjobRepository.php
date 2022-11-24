@@ -52,7 +52,7 @@ class CronjobRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('c')
             ->andWhere('c.nextRun <= :val OR c.nextRun is NULL')
-            ->andWhere('c.isActive = true')
+            ->andWhere('c.isEnabled = true')
             ->setParameter('val', new \DateTime('now'))
             ->getQuery()
             ->getResult();
