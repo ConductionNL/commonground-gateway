@@ -361,6 +361,15 @@ parameters:
 
 # Endpoints        
 App\Entity\Endpoint:
+    searchRequestEndpointGet:
+        name: searchRequestEndpointGet
+        description: endpoint for search requests
+        path: [ 'search' ]
+        pathRegex: "^(search)$"
+        method: GET
+        operationType: collection
+        throws: ['commongateway.search.request']
+        
     # Organization Endpoints
     organizationEndpointGet:
         name: Organization endpoint get collection
@@ -569,6 +578,13 @@ App\Entity\Endpoint:
 
 # Handlers
 App\Entity\Handler:
+    searchRequestHandler:
+        name: Search request handler
+        methods: [ "*" ]
+        sequence: 0
+        conditions: "{}"
+        endpoints: [ "@searchRequestEndpointGet"]
+        
     # Organization Handler
     organizationHandler:
         name: Organization handler
@@ -858,7 +874,20 @@ App\Entity\Cronjob:
         data: []
         isActive: true
 
-#App\Entity\Action:
+App\Entity\Action:
+    SearchRequestAction:
+        name: searches request plugin
+        listens:
+            - 'commongateway.search.request'
+        throws: [ ]
+        conditions:
+            '==': [ 1, 1 ]
+        class: App\ActionHandler\SearchRequestHandler
+        priority: 0
+        async: false
+        configuration:
+            searchEntityId: uuid
+            
 #    NotificationAction:
 #        name: Send a notification
 #        description: This action sends a notification every time a object is made

@@ -120,17 +120,23 @@ class HandlerService
         // @todo creat logicdata, generalvaribales uit de translationservice
 
         $this->stopwatch->start('handleThrows', 'handleEndpoint');
-        // Lets fire the throws
-        foreach ($endpoint->getThrows() as $key => $throw) {
-            $actionEvent = new ActionEvent($throw, []);
+        // Let's fire the throws
+        $actionEvent = null;
+        foreach ($endpoint->getThrows() as $throw) {
+            $actionEvent = new ActionEvent('commongateway.action.event', ['request' => $this->getDataFromRequest(), 'searchResponse' => []], $throw);
+            var_dump($actionEvent->getType());
             $this->eventDispatcher->dispatch($actionEvent, $actionEvent->getType());
         }
         $this->stopwatch->stop('handleThrows');
-        // If any of the throws gave a responce lets use that instead of continuing to the old handelrs
-        if($responce = $session->get('responce', false)){
-            return $responce;
-        }
 
+        // If any of the throws gave a response lets use that instead of continuing to the old handlers
+        if($actionEvent !== null && $response = $actionEvent->getData()['searchResponse']){
+            if ($response instanceof Response) {
+                return $response;
+            } else {
+                throw new GatewayException('....', null, null, ['data' => null, 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+            }
+        }
 
         $this->stopwatch->start('handleHandlers', 'handleEndpoint');
         foreach ($endpoint->getHandlers() as $handler) {

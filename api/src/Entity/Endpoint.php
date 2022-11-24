@@ -203,7 +203,7 @@ class Endpoint
     private ?array $methods = [];
 
     /**
-     * @var ?array needs to be refined
+     * @var ?array The throws of this Endpoint
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
