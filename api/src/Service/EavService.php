@@ -1169,7 +1169,7 @@ class EavService
                 $filter = str_replace('|valueScopeFilter', '', $filter);
                 $resultFilter = $resultDot->get($filter);
                 $resultFilter = $resultFilter === true ? 'true' : ($resultFilter === false ? 'false' : $resultDot->get($filter));
-                if (!is_array($value) && $resultDot->get($filter) !== null && $resultFilter != $value && (is_string($value) && !str_contains($value, "NULL"))) {
+                if (!is_array($value) && $resultDot->get($filter) !== null && $resultFilter != $value && (is_string($value) && !str_contains($value, 'NULL'))) {
                     return false;
                 }
             }
