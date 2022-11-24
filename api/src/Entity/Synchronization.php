@@ -87,7 +87,7 @@ class Synchronization
     private ?Action $action = null;
 
     /**
-     * @var Source The Soruce of this resource
+     * @var Source The Source of this resource
      *
      * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=Gateway::class, cascade={"persist"}, inversedBy="synchronizations")
