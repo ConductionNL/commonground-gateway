@@ -31,20 +31,20 @@ All files should follow the following convention in their structure
 ```json
 {
     [
-	“ref1”:[
-		{”object1”},
-		{”object2”},
-		{”object3”}
+	"ref1":[
+		{"object1"},
+		{"object2"},
+		{"object3"}
 ],
-	“ref2”:[
-		{”object1”},
-		{”object2”},
-		{”object3”}
+	"ref2":[
+		{"object1"},
+		{"object2"},
+		{"object3"}
 ],
-	“ref3”:[
-		{”object1”},
-		{”object2”},
-		{”object3”}
+	"ref3":[
+		{"object1"},
+		{"object2"},
+		{"object3"}
 ]
 ]
 }
