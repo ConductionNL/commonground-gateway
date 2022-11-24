@@ -669,7 +669,7 @@ class ZgwToVrijbrpService
         ];
 
         foreach ($meeverhuizende_gezinsleden as $meeverhuizende_gezinslid) {
-            if(!$meeverhuizende_gezinslid['bsn']) {
+            if (!$meeverhuizende_gezinslid['bsn']) {
                 continue;
             }
             $meeEmigranten[] = [
