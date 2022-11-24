@@ -30,6 +30,7 @@ All files should follow the following convention in their structure
 
 ```json
 {
+    [
 	“ref1”:[
 		{”object1”},
 		{”object2”},
@@ -44,6 +45,7 @@ All files should follow the following convention in their structure
 		{”object1”},
 		{”object2”},
 		{”object3”}
+]
 ]
 }
 ```
