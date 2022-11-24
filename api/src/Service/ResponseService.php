@@ -181,10 +181,10 @@ class ResponseService
         }
 
         if (
-            $result->getEntity()->getGateway() !== null &&
-            ($result->getEntity()->getGateway()->getType() == 'soap' ||
-                $result->getEntity()->getGateway()->getType() == 'xml' ||
-                $result->getEntity()->getGateway()->getAuth() == 'vrijbrp-jwt')
+            $result->getEntity()->getSource() !== null &&
+            ($result->getEntity()->getSource()->getType() == 'soap' ||
+                $result->getEntity()->getSource()->getType() == 'xml' ||
+                $result->getEntity()->getSource()->getAuth() == 'vrijbrp-jwt')
         ) {
             return $response;
         }
@@ -224,7 +224,7 @@ class ResponseService
 
         // todo: do we still want to do this if we have BL for syncing objects?
         // Lets start with the external result
-        if ($result->getEntity()->getGateway() && $result->getEntity()->getEndpoint()) {
+        if ($result->getEntity()->getSource() && $result->getEntity()->getEndpoint()) {
             if (!empty($result->getExternalResult())) {
                 $response = array_merge($response, $result->getExternalResult());
             } elseif (!$result->getExternalResult() === [] && $this->commonGroundService->isResource($result->getExternalResult())) {
@@ -896,7 +896,7 @@ class ResponseService
         $requestLog->setEntity($entity ?? null);
         $requestLog->setDocument(null); // todo
         $requestLog->setFile(null); // todo
-        $requestLog->setGateway($requestLog->getEntity() ? $requestLog->getEntity()->getGateway() : null);
+        $requestLog->setSource($requestLog->getEntity() ? $requestLog->getEntity()->getSource() : null);
 
         if ($this->session->has('application') && Uuid::isValid($this->session->get('application'))) {
             $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);

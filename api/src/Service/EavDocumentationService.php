@@ -815,10 +815,10 @@ class EavDocumentationService
         // Lets see if there are external properties
         if (
             $entity->getExtend() &&
-            $entity->getGateway() &&
-            !empty($entity->getGateway()->getPaths()) &&
-            array_key_exists('/'.$entity->getEndpoint(), $entity->getGateway()->getPaths()) &&
-            $externalSchema = $entity->getGateway()->getPaths()['/'.$entity->getEndpoint()]
+            $entity->getSource() &&
+            !empty($entity->getSource()->getPaths()) &&
+            array_key_exists('/'.$entity->getEndpoint(), $entity->getSource()->getPaths()) &&
+            $externalSchema = $entity->getSource()->getPaths()['/'.$entity->getEndpoint()]
         ) {
             // Lets get the correct schema
             foreach ($externalSchema['properties'] as $key => $property) {
@@ -828,7 +828,7 @@ class EavDocumentationService
                 //}
 
                 // Das magic
-                $property['externalDocs'] = $entity->getGateway()->getLocation();
+                $property['externalDocs'] = $entity->getSource()->getLocation();
                 $schema['properties'][$key] = $property;
             }
         }

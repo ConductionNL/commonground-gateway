@@ -8,6 +8,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Entity\Gateway as Source;
 use App\Exception\GatewayException;
 use DateTime;
 use DateTimeInterface;
@@ -96,7 +97,7 @@ class Entity
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      */
-    private ?Gateway $gateway;
+    private ?Source $gateway;
 
     /**
      * @var string The type of this Entity
@@ -365,15 +366,15 @@ class Entity
 
     public function export()
     {
-        if ($this->getGateway() !== null) {
-            $gateway = $this->getGateway()->getId()->toString();
-            $gateway = '@'.$gateway;
+        if ($this->getSource() !== null) {
+            $source = $this->getSource()->getId()->toString();
+            $source = '@'.$source;
         } else {
-            $gateway = null;
+            $source = null;
         }
 
         $data = [
-            'gateway'             => $gateway,
+            'gateway'             => $source,
             'endpoint'            => $this->getEndpoint(),
             'name'                => $this->getName(),
             'description'         => $this->getDescription(),
@@ -415,14 +416,14 @@ class Entity
         return $this->id;
     }
 
-    public function getGateway(): ?Gateway
+    public function getSource(): ?Source
     {
         return $this->gateway;
     }
 
-    public function setGateway(?Gateway $gateway): self
+    public function setSource(?Source $source): self
     {
-        $this->gateway = $gateway;
+        $this->gateway = $source;
 
         return $this;
     }

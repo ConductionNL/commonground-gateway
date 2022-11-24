@@ -63,7 +63,7 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
 
         // if this subscriber only applies to certain entity types,
         // add some code to check the entity type as early as possible
-        if (!$objectEntity instanceof ObjectEntity || !$objectEntity->getEntity() || !$objectEntity->getEntity()->getGateway() || !$objectEntity->getUri()) {
+        if (!$objectEntity instanceof ObjectEntity || !$objectEntity->getEntity() || !$objectEntity->getEntity()->getSource() || !$objectEntity->getUri()) {
             return;
         }
 
@@ -74,7 +74,7 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
                 $objectEntity->setExternalResult($item->get());
             } else {
                 /* @todo figure out how to this promise style */
-                $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
+                $component = $this->gatewayService->sourceToArray($objectEntity->getEntity()->getSource());
                 $result = $this->commonGroundService->callService($component, $objectEntity->getUri(), '');
                 $result = json_decode($result->getBody()->getContents(), true);
                 $objectEntity->setExternalResult($result);
@@ -84,7 +84,7 @@ class DatabaseActivitySubscriber implements EventSubscriberInterface
             }
         } elseif ($action == 'remove') {
             /* @todo we should check is an entity is not ussed elswhere before removing it */
-            $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
+            $component = $this->gatewayService->sourceToArray($objectEntity->getEntity()->getSource());
             /* @todo we need to do some abstraction to log these calls, something like an callWrapper at the eav service  */
             $result = $this->commonGroundService->callService($component, $objectEntity->getUri(), '', [], [], false, 'DELETE');
             // Lets see if we need to clear the cache

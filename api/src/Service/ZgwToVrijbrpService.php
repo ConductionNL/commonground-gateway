@@ -118,11 +118,12 @@ class ZgwToVrijbrpService
 
     private function getInitiatorBsn(array $zaakArray): ?string
     {
-        foreach($zaakArray['rollen'] as $rol) {
-            if($rol['omschrijvingGeneriek'] == 'initiator' && $rol['betrokkeneType'] == 'natuurlijk_persoon') {
+        foreach ($zaakArray['rollen'] as $rol) {
+            if ($rol['omschrijvingGeneriek'] == 'initiator' && $rol['betrokkeneType'] == 'natuurlijk_persoon') {
                 return $rol['betrokkeneIdentificatie']['inpBsn'];
             }
         }
+
         return null;
     }
 
@@ -202,7 +203,7 @@ class ZgwToVrijbrpService
             }
         }
 
-        if(!isset($commitmentArray['partner2']['bsn'])) {
+        if (!isset($commitmentArray['partner2']['bsn'])) {
             $commitmentArray['partner2']['bsn'] = $this->getInitiatorBsn($zaakArray);
         }
 

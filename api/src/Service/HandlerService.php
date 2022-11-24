@@ -160,7 +160,7 @@ class HandlerService
     {
         $path = $this->cutPath($endpoint->getPath());
 
-        return $this->gatewayService->processGateway($handler->getProxyGateway(), $path, $method, $this->request->getContent(), $this->request->query->all(), $this->request->headers->all());
+        return $this->gatewayService->processSource($handler->getProxyGateway(), $path, $method, $this->request->getContent(), $this->request->query->all(), $this->request->headers->all());
     }
 
     public function getMethodOverrides(string &$method, ?string &$operationType, Handler $handler)
