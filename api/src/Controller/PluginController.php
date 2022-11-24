@@ -82,9 +82,9 @@ class PluginController extends AbstractController
     }
 
     /**
-     * @Route("/installl", methods={"POST"})
+     * @Route("/install", methods={"POST"})
      */
-    public function installlAction(Request $request)
+    public function installAction(Request $request)
     {
         $status = 200;
 
