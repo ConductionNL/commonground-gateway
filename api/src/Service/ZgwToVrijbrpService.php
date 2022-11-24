@@ -660,7 +660,17 @@ class ZgwToVrijbrpService
         }
 
         $meeEmigranten = [];
+
+        $meeEmigranten[] = [
+            'burgerservicenummer'  => key_exists('bsn', $zaakEigenschappen) && $zaakEigenschappen['bsn'] !== null ? $zaakEigenschappen['bsn'] : $bsn,
+            'omschrijvingAangifte' => 'G',
+            'duur'                 => 'l',
+        ];
+
         foreach ($meeverhuizende_gezinsleden as $meeverhuizende_gezinslid) {
+            if(!$meeverhuizende_gezinslid['bsn']) {
+                continue;
+            }
             $meeEmigranten[] = [
                 'burgerservicenummer'  => key_exists('bsn', $meeverhuizende_gezinslid) ? $meeverhuizende_gezinslid['bsn'] : null,
                 'omschrijvingAangifte' => key_exists('rol', $meeverhuizende_gezinslid) ? $meeverhuizende_gezinslid['rol'] : null,
