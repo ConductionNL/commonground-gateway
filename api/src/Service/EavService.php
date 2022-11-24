@@ -1127,9 +1127,9 @@ class EavService
             // todo: remove the following function
             // This is a quick fix for a problem where filtering would return to many result if we are filtering on a value...
             // ...that is also present in a subobject of the main $object we are filtering on.
-//            if (!$this->checkIfFilteredCorrectly($query, $object)) {
-//                continue;
-//            }
+            if (!$this->checkIfFilteredCorrectly($query, $object)) {
+                continue;
+            }
             $result = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
             $results[] = $result;
             $this->stopwatch->lap('renderResults');
@@ -1158,10 +1158,16 @@ class EavService
      */
     private function checkIfFilteredCorrectly(array $query, ObjectEntity $object): bool
     {
+        unset(
+            $query['search'], $query['_search'],
+            $query['fields'], $query['_fields'],
+            $query['extend'], $query['_extend']
+        );
         if (!empty($query)) {
             $resultDot = new Dot($object->toArray());
             foreach ($query as $filter => $value) {
-                if ($resultDot->get($filter) != $value) {
+                $filter = str_replace('|valueScopeFilter', '', $filter);
+                if ($resultDot->get($filter) !== null && $resultDot->get($filter) != $value) {
                     return false;
                 }
             }
