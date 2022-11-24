@@ -116,6 +116,17 @@ class ZgwToVrijbrpService
         return $this->data;
     }
 
+    private function getInitiatorBsn(array $zaakArray): ?string
+    {
+        foreach ($zaakArray['rollen'] as $rol) {
+            if ($rol['omschrijvingGeneriek'] == 'initiator' && $rol['betrokkeneType'] == 'natuurlijk_persoon') {
+                return $rol['betrokkeneIdentificatie']['inpBsn'];
+            }
+        }
+
+        return null;
+    }
+
     private function createCommitmentObject(array $zaakArray): array
     {
         isset($this->configuration['entities']['Commitment']) && $commitmentEntity = $this->entityRepo->find($this->configuration['entities']['Commitment']);
@@ -190,6 +201,10 @@ class ZgwToVrijbrpService
                     $commitmentArray['officials'][1]['name'] = $eigenschap['waarde'];
                     continue 2;
             }
+        }
+
+        if (!isset($commitmentArray['partner2']['bsn'])) {
+            $commitmentArray['partner2']['bsn'] = $this->getInitiatorBsn($zaakArray);
         }
 
         $commitmentArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
