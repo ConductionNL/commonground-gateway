@@ -1,13 +1,13 @@
-window.sessionStorage.setItem("GATSBY_ME_URL", "https://localhost/me");
-window.sessionStorage.setItem("GATSBY_API_URL", "https://localhost/api");
+window.sessionStorage.setItem("GATSBY_ME_URL", "http://localhost/me");
+window.sessionStorage.setItem("GATSBY_API_URL", "http://localhost/api");
 window.sessionStorage.setItem(
   "GATSBY_ADMIN_URL",
-  "https://localhost/admin"
+  "http://localhost/admin"
 );
-window.sessionStorage.setItem("GATSBY_BASE_URL", "https://localhost/");
+window.sessionStorage.setItem("GATSBY_BASE_URL", "http://localhost/");
 window.sessionStorage.setItem(
   "GATSBY_FRONTEND_URL",
-  "https://localhost:8000"
+  "http://localhost:8000"
 );
 window.sessionStorage.setItem(
   "GATSBY_ORGANIZATION",
