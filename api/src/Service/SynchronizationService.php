@@ -614,7 +614,7 @@ class SynchronizationService
      */
     private function getSingleFromSource(Synchronization $synchronization): ?array
     {
-        $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway(), $synchronization->getSourceId());
+        $callServiceConfig = $this->getCallServiceConfig($synchronization->getSource(), $synchronization->getSourceId());
 
         // Get object form source with callservice
         try {
@@ -672,7 +672,7 @@ class SynchronizationService
         }
 
         $synchronization = new Synchronization();
-        $synchronization->setGateway($source);
+        $synchronization->setSource($source);
         $synchronization->setEntity($entity);
         $synchronization->setSourceId($sourceId);
         $this->entityManager->persist($synchronization);
@@ -707,7 +707,7 @@ class SynchronizationService
 
         $synchronization = new Synchronization();
         $synchronization->setObject($objectEntity);
-        $synchronization->setGateway($source);
+        $synchronization->setSource($source);
         $synchronization->setEntity($entity);
         $synchronization->setSourceId($objectEntity->getId());
         $this->entityManager->persist($synchronization);
@@ -1127,7 +1127,7 @@ class SynchronizationService
 
         //        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
         // todo: maybe move this to foreach in getAllFromSource() (nice to have)
-        $callServiceConfig = $this->getCallServiceConfig($synchronization->getGateway(), null, $objectArray);
+        $callServiceConfig = $this->getCallServiceConfig($synchronization->getSource(), null, $objectArray);
         $objectArray = $this->mapOutput($objectArray);
 
         $objectString = $this->getObjectString($objectArray);
@@ -1223,7 +1223,7 @@ class SynchronizationService
         $sourceObjectDot = new Dot($sourceObject);
 
         $object = $this->populateObject($sourceObject, $object, $method);
-        $object->setUri($synchronization->getGateway()->getLocation().$this->getCallServiceEndpoint($synchronization->getSourceId()));
+        $object->setUri($synchronization->getSource()->getLocation().$this->getCallServiceEndpoint($synchronization->getSourceId()));
         if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
             $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
         }

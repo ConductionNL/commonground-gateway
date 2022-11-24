@@ -17,6 +17,7 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Entity\Gateway as Source;
 
 /**
  * An subscriber checks JSON conditions and executes translating and mapping on a outgoing call.
@@ -225,13 +226,13 @@ class Subscriber
     private ?Endpoint $endpoint;
 
     /**
-     * @var ?Gateway The Gateway of this Subscriber
+     * @var ?Source The Source of this Subscriber
      *
      * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="subscribers")
      * @MaxDepth(1)
      */
-    private ?Gateway $gateway;
+    private ?Source $gateway;
 
     /**
      * @var Datetime The moment this resource was created
@@ -484,14 +485,14 @@ class Subscriber
         return $this;
     }
 
-    public function getGateway(): ?Gateway
+    public function getSource(): ?Source
     {
         return $this->gateway;
     }
 
-    public function setGateway(?Gateway $gateway): self
+    public function setSource(?Source $source): self
     {
-        $this->gateway = $gateway;
+        $this->gateway = $source;
 
         return $this;
     }

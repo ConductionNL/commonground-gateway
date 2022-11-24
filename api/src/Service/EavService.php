@@ -1313,7 +1313,7 @@ class EavService
                 }
             }
         }
-        if ($object->getEntity()->getGateway() && $object->getEntity()->getGateway()->getLocation() && $object->getEntity()->getEndpoint() && $object->getExternalId()) {
+        if ($object->getEntity()->getSource() && $object->getEntity()->getSource()->getLocation() && $object->getEntity()->getEndpoint() && $object->getExternalId()) {
             if ($resource = $this->commonGroundService->isResource($object->getUri())) {
                 $this->commonGroundService->deleteResource(null, $object->getUri()); // could use $resource instead?
             }
@@ -1360,7 +1360,7 @@ class EavService
         $this->em->clear();
         //TODO: test and make sure extern objects are not created after an error, and if they are, maybe add this;
         //        var_dump($createdObject->getUri());
-        //        if ($createdObject->getEntity()->getGateway() && $createdObject->getEntity()->getGateway()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
+        //        if ($createdObject->getEntity()->getSource() && $createdObject->getEntity()->getSource()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
         //            try {
         //                $resource = $this->commonGroundService->getResource($createdObject->getUri(), [], false);
         //                var_dump('Delete extern object for: '.$createdObject->getEntity()->getName());

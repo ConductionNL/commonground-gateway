@@ -109,7 +109,7 @@ class LogService
             }
             $this->stopwatch->start('setEntitySource'.$stopWatchNumber, "saveLog$stopWatchNumber");
             $callLog->setEntity(!empty($entity) ? $entity : null);
-            $callLog->setGateway(!empty($source) ? $source : null);
+            $callLog->setSource(!empty($source) ? $source : null);
             $this->stopwatch->stop('setEntitySource'.$stopWatchNumber);
 
             $this->stopwatch->start('setHandler(getHandlerFromSession)'.$stopWatchNumber, "saveLog$stopWatchNumber");

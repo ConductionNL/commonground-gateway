@@ -19,6 +19,7 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Entity\Gateway as Source;
 
 /**
  * This entity holds the information about a Logs.
@@ -291,7 +292,7 @@ class Log
      * @ORM\ManyToOne(targetEntity=Gateway::class)
      * @MaxDepth(1)
      */
-    private $gateway;
+    private ?Source $gateway;
 
     /**
      * @Groups({"read", "write"})
@@ -605,14 +606,14 @@ class Log
         return $this;
     }
 
-    public function getGateway(): ?Gateway
+    public function getSource(): ?Source
     {
         return $this->gateway;
     }
 
-    public function setGateway(?Gateway $gateway): self
+    public function setSource(?Source $source): self
     {
-        $this->gateway = $gateway;
+        $this->gateway = $source;
 
         return $this;
     }

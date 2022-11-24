@@ -15,6 +15,7 @@ use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Entity\Gateway as Source;
 
 /**
  * This entity holds the information about the Synchronization.
@@ -86,13 +87,13 @@ class Synchronization
     private ?Action $action = null;
 
     /**
-     * @var Gateway The gateway (source) of this resource
+     * @var Source The Soruce of this resource
      *
      * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=Gateway::class, cascade={"persist"}, inversedBy="synchronizations")
      * @ORM\JoinColumn(nullable=false)
      */
-    private Gateway $gateway;
+    private Source $gateway;
 
     /**
      * @var string|null
@@ -201,14 +202,14 @@ class Synchronization
         return $this;
     }
 
-    public function getGateway(): ?Gateway
+    public function getSource(): ?Source
     {
         return $this->gateway;
     }
 
-    public function setGateway(?Gateway $gateway): self
+    public function setSource(?Source $source): self
     {
-        $this->gateway = $gateway;
+        $this->gateway = $source;
 
         return $this;
     }
