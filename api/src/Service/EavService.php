@@ -1167,7 +1167,9 @@ class EavService
             $resultDot = new Dot($object->toArray());
             foreach ($query as $filter => $value) {
                 $filter = str_replace('|valueScopeFilter', '', $filter);
-                if ($resultDot->get($filter) !== null && $resultDot->get($filter) != $value) {
+                $resultFilter = $resultDot->get($filter);
+                $resultFilter = $resultFilter === true ? 'true' : ($resultFilter === false ? 'false' : $resultDot->get($filter));
+                if (!is_array($value) && $resultDot->get($filter) !== null && $resultFilter != $value && (is_string($value) && !str_contains($value, "NULL"))) {
                     return false;
                 }
             }
