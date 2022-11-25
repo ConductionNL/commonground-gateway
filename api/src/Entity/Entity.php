@@ -97,7 +97,7 @@ class Entity
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      */
-    private ?Source $gateway;
+    private ?Source $gateway = null;
 
     /**
      * @var string The type of this Entity
