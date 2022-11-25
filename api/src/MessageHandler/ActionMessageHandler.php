@@ -7,27 +7,35 @@ use App\Entity\ObjectEntity;
 use App\Message\ActionMessage;
 use App\Repository\ActionRepository;
 use App\Subscriber\ActionSubscriber;
+use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
 class ActionMessageHandler implements MessageHandlerInterface
 {
     private ActionSubscriber $actionSubscriber;
     private ActionRepository $repository;
+    private EntityManagerInterface $entityManager;
 
-    public function __construct(ActionSubscriber $actionSubscriber, ActionRepository $repository)
+    public function __construct(ActionSubscriber $actionSubscriber, ActionRepository $repository, EntityManagerInterface $entityManager)
     {
         $this->actionSubscriber = $actionSubscriber;
         $this->repository = $repository;
+        $this->entityManager = $entityManager;
     }
 
     public function __invoke(ActionMessage $message): void
     {
         $object = $this->repository->find($message->getObjectEntityId());
-        if ($object instanceof Action) {
-//            var_dump('DispatchNotification: '.$object->getEntity()->getName().' - '.$message->getObjectEntityId()->toString().' - '.$object->getExternalId().' - '.$message->getMethod());
-            $this->actionSubscriber->runFunction($object, $message->getData(), $message->getCurrentThrow());
-        } else {
-//            var_dump('No ObjectEntity found with id: '.$message->getObjectEntityId()->toString());
+        try{
+            if ($object instanceof Action) {
+                var_dump('Running action ' . $object->getName());
+                $this->actionSubscriber->runFunction($object, $message->getData(), $message->getCurrentThrow());
+            }
+            $this->entityManager->clear();
+        } catch (Exception $exception) {
+            $this->entityManager->clear();
+            throw $exception;
         }
     }
 }
