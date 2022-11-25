@@ -139,7 +139,7 @@ class ActionSubscriber implements EventSubscriberInterface
             }
         }
 
-        if (JsonLogic::apply($action->getConditions(), $event->getData()) && $action->getIsActive() == true) {
+        if (JsonLogic::apply($action->getConditions(), $event->getData()) && $action->getIsEnabled() == true) {
             $currentCronJobThrow = $this->handleActionIoStart($action, $event);
 
             if (!$action->getAsync()) {
