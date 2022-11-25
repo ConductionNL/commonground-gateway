@@ -203,10 +203,10 @@ class ZgwToVrijbrpService
             }
         }
 
-        if(!isset($commitmentArray['partner2']['nameAfterCommitment']['nameUseType'])){
+        if (!isset($commitmentArray['partner2']['nameAfterCommitment']['nameUseType'])) {
             $commitmentArray['partner2']['nameAfterCommitment']['nameUseType'] = 'N';
         }
-        if(!isset($commitmentArray['partner1']['nameAfterCommitment']['nameUseType'])) {
+        if (!isset($commitmentArray['partner1']['nameAfterCommitment']['nameUseType'])) {
             $commitmentArray['partner1']['nameAfterCommitment']['nameUseType'] = 'N';
         }
 
@@ -676,7 +676,7 @@ class ZgwToVrijbrpService
         ];
 
         foreach ($meeverhuizende_gezinsleden as $meeverhuizende_gezinslid) {
-            if(!$meeverhuizende_gezinslid['bsn']) {
+            if (!$meeverhuizende_gezinslid['bsn']) {
                 continue;
             }
             $meeEmigranten[] = [
