@@ -19,6 +19,7 @@ use Doctrine\ORM\Mapping as ORM;
 use EasyRdf\Literal\Boolean;
 use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
+use phpDocumentor\Reflection\Types\This;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -141,10 +142,10 @@ class Entity
      *
      * @Gedmo\Versioned
      * @Assert\Length(
-     *     max = 255
+     *     max = 2555
      * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     private $description;
 
@@ -1088,15 +1089,63 @@ class Entity
         return $this;
     }
 
+
+    /**
+     * @throws GatewayException
+     */
+    public function fromSchema(array $schema): Entity
+    {
+        // Basic stuff
+        if(array_key_exists('$id',$schema)){$this->setReference($schema['$id']);}
+        if(array_key_exists('title',$schema)){$this->setName($schema['title']);}
+        if(array_key_exists('description',$schema)){$this->setDescription($schema['description']);}
+        if(array_key_exists('version',$schema)){ $this->setVersion($schema['version']);}
+
+        // Properties
+        foreach($schema['properties'] as $name => $property){
+            // Let see if the attribute exists
+            if(!$attribute = $this->getAttributeByName($name)){
+                $attribute = New Attribute();
+                $attribute->setName($name);
+            }
+
+            // Handle the property setup
+            if(array_key_exists('type',$property)){$attribute->setType($property['type']);}
+            if(array_key_exists('format',$property)){$attribute->setFormat($property['format']);}
+            if(array_key_exists('example',$property)){$attribute->setExample($property['example']);}
+            if(array_key_exists('readOnly',$property)){$attribute->setReadOnly($property['readOnly']);}
+            if(array_key_exists('description',$property)){$attribute->setDescription($property['description']);}
+            if(array_key_exists('$ref',$property)){}
+            if(array_key_exists('items',$property)){}
+            if(array_key_exists('maxLength',$property)){$attribute->setMaxLength($property['maxLength']);}
+            if(array_key_exists('enum',$property)){$attribute->setEnum($property['enum']);}
+            if(array_key_exists('default',$property)){$attribute->setDefaultValue($property['default']);}
+
+            $this->addAttribute($attribute);
+        }
+
+        // Requered stuff
+        if(array_key_exists('required',$schema)){
+            foreach ($schema['required'] as $required){
+                $atribute = $this->getAttributeByName($required);
+                $atribute->setRequired(true);
+            }
+        }
+
+
+        return $this;
+    }
     /**
      * @throws GatewayException
      */
     public function toSchema(?ObjectEntity $objectEntity): array
     {
         $schema = [
-            '$id'          => 'https://example.com/person.schema.json', //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$id'          => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
             '$schema'      => 'https://json-schema.org/draft/2020-12/schema',
             'title'        => $this->getName(),
+            'description'   => $this->getDescription(),
+            'version'        => $this->getVersion(),
             'required'     => [],
             'properties'   => [],
         ];
