@@ -725,6 +725,37 @@ class ObjectEntity
     }
 
     /**
+     * Validate whether or not this object is in line with its own atribute definitions
+     *
+     * @param array $array the optional data set where you want to validate the object against, wil validate its curent self if not profided
+     *
+     * @throws Exception
+     *
+     * @return ObjectEntity
+     */
+    public function validate(?array $array): ObjectEntity
+    {
+        if(!isset($array)){
+            $array = $this->toArray();
+        }
+
+        $validation =  $this->getValidation();
+
+        return $this;
+    }
+
+    /**
+     * Get a validation object for this object
+     *
+     * @return ObjectEntity
+     */
+    public function getValidation(): ObjectEntity
+    {
+
+    }
+
+
+    /**
      * This function will check if the given array has an embedded array, if so it will move all objects from the
      * embedded array to the keys outside this embedded array and (by default) unset the entire embedded array.
      *

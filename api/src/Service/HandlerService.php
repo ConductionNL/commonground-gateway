@@ -130,7 +130,7 @@ class HandlerService
         $this->stopwatch->stop('handleThrows');
 
         // If any of the throws gave a response lets use that instead of continuing to the old handlers
-        if($actionEvent !== null && $response = $actionEvent->getData()['searchResponse']){
+        if($actionEvent !== null && $response = $actionEvent->getData()['response']){
             if ($response instanceof Response) {
                 return $response;
             } else {
