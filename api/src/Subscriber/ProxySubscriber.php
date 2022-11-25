@@ -56,13 +56,17 @@ class ProxySubscriber implements EventSubscriberInterface
         }
 
         $headers = array_merge_recursive($source->getHeaders(), $event->getRequest()->headers->all());
+        $endpoint = $headers['x-endpoint'][0] ?? '';
+        $method = $headers['x-method'][0] ?? $event->getRequest()->getMethod();
         unset($headers['authorization']);
+        unset($headers['x-endpoint']);
+        unset($headers['x-method']);
 
         try {
             $result = $this->callService->call(
                 $source,
-                '/'.($event->getRequest()->attributes->get('endpoint') ?? ''),
-                $event->getRequest()->headers->get('x-method') ?? $event->getRequest()->getMethod(),
+                '/'.$endpoint,
+                $method,
                 array_merge([
                     'headers' => $headers,
                     'query'   => $event->getRequest()->query->all(),
