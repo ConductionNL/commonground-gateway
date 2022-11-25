@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f845348eb829764184a32a3de20ce13e",
+    "content-hash": "c3446df7108dd087d0ad6a3005a0d683",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -4335,6 +4335,54 @@
                 }
             ],
             "time": "2021-09-02T17:10:53+00:00"
+        },
+        {
+            "name": "larping-base/larping-bundle",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/LarpingBase/LarpingBundle.git",
+                "reference": "7f14f889139c4ef627e23a45465952b62a9b22d1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/7f14f889139c4ef627e23a45465952b62a9b22d1",
+                "reference": "7f14f889139c4ef627e23a45465952b62a9b22d1",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "default-branch": true,
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\PetStoreBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An Commong Gateay bundle for the larping application",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "larping",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
+                "source": "https://github.com/LarpingBase/LarpingBundle/tree/main"
+            },
+            "time": "2022-11-25T13:47:04+00:00"
         },
         {
             "name": "league/html-to-markdown",
@@ -14295,7 +14343,8 @@
         "commongateway/corebundle": 20,
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,
-        "conduction/samlbundle": 20
+        "conduction/samlbundle": 20,
+        "larping-base/larping-bundle": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
