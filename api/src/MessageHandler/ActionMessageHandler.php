@@ -3,7 +3,6 @@
 namespace App\MessageHandler;
 
 use App\Entity\Action;
-use App\Entity\ObjectEntity;
 use App\Message\ActionMessage;
 use App\Repository\ActionRepository;
 use App\Subscriber\ActionSubscriber;
@@ -27,14 +26,16 @@ class ActionMessageHandler implements MessageHandlerInterface
     public function __invoke(ActionMessage $message): void
     {
         $object = $this->repository->find($message->getObjectEntityId());
-        try{
+
+        try {
             if ($object instanceof Action) {
-                var_dump('Running action ' . $object->getName());
+                var_dump('Running action '.$object->getName());
                 $this->actionSubscriber->runFunction($object, $message->getData(), $message->getCurrentThrow());
             }
             $this->entityManager->clear();
         } catch (Exception $exception) {
             $this->entityManager->clear();
+
             throw $exception;
         }
     }
