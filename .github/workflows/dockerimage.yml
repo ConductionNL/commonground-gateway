@@ -350,7 +350,7 @@ jobs:
           - name: Up the images
             run: docker compose -f docker-compose.check.yml up -d
           - name: Check contents of bin folder
-            run: docker-compose -f docker-compose.check.yml exec -T php ls -la bin
+            run: docker-compose -f docker-compose.check.yml exec -T php ls -la vendor/symfony/phpunit-bridge/bin
           - name: Run PHPUnit
             run: docker-compose exec -T php bin/phpunit
   Fossa:
