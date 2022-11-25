@@ -65,7 +65,7 @@ class ProxySubscriber implements EventSubscriberInterface
         try {
             $result = $this->callService->call(
                 $source,
-                '/' . $endpoint,
+                '/'.$endpoint,
                 $method,
                 array_merge([
                     'headers' => $headers,
@@ -73,7 +73,7 @@ class ProxySubscriber implements EventSubscriberInterface
                     'body'    => $event->getRequest()->getContent(),
                 ], $source->getConfiguration())
             );
-        } catch (ServerException | ClientException | RequestException $e) {
+        } catch (ServerException|ClientException|RequestException $e) {
             $result = $e->getResponse();
 
             // If error catched dont pass event->getHeaders (causes infinite loop)
