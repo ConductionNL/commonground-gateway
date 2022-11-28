@@ -2,6 +2,7 @@
 
 [![Documentation Status](https://readthedocs.org/projects/commonground-gateway/badge/?version=latest)](https://commonground-gateway.readthedocs.io/en/latest/?badge=latest)
 [![BCH compliance](https://bettercodehub.com/edge/badge/ConductionNL/commonground-gateway?branch=master)](https://bettercodehub.com/)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FConductionNL%2Fcommonground-gateway.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FConductionNL%2Fcommonground-gateway?ref=badge_shield)
 
 ## Quickstart
 
@@ -47,3 +48,7 @@ It's also possible to update the product page directly from the repository by ru
 cd /product-page
 npm run deploy
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FConductionNL%2Fcommonground-gateway.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FConductionNL%2Fcommonground-gateway?ref=badge_large)
