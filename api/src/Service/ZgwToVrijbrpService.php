@@ -148,6 +148,7 @@ class ZgwToVrijbrpService
             ],
         ];
 
+        $date = $time = '';
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             switch ($eigenschap['naam']) {
                 case 'identificatie':
@@ -187,9 +188,10 @@ class ZgwToVrijbrpService
                     in_array($eigenschap['waarde'], ['MARRIAGE', 'GPS']) && $commitmentArray['planning']['commitmentType'] = $eigenschap['waarde'];
                     continue 2;
                 case 'verbintenisDatum':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-                    $commitmentArray['planning']['commitmentDateTime'] = $dateTimeFormatted;
+                    $date = new \DateTime($eigenschap['waarde']);
+                    continue 2;
+                case 'verbintenisTijd':
+                    $time = new \DateTime($eigenschap['waarde']);
                     continue 2;
                 case 'naam':
                     $commitmentArray['location']['name'] = $eigenschap['waarde'];
@@ -202,6 +204,9 @@ class ZgwToVrijbrpService
                     continue 2;
             }
         }
+
+        $dateTime = new \DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
+        $commitmentArray['planning']['commitmentDateTime'] = $dateTime->format('Y-m-d\TH:i:s');
 
         if (!isset($commitmentArray['partner2']['nameAfterCommitment']['nameUseType'])) {
             $commitmentArray['partner2']['nameAfterCommitment']['nameUseType'] = 'N';
