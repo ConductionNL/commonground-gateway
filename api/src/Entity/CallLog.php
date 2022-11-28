@@ -86,20 +86,20 @@ class CallLog
     private string $method = '';
 
     /**
-     * @var string The body of the request
+     * @var ?string The body of the request
      *
      * @Groups({"read","read_secure"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private string $requestBody = '';
+    private ?string $requestBody = '';
 
     /**
-     * @var array The headers of the response
+     * @var ?array The headers of the response
      *
      * @Groups({"read","read_secure"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private array $requestHeaders = [];
+    private ?array $requestHeaders = [];
 
     /**
      * @var string the response status of the request
@@ -118,12 +118,12 @@ class CallLog
     private int $responseStatusCode = 0;
 
     /**
-     * @var string The body of the response
+     * @var ?string The body of the response
      *
      * @Groups({"read","read_secure"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private string $responseBody = '';
+    private ?string $responseBody = '';
 
     /**
      * @var array The headers of the response
