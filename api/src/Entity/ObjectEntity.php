@@ -963,8 +963,10 @@ class ObjectEntity
     {
         $array = [];
         in_array('id', $extend) && $array['id'] = (string) $this->getId();
+        in_array('id', $extend) && $array['_id'] = (string) $this->getId();
         in_array('self', $extend) && $array['x-commongateway-metadata']['self'] = $this->getSelf(); //todo? $this->getSelf() ?? $this->setSelf(???->createSelf($this))->getSelf()
         in_array('synchronizations', $extend) && $array['x-commongateway-metadata']['synchronizations'] = $this->getReadableSyncDataArray();
+        in_array('schema', $extend) && $array['_schema'] = $this->getEntity()->toSchema();
         if ($onlyMetadata) {
             return $array;
         }
