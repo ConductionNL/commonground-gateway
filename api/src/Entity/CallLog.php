@@ -2,8 +2,8 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\CallLogRepository;
 use DateTime;
@@ -169,7 +169,7 @@ class CallLog
         $status = $this->source->getStatus();
         // If we only have a status code set code if we have code and status text set both
         isset($this->responseStatusCode) && !empty($this->responseStatusCode) && $status = $this->responseStatusCode;
-        isset($this->responseStatusCode, $this->responseStatus) && !empty($this->responseStatusCode) && !empty($this->responseStatus) && $status = $this->responseStatusCode . ' ' . $this->responseStatus;
+        isset($this->responseStatusCode, $this->responseStatus) && !empty($this->responseStatusCode) && !empty($this->responseStatus) && $status = $this->responseStatusCode.' '.$this->responseStatus;
         $this->source->setStatus($status);
     }
 
