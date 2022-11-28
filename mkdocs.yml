@@ -8,6 +8,8 @@ nav:
     - "getting_started.md"
     - "how_does_it_work.md"
     - Features: "./features/index.md"
+    - "plugins.md"
+    - "schemas.md"
     - "design_decisions.md"
     - "contributing.md"
     - "installation.md"
