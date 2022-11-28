@@ -4,16 +4,29 @@ repo_url: https://github.com/ConductionNL/commonground-gateway/
 docs_dir: redoc/docs
 
 nav:
-    - "index.md"
-    - "getting_started.md"
-    - "how_does_it_work.md"
-    - Features: "./features/index.md"
-    - "plugins.md"
-    - "schemas.md"
-    - "design_decisions.md"
-    - "contributing.md"
-    - "installation.md"
-    - "security.md"
+    - Home: "index.md"
+    - Getting Started: "getting_started.md"
+    - How does it work: "how_does_it_work.md"
+    - Features: 
+        - "./features/index.md"
+        - "./features/applications.md"
+        - "./features/attributes.md"
+        - "./features/collections.md"
+        - "./features/configurations.md"
+        - "./features/endpoints.md"
+        - "./features/handlers.md"
+        - "./features/logs.md"
+        - "./features/logtables.md"
+        - "./features/object_types.md"
+        - "./features/sources.md"
+        - "./features/translations.md" 
+    - Plugins: "plugins.md"
+    - Schemas: "schemas.md"
+    - hidden: "mappings.md"
+    - Design Decisions: "design_decisions.md"
+    - Contributing: "contributing.md"
+    - Installation: "installation.md"
+    - Security: "security.md"
 
 theme:
     name: readthedocs
