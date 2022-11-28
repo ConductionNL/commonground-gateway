@@ -60,7 +60,7 @@ class ZgwToVrijbrpService
             ) {
                 $childIndex = substr($eigenschap['naam'], -1);
                 $childIndexInt = intval($childIndex) - 1;
-            } elseif ($eigenschap['naam'] == 'voornamen' || $eigenschap['naam'] == 'geboortedatum' || $eigenschap['naam'] == 'geslachtsaanduiding') {
+            } elseif ($eigenschap['naam'] == 'voornamen' || $eigenschap['naam'] == 'geboortedatum' || $eigenschap['naam'] == 'geslachtsaanduiding' || $eigenschap == 'geboortedatum') {
                 continue;
             }
             switch ($eigenschap['naam']) {
@@ -68,10 +68,24 @@ class ZgwToVrijbrpService
                     $birthArray['children'][$childIndexInt]['firstname'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geboortedatum'.$childIndex:
-                    $dates[$childIndexInt] = new \DateTime($eigenschap['waarde']);
+                    $date = new \DateTime($eigenschap['waarde']);
+                    if(isset($birthArray['children'][$childIndexInt]['birthDateTime'])) {
+                        $time = new \DateTime($birthArray['children'][$childIndexInt]['birthDateTime']);
+                        $dateTime = new \DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
+                    } else {
+                        $dateTime = $date;
+                    }
+                    $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTime->format('Y-m-d\TH:i:s');
                     continue 2;
                 case 'geboortetijd'.$childIndex:
-                    $times[$childIndexInt] = new \DateTime($eigenschap['waarde']);
+                    $time = new \DateTime($eigenschap['waarde']);
+                    if(isset($birthArray['children'][$childIndexInt]['birthDateTime'])) {
+                        $date = new \DateTime($birthArray['children'][$childIndexInt]['birthDateTime']);
+                        $dateTime = new \DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
+                    } else {
+                        $dateTime = $time;
+                    }
+                    $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTime->format('Y-m-d\TH:i:s');
                     continue 2;
                 case 'geslachtsaanduiding'.$childIndex:
                     in_array($eigenschap['waarde'], ['MAN', 'WOMAN', 'UNKNOWN']) && $birthArray['children'][$childIndexInt]['gender'] = $eigenschap['waarde'];
@@ -86,15 +100,6 @@ class ZgwToVrijbrpService
                     $birthArray['qualificationForDeclaringType'] = $eigenschap['waarde'];
                     continue 2;
             }
-        }
-
-        foreach($dates as $key=>$date) {
-            if(isset($times[$key])) {
-                $dateTime = new \DateTime($date->format('Y-m-d\T').$times[$key]->format('H:i:s'));
-            } else {
-                $dateTime = $date;
-            }
-            $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTime->format('Y-m-d\TH:i:s');
         }
 
         isset($birthArray['children']) && $birthArray['children'] = array_values($birthArray['children']);
