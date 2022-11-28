@@ -68,10 +68,10 @@ class ZgwToVrijbrpService
                     $birthArray['children'][$childIndexInt]['firstname'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geboortedatum'.$childIndex:
-                    $date = new DateTime($eigenschap['waarde']);
+                    $dates[$childIndexInt] = new \DateTime($eigenschap['waarde']);
                     continue 2;
                 case 'geboortetijd'.$childIndex:
-                    $time = new DateTime($eigenschap['waarde']);
+                    $times[$childIndexInt] = new \DateTime($eigenschap['waarde']);
                     continue 2;
                 case 'geslachtsaanduiding'.$childIndex:
                     in_array($eigenschap['waarde'], ['MAN', 'WOMAN', 'UNKNOWN']) && $birthArray['children'][$childIndexInt]['gender'] = $eigenschap['waarde'];
@@ -84,8 +84,16 @@ class ZgwToVrijbrpService
                     continue 2;
                 case 'relatie':
                     $birthArray['qualificationForDeclaringType'] = $eigenschap['waarde'];
+                    continue 2;
             }
-            $dateTime = new DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
+        }
+
+        foreach($dates as $key=>$date) {
+            if(isset($times[$key])) {
+                $dateTime = new \DateTime($date->format('Y-m-d\T').$times[$key]->format('H:i:s'));
+            } else {
+                $dateTime = $date;
+            }
             $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTime->format('Y-m-d\TH:i:s');
         }
 
