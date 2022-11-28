@@ -128,13 +128,15 @@ class SynchronizationService
         }
 
         foreach ($entity->getObjectEntities() as $object) {
-            $synchronisation = $this->findSyncByObject($object, $source, $entity);
-            if (!$synchronisation->getLastSynced()) {
-                $synchronisation = $this->syncToSource($synchronisation, false);
-            } elseif ($object->getDateModified() > $synchronisation->getLastSynced() && (!isset($this->configuration['updatesAllowed']) || $this->configuration['updatesAllowed'])) {
-                $synchronisation = $this->syncToSource($synchronisation, true);
+            $synchronization = $this->findSyncByObject($object, $source, $entity);
+            // todo: replace this if elseif with handleSync! needs testing first!
+//            $this->handleSync($synchronization);
+            if (!$synchronization->getLastSynced()) {
+                $synchronization = $this->syncToSource($synchronization, false);
+            } elseif ($object->getDateModified() > $synchronization->getLastSynced() && (!isset($this->configuration['updatesAllowed']) || $this->configuration['updatesAllowed'])) {
+                $synchronization = $this->syncToSource($synchronization, true);
             }
-            $this->entityManager->persist($synchronisation);
+            $this->entityManager->persist($synchronization);
             $this->entityManager->flush();
         }
         if ($this->asyncError) {
@@ -805,11 +807,15 @@ class SynchronizationService
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
 
         //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
+        // todo: this if, elseif, else needs fixing, conditions aren't correct for if we ever want to syncToSource with this handleSync function
         if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() > $synchronization->getObject()->getDateModified())) {
             $synchronization = $this->syncToGateway($synchronization, $sourceObject, $method);
-        } elseif ((!$synchronization->getLastSynced() || $synchronization->getLastSynced() < $synchronization->getObject()->getDateModified()) && $synchronization->getSourceLastChanged() < $synchronization->getObject()->getDateModified()) {
-            $synchronization = $this->syncToSource($synchronization, true);
-        } else {
+        }
+        // todo: we currently never use handleSync to do syncToSource, so let's make sure we aren't trying to by accident
+//        elseif ((!$synchronization->getLastSynced() || $synchronization->getLastSynced() < $synchronization->getObject()->getDateModified()) && $synchronization->getSourceLastChanged() < $synchronization->getObject()->getDateModified()) {
+//            $synchronization = $this->syncToSource($synchronization, true);
+//        }
+        else {
             if (isset($this->io)) {
                 //todo: temp, maybe put something else here later
                 $this->io->text("Nothing to sync because source and gateway haven't changed");
