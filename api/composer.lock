@@ -673,12 +673,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "b834529209e24dedbc6f546851532207927efcf6"
+                "reference": "49ddb0fde497937d030fa3ffa5116afaaf9a92b9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/b834529209e24dedbc6f546851532207927efcf6",
-                "reference": "b834529209e24dedbc6f546851532207927efcf6",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/49ddb0fde497937d030fa3ffa5116afaaf9a92b9",
+                "reference": "49ddb0fde497937d030fa3ffa5116afaaf9a92b9",
                 "shasum": ""
             },
             "require": {
@@ -723,7 +723,7 @@
                 }
             ],
             "description": "Symfony Bundle for dutch common ground functionality",
-            "homepage": "https://commongatway.nl",
+            "homepage": "https://commongateway.nl",
             "keywords": [
                 "common",
                 "commongateway",
@@ -736,7 +736,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2022-11-22T10:02:20+00:00"
+            "time": "2022-11-28T13:29:31+00:00"
         },
         {
             "name": "composer/ca-bundle",
