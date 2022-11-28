@@ -84,7 +84,7 @@ class ZgwToVrijbrpService
                 case 'relatie':
                     $birthArray['qualificationForDeclaringType'] = $eigenschap['waarde'];
             }
-            $dateTime = new DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
+            $dateTime = new \DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
             $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTime->format('Y-m-d\TH:i:s');
         }
 
