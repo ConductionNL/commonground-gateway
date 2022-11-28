@@ -2,7 +2,9 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\CallLogRepository;
 use DateTime;
 use DateTimeInterface;
@@ -30,6 +32,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * @ORM\HasLifecycleCallbacks
  * @ORM\Entity(repositoryClass=CallLogRepository::class)
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "source.id": "exact"
+ * })
  */
 class CallLog
 {
@@ -81,6 +86,22 @@ class CallLog
     private string $method = '';
 
     /**
+     * @var string The body of the request
+     *
+     * @Groups({"read","read_secure"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private string $requestBody = '';
+
+    /**
+     * @var array The headers of the response
+     *
+     * @Groups({"read","read_secure"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $requestHeaders = [];
+
+    /**
      * @var string the response status of the request
      *
      * @Groups({"read","read_secure"})
@@ -103,6 +124,14 @@ class CallLog
      * @ORM\Column(type="text", nullable=true)
      */
     private string $responseBody = '';
+
+    /**
+     * @var array The headers of the response
+     *
+     * @Groups({"read","read_secure"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $responseHeaders = [];
 
     /**
      * @var int the runtime of the request
@@ -197,6 +226,30 @@ class CallLog
         return $this;
     }
 
+    public function getRequestBody(): ?string
+    {
+        return $this->requestBody;
+    }
+
+    public function setRequestBody(?string $requestBody): self
+    {
+        $this->requestBody = $requestBody;
+
+        return $this;
+    }
+
+    public function getRequestHeaders(): ?array
+    {
+        return $this->requestHeaders;
+    }
+
+    public function setRequestHeaders(?array $requestHeaders): self
+    {
+        $this->requestHeaders = $requestHeaders;
+
+        return $this;
+    }
+
     public function getResponseStatus(): ?string
     {
         return $this->responseStatus;
@@ -229,6 +282,18 @@ class CallLog
     public function setResponseBody(?string $responseBody): self
     {
         $this->responseBody = $responseBody;
+
+        return $this;
+    }
+
+    public function getResponseHeaders(): ?array
+    {
+        return $this->responseHeaders;
+    }
+
+    public function setResponseHeaders(?array $responseHeaders): self
+    {
+        $this->responseHeaders = $responseHeaders;
 
         return $this;
     }
