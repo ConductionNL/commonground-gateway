@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use phpDocumentor\Reflection\Types\This;
@@ -52,7 +53,7 @@ class ZgwToVrijbrpService
 
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             $childIndex = '';
-            $date = $time = new \DateTime();
+            $date = $time = new DateTime();
             if (
                 in_array(substr_replace($eigenschap['naam'], '', -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding']) &&
                 $eigenschap['naam'] != 'voornamen' && $eigenschap['naam'] != 'geboortedatum' && $eigenschap['naam'] != 'geslachtsaanduiding'
@@ -67,10 +68,10 @@ class ZgwToVrijbrpService
                     $birthArray['children'][$childIndexInt]['firstname'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geboortedatum'.$childIndex:
-                    $date = new \DateTime($eigenschap['waarde']);
+                    $date = new DateTime($eigenschap['waarde']);
                     continue 2;
                 case 'geboortetijd'.$childIndex:
-                    $time = new \DateTime($eigenschap['waarde']);
+                    $time = new DateTime($eigenschap['waarde']);
                     continue 2;
                 case 'geslachtsaanduiding'.$childIndex:
                     in_array($eigenschap['waarde'], ['MAN', 'WOMAN', 'UNKNOWN']) && $birthArray['children'][$childIndexInt]['gender'] = $eigenschap['waarde'];
@@ -84,7 +85,7 @@ class ZgwToVrijbrpService
                 case 'relatie':
                     $birthArray['qualificationForDeclaringType'] = $eigenschap['waarde'];
             }
-            $dateTime = new \DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
+            $dateTime = new DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
             $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTime->format('Y-m-d\TH:i:s');
         }
 
@@ -93,11 +94,11 @@ class ZgwToVrijbrpService
         $birthArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $birthArray['dossier']['dossierId'] = $zaakArray['id'];
 
-        $dateTimeObject = new \DateTime($zaakArray['startdatum']);
+        $dateTimeObject = new DateTime($zaakArray['startdatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
         $birthArray['dossier']['startDate'] = $dateTimeFormatted;
 
-        $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
+        $dateTimeObject = new DateTime($zaakArray['registratiedatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
         $birthArray['dossier']['entryDateTime'] = $dateTimeFormatted;
         $birthArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
@@ -152,7 +153,7 @@ class ZgwToVrijbrpService
             ],
         ];
 
-        $date = $time = new \DateTime();
+        $date = $time = new DateTime();
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             switch ($eigenschap['naam']) {
                 case 'identificatie':
@@ -192,10 +193,10 @@ class ZgwToVrijbrpService
                     in_array($eigenschap['waarde'], ['MARRIAGE', 'GPS']) && $commitmentArray['planning']['commitmentType'] = $eigenschap['waarde'];
                     continue 2;
                 case 'verbintenisDatum':
-                    $date = new \DateTime($eigenschap['waarde']);
+                    $date = new DateTime($eigenschap['waarde']);
                     continue 2;
                 case 'verbintenisTijd':
-                    $time = new \DateTime($eigenschap['waarde']);
+                    $time = new DateTime($eigenschap['waarde']);
                     continue 2;
                 case 'naam':
                     $commitmentArray['location']['name'] = $eigenschap['waarde'];
@@ -209,7 +210,7 @@ class ZgwToVrijbrpService
             }
         }
 
-        $dateTime = new \DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
+        $dateTime = new DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
         $commitmentArray['planning']['commitmentDateTime'] = $dateTime->format('Y-m-d\TH:i:s');
 
         if (!isset($commitmentArray['partner2']['nameAfterCommitment']['nameUseType'])) {
@@ -226,11 +227,11 @@ class ZgwToVrijbrpService
         $commitmentArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $commitmentArray['dossier']['dossierId'] = $zaakArray['id'];
 
-        $dateTimeObject = new \DateTime($zaakArray['startdatum']);
+        $dateTimeObject = new DateTime($zaakArray['startdatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
         $commitmentArray['dossier']['startDate'] = $dateTimeFormatted;
 
-        $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
+        $dateTimeObject = new DateTime($zaakArray['registratiedatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
         $commitmentArray['dossier']['entryDateTime'] = $dateTimeFormatted;
         $commitmentArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
@@ -314,7 +315,7 @@ class ZgwToVrijbrpService
                 case 'bsn':
                     continue 2;
                 case 'verhuisdatum':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeObject = new DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
                     $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
                     $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
@@ -381,11 +382,11 @@ class ZgwToVrijbrpService
         $relocationArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $relocationArray['dossier']['dossierId'] = $zaakArray['id'];
 
-        $dateTimeObject = new \DateTime($zaakArray['startdatum']);
+        $dateTimeObject = new DateTime($zaakArray['startdatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
         $relocationArray['dossier']['startDate'] = $dateTimeFormatted;
 
-        $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
+        $dateTimeObject = new DateTime($zaakArray['registratiedatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
         $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
         $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
@@ -456,12 +457,12 @@ class ZgwToVrijbrpService
                     $deathArrayObject['municipality']['code'] = $eigenschap['waarde'];
                     continue 2;
                 case 'datumoverlijden':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeObject = new DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
                     $deathArrayObject['dateOfDeath'] = $dateTimeFormatted;
                     continue 2;
                 case 'tijdoverlijden':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeObject = new DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('H:i');
                     $deathArrayObject['timeOfDeath'] = $dateTimeFormatted;
                     continue 2;
@@ -475,7 +476,7 @@ class ZgwToVrijbrpService
                     $deathArrayObject['extracts'][$extractIndex]['code'] = $eigenschap['waarde'];
                     continue 2;
                 case 'datum':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeObject = new DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
                     $deathArrayObject['funeralServices']['date'] = $dateTimeFormatted;
                     continue 2;
@@ -522,11 +523,11 @@ class ZgwToVrijbrpService
         $deathArrayObject['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $deathArrayObject['dossier']['dossierId'] = $zaakArray['id'];
 
-        $dateTimeObject = new \DateTime($zaakArray['startdatum']);
+        $dateTimeObject = new DateTime($zaakArray['startdatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
         $deathArrayObject['dossier']['startDate'] = $dateTimeFormatted;
 
-        $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
+        $dateTimeObject = new DateTime($zaakArray['registratiedatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
         $deathArrayObject['dossier']['entryDateTime'] = $dateTimeFormatted;
         $deathArrayObject['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
@@ -992,7 +993,7 @@ class ZgwToVrijbrpService
         if ($zaakDocumentObjectEntity instanceof ObjectEntity) {
             $vrijBrpDossierEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['vrijBrpDossierEntityId']);
 
-            $date = new \DateTime($zaakDocumentObjectEntity->getValue('creatiedatum'));
+            $date = new DateTime($zaakDocumentObjectEntity->getValue('creatiedatum'));
             $dateTimeFormatted = $date->format('Y-m-d\TH:i:s');
 
             $vrijBrpDossierArray = [
