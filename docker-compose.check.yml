@@ -25,6 +25,8 @@ services:
       - db
     volumes:
       - ./api/var/certs:/var/certs:rw,cached
+      - ./api/tests:/srv/api/tests
+      - ./api/phpunit.xml.dist:/srv/api/phpunit.xml.dist
     environment:
       - CONTAINER_REGISTRY_BASE=${CONTAINER_REGISTRY_BASE}
       - CONTAINER_PROJECT_NAME=${CONTAINER_PROJECT_NAME}

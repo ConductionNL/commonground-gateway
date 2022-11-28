@@ -120,7 +120,6 @@ COPY src src/
 COPY templates templates/
 COPY migrations migrations/
 COPY fixtures fixtures/
-COPY phpunit.xml.dist phpunit.xml.dist
 
 RUN set -eux; \
 	mkdir -p var/cache var/log; \
