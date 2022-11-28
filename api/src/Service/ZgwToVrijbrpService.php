@@ -52,6 +52,7 @@ class ZgwToVrijbrpService
 
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             $childIndex = '';
+            $date = $time = new \DateTime();
             if (
                 in_array(substr_replace($eigenschap['naam'], '', -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding']) &&
                 $eigenschap['naam'] != 'voornamen' && $eigenschap['naam'] != 'geboortedatum' && $eigenschap['naam'] != 'geslachtsaanduiding'
@@ -66,9 +67,10 @@ class ZgwToVrijbrpService
                     $birthArray['children'][$childIndexInt]['firstname'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geboortedatum'.$childIndex:
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-                    $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTimeFormatted;
+                    $date = new \DateTime($eigenschap['waarde']);
+                    continue 2;
+                case 'geboortetijd'.$childIndex:
+                    $time = new \DateTime($eigenschap['waarde']);
                     continue 2;
                 case 'geslachtsaanduiding'.$childIndex:
                     in_array($eigenschap['waarde'], ['MAN', 'WOMAN', 'UNKNOWN']) && $birthArray['children'][$childIndexInt]['gender'] = $eigenschap['waarde'];
@@ -82,6 +84,8 @@ class ZgwToVrijbrpService
                 case 'relatie':
                     $birthArray['qualificationForDeclaringType'] = $eigenschap['waarde'];
             }
+            $dateTime = new DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
+            $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTime->format('Y-m-d\TH:i:s');;
         }
 
         isset($birthArray['children']) && $birthArray['children'] = array_values($birthArray['children']);
@@ -148,7 +152,7 @@ class ZgwToVrijbrpService
             ],
         ];
 
-        $date = $time = '';
+        $date = $time = new \DateTime();
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             switch ($eigenschap['naam']) {
                 case 'identificatie':
