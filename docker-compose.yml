@@ -179,12 +179,12 @@ services:
     ports:
       - "5432:5432"
 
-  mongo:
+  mongodb:
     image: mongo
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      MONGO_INITDB_ROOT_USERNAME: api-platform
+      MONGO_INITDB_ROOT_PASSWORD: '!ChangeMe!'
         
   user-component:
     image: ghcr.io/conductionnl/user-component-nginx:latest
