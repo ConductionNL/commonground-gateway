@@ -32,6 +32,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *
  * @ORM\HasLifecycleCallbacks
  * @ORM\Entity(repositoryClass=CallLogRepository::class)
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "source.id": "exact"
+ * })
  */
 class CallLog
 {
