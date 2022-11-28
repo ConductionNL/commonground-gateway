@@ -35,39 +35,43 @@
 #        name: Klanten collection
 #        sourceType: GitHub
 #        testDataLocation: https://raw.githubusercontent.com/CommonGateway/KlantenAPI/main/data/klanten.json
-#    loggingReadCollection:
-#        autoLoad: true
-#        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/gemma-verwerkingenlogging/master/docs/api-read/oas-specification/logging-verwerkingen-api/openapi.yaml
-#        name: Logging read collection
-#        sourceType: GitHub
-#        testDataLocation: https://github.com/ConductionNL/logging-verwerking-read_publiccode/raw/main/data/logging-verwerking-read.yml
-#    loggingWriteCollection:
-#        autoLoad: true
-#        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/gemma-verwerkingenlogging/master/docs/api-write/oas-specification/logging-verwerkingen-api/openapi.yaml
-#        name: Logging write collection
-#        sourceType: GitHub
-#        testDataLocation: https://github.com/ConductionNL/logging-verwerking-write_publiccode/raw/main/data/logging-verwerking-write.yml
-#    pdcCollection:
-#        autoLoad: true
-#        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/ConductionNL/PDC_publiccode/main/PDC_OAS.json
-#        name: producten en diensten collection
-#        sourceType: GitHub
-#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/PDC_publiccode/main/data/PDC.json
+##    todo: delete? :
+##    loggingReadCollection:
+##        autoLoad: true
+##        loadTestData: true
+##        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/gemma-verwerkingenlogging/master/docs/api-read/oas-specification/logging-verwerkingen-api/openapi.yaml
+##        name: Logging read collection
+##        sourceType: GitHub
+##        testDataLocation: https://github.com/ConductionNL/logging-verwerking-read_publiccode/raw/main/data/logging-verwerking-read.yml
+##    todo: delete? :
+##    loggingWriteCollection:
+##        autoLoad: true
+##        loadTestData: true
+##        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/gemma-verwerkingenlogging/master/docs/api-write/oas-specification/logging-verwerkingen-api/openapi.yaml
+##        name: Logging write collection
+##        sourceType: GitHub
+##        testDataLocation: https://github.com/ConductionNL/logging-verwerking-write_publiccode/raw/main/data/logging-verwerking-write.yml
+##    todo: delete? :
+##    pdcCollection:
+##        autoLoad: true
+##        loadTestData: true
+##        locationOAS: https://raw.githubusercontent.com/ConductionNL/PDC_publiccode/main/PDC_OAS.json
+##        name: producten en diensten collection
+##        sourceType: GitHub
+##        testDataLocation: https://raw.githubusercontent.com/ConductionNL/PDC_publiccode/main/data/PDC.json
 #    pubCollection:
 #        autoLoad: true
 #        locationOAS: https://raw.githubusercontent.com/ConductionNL/PUB_publiccode/main/PublicationsOAS.yaml
 #        name: Pub collection
 #        sourceType: GitHub
-#    verzoekenCollection:
-#        autoLoad: true
-#        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/verzoeken-api/master/src/openapi.yaml
-#        name: verzoeken collection
-#        sourceType: GitHub
-#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/verzoeken_publiccode/main/data/verzoeken.json
+##    todo: delete? :
+##    verzoekenCollection:
+##        autoLoad: true
+##        loadTestData: true
+##        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/verzoeken-api/master/src/openapi.yaml
+##        name: verzoeken collection
+##        sourceType: GitHub
+##        testDataLocation: https://raw.githubusercontent.com/ConductionNL/verzoeken_publiccode/main/data/verzoeken.json
 #    zrcCollection:
 #        autoLoad: true
 #        loadTestData: true
@@ -96,13 +100,14 @@
 #        testDataLocation: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/data/KissPubData.json
 #        loadTestData: true
 #        autoLoad: true
-#    agendaserviceCollection:
-#        name: AgendaService collection
-#        sourceType: GitHub
-#        locationOAS: https://raw.githubusercontent.com/Huwelijksplanner/AgendaService/main/OAS.yaml
-#       #  testDataLocation: https://raw.githubusercontent.com/Huwelijksplanner/AgendaService/main/data/testdata.json
-#       #  loadTestData: true
-#        autoLoad: true
+##    todo: delete? :
+##    agendaserviceCollection:
+##        name: AgendaService collection
+##        sourceType: GitHub
+##        locationOAS: https://raw.githubusercontent.com/Huwelijksplanner/AgendaService/main/OAS.yaml
+##       #  testDataLocation: https://raw.githubusercontent.com/Huwelijksplanner/AgendaService/main/data/testdata.json
+##       #  loadTestData: true
+##        autoLoad: true
 #
 #    handelsregisterbevragenCollection:
 #        name: HandelsRegisterBevragen collection
@@ -119,7 +124,7 @@
 #        testDataLocation: https://raw.githubusercontent.com/Huwelijksplanner/OverigeObjecten/main/data/data.json
 #        loadTestData: true
 #        autoLoad: true
-#
+##    todo: ^ bevat ook alle info uit deze collectie:
 ##    overigeObjectenSDGCollection:
 ##        name: overigeObjectenSDG collection
 ##        sourceType: GitHub
