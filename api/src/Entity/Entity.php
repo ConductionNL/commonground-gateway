@@ -360,6 +360,11 @@ class Entity
      */
     private $version;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Endpoint::class, mappedBy="Entity")
+     */
+    private $endpoints;
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
@@ -373,6 +378,7 @@ class Entity
         $this->subscribers = new ArrayCollection();
         $this->subscriberOut = new ArrayCollection();
         $this->collections = new ArrayCollection();
+        $this->endpoints = new ArrayCollection();
     }
 
     public function export()
@@ -1132,6 +1138,18 @@ class Entity
             }
         }
 
+        // Bit of cleanup
+        foreach ($this->getAttributes() as $attribute){
+            // Remove Required if no longer valid
+            if(array_key_exists('required', $schema) && !in_array($attribute->getName(),$schema['required']) && $atribute->getRequired() == true){
+                $atribute->setRequired(false);
+            }
+            // Remove atribute if no longer present
+            if(!array_key_exists($attribute->getName(),$schema['properties'])){
+                $this->removeAttribute($attribute);
+            }
+        }
+
 
         return $this;
     }
@@ -1209,6 +1227,36 @@ class Entity
     public function setVersion(?string $version): self
     {
         $this->version = $version;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Endpoint[]
+     */
+    public function getEndpoints(): Collection
+    {
+        return $this->endpoints;
+    }
+
+    public function addEndpoint(Endpoint $endpoint): self
+    {
+        if (!$this->endpoints->contains($endpoint)) {
+            $this->endpoints[] = $endpoint;
+            $endpoint->setEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEndpoint(Endpoint $endpoint): self
+    {
+        if ($this->endpoints->removeElement($endpoint)) {
+            // set the owning side to null (unless already changed)
+            if ($endpoint->getEntity() === $this) {
+                $endpoint->setEntity(null);
+            }
+        }
 
         return $this;
     }

@@ -4342,12 +4342,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "7f14f889139c4ef627e23a45465952b62a9b22d1"
+                "reference": "abc6b55802a595735bd507e6d42309a713c92caf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/7f14f889139c4ef627e23a45465952b62a9b22d1",
-                "reference": "7f14f889139c4ef627e23a45465952b62a9b22d1",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/abc6b55802a595735bd507e6d42309a713c92caf",
+                "reference": "abc6b55802a595735bd507e6d42309a713c92caf",
                 "shasum": ""
             },
             "require": {
@@ -4360,7 +4360,7 @@
             "type": "symfony-bundle",
             "autoload": {
                 "psr-4": {
-                    "CommonGateway\\PetStoreBundle\\": ""
+                    "LarpingBase\\LarpingBundle\\": ""
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -4382,7 +4382,7 @@
                 "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
                 "source": "https://github.com/LarpingBase/LarpingBundle/tree/main"
             },
-            "time": "2022-11-25T13:47:04+00:00"
+            "time": "2022-11-27T20:36:29+00:00"
         },
         {
             "name": "league/html-to-markdown",
