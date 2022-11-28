@@ -109,15 +109,15 @@ class SynchronizationService
      *
      * @throws CacheException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError|AsynchronousException
      *
-     * @return array The data from the action modified by the execution of the synchronisation
+     * @return array The data from the action modified by the execution of the synchronization
      */
-    public function synchronisationPushHandler(array $data, array $configuration): array
+    public function synchronizationPushHandler(array $data, array $configuration): array
     {
         $this->configuration = $configuration;
         $this->data = $data;
         if ($this->session->get('io')) {
             $this->io = $this->session->get('io');
-            $this->io->note('SynchronizationService->synchronisationPushHandler()');
+            $this->io->note('SynchronizationService->synchronizationPushHandler()');
         }
 
         $source = $this->getSourceFromConfig();
@@ -607,7 +607,7 @@ class SynchronizationService
     /**
      * Gets a single object from the source.
      *
-     * @param Synchronization $synchronization The synchronisation object with the related source object id
+     * @param Synchronization $synchronization The synchronization object with the related source object id
      *
      * @throws LoaderError|SyntaxError|GuzzleException
      *
@@ -652,13 +652,13 @@ class SynchronizationService
     }
 
     /**
-     * Finds a synchronisation object if it exists for the current object in the source, or creates one if it doesn't exist.
+     * Finds a synchronization object if it exists for the current object in the source, or creates one if it doesn't exist.
      *
      * @param Source $source   The source that is requested
      * @param Entity $entity   The entity that is requested
      * @param string $sourceId The id of the object in the source
      *
-     * @return Synchronization|null A synchronisation object related to the object in the source
+     * @return Synchronization|null A synchronization object related to the object in the source
      */
     public function findSyncBySource(Source $source, Entity $entity, string $sourceId): ?Synchronization
     {
@@ -687,13 +687,13 @@ class SynchronizationService
     }
 
     /**
-     * Finds a synchronisation object if it exists for the current object in the gateway, or creates one if it doesn't exist.
+     * Finds a synchronization object if it exists for the current object in the gateway, or creates one if it doesn't exist.
      *
      * @param ObjectEntity $objectEntity The current object in the gateway
      * @param Source       $source       The current source
      * @param Entity       $entity       The current entity
      *
-     * @return Synchronization|null A synchronisation object related to the object in the gateway
+     * @return Synchronization|null A synchronization object related to the object in the gateway
      */
     private function findSyncByObject(ObjectEntity $objectEntity, Source $source, Entity $entity): ?Synchronization
     {
@@ -722,9 +722,9 @@ class SynchronizationService
     }
 
     /**
-     * Adds a new ObjectEntity to a synchronisation object.
+     * Adds a new ObjectEntity to a synchronization object.
      *
-     * @param Synchronization $synchronization The synchronisation object without object
+     * @param Synchronization $synchronization The synchronization object without object
      *
      * @return string The method for populateObject, POST or PUT depending on if we created a new ObjectEntity.
      */
@@ -750,7 +750,7 @@ class SynchronizationService
     /**
      * Sets the last changed date from the source object and creates a hash for the source object.
      *
-     * @param Synchronization $synchronization The synchronisation object to update
+     * @param Synchronization $synchronization The synchronization object to update
      * @param array           $sourceObject    The object returned from the source
      *
      * @throws Exception
@@ -774,14 +774,14 @@ class SynchronizationService
     }
 
     /**
-     * Executes the synchronisation between source and gateway.
+     * Executes the synchronization between source and gateway.
      *
-     * @param Synchronization $synchronization The synchronisation object before synchronisation
+     * @param Synchronization $synchronization The synchronization object before synchronization
      * @param array           $sourceObject    The object in the source
      *
      * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError
      *
-     * @return Synchronization The updated synchronisation object
+     * @return Synchronization The updated synchronization object
      */
     public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
     {
@@ -822,7 +822,7 @@ class SynchronizationService
 
     /**
      * This function populates a pre-existing objectEntity with data that has been validated.
-     * This function is only meant for synchronisation.
+     * This function is only meant for synchronization.
      *
      * @param array        $data         The data that has to go into the objectEntity
      * @param ObjectEntity $objectEntity The ObjectEntity to populate
@@ -1021,9 +1021,9 @@ class SynchronizationService
     }
 
     /**
-     * Stores the result of a synchronisation in the synchronization object.
+     * Stores the result of a synchronization in the synchronization object.
      *
-     * @param Synchronization $synchronization The synchronisation object for the object that is made or updated
+     * @param Synchronization $synchronization The synchronization object for the object that is made or updated
      * @param array           $body            The body of the call to synchronise to a source
      *
      * @throws CacheException|InvalidArgumentException
@@ -1084,7 +1084,7 @@ class SynchronizationService
     }
 
     /**
-     * Encodes the object dependent on the settings for the synchronisation action.
+     * Encodes the object dependent on the settings for the synchronization action.
      *
      * @param array $objectArray The object array to encode
      *
@@ -1111,12 +1111,12 @@ class SynchronizationService
     /**
      * Synchronises a new object in the gateway to it source, or an object updated in the gateway.
      *
-     * @param Synchronization $synchronization The synchronisation object for the created or updated object
-     * @param bool            $existsInSource  Determines if a new synchronisation should be made, or an existing one should be updated
+     * @param Synchronization $synchronization The synchronization object for the created or updated object
+     * @param bool            $existsInSource  Determines if a new synchronization should be made, or an existing one should be updated
      *
      * @throws CacheException|InvalidArgumentException|LoaderError|SyntaxError|GuzzleException
      *
-     * @return Synchronization The updated synchronisation object
+     * @return Synchronization The updated synchronization object
      */
     private function syncToSource(Synchronization $synchronization, bool $existsInSource): Synchronization
     {
@@ -1205,12 +1205,12 @@ class SynchronizationService
     /**
      * Synchronises data from an external source to the internal database of the gateway.
      *
-     * @param Synchronization $synchronization The synchronisation object to update
+     * @param Synchronization $synchronization The synchronization object to update
      * @param array           $sourceObject    The external object to synchronise from
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
      *
-     * @return Synchronization The updated synchronisation object containing an updated objectEntity
+     * @return Synchronization The updated synchronization object containing an updated objectEntity
      */
     private function syncToGateway(Synchronization $synchronization, array $sourceObject, string $method = 'POST'): Synchronization
     {

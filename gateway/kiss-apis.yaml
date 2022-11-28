@@ -322,7 +322,7 @@
 #
 #    SyncEmployeeElasticSearch:
 #        name: SyncEmployeeElasticAction
-#        description: This is a synchronisation for the medewerkerscollection to Elastic
+#        description: This is a synchronization for the medewerkerscollection to Elastic
 #        listens:
 #            - 'commongateway.object.create'
 #            - 'commongateway.object.update'
@@ -377,7 +377,7 @@
 #
 #    SyncKennisArtikelElasticSearch:
 #        name: SyncKennisArtikelElasticAction
-#        description: This is a synchronisation for SDG kenninsartikel to Elastic
+#        description: This is a synchronization for SDG kenninsartikel to Elastic
 #        listens:
 #            - 'commongateway.object.create'
 #            - 'commongateway.object.update'
