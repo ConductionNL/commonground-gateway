@@ -55,7 +55,7 @@ class ZgwToVrijbrpService
             $childIndex = '';
             $date = $time = new DateTime();
             if (
-                in_array(substr_replace($eigenschap['naam'], '', -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding']) &&
+                in_array(substr_replace($eigenschap['naam'], '', -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding', 'geboortetijd']) &&
                 $eigenschap['naam'] != 'voornamen' && $eigenschap['naam'] != 'geboortedatum' && $eigenschap['naam'] != 'geslachtsaanduiding'
             ) {
                 $childIndex = substr($eigenschap['naam'], -1);
