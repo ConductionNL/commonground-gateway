@@ -18,4 +18,3 @@ bin/*
 !bin/phpunit
 docker/db/data/
 var/
-!vendor/symfony/phpunit-bridge/bin/*
