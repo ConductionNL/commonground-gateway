@@ -383,10 +383,10 @@ class ZgwToVrijbrpService
             ];
         }
 
-        $relocationArray['newAddress']['liveIn']['consenter']['contactInformation'] = [
-            'email'           => $relocator['email'] ?? null,
-            'telephoneNumber' => $relocator['telephoneNumber'] ?? null,
-        ];
+//        $relocationArray['newAddress']['liveIn']['consenter']['contactInformation'] = [
+//            'email'           => $relocator['email'] ?? null,
+//            'telephoneNumber' => $relocator['telephoneNumber'] ?? null,
+//        ];
         $relocationArray['newAddress']['mainOccupant']['contactInformation'] = [
             'email'           => $relocator['email'] ?? null,
             'telephoneNumber' => $relocator['telephoneNumber'] ?? null,
@@ -575,7 +575,7 @@ class ZgwToVrijbrpService
     {
         return [
             'zaakId'      => $type !== null ? $zaakObjectEntity->getId()->toString() : $zaakObjectEntity->getValue('identificatie'),
-            'bron'        => $zaakObjectEntity->getValue('omschrijving'),
+            'bron'        => 'eDienst',
             'leverancier' => $zaakObjectEntity->getValue('opdrachtgevendeOrganisatie'),
             //            'medewerker' => $zaakObjectEntity->getValue('identificatie'),
             'datumAanvraag' => $zaakObjectEntity->getValue('registratiedatum'),
