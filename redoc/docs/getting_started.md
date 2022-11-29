@@ -75,7 +75,7 @@ You will see the containers (virtual machines) come up one by one. Wait until al
 
 Alternatively, you can spin up the frontend from [this repository](https://github.com/ConductionNL/commonground-gateway-frontend) and have a GUI along with the Gateway engine.  
   
-![Gateway interface](https://github.com/ConductionNL/commonground-gateway/blob/master/redoc/assets/dashboard.png).
+![Gateway interface](https://github.com/ConductionNL/commonground-gateway/blob/master/redoc/assets/dashboard.png?raw=true).
 
 The login is:
 
