@@ -141,9 +141,6 @@ class Entity
      * @var string The description of this Entity
      *
      * @Gedmo\Versioned
-     * @Assert\Length(
-     *     max = 2555
-     * )
      * @Groups({"read","write"})
      * @ORM\Column(type="text", nullable=true)
      */
