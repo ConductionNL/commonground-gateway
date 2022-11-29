@@ -262,13 +262,29 @@ class Endpoint
      */
     private ?string $defaultContentType = 'application/json';
 
-    public function __construct()
+    /**
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="endpoints")
+     */
+    private $Entity;
+
+    public function __construct(?Entity $entity)
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
         $this->applications = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->properties = new ArrayCollection();
+
+        // Create simple endpoints for entities
+        if($entity){
+            $this->setEntity($entity);
+            $this->setName($entity->getName());
+            $this->setDescription($entity->getDescription());
+            $this->setMethods(['GET','POST','PUT','PATCH','DELETE']);
+
+            /*@depricated kept here for lagacy */
+            $this->setOperationType('GET');
+        }
     }
 
     public function getId(): ?UuidInterface
@@ -646,6 +662,18 @@ class Endpoint
     public function setDefaultContentType(?string $defaultContentType): self
     {
         $this->defaultContentType = $defaultContentType;
+
+        return $this;
+    }
+
+    public function getEntity(): ?Entity
+    {
+        return $this->Entity;
+    }
+
+    public function setEntity(?Entity $entity): self
+    {
+        $this->entity = $entity;
 
         return $this;
     }
