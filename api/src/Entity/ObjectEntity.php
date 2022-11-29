@@ -1172,7 +1172,7 @@ class ObjectEntity
     }
 
     /**
-     * Set name on pre persist
+     * Set name on pre persist.
      *
      * This function makes sure that each and every oject alwys has a name when saved
      *
@@ -1181,18 +1181,20 @@ class ObjectEntity
     public function prePersist(): void
     {
         // Lets see if the name is congigured
-        if($this->entity->getNameProperty() && $name = $this->getValue($this->entity->getNameProperty())){
+        if ($this->entity->getNameProperty() && $name = $this->getValue($this->entity->getNameProperty())) {
             $this->setName($name);
+
             return;
         }
         // Lets check agains common names
-        $nameProperties = ['name','title','naam','titel'];
-        foreach($nameProperties as $nameProperty){
-            if($name = $this->getValue($nameProperty)){
+        $nameProperties = ['name', 'title', 'naam', 'titel'];
+        foreach ($nameProperties as $nameProperty) {
+            if ($name = $this->getValue($nameProperty)) {
                 $this->setName($name);
+
                 return;
             }
         }
-       $this->setName($this->getId());
+        $this->setName($this->getId());
     }
 }
