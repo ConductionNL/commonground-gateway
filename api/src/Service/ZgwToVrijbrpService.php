@@ -376,10 +376,10 @@ class ZgwToVrijbrpService
             $relocationArray['newAddress']['mainOccupant']['bsn'] = $bsn;
             $relocationArray['newAddress']['liveIn'] = [
                 'liveInApplicable' => false,
-//                'consent'          => 'PENDING',
-//                'consenter'        => [
-//                    'bsn' => $bsn,
-//                ],
+                //                'consent'          => 'PENDING',
+                //                'consenter'        => [
+                //                    'bsn' => $bsn,
+                //                ],
             ];
         }
 
