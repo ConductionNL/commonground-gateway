@@ -275,6 +275,7 @@ class ZgwToVrijbrpService
      */
     private function mapRelocators(array $eigenschap): array
     {
+        $relocators = [];
         foreach (json_decode($eigenschap['waarde'], true) as $meeverhuizende) {
             switch ($meeverhuizende['rol']) {
                 case 'P':
@@ -283,9 +284,10 @@ class ZgwToVrijbrpService
                 case 'K':
                     $declarationType = 'ADULT_CHILD_LIVING_WITH_PARENTS';
                     break;
+                case 'I':
+                    $declarationType = 'REGISTERED';
                 default:
-                    $declarationType = 'ADULT_CHILD_LIVING_WITH_PARENTS';
-                    break;
+                    continue 2;
             }
             $relocators[] = [
                 'bsn'             => $meeverhuizende['bsn'],
@@ -364,6 +366,7 @@ class ZgwToVrijbrpService
                         $isInterRelocation = true;
                     }
                     continue 2;
+
             }
         }
 
@@ -371,10 +374,10 @@ class ZgwToVrijbrpService
             $relocationArray['declarant']['bsn'] = $bsn;
             $relocationArray['newAddress']['mainOccupant']['bsn'] = $bsn;
             $relocationArray['newAddress']['liveIn'] = [
-                'liveInApplicable' => true,
-                'consent'          => 'PENDING',
-                'consenter'        => [
-                    'bsn' => $bsn,
+                'liveInApplicable' => false,
+//                'consent'          => 'PENDING',
+//                'consenter'        => [
+//                    'bsn' => $bsn,
                 ],
             ];
         }
@@ -390,7 +393,7 @@ class ZgwToVrijbrpService
         $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
 
         $relocationArray['relocators'] = $relocators;
-        $relocationArray['relocators'][] = array_merge($relocationArray['newAddress']['mainOccupant'], ['declarationType' => 'ADULT_AUTHORIZED_REPRESENTATIVE']);
+        $relocationArray['relocators'][] = array_merge($relocationArray['newAddress']['mainOccupant'], ['declarationType' => 'REGISTERED']);
 
         $relocationArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $relocationArray['dossier']['dossierId'] = $zaakArray['id'];
