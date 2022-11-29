@@ -8,7 +8,7 @@ use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 
-class VrijbrpToZgwHandler
+class VrijbrpToZgwHandler implements ActionHandlerInterface
 {
     private ZgwToVrijbrpService $zgwToVrijbrpService;
 
