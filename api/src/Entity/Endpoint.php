@@ -267,7 +267,7 @@ class Endpoint
      */
     private $Entity;
 
-    public function __construct(?Entity $entity)
+    public function __construct(?Entity $entity = null)
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
