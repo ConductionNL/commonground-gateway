@@ -275,6 +275,7 @@ class ZgwToVrijbrpService
      */
     private function mapRelocators(array $eigenschap): array
     {
+        $relocators = [];
         foreach (json_decode($eigenschap['waarde'], true) as $meeverhuizende) {
             switch ($meeverhuizende['rol']) {
                 case 'P':
@@ -283,9 +284,11 @@ class ZgwToVrijbrpService
                 case 'K':
                     $declarationType = 'ADULT_CHILD_LIVING_WITH_PARENTS';
                     break;
-                default:
-                    $declarationType = 'ADULT_CHILD_LIVING_WITH_PARENTS';
+                case 'I':
+                    $declarationType = 'REGISTERED';
                     break;
+                default:
+                    continue 2;
             }
             $relocators[] = [
                 'bsn'             => $meeverhuizende['bsn'],
@@ -364,6 +367,7 @@ class ZgwToVrijbrpService
                         $isInterRelocation = true;
                     }
                     continue 2;
+
             }
         }
 
@@ -371,18 +375,18 @@ class ZgwToVrijbrpService
             $relocationArray['declarant']['bsn'] = $bsn;
             $relocationArray['newAddress']['mainOccupant']['bsn'] = $bsn;
             $relocationArray['newAddress']['liveIn'] = [
-                'liveInApplicable' => true,
-                'consent'          => 'PENDING',
-                'consenter'        => [
-                    'bsn' => $bsn,
-                ],
+                'liveInApplicable' => false,
+//                'consent'          => 'PENDING',
+//                'consenter'        => [
+//                    'bsn' => $bsn,
+//                ],
             ];
         }
 
-        $relocationArray['newAddress']['liveIn']['consenter']['contactInformation'] = [
-            'email'           => $relocator['email'] ?? null,
-            'telephoneNumber' => $relocator['telephoneNumber'] ?? null,
-        ];
+//        $relocationArray['newAddress']['liveIn']['consenter']['contactInformation'] = [
+//            'email'           => $relocator['email'] ?? null,
+//            'telephoneNumber' => $relocator['telephoneNumber'] ?? null,
+//        ];
         $relocationArray['newAddress']['mainOccupant']['contactInformation'] = [
             'email'           => $relocator['email'] ?? null,
             'telephoneNumber' => $relocator['telephoneNumber'] ?? null,
@@ -390,7 +394,7 @@ class ZgwToVrijbrpService
         $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
 
         $relocationArray['relocators'] = $relocators;
-        $relocationArray['relocators'][] = array_merge($relocationArray['newAddress']['mainOccupant'], ['declarationType' => 'ADULT_AUTHORIZED_REPRESENTATIVE']);
+        $relocationArray['relocators'][] = array_merge($relocationArray['newAddress']['mainOccupant'], ['declarationType' => 'REGISTERED']);
 
         $relocationArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $relocationArray['dossier']['dossierId'] = $zaakArray['id'];
@@ -571,7 +575,7 @@ class ZgwToVrijbrpService
     {
         return [
             'zaakId'      => $type !== null ? $zaakObjectEntity->getId()->toString() : $zaakObjectEntity->getValue('identificatie'),
-            'bron'        => $zaakObjectEntity->getValue('omschrijving'),
+            'bron'        => 'eDienst',
             'leverancier' => $zaakObjectEntity->getValue('opdrachtgevendeOrganisatie'),
             //            'medewerker' => $zaakObjectEntity->getValue('identificatie'),
             'datumAanvraag' => $zaakObjectEntity->getValue('registratiedatum'),
