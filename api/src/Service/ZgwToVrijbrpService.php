@@ -286,6 +286,7 @@ class ZgwToVrijbrpService
                     break;
                 case 'I':
                     $declarationType = 'REGISTERED';
+                    break;
                 default:
                     continue 2;
             }
@@ -378,7 +379,7 @@ class ZgwToVrijbrpService
 //                'consent'          => 'PENDING',
 //                'consenter'        => [
 //                    'bsn' => $bsn,
-                ],
+//                ],
             ];
         }
 
