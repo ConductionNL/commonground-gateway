@@ -72,6 +72,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
+ * @ORM\HasLifecycleCallbacks
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -963,10 +964,10 @@ class ObjectEntity
     {
         $array = [];
         in_array('id', $extend) && $array['id'] = (string) $this->getId();
-        in_array('id', $extend) && $array['_id'] = (string) $this->getId();
+        //in_array('id', $extend) && $array['_id'] = (string) $this->getId();
         in_array('self', $extend) && $array['x-commongateway-metadata']['self'] = $this->getSelf(); //todo? $this->getSelf() ?? $this->setSelf(???->createSelf($this))->getSelf()
         in_array('synchronizations', $extend) && $array['x-commongateway-metadata']['synchronizations'] = $this->getReadableSyncDataArray();
-        in_array('schema', $extend) && $array['_schema'] = $this->getEntity()->toSchema();
+        in_array('schema', $extend) && $array['_schema'] = $this->getEntity()->toSchema($this);
         if ($onlyMetadata) {
             return $array;
         }
@@ -1168,5 +1169,30 @@ class ObjectEntity
         $this->dateModified = $dateModified;
 
         return $this;
+    }
+
+    /**
+     * Set name on pre persist
+     *
+     * This function makes sure that each and every oject alwys has a name when saved
+     *
+     * @ORM\PrePersist
+     */
+    public function prePersist(): void
+    {
+        // Lets see if the name is congigured
+        if($this->entity->getNameProperty() && $name = $this->getValue($this->entity->getNameProperty())){
+            $this->setName($name);
+            return;
+        }
+        // Lets check agains common names
+        $nameProperties = ['name','title','naam','titel'];
+        foreach($nameProperties as $nameProperty){
+            if($name = $this->getValue($nameProperty)){
+                $this->setName($name);
+                return;
+            }
+        }
+       $this->setName($this->getId());
     }
 }

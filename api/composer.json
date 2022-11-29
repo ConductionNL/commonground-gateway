@@ -10,6 +10,7 @@
         "ext-iconv": "*",
         "ext-json": "*",
         "adbario/php-dot-notation": "^3",
+        "alcaeus/mongo-php-adapter": "^1.2",
         "api-platform/core": "^2.6",
         "beberlei/doctrineextensions": "^1.3",
         "common-gateway/formio-bundle": "dev-main",

@@ -2,6 +2,9 @@
     "adbario/php-dot-notation": {
         "version": "2.2.0"
     },
+    "alcaeus/mongo-php-adapter": {
+        "version": "1.2.2"
+    },
     "api-platform/api-pack": {
         "version": "v1.3.0"
     },

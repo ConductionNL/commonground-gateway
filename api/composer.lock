@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "43b712b3808a062631c8fed6ff7c5f6c",
+    "content-hash": "b0b3c52d016644bacf6f0ae34071237f",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -59,6 +59,74 @@
                 "source": "https://github.com/adbario/php-dot-notation/tree/3.1.1"
             },
             "time": "2022-03-28T01:09:30+00:00"
+        },
+        {
+            "name": "alcaeus/mongo-php-adapter",
+            "version": "1.2.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/alcaeus/mongo-php-adapter.git",
+                "reference": "0e99bf5ea15f8e9b7ddb3a6dc38c11aa95330ca1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/alcaeus/mongo-php-adapter/zipball/0e99bf5ea15f8e9b7ddb3a6dc38c11aa95330ca1",
+                "reference": "0e99bf5ea15f8e9b7ddb3a6dc38c11aa95330ca1",
+                "shasum": ""
+            },
+            "require": {
+                "ext-ctype": "*",
+                "ext-hash": "*",
+                "ext-mongodb": "^1.2.0",
+                "mongodb/mongodb": "^1.0.1",
+                "php": "^5.6 || ^7.0 || ^8.0"
+            },
+            "provide": {
+                "ext-mongo": "1.6.14"
+            },
+            "require-dev": {
+                "squizlabs/php_codesniffer": "^3.2",
+                "symfony/phpunit-bridge": "^4.4.16 || ^5.2"
+            },
+            "type": "library",
+            "extra": {
+                "branch-version": "1.x"
+            },
+            "autoload": {
+                "files": [
+                    "lib/Mongo/functions.php"
+                ],
+                "psr-0": {
+                    "Mongo": "lib/Mongo"
+                },
+                "psr-4": {
+                    "Alcaeus\\MongoDbAdapter\\": "lib/Alcaeus/MongoDbAdapter"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "alcaeus",
+                    "email": "alcaeus@alcaeus.org"
+                },
+                {
+                    "name": "Olivier Lechevalier",
+                    "email": "olivier.lechevalier@gmail.com"
+                }
+            ],
+            "description": "Adapter to provide ext-mongo interface on top of mongo-php-library",
+            "keywords": [
+                "database",
+                "mongodb"
+            ],
+            "support": {
+                "issues": "https://github.com/alcaeus/mongo-php-adapter/issues",
+                "source": "https://github.com/alcaeus/mongo-php-adapter/tree/1.2.2"
+            },
+            "time": "2022-01-11T15:05:50+00:00"
         },
         {
             "name": "api-platform/api-pack",

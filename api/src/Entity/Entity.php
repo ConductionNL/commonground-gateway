@@ -349,6 +349,11 @@ class Entity
      */
     private $dateModified;
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $nameProperty;
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
@@ -1128,5 +1133,17 @@ class Entity
         }
 
         return $schema;
+    }
+
+    public function getNameProperty(): ?string
+    {
+        return $this->nameProperty;
+    }
+
+    public function setNameProperty(?string $nameProperty): self
+    {
+        $this->nameProperty = $nameProperty;
+
+        return $this;
     }
 }
