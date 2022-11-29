@@ -37,7 +37,12 @@ class SearchController extends AbstractController
     {
         $status = 200;
 
-        $results = $this->cacheService->searchObjects($request->query->get('search',''));
+        if($id = $request->query->get('id', false)  ){
+            $results = $this->cacheService->getObject($id);
+        }
+        else{
+            $results = $this->cacheService->searchObjects($request->query->get('search'));
+        }
 
         return new Response(json_encode($results), $status, ['Content-type' => 'application/json']);
     }
