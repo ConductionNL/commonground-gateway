@@ -276,11 +276,11 @@ class Endpoint
         $this->properties = new ArrayCollection();
 
         // Create simple endpoints for entities
-        if($entity){
+        if ($entity) {
             $this->setEntity($entity);
             $this->setName($entity->getName());
             $this->setDescription($entity->getDescription());
-            $this->setMethods(['GET','POST','PUT','PATCH','DELETE']);
+            $this->setMethods(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
             /*@depricated kept here for lagacy */
             $this->setOperationType('GET');
