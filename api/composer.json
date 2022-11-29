@@ -29,6 +29,7 @@
         "guzzlehttp/psr7": "1.9",
         "hautelook/alice-bundle": "^2.9.0",
         "jwadhams/json-logic-php": "^1.4",
+        "larping-base/larping-bundle": "dev-main",
         "nelmio/cors-bundle": "^2.1",
         "phpdocumentor/reflection-docblock": "^5.2",
         "phpoffice/phpword": "^0.18.2",
