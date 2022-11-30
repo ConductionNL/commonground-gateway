@@ -35,9 +35,8 @@ class EndpointRepository extends ServiceEntityRepository
     public function findByMethodRegex(string $method, string $path): ?Endpoint
     {
         $query = $this->createQueryBuilder('e')
-            ->andWhere('LOWER(e.method) = :method')
             ->andWhere('REGEXP_REPLACE(:path, e.pathRegex, :replace) LIKE :compare')
-            ->setParameters(['method' => strtolower($method), 'path' => $path, 'replace' => 'ItsAMatch', 'compare' => 'ItsAMatch']);
+            ->setParameters(['path' => $path, 'replace' => 'ItsAMatch', 'compare' => 'ItsAMatch']);
 
         return $query
             ->getQuery()
