@@ -279,6 +279,7 @@ class Endpoint
         $this->applications = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->properties = new ArrayCollection();
+        $this->entities = new ArrayCollection();
 
         // Create simple endpoints for entities
         if ($entity) {
@@ -292,7 +293,6 @@ class Endpoint
             /*@depricated kept here for lagacy */
             $this->setOperationType('GET');
         }
-        $this->entities = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -681,6 +681,9 @@ class Endpoint
 
     public function setEntity(?Entity $entity): self
     {
+        // Also put it in the array
+        $this->addEntity($entity);
+
         $this->entity = $entity;
 
         return $this;
