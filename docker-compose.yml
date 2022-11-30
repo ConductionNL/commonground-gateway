@@ -43,6 +43,7 @@ services:
       - CONTAINER_PROJECT_NAME=${CONTAINER_PROJECT_NAME}
       - DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1
 #      - DATABASE_URL=mysql://api-platform:!ChangeMe!@db/api?serverVersion=10.1
+      - CACHE_URL=mongodb://api-platform:!ChangeMe!@mongodb
       - APP_ENV=${APP_ENV}
       - APP_CONTAINER=${APP_CONTAINER}
       - APP_DEBUG=${APP_DEBUG}
