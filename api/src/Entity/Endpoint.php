@@ -281,7 +281,7 @@ class Endpoint
             $this->setName($entity->getName());
             $this->setDescription($entity->getDescription());
             $this->setMethods(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
-            $this->setPathRegex('^'.mb_strtolower(str_replace(' ','_',$entity->getName())).'/?([a-z0-9-]+)?$');
+            $this->setPathRegex('^'.mb_strtolower(str_replace(' ', '_', $entity->getName())).'/?([a-z0-9-]+)?$');
             $this->setPath([1=>'id']);
 
             /*@depricated kept here for lagacy */
