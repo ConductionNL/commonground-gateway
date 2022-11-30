@@ -350,6 +350,11 @@ class Entity
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
+    private $nameProperty;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
     private $reference;
 
     /**
@@ -1092,77 +1097,102 @@ class Entity
         return $this;
     }
 
-
     /**
      * @throws GatewayException
      */
     public function fromSchema(array $schema): Entity
     {
         // Basic stuff
-        if(array_key_exists('$id',$schema)){$this->setReference($schema['$id']);}
-        if(array_key_exists('title',$schema)){$this->setName($schema['title']);}
-        if(array_key_exists('description',$schema)){$this->setDescription($schema['description']);}
-        if(array_key_exists('version',$schema)){ $this->setVersion($schema['version']);}
+        if (array_key_exists('$id', $schema)) {
+            $this->setReference($schema['$id']);
+        }
+        if (array_key_exists('title', $schema)) {
+            $this->setName($schema['title']);
+        }
+        if (array_key_exists('description', $schema)) {
+            $this->setDescription($schema['description']);
+        }
+        if (array_key_exists('version', $schema)) {
+            $this->setVersion($schema['version']);
+        }
 
         // Properties
-        foreach($schema['properties'] as $name => $property){
+        foreach ($schema['properties'] as $name => $property) {
             // Let see if the attribute exists
-            if(!$attribute = $this->getAttributeByName($name)){
-                $attribute = New Attribute();
+            if (!$attribute = $this->getAttributeByName($name)) {
+                $attribute = new Attribute();
                 $attribute->setName($name);
             }
 
             // Handle the property setup
-            if(array_key_exists('type',$property)){$attribute->setType($property['type']);}
-            if(array_key_exists('format',$property)){$attribute->setFormat($property['format']);}
-            if(array_key_exists('example',$property)){$attribute->setExample($property['example']);}
-            if(array_key_exists('readOnly',$property)){$attribute->setReadOnly($property['readOnly']);}
-            if(array_key_exists('description',$property)){$attribute->setDescription($property['description']);}
-            if(array_key_exists('$ref',$property)){}
-            if(array_key_exists('items',$property)){}
-            if(array_key_exists('maxLength',$property)){$attribute->setMaxLength($property['maxLength']);}
-            if(array_key_exists('enum',$property)){$attribute->setEnum($property['enum']);}
-            if(array_key_exists('default',$property)){$attribute->setDefaultValue($property['default']);}
+            if (array_key_exists('type', $property)) {
+                $attribute->setType($property['type']);
+            }
+            if (array_key_exists('format', $property)) {
+                $attribute->setFormat($property['format']);
+            }
+            if (array_key_exists('example', $property)) {
+                $attribute->setExample($property['example']);
+            }
+            if (array_key_exists('readOnly', $property)) {
+                $attribute->setReadOnly($property['readOnly']);
+            }
+            if (array_key_exists('description', $property)) {
+                $attribute->setDescription($property['description']);
+            }
+            if (array_key_exists('$ref', $property)) {
+            }
+            if (array_key_exists('items', $property)) {
+            }
+            if (array_key_exists('maxLength', $property)) {
+                $attribute->setMaxLength($property['maxLength']);
+            }
+            if (array_key_exists('enum', $property)) {
+                $attribute->setEnum($property['enum']);
+            }
+            if (array_key_exists('default', $property)) {
+                $attribute->setDefaultValue($property['default']);
+            }
 
             $this->addAttribute($attribute);
         }
 
         // Requered stuff
-        if(array_key_exists('required',$schema)){
-            foreach ($schema['required'] as $required){
+        if (array_key_exists('required', $schema)) {
+            foreach ($schema['required'] as $required) {
                 $atribute = $this->getAttributeByName($required);
                 $atribute->setRequired(true);
             }
         }
 
         // Bit of cleanup
-        foreach ($this->getAttributes() as $attribute){
+        foreach ($this->getAttributes() as $attribute) {
             // Remove Required if no longer valid
-            if(array_key_exists('required', $schema) && !in_array($attribute->getName(),$schema['required']) && $atribute->getRequired() == true){
+            if (array_key_exists('required', $schema) && !in_array($attribute->getName(), $schema['required']) && $atribute->getRequired() == true) {
                 $atribute->setRequired(false);
             }
             // Remove atribute if no longer present
-            if(!array_key_exists($attribute->getName(),$schema['properties'])){
+            if (!array_key_exists($attribute->getName(), $schema['properties'])) {
                 $this->removeAttribute($attribute);
             }
         }
 
-
         return $this;
     }
+
     /**
      * @throws GatewayException
      */
     public function toSchema(?ObjectEntity $objectEntity): array
     {
         $schema = [
-            '$id'          => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema'      => 'https://json-schema.org/draft/2020-12/schema',
-            'title'        => $this->getName(),
-            'description'   => $this->getDescription(),
+            '$id'            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'        => 'https://json-schema.org/draft/2020-12/schema',
+            'title'          => $this->getName(),
+            'description'    => $this->getDescription(),
             'version'        => $this->getVersion(),
-            'required'     => [],
-            'properties'   => [],
+            'required'       => [],
+            'properties'     => [],
         ];
 
         if ($objectEntity && $objectEntity->getEntity() !== $this) {
@@ -1202,6 +1232,18 @@ class Entity
         }
 
         return $schema;
+    }
+
+    public function getNameProperty(): ?string
+    {
+        return $this->nameProperty;
+    }
+
+    public function setNameProperty(?string $nameProperty): self
+    {
+        $this->nameProperty = $nameProperty;
+
+        return $this;
     }
 
     public function getReference(): ?string
