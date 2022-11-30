@@ -24,7 +24,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
 use Twig\Environment;
 
 // Hack van de maand award
-use CommonGateway\CoreBundle\ActionHandler\RequestCollectionHandler;
+use CommonGateway\CoreBundle\Service\RequestService;
 
 class HandlerService
 {
@@ -40,7 +40,7 @@ class HandlerService
     private GatewayService $gatewayService;
     private Stopwatch $stopwatch;
     private EventDispatcherInterface $eventDispatcher;
-    private RequestCollectionHandler $requestCollectionHandler;
+    private RequestService $requestService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -80,7 +80,7 @@ class HandlerService
         GatewayService $gatewayService,
         Stopwatch $stopwatch,
         EventDispatcherInterface $eventDispatcher,
-        RequestCollectionHandler $requestCollectionHandler
+        RequestService $requestService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
@@ -99,7 +99,7 @@ class HandlerService
         $this->gatewayService = $gatewayService;
         $this->stopwatch = $stopwatch;
         $this->eventDispatcher = $eventDispatcher;
-        $this->requestCollectionHandler = $requestCollectionHandler;
+        $this->requestService = $requestService;
     }
 
     /**
@@ -153,7 +153,7 @@ class HandlerService
         }
 
         // Let default
-        return $this->requestCollectionHandler->run($parameters, []);
+        return $this->requestService->requestHandler($parameters, []);
 
         //
         //throw new GatewayException('No handler found for endpoint: '.$endpoint->getName().' and method: '.$this->request->getMethod(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
