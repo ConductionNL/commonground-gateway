@@ -44,6 +44,7 @@ RUN set -eux; \
 		apcu-${APCU_VERSION} \
 		redis \
     	amqp \
+    	mongodb \
 	; \
 	rm -rf /tmp/pear \
 	pecl clear-cache; \

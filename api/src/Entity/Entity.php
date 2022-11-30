@@ -350,6 +350,11 @@ class Entity
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
      */
+    private $nameProperty;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
     private $reference;
 
     /**
@@ -1227,6 +1232,18 @@ class Entity
         }
 
         return $schema;
+    }
+
+    public function getNameProperty(): ?string
+    {
+        return $this->nameProperty;
+    }
+
+    public function setNameProperty(?string $nameProperty): self
+    {
+        $this->nameProperty = $nameProperty;
+
+        return $this;
     }
 
     public function getReference(): ?string
