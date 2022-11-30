@@ -267,6 +267,11 @@ class Endpoint
      */
     private $Entity;
 
+    /**
+     * @ORM\ManyToMany(targetEntity=Entity::class, inversedBy="endpoints")
+     */
+    private $entities;
+
     public function __construct(?Entity $entity = null)
     {
         $this->requestLogs = new ArrayCollection();
@@ -287,6 +292,7 @@ class Endpoint
             /*@depricated kept here for lagacy */
             $this->setOperationType('GET');
         }
+        $this->entities = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -676,6 +682,30 @@ class Endpoint
     public function setEntity(?Entity $entity): self
     {
         $this->entity = $entity;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Entity[]
+     */
+    public function getEntities(): Collection
+    {
+        return $this->entities;
+    }
+
+    public function addEntity(Entity $entity): self
+    {
+        if (!$this->entities->contains($entity)) {
+            $this->entities[] = $entity;
+        }
+
+        return $this;
+    }
+
+    public function removeEntity(Entity $entity): self
+    {
+        $this->entities->removeElement($entity);
 
         return $this;
     }
