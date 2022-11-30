@@ -10,3 +10,5 @@ fi
 if [ ! -d "/tmp/vendor/vendor" ]; then
 	cp /srv/api/vendor /tmp/vendor/vendor -R
 fi
+
+ls -la /tmp/vendor
