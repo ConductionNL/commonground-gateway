@@ -7,7 +7,7 @@ use App\Entity\Endpoint;
 use App\Entity\Handler;
 use App\Event\ActionEvent;
 use App\Exception\GatewayException;
-use CommonGateway\CoreBundle\ActionHandler\RequestCollectionHandler;
+use CommonGateway\CoreBundle\Service\RequestService;
 use CommonGateway\FormIOBundle\Service\FormIOService;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
@@ -21,12 +21,10 @@ use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
+// Hack van de maand award
 use Symfony\Component\Stopwatch\Stopwatch;
 // Hack van de maand award
 use Twig\Environment;
-
-// Hack van de maand award
-use CommonGateway\CoreBundle\Service\RequestService;
 
 class HandlerService
 {
