@@ -267,6 +267,11 @@ class Endpoint
      */
     private $Entity;
 
+    /**
+     * @ORM\ManyToMany(targetEntity=Entity::class, inversedBy="endpoints")
+     */
+    private $entities;
+
     public function __construct(?Entity $entity = null)
     {
         $this->requestLogs = new ArrayCollection();
@@ -274,6 +279,7 @@ class Endpoint
         $this->applications = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->properties = new ArrayCollection();
+        $this->entities = new ArrayCollection();
 
         // Create simple endpoints for entities
         if ($entity) {
@@ -675,7 +681,34 @@ class Endpoint
 
     public function setEntity(?Entity $entity): self
     {
+        // Also put it in the array
+        $this->addEntity($entity);
+
         $this->entity = $entity;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Entity[]
+     */
+    public function getEntities(): Collection
+    {
+        return $this->entities;
+    }
+
+    public function addEntity(Entity $entity): self
+    {
+        if (!$this->entities->contains($entity)) {
+            $this->entities[] = $entity;
+        }
+
+        return $this;
+    }
+
+    public function removeEntity(Entity $entity): self
+    {
+        $this->entities->removeElement($entity);
 
         return $this;
     }

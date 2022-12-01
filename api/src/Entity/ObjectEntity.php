@@ -165,7 +165,7 @@ class ObjectEntity
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"persist","remove"})
+     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"persist","remove"}, orphanRemoval=true)
      * @MaxDepth(1)
      */
     private $objectValues;
@@ -274,7 +274,7 @@ class ObjectEntity
 
     public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
@@ -688,17 +688,19 @@ class ObjectEntity
      * Sets a value based on the attribute string name or atribute object.
      *
      * @param string|Attribute $attribute
+     * @param $value
+     * @param bool $unsafe
      *
      * @throws Exception
      *
      * @return false|Value
      */
-    public function setValue($attribute, $value)
+    public function setValue($attribute, $value, bool $unsafe = false)
     {
         $valueObject = $this->getValueObject($attribute);
         // If we find the Value object we set the value
         if ($valueObject instanceof Value) {
-            return $valueObject->setValue($value);
+            return $valueObject->setValue($value, $unsafe);
         }
 
         // If not return false
@@ -708,18 +710,29 @@ class ObjectEntity
     /**
      * Populate this object with an array of values, where attributes are diffined by key.
      *
-     * @param array $array
+     * @param array $array  the data to set
+     * @param bool  $unsafe unset atributes that are not inlcuded in the hydrator array
      *
      * @throws Exception
      *
      * @return ObjectEntity
      */
-    public function hydrate(array $array): ObjectEntity
+    public function hydrate(array $array, bool $unsafe = false): ObjectEntity
     {
         $array = $this->includeEmbeddedArray($array);
+        $hydratedValues = [];
 
         foreach ($array as $key => $value) {
-            $this->setValue($key, $value);
+            $this->setValue($key, $value, $unsafe);
+            $hydratedValues[] = $key;
+        }
+
+        if ($unsafe) {
+            foreach ($this->getObjectValues() as $value) {
+                if (!in_array($value->getAttribute()->getName(), $hydratedValues)) {
+                    $this->removeObjectValue($value);
+                }
+            }
         }
 
         return $this;
@@ -1181,8 +1194,14 @@ class ObjectEntity
     public function prePersist(): void
     {
         // Lets see if the name is congigured
-        if ($this->entity->getNameProperty() && $name = $this->getValue($this->entity->getNameProperty())) {
-            $this->setName($name);
+        if ($this->entity->getNameProperties()) {
+            $name = null;
+            foreach ($this->entity->getNameProperties() as $nameProperty) {
+                if ($nameProperty && $namePart = $this->getValue($nameProperty)) {
+                    $name = "$name $namePart";
+                }
+            }
+            $this->setName(trim($name));
 
             return;
         }
