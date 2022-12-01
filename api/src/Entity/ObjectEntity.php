@@ -165,7 +165,7 @@ class ObjectEntity
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"persist","remove"})
+     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"persist","remove"}, orphanRemoval=true)
      * @MaxDepth(1)
      */
     private $objectValues;
