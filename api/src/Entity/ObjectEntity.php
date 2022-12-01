@@ -691,9 +691,9 @@ class ObjectEntity
      * @param $value
      * @param bool $unsafe
      *
-     * @return false|Value
-     *
      * @throws Exception
+     *
+     * @return false|Value
      */
     public function setValue($attribute, $value, bool $unsafe = false)
     {
@@ -711,11 +711,11 @@ class ObjectEntity
      * Populate this object with an array of values, where attributes are diffined by key.
      *
      * @param array $array  the data to set
-     * @param bool $unsafe unset atributes that are not inlcuded in the hydrator array
-     *
-     * @return ObjectEntity
+     * @param bool  $unsafe unset atributes that are not inlcuded in the hydrator array
      *
      * @throws Exception
+     *
+     * @return ObjectEntity
      */
     public function hydrate(array $array, bool $unsafe = false): ObjectEntity
     {
