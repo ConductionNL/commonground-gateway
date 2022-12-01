@@ -187,8 +187,6 @@ class SynchronizationService
         // If we have a complete object we can use that to sync
         if (array_key_exists('object', $this->configuration['apiSource']['webhook'])) {
             $sourceObject = $dot->get($this->configuration['apiSource']['webhook']['object'], $responseData); // todo should default be $data or [] ?
-        } else {
-            //todo: find object from source by $id ?
         }
 
         // Lets grab the sync object, if we don't find an existing one, this will create a new one: via config
