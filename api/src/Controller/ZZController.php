@@ -91,10 +91,13 @@ class ZZController extends AbstractController
         //todo use eavService->realRequestQueryAll(), maybe replace this function to another service than eavService?
 
         $parameters['endpoint'] = $endpoint;
-//        if ($request->getContent()) {
-//            $parameters['body'] = $request->toArray();
-//        }
-//        $parameters['method'] = $request->getMethod();
+        try {
+            $parameters['body'] = $request->toArray();
+        } catch (\Exception $exception) {
+
+        }
+
+        $parameters['method'] = $request->getMethod();
         $parameters['query'] = $request->query->all();
 
         // Lets get all the headers
