@@ -268,6 +268,9 @@ class Endpoint
     private $Entity;
 
     /**
+     * The Entities of this Endpoint.
+     *
+     * @Groups({"read", "write"})
      * @ORM\ManyToMany(targetEntity=Entity::class, inversedBy="endpoints")
      */
     private $entities;
