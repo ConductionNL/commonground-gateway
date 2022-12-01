@@ -348,9 +348,12 @@ class Entity
     private $dateModified;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @var array|null The properties used to set the name for ObjectEntities created linked to this Entity.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", length=255, nullable=true, options={"default": null})
      */
-    private $nameProperty;
+    private ?array $nameProperties = null;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -1234,14 +1237,14 @@ class Entity
         return $schema;
     }
 
-    public function getNameProperty(): ?string
+    public function getNameProperties(): ?array
     {
-        return $this->nameProperty;
+        return $this->nameProperties;
     }
 
-    public function setNameProperty(?string $nameProperty): self
+    public function setNameProperties(?array $nameProperties): self
     {
-        $this->nameProperty = $nameProperty;
+        $this->nameProperties = $nameProperties;
 
         return $this;
     }

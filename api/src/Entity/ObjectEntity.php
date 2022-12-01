@@ -274,7 +274,7 @@ class ObjectEntity
 
     public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
@@ -1194,8 +1194,14 @@ class ObjectEntity
     public function prePersist(): void
     {
         // Lets see if the name is congigured
-        if ($this->entity->getNameProperty() && $name = $this->getValue($this->entity->getNameProperty())) {
-            $this->setName($name);
+        if ($this->entity->getNameProperties()) {
+            $name = null;
+            foreach ($this->entity->getNameProperties() as $nameProperty) {
+                if ($nameProperty && $namePart = $this->getValue($nameProperty)) {
+                    $name = "$name $namePart";
+                }
+            }
+            $this->setName(trim($name));
 
             return;
         }

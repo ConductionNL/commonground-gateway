@@ -206,7 +206,7 @@ class Soap
 
     public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
