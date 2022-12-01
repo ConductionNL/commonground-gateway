@@ -51,7 +51,7 @@ class DashboardCard
     private $id;
 
     /**
-     * The name of the dashboard card
+     * The name of the dashboard card.
      *
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
@@ -59,7 +59,7 @@ class DashboardCard
     private string $name;
 
     /**
-     * The description of the dashboard
+     * The description of the dashboard.
      *
      * @Groups({"read","write"})
      * @ORM\Column(type="text", nullable=true)
@@ -67,7 +67,7 @@ class DashboardCard
     private ?string $description;
 
     /**
-     * The type of the card
+     * The type of the card.
      *
      * @todo enum on schema etc
      *
@@ -77,7 +77,7 @@ class DashboardCard
     private string $type;
 
     /**
-     * The entity of the schema e.g. Gateway
+     * The entity of the schema e.g. Gateway.
      *
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
@@ -85,14 +85,14 @@ class DashboardCard
     private string $entity;
 
     /**
-     * The actual object that the card refers to, is loaded by subscriber on get requests
+     * The actual object that the card refers to, is loaded by subscriber on get requests.
      *
      * @Groups({"read"})
      */
     private $object;
 
     /**
-     * The UUID of the object stored in Dashboard Card
+     * The UUID of the object stored in Dashboard Card.
      *
      * @Groups({"read","write"})
      * @ORM\Column(type="uuid")

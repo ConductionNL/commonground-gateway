@@ -69,7 +69,7 @@ class ZgwToVrijbrpService
                     continue 2;
                 case 'geboortedatum'.$childIndex:
                     $date = new \DateTime($eigenschap['waarde']);
-                    if(isset($birthArray['children'][$childIndexInt]['birthDateTime'])) {
+                    if (isset($birthArray['children'][$childIndexInt]['birthDateTime'])) {
                         $time = new \DateTime($birthArray['children'][$childIndexInt]['birthDateTime']);
                         $dateTime = new \DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
                     } else {
@@ -79,7 +79,7 @@ class ZgwToVrijbrpService
                     continue 2;
                 case 'geboortetijd'.$childIndex:
                     $time = new \DateTime($eigenschap['waarde']);
-                    if(isset($birthArray['children'][$childIndexInt]['birthDateTime'])) {
+                    if (isset($birthArray['children'][$childIndexInt]['birthDateTime'])) {
                         $date = new \DateTime($birthArray['children'][$childIndexInt]['birthDateTime']);
                         $dateTime = new \DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
                     } else {
@@ -376,10 +376,10 @@ class ZgwToVrijbrpService
             $relocationArray['newAddress']['mainOccupant']['bsn'] = $bsn;
             $relocationArray['newAddress']['liveIn'] = [
                 'liveInApplicable' => false,
-//                'consent'          => 'PENDING',
-//                'consenter'        => [
-//                    'bsn' => $bsn,
-//                ],
+                //                'consent'          => 'PENDING',
+                //                'consenter'        => [
+                //                    'bsn' => $bsn,
+                //                ],
             ];
         }
 
