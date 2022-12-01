@@ -688,17 +688,19 @@ class ObjectEntity
      * Sets a value based on the attribute string name or atribute object.
      *
      * @param string|Attribute $attribute
+     * @param $value
+     * @param bool $unsave
      *
      * @throws Exception
      *
      * @return false|Value
      */
-    public function setValue($attribute, $value)
+    public function setValue($attribute, $value, $unsave = false)
     {
         $valueObject = $this->getValueObject($attribute);
         // If we find the Value object we set the value
         if ($valueObject instanceof Value) {
-            return $valueObject->setValue($value);
+            return $valueObject->setValue($value, $unsave);
         }
 
         // If not return false
@@ -708,18 +710,29 @@ class ObjectEntity
     /**
      * Populate this object with an array of values, where attributes are diffined by key.
      *
-     * @param array $array
+     * @param array $array the data to set
+     * @param bool $unsave unset atributes that are not inlcuded in the hydrator array
      *
      * @throws Exception
      *
      * @return ObjectEntity
      */
-    public function hydrate(array $array): ObjectEntity
+    public function hydrate(array $array, $unsave = false): ObjectEntity
     {
         $array = $this->includeEmbeddedArray($array);
+        $hydratedValues= [];
 
         foreach ($array as $key => $value) {
-            $this->setValue($key, $value);
+            $this->setValue($key, $value, $unsave);
+            $hydratedValues[] = $key;
+        }
+
+        if($unsave){
+            foreach($this->getObjectValues() as $value){
+                if(!in_array($value->getAttribute()->getName(), $hydratedValues)){
+                    $this->removeObjectValue($value);
+                }
+            }
         }
 
         return $this;

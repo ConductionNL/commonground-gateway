@@ -538,9 +538,12 @@ class Value
     }
 
     /**
+     * @param $value The value to set
+     * @param bool $unsave Wheter the setter can also remove values
+     *
      * @throws Exception
      */
-    public function setValue($value): self
+    public function setValue($value, bool $unsave = false): self
     {
         if ($this->getAttribute()) {
 
@@ -567,7 +570,7 @@ class Value
                         $valueObject->setOwner($this->getObjectEntity()->getOwner());
                         $valueObject->setApplication($this->getObjectEntity()->getApplication());
                         $valueObject->setOrganization($this->getObjectEntity()->getOrganization());
-                        $valueObject->hydrate($value);
+                        $valueObject->hydrate($value, $unsave);
                         $value = $valueObject;
                     }
 
