@@ -90,11 +90,12 @@ class ZZController extends AbstractController
         // Lets add the query parameters to the variables
         //todo use eavService->realRequestQueryAll(), maybe replace this function to another service than eavService?
 
+        $parameters['querystring'] = $request->getQueryString();
         $parameters['endpoint'] = $endpoint;
+
         try {
             $parameters['body'] = $request->toArray();
         } catch (\Exception $exception) {
-
         }
 
         $parameters['method'] = $request->getMethod();
