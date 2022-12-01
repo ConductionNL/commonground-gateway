@@ -44,7 +44,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(SearchFilter::class, properties={
  *     "name": "exact",
  *     "operationType": "exact",
- *     "pathRegex": "ipartial"
+ *     "pathRegex": "ipartial",
+ *     "entities.id": "exact"
  * })
  */
 class Endpoint
