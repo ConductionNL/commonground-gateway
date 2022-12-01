@@ -43,6 +43,9 @@
     "common-gateway/formio-bundle": {
         "version": "dev-main"
     },
+    "common-gateway/open-catalogi-bundle": {
+        "version": "dev-main"
+    },
     "common-gateway/waardepapieren-bundle": {
         "version": "dev-main"
     },

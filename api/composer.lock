@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7b8c28bd21837375adde113210573b5c",
+    "content-hash": "d2864f5781db891430b2724ef295790e",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -695,6 +695,53 @@
                 "source": "https://github.com/CommonGateway/FormIOBundle/tree/main"
             },
             "time": "2022-11-16T13:35:03+00:00"
+        },
+        {
+            "name": "common-gateway/open-catalogi-bundle",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/OpenCatalogi/OpenCatalogiBundle.git",
+                "reference": "1d1863d205bb2c9fc69cf33ce2c13d94d594e891"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/1d1863d205bb2c9fc69cf33ce2c13d94d594e891",
+                "reference": "1d1863d205bb2c9fc69cf33ce2c13d94d594e891",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "default-branch": true,
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\OpenCatalogiBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An example package for creating symfony flex bundles as plugins",
+            "homepage": "https://commongatway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/OpenCatalogi/OpenCatalogiBundle/issues",
+                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/main"
+            },
+            "time": "2022-12-01T10:25:37+00:00"
         },
         {
             "name": "common-gateway/waardepapieren-bundle",
@@ -14536,6 +14583,7 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "common-gateway/formio-bundle": 20,
+        "common-gateway/open-catalogi-bundle": 20,
         "common-gateway/waardepapieren-bundle": 20,
         "commongateway/corebundle": 20,
         "conduction/commongroundbundle": 20,
