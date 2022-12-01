@@ -44,7 +44,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(SearchFilter::class, properties={
  *     "name": "exact",
  *     "operationType": "exact",
- *     "pathRegex": "ipartial"
+ *     "pathRegex": "ipartial",
+ *     "entities.id": "exact"
  * })
  */
 class Endpoint
@@ -268,6 +269,9 @@ class Endpoint
     private $Entity;
 
     /**
+     * The Entities of this Endpoint.
+     *
+     * @Groups({"read", "write"})
      * @ORM\ManyToMany(targetEntity=Entity::class, inversedBy="endpoints")
      */
     private $entities;

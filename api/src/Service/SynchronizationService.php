@@ -109,15 +109,15 @@ class SynchronizationService
      *
      * @throws CacheException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError|AsynchronousException
      *
-     * @return array The data from the action modified by the execution of the synchronisation
+     * @return array The data from the action modified by the execution of the synchronization
      */
-    public function synchronisationPushHandler(array $data, array $configuration): array
+    public function synchronizationPushHandler(array $data, array $configuration): array
     {
         $this->configuration = $configuration;
         $this->data = $data;
         if ($this->session->get('io')) {
             $this->io = $this->session->get('io');
-            $this->io->note('SynchronizationService->synchronisationPushHandler()');
+            $this->io->note('SynchronizationService->synchronizationPushHandler()');
         }
 
         $source = $this->getSourceFromConfig();
@@ -128,13 +128,15 @@ class SynchronizationService
         }
 
         foreach ($entity->getObjectEntities() as $object) {
-            $synchronisation = $this->findSyncByObject($object, $source, $entity);
-            if (!$synchronisation->getLastSynced()) {
-                $synchronisation = $this->syncToSource($synchronisation, false);
-            } elseif ($object->getDateModified() > $synchronisation->getLastSynced() && (!isset($this->configuration['updatesAllowed']) || $this->configuration['updatesAllowed'])) {
-                $synchronisation = $this->syncToSource($synchronisation, true);
+            $synchronization = $this->findSyncByObject($object, $source, $entity);
+            // todo: replace this if elseif with handleSync! needs testing first!
+//            $this->handleSync($synchronization);
+            if (!$synchronization->getLastSynced()) {
+                $synchronization = $this->syncToSource($synchronization, false);
+            } elseif ($object->getDateModified() > $synchronization->getLastSynced() && (!isset($this->configuration['updatesAllowed']) || $this->configuration['updatesAllowed'])) {
+                $synchronization = $this->syncToSource($synchronization, true);
             }
-            $this->entityManager->persist($synchronisation);
+            $this->entityManager->persist($synchronization);
             $this->entityManager->flush();
         }
         if ($this->asyncError) {
@@ -176,18 +178,21 @@ class SynchronizationService
         // Dot the data array and try to find id in it
         $dot = new Dot($responseData);
         $id = $dot->get($this->configuration['apiSource']['webhook']['idField']);
+        if (array_key_exists('idFieldFromUrl', $this->configuration['apiSource']['webhook']) &&
+            $this->configuration['apiSource']['webhook']['idFieldFromUrl']) {
+            $ifUrl = explode('/', $id);
+            $id = end($ifUrl);
+        }
 
         // If we have a complete object we can use that to sync
         if (array_key_exists('object', $this->configuration['apiSource']['webhook'])) {
             $sourceObject = $dot->get($this->configuration['apiSource']['webhook']['object'], $responseData); // todo should default be $data or [] ?
-        } else {
-            //todo: find object from source by $id ?
         }
 
         // Lets grab the sync object, if we don't find an existing one, this will create a new one: via config
         $synchronization = $this->findSyncBySource($source, $entity, $id);
 
-        // Lets sync (returns the Synchronization object), will do a get on the source if $sourceObject = []
+        // Lets sync (returns the Synchronization object), will do a get on the source with $id if $sourceObject = []
         $synchronization = $this->handleSync($synchronization, $sourceObject);
 
         $this->entityManager->persist($synchronization);
@@ -607,7 +612,7 @@ class SynchronizationService
     /**
      * Gets a single object from the source.
      *
-     * @param Synchronization $synchronization The synchronisation object with the related source object id
+     * @param Synchronization $synchronization The synchronization object with the related source object id
      *
      * @throws LoaderError|SyntaxError|GuzzleException
      *
@@ -652,13 +657,13 @@ class SynchronizationService
     }
 
     /**
-     * Finds a synchronisation object if it exists for the current object in the source, or creates one if it doesn't exist.
+     * Finds a synchronization object if it exists for the current object in the source, or creates one if it doesn't exist.
      *
      * @param Source $source   The source that is requested
      * @param Entity $entity   The entity that is requested
      * @param string $sourceId The id of the object in the source
      *
-     * @return Synchronization|null A synchronisation object related to the object in the source
+     * @return Synchronization|null A synchronization object related to the object in the source
      */
     public function findSyncBySource(Source $source, Entity $entity, string $sourceId): ?Synchronization
     {
@@ -687,13 +692,13 @@ class SynchronizationService
     }
 
     /**
-     * Finds a synchronisation object if it exists for the current object in the gateway, or creates one if it doesn't exist.
+     * Finds a synchronization object if it exists for the current object in the gateway, or creates one if it doesn't exist.
      *
      * @param ObjectEntity $objectEntity The current object in the gateway
      * @param Source       $source       The current source
      * @param Entity       $entity       The current entity
      *
-     * @return Synchronization|null A synchronisation object related to the object in the gateway
+     * @return Synchronization|null A synchronization object related to the object in the gateway
      */
     private function findSyncByObject(ObjectEntity $objectEntity, Source $source, Entity $entity): ?Synchronization
     {
@@ -722,9 +727,9 @@ class SynchronizationService
     }
 
     /**
-     * Adds a new ObjectEntity to a synchronisation object.
+     * Adds a new ObjectEntity to a synchronization object.
      *
-     * @param Synchronization $synchronization The synchronisation object without object
+     * @param Synchronization $synchronization The synchronization object without object
      *
      * @return string The method for populateObject, POST or PUT depending on if we created a new ObjectEntity.
      */
@@ -750,7 +755,7 @@ class SynchronizationService
     /**
      * Sets the last changed date from the source object and creates a hash for the source object.
      *
-     * @param Synchronization $synchronization The synchronisation object to update
+     * @param Synchronization $synchronization The synchronization object to update
      * @param array           $sourceObject    The object returned from the source
      *
      * @throws Exception
@@ -774,14 +779,14 @@ class SynchronizationService
     }
 
     /**
-     * Executes the synchronisation between source and gateway.
+     * Executes the synchronization between source and gateway.
      *
-     * @param Synchronization $synchronization The synchronisation object before synchronisation
+     * @param Synchronization $synchronization The synchronization object before synchronization
      * @param array           $sourceObject    The object in the source
      *
      * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError
      *
-     * @return Synchronization The updated synchronisation object
+     * @return Synchronization The updated synchronization object
      */
     public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
     {
@@ -805,11 +810,15 @@ class SynchronizationService
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
 
         //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
+        // todo: this if, elseif, else needs fixing, conditions aren't correct for if we ever want to syncToSource with this handleSync function
         if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() > $synchronization->getObject()->getDateModified())) {
             $synchronization = $this->syncToGateway($synchronization, $sourceObject, $method);
-        } elseif ((!$synchronization->getLastSynced() || $synchronization->getLastSynced() < $synchronization->getObject()->getDateModified()) && $synchronization->getSourceLastChanged() < $synchronization->getObject()->getDateModified()) {
-            $synchronization = $this->syncToSource($synchronization, true);
-        } else {
+        }
+        // todo: we currently never use handleSync to do syncToSource, so let's make sure we aren't trying to by accident
+//        elseif ((!$synchronization->getLastSynced() || $synchronization->getLastSynced() < $synchronization->getObject()->getDateModified()) && $synchronization->getSourceLastChanged() < $synchronization->getObject()->getDateModified()) {
+//            $synchronization = $this->syncToSource($synchronization, true);
+//        }
+        else {
             if (isset($this->io)) {
                 //todo: temp, maybe put something else here later
                 $this->io->text("Nothing to sync because source and gateway haven't changed");
@@ -822,7 +831,7 @@ class SynchronizationService
 
     /**
      * This function populates a pre-existing objectEntity with data that has been validated.
-     * This function is only meant for synchronisation.
+     * This function is only meant for synchronization.
      *
      * @param array        $data         The data that has to go into the objectEntity
      * @param ObjectEntity $objectEntity The ObjectEntity to populate
@@ -1021,9 +1030,9 @@ class SynchronizationService
     }
 
     /**
-     * Stores the result of a synchronisation in the synchronization object.
+     * Stores the result of a synchronization in the synchronization object.
      *
-     * @param Synchronization $synchronization The synchronisation object for the object that is made or updated
+     * @param Synchronization $synchronization The synchronization object for the object that is made or updated
      * @param array           $body            The body of the call to synchronise to a source
      *
      * @throws CacheException|InvalidArgumentException
@@ -1052,7 +1061,7 @@ class SynchronizationService
 
         $synchronization->setLastSynced($now);
         $synchronization->setSourceLastChanged($now);
-        $synchronization->setLastChecked($now); //todo this should not be here but only in the handleSync function. But this needs to be here because we call the syncToSource function instead of handleSync function
+        $synchronization->setLastChecked($now); //todo this should not be here but only in the handleSync function. But this needs to be here because we call the syncToSource function instead of handleSync function in the synchronizationPushHandler
         if ($body->has($this->configuration['apiSource']['location']['idField'])) {
             $synchronization->setSourceId($body->get($this->configuration['apiSource']['location']['idField']));
         }
@@ -1084,7 +1093,7 @@ class SynchronizationService
     }
 
     /**
-     * Encodes the object dependent on the settings for the synchronisation action.
+     * Encodes the object dependent on the settings for the synchronization action.
      *
      * @param array $objectArray The object array to encode
      *
@@ -1111,12 +1120,12 @@ class SynchronizationService
     /**
      * Synchronises a new object in the gateway to it source, or an object updated in the gateway.
      *
-     * @param Synchronization $synchronization The synchronisation object for the created or updated object
-     * @param bool            $existsInSource  Determines if a new synchronisation should be made, or an existing one should be updated
+     * @param Synchronization $synchronization The synchronization object for the created or updated object
+     * @param bool            $existsInSource  Determines if a new synchronization should be made, or an existing one should be updated
      *
      * @throws CacheException|InvalidArgumentException|LoaderError|SyntaxError|GuzzleException
      *
-     * @return Synchronization The updated synchronisation object
+     * @return Synchronization The updated synchronization object
      */
     private function syncToSource(Synchronization $synchronization, bool $existsInSource): Synchronization
     {
@@ -1205,12 +1214,12 @@ class SynchronizationService
     /**
      * Synchronises data from an external source to the internal database of the gateway.
      *
-     * @param Synchronization $synchronization The synchronisation object to update
+     * @param Synchronization $synchronization The synchronization object to update
      * @param array           $sourceObject    The external object to synchronise from
      *
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
      *
-     * @return Synchronization The updated synchronisation object containing an updated objectEntity
+     * @return Synchronization The updated synchronization object containing an updated objectEntity
      */
     private function syncToGateway(Synchronization $synchronization, array $sourceObject, string $method = 'POST'): Synchronization
     {

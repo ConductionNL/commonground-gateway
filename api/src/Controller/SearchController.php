@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
  * Class SearchControllerc.
  *
  *
- * @Route("admin/search")
+ * @Route("api/search")
  */
 class SearchController extends AbstractController
 {

@@ -4469,12 +4469,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "d521590078f8107cc340de4f64aeee97f6ce03ef"
+                "reference": "05489f9e64ac12c54c3e30df794fcf9c8b82d7de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/d521590078f8107cc340de4f64aeee97f6ce03ef",
-                "reference": "d521590078f8107cc340de4f64aeee97f6ce03ef",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/05489f9e64ac12c54c3e30df794fcf9c8b82d7de",
+                "reference": "05489f9e64ac12c54c3e30df794fcf9c8b82d7de",
                 "shasum": ""
             },
             "require": {
@@ -4509,7 +4509,7 @@
                 "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
                 "source": "https://github.com/LarpingBase/LarpingBundle/tree/main"
             },
-            "time": "2022-11-29T21:16:55+00:00"
+            "time": "2022-11-30T11:59:26+00:00"
         },
         {
             "name": "league/html-to-markdown",

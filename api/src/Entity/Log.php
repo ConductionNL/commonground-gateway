@@ -296,10 +296,11 @@ class Log
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\ManyToOne(targetEntity=Handler::class)
+     * @ORM\ManyToOne(targetEntity=Handler::class, inversedBy="logs")
+     * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      */
-    private $handler;
+    private ?Handler $handler;
 
     // todo: It would be nice if we could use a relation here instead of $objectId...
     // todo: ...but this will have the side-effect that we have to delete all logs of an Object if we delete the Object.

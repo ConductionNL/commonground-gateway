@@ -121,6 +121,7 @@ COPY src src/
 COPY templates templates/
 COPY migrations migrations/
 COPY fixtures fixtures/
+COPY docker/php/online-copy-vendor.sh docker/php/online-copy-vendor.sh
 
 RUN set -eux; \
 	mkdir -p var/cache var/log; \
