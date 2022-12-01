@@ -153,6 +153,7 @@ class HandlerService
         }
 
         // Let default
+        var_dump($parameters);
         return $this->requestService->requestHandler($parameters, []);
 
         //
