@@ -348,6 +348,9 @@ class Entity
     private $dateModified;
 
     /**
+     * @var array|null The properties used to set the name for ObjectEntities created linked to this Entity.
+     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="array", length=255, nullable=true, options={"default": null})
      */
     private ?array $nameProperties = null;
