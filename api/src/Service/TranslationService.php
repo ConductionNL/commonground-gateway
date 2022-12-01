@@ -129,7 +129,7 @@ class TranslationService
             return $synchronizations[0]->getObject()->getId()->toString();
         }
 
-        return $sourceId;
+        return null;
     }
 
     public function getSourceFromUrl(string $url): ?Source
