@@ -126,19 +126,19 @@ class ValidatorService
     private function addAttributeValidators(Entity $entity, Validator $validator, int $level): Validator
     {
         foreach ($entity->getAttributes() as $attribute) {
-            if (($this->method == 'PUT' || $this->method == 'PATCH') && isset($attribute->getValidations()['immutable']) && $attribute->getValidations()['immutable']) {
+            if (($this->method == 'PUT' || $this->method == 'PATCH') && $attribute->getValidations()['immutable']) {
                 // If immutable this attribute should not be present when doing a PUT or PATCH.
                 $validator->addRule(new Rules\Not(new Rules\Key($attribute->getName())));
                 // Skip any other validations
                 continue;
             }
-            if ($this->method == 'POST' && isset($attribute->getValidations()['unsetable']) && $attribute->getValidations()['unsetable']) {
+            if ($this->method == 'POST' && $attribute->getValidations()['unsetable']) {
                 // If unsetable this attribute should not be present when doing a POST.
                 $validator->addRule(new Rules\Not(new Rules\Key($attribute->getName())));
                 // Skip any other validations
                 continue;
             }
-            if (isset($attribute->getValidations()['readOnly']) && $attribute->getValidations()['readOnly']) {
+            if ($attribute->getValidations()['readOnly']) {
                 // If readOnly this attribute should not be present.
                 $validator->addRule(new Rules\Not(new Rules\Key($attribute->getName())));
                 // Skip any other validations
@@ -173,7 +173,7 @@ class ValidatorService
     private function getConditionalsRule(Attribute $attribute): Rules\AllOf
     {
         $requiredIf = new Rules\AlwaysValid(); // <- If (JsonLogic for) requiredIf isn't set
-        if (isset($attribute->getValidations()['requiredIf']) && $attribute->getValidations()['requiredIf']) {
+        if ($attribute->getValidations()['requiredIf']) {
             // todo: this works but doesn't give a nice and clear error response why the rule is broken. ("x must be present")
             $requiredIf = new Rules\When(
                 new CustomRules\JsonLogic($attribute->getValidations()['requiredIf']), // IF (the requiredIf JsonLogic finds a match / is true)
@@ -183,7 +183,7 @@ class ValidatorService
         }
 
         $forbiddenIf = new Rules\AlwaysValid(); // <- If JsonLogic for forbiddenIf isn't set
-        if (isset($attribute->getValidations()['forbiddenIf']) && $attribute->getValidations()['forbiddenIf']) {
+        if ($attribute->getValidations()['forbiddenIf']) {
             // todo: this works but doesn't give a nice and clear error response why the rule is broken. ("x must not be present")
             $forbiddenIf = new Rules\When(
                 new CustomRules\JsonLogic($attribute->getValidations()['forbiddenIf']), // IF (the requiredIf JsonLogic finds a match / is true)
@@ -230,7 +230,7 @@ class ValidatorService
     private function checkIfAttRequired(Attribute $attribute, int $level): Rules\AbstractRule
     {
         // If attribute is required and an 'inversedBy required loop' is possible
-        if (isset($attribute->getValidations()['required']) && $attribute->getValidations()['required'] === true && $this->checkInversedBy($attribute) && $level != 0) {
+        if ($attribute->getValidations()['required'] === true && $this->checkInversedBy($attribute) && $level != 0) {
             // todo: this is an incomplete solution to the inversedBy required loop problem, because this way fields that are inversedBy are never required unless they are on level 0...
             return new Rules\Key(
                 $attribute->getName(),
@@ -260,7 +260,7 @@ class ValidatorService
         return new Rules\Key(
             $attribute->getName(),
             $this->getAttributeValidator($attribute, $level),
-            isset($attribute->getValidations()['required']) && $attribute->getValidations()['required'] === true // mandatory = required validation.
+            $attribute->getValidations()['required'] === true // mandatory = required validation.
         );
     }
 
@@ -292,7 +292,7 @@ class ValidatorService
     private function checkIfAttNullable(Attribute $attribute, int $level): Rules\AbstractRule
     {
         // Check if this attribute can be null
-        if (isset($attribute->getValidations()['nullable']) && $attribute->getValidations()['nullable'] !== false) {
+        if ($attribute->getValidations()['nullable'] !== false) {
             // When works like this: When(IF, TRUE, FALSE)
             return new Rules\When(new Rules\NotEmpty(), $this->checkIfAttMultiple($attribute, $level), new Rules\AlwaysValid());
         }
@@ -316,12 +316,12 @@ class ValidatorService
         $attributeRulesValidator = $this->getAttTypeValidator($attribute, $level);
 
         // Check if this attribute should be an array
-        if (isset($attribute->getValidations()['multiple']) && $attribute->getValidations()['multiple'] === true) {
+        if ($attribute->getValidations()['multiple'] === true) {
             // TODO: When we get a validation error we somehow need to get the index of that object in the array for in the error data...
 
             $multipleValidator = new Validator();
             $multipleValidator->addRule(new Rules\Each($attributeRulesValidator));
-            if (isset($attribute->getValidations()['uniqueItems']) && $attribute->getValidations()['uniqueItems'] === true) {
+            if ($attribute->getValidations()['uniqueItems'] === true) {
                 $multipleValidator->addRule(new Rules\Unique());
             }
 
@@ -472,7 +472,7 @@ class ValidatorService
         // TODO: Make a custom rule for cascading so we can give custom exception messages back?
         // TODO: maybe check if an object with the given UUID actually exists?
         // Validate for cascading
-        if (isset($attribute->getValidations()['cascade']) && $attribute->getValidations()['cascade'] === true) {
+        if ($attribute->getValidations()['cascade'] === true) {
             // Array or Uuid
             $objectValidator->addRule(new Rules\OneOf(
                 new Rules\ArrayType(),
