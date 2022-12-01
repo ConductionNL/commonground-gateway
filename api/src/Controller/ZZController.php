@@ -93,10 +93,9 @@ class ZZController extends AbstractController
         $parameters['querystring'] =$request->getQueryString();
         $parameters['endpoint'] =$endpoint;
 
-        // @todo supportxml
-        if($request->getContent()){
+        try {
             $parameters['body'] = $request->toArray();
-        }
+        } catch (\Exception $exception) {
 
         $parameters['method'] = $request->getMethod();
         $parameters['query'] = $request->query->all();
