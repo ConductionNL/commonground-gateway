@@ -1196,12 +1196,12 @@ class ObjectEntity
         // Lets see if the name is congigured
         if ($this->entity->getNameProperties()) {
             $name = null;
-            foreach ($this->entity->getNameProperties() as $nameProperty) {
+            foreach ($this->entity->getNameProperties() as $key => $nameProperty) {
                 if ($nameProperty && $namePart = $this->getValue($nameProperty)) {
                     $name = "$name $namePart";
                 }
             }
-            $this->setName($name);
+            $this->setName(trim($name));
 
             return;
         }
