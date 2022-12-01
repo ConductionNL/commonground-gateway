@@ -710,8 +710,8 @@ class ObjectEntity
     /**
      * Populate this object with an array of values, where attributes are diffined by key.
      *
-     * @param array $array the data to set
-     * @param bool $unsave unset atributes that are not inlcuded in the hydrator array
+     * @param array $array  the data to set
+     * @param bool  $unsave unset atributes that are not inlcuded in the hydrator array
      *
      * @throws Exception
      *
@@ -720,16 +720,16 @@ class ObjectEntity
     public function hydrate(array $array, $unsave = false): ObjectEntity
     {
         $array = $this->includeEmbeddedArray($array);
-        $hydratedValues= [];
+        $hydratedValues = [];
 
         foreach ($array as $key => $value) {
             $this->setValue($key, $value, $unsave);
             $hydratedValues[] = $key;
         }
 
-        if($unsave){
-            foreach($this->getObjectValues() as $value){
-                if(!in_array($value->getAttribute()->getName(), $hydratedValues)){
+        if ($unsave) {
+            foreach ($this->getObjectValues() as $value) {
+                if (!in_array($value->getAttribute()->getName(), $hydratedValues)) {
                     $this->removeObjectValue($value);
                 }
             }
