@@ -242,9 +242,16 @@ class Handler
      */
     private $prefix;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Log::class, mappedBy="handler", fetch="EXTRA_LAZY", cascade={"remove"}, orphanRemoval=true)
+     * @MaxDepth(1)
+     */
+    private Collection $logs;
+
     public function __construct()
     {
         $this->endpoints = new ArrayCollection();
+        $this->logs = new ArrayCollection();
     }
 
     public function getId()
@@ -440,6 +447,30 @@ class Handler
     public function removeEndpoint(Endpoint $endpoint): self
     {
         $this->endpoints->removeElement($endpoint);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Log[]
+     */
+    public function getLogs(): Collection
+    {
+        return $this->logs;
+    }
+
+    public function addLog(Log $log): self
+    {
+        if (!$this->logs->contains($log)) {
+            $this->logs[] = $log;
+        }
+
+        return $this;
+    }
+
+    public function removeLog(Log $log): self
+    {
+        $this->logs->removeElement($log);
 
         return $this;
     }
