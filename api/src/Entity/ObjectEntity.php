@@ -1194,7 +1194,13 @@ class ObjectEntity
     public function prePersist(): void
     {
         // Lets see if the name is congigured
-        if ($this->entity->getNameProperty() && $name = $this->getValue($this->entity->getNameProperty())) {
+        if ($this->entity->getNameProperties()) {
+            $name = null;
+            foreach ($this->entity->getNameProperties() as $nameProperty) {
+                if ($nameProperty && $namePart = $this->getValue($nameProperty)) {
+                    $name = "$name $namePart";
+                }
+            }
             $this->setName($name);
 
             return;
@@ -1208,6 +1214,6 @@ class ObjectEntity
                 return;
             }
         }
-        $this->setName($this->getId());
+        $this->setName($this->getId()->toString());
     }
 }
