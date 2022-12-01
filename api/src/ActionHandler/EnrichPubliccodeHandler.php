@@ -2,7 +2,7 @@
 
 namespace App\ActionHandler;
 
-use App\Service\PubliccodeService;
+use  CommonGateway\OpenCatalogiBundle\Service\PubliccodeService;
 
 class EnrichPubliccodeHandler implements ActionHandlerInterface
 {
