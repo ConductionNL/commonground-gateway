@@ -177,9 +177,12 @@ class SynchronizationService
 
         // Dot the data array and try to find id in it
         $dot = new Dot($responseData);
-        $ifUrl = $dot->get($this->configuration['apiSource']['webhook']['idField']);
-        $ifUrl = explode('/', $ifUrl);
-        $id = end($ifUrl);
+        $id = $dot->get($this->configuration['apiSource']['webhook']['idField']);
+        if (array_key_exists('idFieldFromUrl', $this->configuration['apiSource']['webhook']) &&
+            $this->configuration['apiSource']['webhook']['idFieldFromUrl']) {
+            $ifUrl = explode('/', $id);
+            $id = end($ifUrl);
+        }
 
         // If we have a complete object we can use that to sync
         if (array_key_exists('object', $this->configuration['apiSource']['webhook'])) {
