@@ -3,20 +3,18 @@ name: Docker Image CI
 on:
   pull_request:
     branches:
-      - master
-      - staging
-      - development
-      - feature-soap
-      - odyssey-hackathon-2022
+        - master
+        - staging
+        - development
+        - acceptance
 
   push:
     branches:
-      - master
-      - staging
-      - development
-      - feature-soap
-      - feature-soap-extra
-      - feature-cleanup
+        - master
+        - staging
+        - development
+        - acceptance
+        - 'feature/**'
 
 jobs:
   build:
@@ -112,6 +110,35 @@ jobs:
       #- name: Run Postman Tests
       #  if: contains( github.ref, 'master' ) == false && contains( github.base_ref, 'master' ) == false
       #  run: newman run api/public/schema/*.postman_collection.json
+      - name: Run Gryphe to check for vulnerabilities
+        uses: anchore/scan-action@v3
+        with:
+            image: php
+            fail-build: true
+            severity-cutoff: critical
+            output-format: table
+      - name: Run Trivy to check for vulnerabilities
+        uses: aquasecurity/trivy-action@master
+        with:
+            image-ref: php
+            format: 'table'
+            ignore-unfixed: true
+            vuln-type: 'os,library'
+            severity: 'CRITICAL,HIGH'
+      - name: Run Fossa checks
+        uses: fossas/fossa-action@main # Use a specific version if locking is preferred
+        with:
+            api-key: ${{secrets.fossaApiKey}}
+            container: ubuntu:20.04
+      - name: Run Postman checks
+        uses: matt-ball/newman-action@master
+        with:
+            collection: api/public/schema/*.postman_collection.json
+      - name: Run PHPUnit tests
+        uses: php-actions/phpunit@v3
+        with:
+            configuration: plugins/OpenPub/phpunit.xml.dit
+            memory_limit: 256M
       - name: Add docker tags
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
