@@ -12,6 +12,7 @@ parameters:
   common_ground.app.id: "%env(APP_COMMONGROUND_ID)%"
   app_commonground_id: "%env(APP_COMMONGROUND_ID)%"
   app_commonground_secret: "%env(APP_COMMONGROUND_SECRET)%"
+  cache_url: "%env(CACHE_URL)%"
 
   env(REDIS_HOST): redis
   env(REDIS_PORT): 6379

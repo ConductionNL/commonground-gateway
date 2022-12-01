@@ -267,7 +267,7 @@ class Endpoint
      */
     private $Entity;
 
-    public function __construct(?Entity $entity)
+    public function __construct(?Entity $entity = null)
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
@@ -276,11 +276,13 @@ class Endpoint
         $this->properties = new ArrayCollection();
 
         // Create simple endpoints for entities
-        if($entity){
+        if ($entity) {
             $this->setEntity($entity);
             $this->setName($entity->getName());
             $this->setDescription($entity->getDescription());
-            $this->setMethods(['GET','POST','PUT','PATCH','DELETE']);
+            $this->setMethods(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+            $this->setPathRegex('^'.mb_strtolower(str_replace(' ', '_', $entity->getName())).'/?([a-z0-9-]+)?$');
+            $this->setPath([1=>'id']);
 
             /*@depricated kept here for lagacy */
             $this->setOperationType('GET');
