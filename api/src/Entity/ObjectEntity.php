@@ -274,7 +274,7 @@ class ObjectEntity
 
     public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
@@ -1214,6 +1214,6 @@ class ObjectEntity
                 return;
             }
         }
-        $this->setName($this->getId()->toString());
+        $this->setName($this->getId());
     }
 }
