@@ -186,6 +186,8 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: api-platform
       MONGO_INITDB_ROOT_PASSWORD: '!ChangeMe!'
+    ports:
+      - "27017:27017"
         
   user-component:
     image: ghcr.io/conductionnl/user-component-nginx:latest
