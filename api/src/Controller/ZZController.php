@@ -96,6 +96,8 @@ class ZZController extends AbstractController
         try {
             $parameters['body'] = $request->toArray();
         } catch (\Exception $exception) {
+            
+        }
 
         $parameters['method'] = $request->getMethod();
         $parameters['query'] = $request->query->all();
