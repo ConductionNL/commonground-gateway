@@ -363,7 +363,7 @@ class Entity
     private $version;
 
     /**
-     * @ORM\OneToMany(targetEntity=Endpoint::class, mappedBy="Entity")
+     * @ORM\ManyToMany(targetEntity=Endpoint::class, mappedBy="entities")
      */
     private $endpoints;
 
@@ -1282,7 +1282,7 @@ class Entity
     {
         if (!$this->endpoints->contains($endpoint)) {
             $this->endpoints[] = $endpoint;
-            $endpoint->setEntity($this);
+            $endpoint->addEntity($this);
         }
 
         return $this;
@@ -1291,10 +1291,7 @@ class Entity
     public function removeEndpoint(Endpoint $endpoint): self
     {
         if ($this->endpoints->removeElement($endpoint)) {
-            // set the owning side to null (unless already changed)
-            if ($endpoint->getEntity() === $this) {
-                $endpoint->setEntity(null);
-            }
+            $endpoint->removeEntity($this);
         }
 
         return $this;
