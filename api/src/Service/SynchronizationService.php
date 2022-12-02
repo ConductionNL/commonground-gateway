@@ -1184,7 +1184,7 @@ class SynchronizationService
             $sourceObject = $this->translationService->dotHydrator(array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']), $sourceObject, $this->configuration['apiSource']['mappingIn']);
         } elseif (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
             $sourceObject = $this->translationService->dotHydrator($sourceObject, $sourceObject, $this->configuration['apiSource']['mappingIn']);
-        } elseif (array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
+        } elseif (array_key_exists('skeletonIn', $this->configuration['apiSource'])) {
             $sourceObject = $this->translationService->dotHydrator(array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']), $sourceObject, $sourceObject);
         }
 
