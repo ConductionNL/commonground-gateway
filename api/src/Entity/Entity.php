@@ -356,15 +356,18 @@ class Entity
     private ?array $nameProperties = null;
 
     /**
+     * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $reference;
 
     /**
+     * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $version;
 
+    //todo: do we want read/write groups here?
     /**
      * @ORM\ManyToMany(targetEntity=Endpoint::class, mappedBy="entities")
      */
