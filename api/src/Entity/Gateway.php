@@ -627,7 +627,7 @@ class Gateway
      * @var bool Whether the source is in test mode
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="boolean", , options={"default": false})
+     * @ORM\Column(type="boolean", options={"default": false})
      */
     private bool $test = false;
 
