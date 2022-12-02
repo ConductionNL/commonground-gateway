@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7b8c28bd21837375adde113210573b5c",
+    "content-hash": "d4209a640166eba2c56a1f13e612fff2",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -4276,6 +4276,56 @@
             "time": "2022-06-29T09:25:13+00:00"
         },
         {
+            "name": "klantinteractie-servicesysteem/kiss-bundle",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Klantinteractie-Servicesysteem/KissBundle.git",
+                "reference": "6cef5317aedf82d11748d1f7800aea71ad2fd86b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/6cef5317aedf82d11748d1f7800aea71ad2fd86b",
+                "reference": "6cef5317aedf82d11748d1f7800aea71ad2fd86b",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": "dev-master",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "default-branch": true,
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "Kiss\\KissBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An example package for creating symfony flex bundles as plugins",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "dimpact",
+                "gateway",
+                "kiss",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/issues",
+                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/main"
+            },
+            "time": "2022-12-01T21:27:41+00:00"
+        },
+        {
             "name": "knplabs/knp-markdown-bundle",
             "version": "1.9.0",
             "source": {
@@ -5259,6 +5309,55 @@
                 "source": "https://github.com/onelogin/php-saml/"
             },
             "time": "2021-03-02T10:19:19+00:00"
+        },
+        {
+            "name": "open-catalogi/open-catalogi-bundle",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/OpenCatalogi/OpenCatalogiBundle.git",
+                "reference": "c126c57adfd2eca370dd219483a3c1ef5a17b5bf"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/c126c57adfd2eca370dd219483a3c1ef5a17b5bf",
+                "reference": "c126c57adfd2eca370dd219483a3c1ef5a17b5bf",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": "dev-master",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "default-branch": true,
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "OpenCatalogi\\OpenCatalogiBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An example package for creating symfony flex bundles as plugins",
+            "homepage": "https://commongatway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "open catalogi",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/OpenCatalogi/OpenCatalogiBundle/issues",
+                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/main"
+            },
+            "time": "2022-12-01T21:15:14+00:00"
         },
         {
             "name": "paragonie/random_compat",
@@ -14541,7 +14640,9 @@
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,
         "conduction/samlbundle": 20,
-        "larping-base/larping-bundle": 20
+        "klantinteractie-servicesysteem/kiss-bundle": 20,
+        "larping-base/larping-bundle": 20,
+        "open-catalogi/open-catalogi-bundle": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
