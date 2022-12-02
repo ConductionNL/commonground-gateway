@@ -36,6 +36,10 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "method"="GET",
  *          "path"="/admin/object_entities/{id}/sync"
  *      },
+ *     "create_sync"={
+ *          "method"="POST",
+ *          "path"="/admin/object_entities/{id}/sync/{sourceId}"
+ *      },
  *     "get_object"={
  *          "method"="GET",
  *          "path"="/admin/objects/{id}"
