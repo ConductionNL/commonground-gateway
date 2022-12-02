@@ -764,7 +764,11 @@ class SynchronizationService
      */
     private function setLastChangedDate(Synchronization $synchronization, array $sourceObject): Synchronization
     {
-        $hash = hash('sha384', serialize($sourceObject));
+        if (!$synchronization->getSource()->getTest()) {
+            $hash = hash('sha384', serialize($sourceObject));
+        } else {
+            $hash = serialize($sourceObject);
+        }
         $dot = new Dot($sourceObject);
         if (isset($this->configuration['apiSource']['location']['dateChangedField'])) {
             $lastChanged = $dot->get($this->configuration['apiSource']['location']['dateChangedField']);
@@ -1065,7 +1069,11 @@ class SynchronizationService
         if ($body->has($this->configuration['apiSource']['location']['idField'])) {
             $synchronization->setSourceId($body->get($this->configuration['apiSource']['location']['idField']));
         }
-        $synchronization->setHash(hash('sha384', serialize($body->jsonSerialize())));
+        if (!$synchronization->getSource()->getTest()) {
+            $synchronization->setHash(hash('sha384', serialize($body->jsonSerialize())));
+        } else {
+            $synchronization->setHash(serialize($body->jsonSerialize()));
+        }
 
         return $synchronization;
     }
