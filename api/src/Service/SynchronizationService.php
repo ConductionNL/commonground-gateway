@@ -1050,7 +1050,7 @@ class SynchronizationService
         }
 
         try {
-            $synchronization->setObject($this->populateObject($body, $synchronization->getObject(), 'PUT'));
+            $synchronization->setObject($synchronization->getObject()->hydrate($body));
         } catch (Exception $exception) {
             $this->ioCatchException($exception, ['line', 'file', 'message' => [
                 'preMessage' => 'Error while doing syncToSource: ',
