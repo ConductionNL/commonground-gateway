@@ -623,6 +623,14 @@ class Gateway
      */
     private $dateModified;
 
+    /**
+     * @var bool Whether the source is in test mode
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", , options={"default": false})
+     */
+    private bool $test = false;
+
     public function __construct()
     {
         $this->responceLogs = new ArrayCollection();
@@ -1177,6 +1185,18 @@ class Gateway
     public function setConfiguration(?array $configuration = []): self
     {
         $this->configuration = $configuration;
+
+        return $this;
+    }
+
+    public function getTest(): ?bool
+    {
+        return $this->test;
+    }
+
+    public function setTest(?bool $test): self
+    {
+        $this->test = $test;
 
         return $this;
     }
