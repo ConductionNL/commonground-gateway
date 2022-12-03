@@ -4281,12 +4281,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Klantinteractie-Servicesysteem/KissBundle.git",
-                "reference": "6cef5317aedf82d11748d1f7800aea71ad2fd86b"
+                "reference": "5217bfdb54522eed42300de3560ec2634fb35773"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/6cef5317aedf82d11748d1f7800aea71ad2fd86b",
-                "reference": "6cef5317aedf82d11748d1f7800aea71ad2fd86b",
+                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/5217bfdb54522eed42300de3560ec2634fb35773",
+                "reference": "5217bfdb54522eed42300de3560ec2634fb35773",
                 "shasum": ""
             },
             "require": {
@@ -4323,7 +4323,7 @@
                 "issues": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/issues",
                 "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/main"
             },
-            "time": "2022-12-01T21:27:41+00:00"
+            "time": "2022-12-01T22:26:41+00:00"
         },
         {
             "name": "knplabs/knp-markdown-bundle",
