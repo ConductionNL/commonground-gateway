@@ -36,10 +36,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "method"="GET",
  *          "path"="/admin/object_entities/{id}/sync"
  *      },
- *     "create_sync"={
- *          "method"="POST",
- *          "path"="/admin/object_entities/{id}/sync/{sourceId}"
- *      },
  *     "get_object"={
  *          "method"="GET",
  *          "path"="/admin/objects/{id}"
@@ -73,6 +69,16 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "read"=false,
  *          "validate"=false,
  *          "path"="/admin/objects/schema/{schemaId}"
+ *      },
+ *     "create_sync"={
+ *          "method"="POST",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "deserialize"=false,
+ *          "write"=false,
+ *          "serialize"=false,
+ *          "query_parameter_validate"=false,
+ *          "path"="/admin/object_entities/{id}/sync/{sourceId}"
  *      },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")

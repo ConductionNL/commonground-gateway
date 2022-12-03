@@ -187,6 +187,8 @@ class Synchronization
     {
         $this->object = $object;
 
+        $this->setEntity($object->getEntity());
+
         return $this;
     }
 
