@@ -3,14 +3,9 @@
 namespace App\Subscriber;
 
 use ApiPlatform\Core\EventListener\EventPriorities;
-use App\Entity\Gateway as Source;
 use App\Entity\Synchronization;
-use CommonGateway\CoreBundle\Service\CallService;
 use App\Service\SynchronizationService;
 use Doctrine\ORM\EntityManagerInterface;
-use GuzzleHttp\Exception\ClientException;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Exception\ServerException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
@@ -59,17 +54,16 @@ class EavSyncSubscriber implements EventSubscriberInterface
         // Get a sync objcet
 
         $status = 202;
-        if(!$synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['object' => $objectEntity->getId(), 'gateway' => $source])){
-            $synchronization = New Synchronization();
+        if (!$synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['object' => $objectEntity->getId(), 'gateway' => $source])) {
+            $synchronization = new Synchronization();
             $synchronization->setObject($objectEntity);
             $synchronization->setSource($source);
             $synchronization->setSourceId($sourceId);
             $synchronization->setEndpoint($endpoint);
-            if($actionId){
+            if ($actionId) {
                 $action = $this->entityManager->getRepository('App:Action')->findOneBy(['id'=>$actionId]);
                 $synchronization->setAction($action);
             }
-
 
             $status = 201;
             // Lets do the practical stuff
@@ -84,12 +78,12 @@ class EavSyncSubscriber implements EventSubscriberInterface
         $event->setResponse(
             new Response(
                 json_encode([
-                    "id"=>$synchronization->getId(),
-                    "sourceLastChanged"=>$synchronization->getSourceLastChanged(),
-                    "lastChecked"=>$synchronization->getLastChecked(),
-                    "lastSynced"=>$synchronization->getLastSynced(),
-                    "dateCreated"=>$synchronization->getDateCreated(),
-                    "dateModified"=>$synchronization->getDateModified()
+                    'id'               => $synchronization->getId(),
+                    'sourceLastChanged'=> $synchronization->getSourceLastChanged(),
+                    'lastChecked'      => $synchronization->getLastChecked(),
+                    'lastSynced'       => $synchronization->getLastSynced(),
+                    'dateCreated'      => $synchronization->getDateCreated(),
+                    'dateModified'     => $synchronization->getDateModified(),
                 ]),
                 $status,
             )
