@@ -52,18 +52,29 @@ class EavSyncSubscriber implements EventSubscriberInterface
         $objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['id'=>$objectId]);
         $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id'=>$sourceId]);
 
+
+        $sourceId = $event->getRequest()->query->get('sourceId','');
+        $endpoint = $event->getRequest()->query->get('endpoint',null);
+        $actionId = $event->getRequest()->query->get('sourceId',null);
         // Get a sync objcet
         $status = 202;
         if(!$synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['object' => $objectEntity->getId(), 'gateway' => $source])){
             $synchronization = New Synchronization();
             $synchronization->setObject($objectEntity);
             $synchronization->setSource($source);
+            $synchronization->setSourceId($sourceId);
+            $synchronization->setEndpoint($endpoint);
+            if($actionId){
+                $action = $this->entityManager->getRepository('App:Action')->findOneBy(['id'=>$actionId]);
+                $synchronization->setAction($action);
+            }
+
 
             $status = 201;
             // Lets do the practical stuff
            // (isset($event->getRequest()->query->get('endpoint', false))? '': '');
         }
-
+//
         $synchronization = $this->synchronizationService->handleSync($synchronization);
 
         $this->entityManager->persist($synchronization);
@@ -71,7 +82,15 @@ class EavSyncSubscriber implements EventSubscriberInterface
 
         $event->setResponse(
             new Response(
-                $status
+                json_encode([
+                    "id"=>$synchronization->getId(),
+                    "sourceLastChanged"=>$synchronization->getSourceLastChanged(),
+                    "lastChecked"=>$synchronization->getLastChecked(),
+                    "lastSynced"=>$synchronization->getLastSynced(),
+                    "dateCreated"=>$synchronization->getDateCreated(),
+                    "dateModified"=>$synchronization->getDateModified()
+                ]),
+                $status,
             )
         );
     }

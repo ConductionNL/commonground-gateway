@@ -5316,12 +5316,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/OpenCatalogi/OpenCatalogiBundle.git",
-                "reference": "c126c57adfd2eca370dd219483a3c1ef5a17b5bf"
+                "reference": "37f58075920de2e63432969facf65c70d54a8245"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/c126c57adfd2eca370dd219483a3c1ef5a17b5bf",
-                "reference": "c126c57adfd2eca370dd219483a3c1ef5a17b5bf",
+                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/37f58075920de2e63432969facf65c70d54a8245",
+                "reference": "37f58075920de2e63432969facf65c70d54a8245",
                 "shasum": ""
             },
             "require": {
@@ -5357,7 +5357,7 @@
                 "issues": "https://github.com/OpenCatalogi/OpenCatalogiBundle/issues",
                 "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/main"
             },
-            "time": "2022-12-01T21:15:14+00:00"
+            "time": "2022-12-02T16:19:58+00:00"
         },
         {
             "name": "paragonie/random_compat",
