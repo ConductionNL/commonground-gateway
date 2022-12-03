@@ -462,6 +462,11 @@ class SynchronizationService
      */
     private function getCallServiceEndpoint(string $id = null, ?array $objectArray = []): string
     {
+        // What if we do not have an action?
+        if (!isset($this->configuration['location'])) {
+            return '';
+        }
+
         $renderData = array_key_exists('replaceTwigLocation', $this->configuration) && $this->configuration['replaceTwigLocation'] === 'objectEntityData' ? $objectArray : $this->data;
         $location = $this->twig->createTemplate($this->configuration['location'])->render($renderData);
 
@@ -481,6 +486,12 @@ class SynchronizationService
      */
     private function getQueryForCallService(string $id = null): array
     {
+
+        // What if we do not have an action?
+        if (!isset($this->configuration['apiSource'])) {
+            return [];
+        }
+
         $query = [];
         // todo: maybe move this specific option to fetchObjectsFromSource, because it is specifically used for get collection calls on the source.
         if (array_key_exists('sourceLimit', $this->configuration['apiSource'])) {

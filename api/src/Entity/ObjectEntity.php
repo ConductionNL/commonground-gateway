@@ -70,6 +70,16 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "validate"=false,
  *          "path"="/admin/objects/schema/{schemaId}"
  *      },
+ *     "create_sync"={
+ *          "method"="POST",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "deserialize"=false,
+ *          "write"=false,
+ *          "serialize"=false,
+ *          "query_parameter_validate"=false,
+ *          "path"="/admin/object_entities/{id}/sync/{sourceId}"
+ *      },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @ORM\HasLifecycleCallbacks
