@@ -463,7 +463,7 @@ class SynchronizationService
     private function getCallServiceEndpoint(string $id = null, ?array $objectArray = []): string
     {
         // What if we do not have an action?
-        if(!isset($this->configuration['location'])){
+        if (!isset($this->configuration['location'])) {
             return '';
         }
 
@@ -488,10 +488,9 @@ class SynchronizationService
     {
 
         // What if we do not have an action?
-        if(!isset($this->configuration['apiSource'])){
+        if (!isset($this->configuration['apiSource'])) {
             return [];
         }
-
 
         $query = [];
         // todo: maybe move this specific option to fetchObjectsFromSource, because it is specifically used for get collection calls on the source.
