@@ -1155,7 +1155,7 @@ class SynchronizationService
         if (isset($this->io)) {
             $this->io->text("syncToSource for Synchronization with id = {$synchronization->getId()->toString()}");
         }
-        if($synchronization->isBlocked()) {
+        if ($synchronization->isBlocked()) {
             return $synchronization;
         }
         $object = $synchronization->getObject();

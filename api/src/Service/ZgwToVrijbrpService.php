@@ -308,17 +308,18 @@ class ZgwToVrijbrpService
     }
 
     /**
-     * Adds the objects for living in approval if applicable
+     * Adds the objects for living in approval if applicable.
      *
-     * @param array $relocationArray        The relocation array to edit
-     * @param string $bsn                   The BSN of the initiator
-     * @param string|null $bsnHoofdbewoner  The BSN of the main occupant
-     * @param string|null $wijzeBewoning    The type of habitation
+     * @param array       $relocationArray The relocation array to edit
+     * @param string      $bsn             The BSN of the initiator
+     * @param string|null $bsnHoofdbewoner The BSN of the main occupant
+     * @param string|null $wijzeBewoning   The type of habitation
+     *
      * @return array
      */
     private function createLiveInObject(array $relocationArray, string $bsn, ?string $bsnHoofdbewoner = null, ?string $wijzeBewoning = null): array
     {
-        if(
+        if (
             $wijzeBewoning &&
             isset($this->configuration['relocationConsentRequired']) &&
             in_array($wijzeBewoning, $this->configuration['relocationConsentRequired'])
@@ -326,17 +327,17 @@ class ZgwToVrijbrpService
             $relocationArray['newAddress']['liveIn'] = $bsnHoofdbewoner ?
                 [
                     'liveInApplicable' => true,
-                    'consent' => 'PENDING',
-                    'consenter' => [
+                    'consent'          => 'PENDING',
+                    'consenter'        => [
                         'bsn' => $bsnHoofdbewoner,
-                    ]
+                    ],
                 ] :
                 [
                     'liveInApplicable'  => true,
                     'consent'           => 'APPROVED',
                     'consenter'         => [
-                        'bsn' => $bsn
-                    ]
+                        'bsn' => $bsn,
+                    ],
                 ];
             $relocationArray['newAddress']['mainOccupant']['bsn'] = $bsnHoofdbewoner ?: $bsn;
         } else {
@@ -429,7 +430,6 @@ class ZgwToVrijbrpService
             $relocationArray['declarant']['bsn'] = $bsn;
             $relocationArray['newAddress']['mainOccupant']['bsn'] = $bsn;
             $relocationArray = $this->createLiveInObject($relocationArray, $bsn, $bsnHoofdbewoner ?? null, $wijzeBewoning ?? null);
-
         }
         $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
 
