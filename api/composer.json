@@ -31,10 +31,10 @@
         "hautelook/alice-bundle": "^2.9.0",
         "jwadhams/json-logic-php": "^1.4",
         "klantinteractie-servicesysteem/kiss-bundle": "dev-main",
-        "larping-base/larping-bundle": "dev-main",
+        "larping-base/larping-bundle": "^1.0",
         "mongodb/mongodb": "^1.15",
         "nelmio/cors-bundle": "^2.1",
-        "open-catalogi/open-catalogi-bundle": "dev-main",
+        "open-catalogi/open-catalogi-bundle": "^0.0.1",
         "phpdocumentor/reflection-docblock": "^5.2",
         "phpoffice/phpword": "^0.18.2",
         "respect/validation": "^2.2",
@@ -91,7 +91,8 @@
     "scripts": {
         "auto-scripts": {
             "cache:clear": "symfony-cmd",
-            "assets:install %PUBLIC_DIR%": "symfony-cmd"
+            "assets:install %PUBLIC_DIR%": "symfony-cmd",
+            "commongateway:composer:update": "symfony-cmd"
         },
         "post-install-cmd": [
             "@auto-scripts"

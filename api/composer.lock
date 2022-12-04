@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d4209a640166eba2c56a1f13e612fff2",
+    "content-hash": "7757df04c4e07b72a0d74828f998a9ce",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -4515,25 +4515,25 @@
         },
         {
             "name": "larping-base/larping-bundle",
-            "version": "dev-main",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "05489f9e64ac12c54c3e30df794fcf9c8b82d7de"
+                "reference": "2c7e36128ddf03e18d5eb3ca8660edd5b167a7f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/05489f9e64ac12c54c3e30df794fcf9c8b82d7de",
-                "reference": "05489f9e64ac12c54c3e30df794fcf9c8b82d7de",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/2c7e36128ddf03e18d5eb3ca8660edd5b167a7f6",
+                "reference": "2c7e36128ddf03e18d5eb3ca8660edd5b167a7f6",
                 "shasum": ""
             },
             "require": {
+                "commongateway/corebundle": "dev-master",
                 "php": ">=7.4"
             },
             "require-dev": {
                 "symfony/dependency-injection": "~3.4|~4.1|~5.0"
             },
-            "default-branch": true,
             "type": "symfony-bundle",
             "autoload": {
                 "psr-4": {
@@ -4557,9 +4557,9 @@
             ],
             "support": {
                 "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/main"
+                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.2"
             },
-            "time": "2022-11-30T11:59:26+00:00"
+            "time": "2022-12-03T21:07:14+00:00"
         },
         {
             "name": "league/html-to-markdown",
@@ -5312,16 +5312,16 @@
         },
         {
             "name": "open-catalogi/open-catalogi-bundle",
-            "version": "dev-main",
+            "version": "0.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/OpenCatalogi/OpenCatalogiBundle.git",
-                "reference": "37f58075920de2e63432969facf65c70d54a8245"
+                "reference": "15e89bfe572c18a3c3a54fb61e8363ec5f0d7f83"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/37f58075920de2e63432969facf65c70d54a8245",
-                "reference": "37f58075920de2e63432969facf65c70d54a8245",
+                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/15e89bfe572c18a3c3a54fb61e8363ec5f0d7f83",
+                "reference": "15e89bfe572c18a3c3a54fb61e8363ec5f0d7f83",
                 "shasum": ""
             },
             "require": {
@@ -5331,7 +5331,6 @@
             "require-dev": {
                 "symfony/dependency-injection": "~3.4|~4.1|~5.0"
             },
-            "default-branch": true,
             "type": "symfony-bundle",
             "autoload": {
                 "psr-4": {
@@ -5355,9 +5354,9 @@
             ],
             "support": {
                 "issues": "https://github.com/OpenCatalogi/OpenCatalogiBundle/issues",
-                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/main"
+                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/0.0.1"
             },
-            "time": "2022-12-02T16:19:58+00:00"
+            "time": "2022-12-03T20:26:00+00:00"
         },
         {
             "name": "paragonie/random_compat",
@@ -14640,9 +14639,7 @@
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,
         "conduction/samlbundle": 20,
-        "klantinteractie-servicesysteem/kiss-bundle": 20,
-        "larping-base/larping-bundle": 20,
-        "open-catalogi/open-catalogi-bundle": 20
+        "klantinteractie-servicesysteem/kiss-bundle": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
