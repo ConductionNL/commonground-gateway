@@ -91,7 +91,7 @@ class Cronjob
      * @Groups({"read","write"})
      * @ORM\Column(type="string")
      */
-    private string $crontab;
+    private string $crontab = '*/5 * * * *';
 
     /**
      * @var array The actions that put on the stack by the crontab.
@@ -150,6 +150,17 @@ class Cronjob
      * @ORM\Column(type="datetime", nullable=true)
      */
     private DateTimeInterface $dateModified;
+
+    public function __construct(
+        $action = false
+    )
+    {
+        if($action){
+            $this->setName($action->getName());
+            $this->setDescription($action->getDescription());
+            $this->setThrows([reset($action->getListens()->first())]);
+        }
+    }
 
     public function getId()
     {

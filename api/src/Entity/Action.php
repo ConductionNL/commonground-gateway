@@ -126,7 +126,7 @@ class Action
      *
      * @ORM\Column(type="integer")
      */
-    private int $priority;
+    private int $priority = 1;
 
     /**
      * @var bool Whether the action should be run asynchronous
@@ -216,9 +216,21 @@ class Action
      */
     private $dateModified;
 
-    public function __construct()
+    public function __construct(
+        $actionHandler = false
+    )
     {
         $this->actionLogs = new ArrayCollection();
+
+        if($actionHandler){
+            if (!$schema = $actionHandler->getConfiguration()) {
+                return;
+            }
+
+            (isset($schema['title'])? $this->setName($schema['title']):'');
+            (isset($schema['description'])? $this->setDescription($schema['description']):'');
+            $this->setClass(get_class($actionHandler));
+        }
     }
 
     public function getId(): ?UuidInterface
