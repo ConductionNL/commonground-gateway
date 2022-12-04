@@ -140,6 +140,8 @@ class SynchronizationService
             $this->entityManager->flush();
         }
         if ($this->asyncError) {
+            $this->asyncError = false;
+
             throw new AsynchronousException('Synchronization failed');
         }
 
@@ -468,6 +470,7 @@ class SynchronizationService
         }
 
         $renderData = array_key_exists('replaceTwigLocation', $this->configuration) && $this->configuration['replaceTwigLocation'] === 'objectEntityData' ? $objectArray : $this->data;
+
         $location = $this->twig->createTemplate($this->configuration['location'])->render($renderData);
 
         if (isset($this->configuration['queryParams']['syncSourceId'])) {

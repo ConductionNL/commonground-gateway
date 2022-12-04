@@ -105,7 +105,7 @@ class ZgwToVrijbrpService
         isset($birthArray['children']) && $birthArray['children'] = array_values($birthArray['children']);
 
         $birthArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
-        $birthArray['dossier']['dossierId'] = $zaakArray['id'];
+        $birthArray['dossier']['dossierId'] = $zaakArray['identificatie'] ?? $zaakArray['id'];
 
         $dateTimeObject = new DateTime($zaakArray['startdatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
@@ -169,9 +169,6 @@ class ZgwToVrijbrpService
         $date = $time = new DateTime();
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             switch ($eigenschap['naam']) {
-                case 'identificatie':
-                    $commitmentArray['dossier']['dossierId'] = $eigenschap['waarde'];
-                    continue 2;
                 case 'omschrijving':
                     $commitmentArray['dossier']['description'] = $eigenschap['waarde'];
                     $commitmentArray['dossier']['type']['description'] = $eigenschap['waarde'];
@@ -238,7 +235,7 @@ class ZgwToVrijbrpService
         }
 
         $commitmentArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
-        $commitmentArray['dossier']['dossierId'] = $zaakArray['id'];
+        $commitmentArray['dossier']['dossierId'] = $zaakArray['identificatie'] ?? $zaakArray['id'];
 
         $dateTimeObject = new DateTime($zaakArray['startdatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
@@ -397,7 +394,7 @@ class ZgwToVrijbrpService
         $relocationArray['relocators'][] = array_merge($relocationArray['newAddress']['mainOccupant'], ['declarationType' => 'REGISTERED']);
 
         $relocationArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
-        $relocationArray['dossier']['dossierId'] = $zaakArray['id'];
+        $relocationArray['dossier']['dossierId'] = $zaakArray['identificatie'] ?? $zaakArray['id'];
 
         $dateTimeObject = new DateTime($zaakArray['startdatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
@@ -538,7 +535,7 @@ class ZgwToVrijbrpService
         $deathArrayObject['funeralServices']['causeOfDeathType'] = $deathArrayObject['deathByNaturalCauses'] == true ? 'NATURAL_CAUSES' : 'NON_CONTAGIOUS_DISEASE';
 
         $deathArrayObject['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
-        $deathArrayObject['dossier']['dossierId'] = $zaakArray['id'];
+        $deathArrayObject['dossier']['dossierId'] = $zaakArray['identificatie'] ?? $zaakArray['id'];
 
         $dateTimeObject = new DateTime($zaakArray['startdatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
@@ -571,10 +568,10 @@ class ZgwToVrijbrpService
      *
      * @return array zaakgegevens
      */
-    public function createVrijBrpSoapZaakgegevens(ObjectEntity $zaakObjectEntity, ?string $type = null): array
+    public function createVrijBrpSoapZaakgegevens(ObjectEntity $zaakObjectEntity): array
     {
         return [
-            'zaakId'      => $type !== null ? $zaakObjectEntity->getId()->toString() : $zaakObjectEntity->getValue('identificatie'),
+            'zaakId'      => $zaakObjectEntity->getValue('identificatie') ?? $zaakObjectEntity->getId()->toString(),
             'bron'        => 'eDienst',
             'leverancier' => $zaakObjectEntity->getValue('opdrachtgevendeOrganisatie'),
             //            'medewerker' => $zaakObjectEntity->getValue('identificatie'),
@@ -1006,8 +1003,12 @@ class ZgwToVrijbrpService
      */
     public function createVrijBrpDocumenten(array $zgwDocument, string $type): void
     {
+        $zaakInformatieObjectEntity = $this->entityManager->find('App:Entity', $this->configuration['zaakInformatieObjectEntityId']);
         $zaakDocumentObjectEntity = $this->entityManager->find('App:ObjectEntity', $zgwDocument['id']);
-        if ($zaakDocumentObjectEntity instanceof ObjectEntity) {
+
+        $zaakInformatieObjecten = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakInformatieObjectEntity, ['informatieobject' => $zaakDocumentObjectEntity->getId()->toString()]);
+        $zaakInformatieObject = count($zaakInformatieObjecten) == 1 ? $zaakInformatieObjecten[0] : null;
+        if ($zaakDocumentObjectEntity instanceof ObjectEntity && $zaakInformatieObject->getValue('zaak')) {
             $vrijBrpDossierEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['vrijBrpDossierEntityId']);
 
             $date = new DateTime($zaakDocumentObjectEntity->getValue('creatiedatum'));
@@ -1018,8 +1019,7 @@ class ZgwToVrijbrpService
                 'filename'      => $zaakDocumentObjectEntity->getValue('bestandsnaam') ?? $zaakDocumentObjectEntity->getValue('titel'),
                 'entryDateTime' => $dateTimeFormatted,
                 'content'       => $zaakDocumentObjectEntity->getValue('inhoud'),
-                'zaakgegevens'  => $this->data['response']['soapZaak']['zaakgegevens'] ?? null,
-                'dossier'       => $this->data['response']['dossier'] ?? null,
+                'dossier'       => $zaakInformatieObject->getValue('zaak')->getValue('identificatie') ?? $zaakInformatieObject->getValue('zaak')->getId()->toString(),
             ];
 
             $this->createSoapObject($vrijBrpDossierEntity, $vrijBrpDossierArray);
