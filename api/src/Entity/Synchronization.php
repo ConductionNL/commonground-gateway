@@ -120,6 +120,14 @@ class Synchronization
     private ?string $hash = '';
 
     /**
+     * @var bool Whether or not the synchronization is blocked
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", options={"default": true})
+     */
+    private bool $blocked = false;
+
+    /**
      * @var ?DateTimeInterface The moment the source of this resource was last changed
      *
      * @Groups({"read","write"})
@@ -309,6 +317,24 @@ class Synchronization
     public function setDateModified(?\DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isBlocked(): bool
+    {
+        return $this->blocked;
+    }
+
+    /**
+     * @param bool $blocked
+     */
+    public function setBlocked(bool $blocked): self
+    {
+        $this->blocked = $blocked;
 
         return $this;
     }

@@ -730,6 +730,7 @@ class SynchronizationService
         $synchronization->setSource($source);
         $synchronization->setEntity($entity);
         $synchronization->setSourceId($objectEntity->getId());
+        $synchronization->setBlocked(false);
         $this->entityManager->persist($synchronization);
         $this->entityManager->flush();
 
@@ -1153,6 +1154,9 @@ class SynchronizationService
     {
         if (isset($this->io)) {
             $this->io->text("syncToSource for Synchronization with id = {$synchronization->getId()->toString()}");
+        }
+        if ($synchronization->isBlocked()) {
+            return $synchronization;
         }
         $object = $synchronization->getObject();
         $objectArray = $object->toArray(1, $this->configuration['apiSource']['extend'] ?? ['id']);
