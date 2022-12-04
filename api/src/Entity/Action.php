@@ -218,17 +218,16 @@ class Action
 
     public function __construct(
         $actionHandler = false
-    )
-    {
+    ) {
         $this->actionLogs = new ArrayCollection();
 
-        if($actionHandler){
+        if ($actionHandler) {
             if (!$schema = $actionHandler->getConfiguration()) {
                 return;
             }
 
-            (isset($schema['title'])? $this->setName($schema['title']):'');
-            (isset($schema['description'])? $this->setDescription($schema['description']):'');
+            (isset($schema['title']) ? $this->setName($schema['title']) : '');
+            (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
             $this->setClass(get_class($actionHandler));
         }
     }

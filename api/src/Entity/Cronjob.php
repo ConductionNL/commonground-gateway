@@ -153,9 +153,8 @@ class Cronjob
 
     public function __construct(
         $action = false
-    )
-    {
-        if($action){
+    ) {
+        if ($action) {
             $this->setName($action->getName());
             $this->setDescription($action->getDescription());
             $this->setThrows([reset($action->getListens()->first())]);
