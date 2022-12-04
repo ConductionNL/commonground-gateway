@@ -230,6 +230,11 @@ class CollectionEntity
      */
     private $dateModified;
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $plugin;
+
     public function __construct()
     {
         $this->applications = new ArrayCollection();
@@ -509,6 +514,18 @@ class CollectionEntity
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    public function getPlugin(): ?string
+    {
+        return $this->plugin;
+    }
+
+    public function setPlugin(?string $plugin): self
+    {
+        $this->plugin = $plugin;
 
         return $this;
     }
