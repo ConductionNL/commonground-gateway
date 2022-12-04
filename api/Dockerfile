@@ -9,7 +9,6 @@ RUN apk add --no-cache \
 		gettext \
 		git \
 		bash \
-    	cron \
 	;
 
 ARG APCU_VERSION=5.1.17
