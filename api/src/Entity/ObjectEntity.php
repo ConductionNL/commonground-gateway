@@ -247,6 +247,12 @@ class ObjectEntity
     private Collection $synchronizations;
 
     /**
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="object", fetch="EXTRA_LAZY", cascade={"remove","persist"})
+     */
+    private Collection $usedIn;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -271,6 +277,7 @@ class ObjectEntity
         $this->subresourceOf = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
         $this->synchronizations = new ArrayCollection();
+        $this->usedIn = new ArrayCollection();
 
         if ($entity) {
             $this->setEntity($entity);
@@ -1164,6 +1171,38 @@ class ObjectEntity
             // set the owning side to null (unless already changed)
             if ($synchronization->getObject() === $this) {
                 $synchronization->setObject(null);
+            }
+        }
+
+        return $this;
+    }
+
+
+    /**
+     * @return Collection|Synchronization[]
+     */
+    public function getUsedIn(): Collection
+    {
+        return $this->usedIn;
+    }
+
+    public function addUsedIn(Attribute $attribute): self
+    {
+        if (!$this->usedIn->contains($attribute)) {
+            $this->usedIn[] = $attribute;
+            $attribute->setObject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUsedIn(Attribute $attribute): self
+    {
+        if ($this->usedIn->removeElement($attribute)) {
+            // set the owning side to null (unless already changed)
+            if ($attribute->getObject() === $this) {
+                $attribute->setObject(null);
+                $attribute->setReference(null);
             }
         }
 

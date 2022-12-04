@@ -687,6 +687,11 @@ class Attribute
      */
     private $dateModified;
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $reference;
+
     public function __construct()
     {
         $this->attributeValues = new ArrayCollection();
@@ -1721,6 +1726,18 @@ class Attribute
     public function setSchema(?string $schema): self
     {
         $this->schema = $schema;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
 
         return $this;
     }
