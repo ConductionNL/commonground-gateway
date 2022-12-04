@@ -47,10 +47,11 @@ class EavSyncSubscriber implements EventSubscriberInterface
         $objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['id'=>$objectId]);
         $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id'=>$sourceId]);
 
-        $sourceId = $event->getRequest()->query->get('sourceId', '');
+        $sourceId = $event->getRequest()->query->get('externalId', '');
         $endpoint = $event->getRequest()->query->get('endpoint', null);
-        $actionId = $event->getRequest()->query->get('sourceId', null);
+        $actionId = $event->getRequest()->query->get('action', null);
         // Get a sync objcet
+
         $status = 202;
         if (!$synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['object' => $objectEntity->getId(), 'gateway' => $source])) {
             $synchronization = new Synchronization();

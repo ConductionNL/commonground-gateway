@@ -31,7 +31,7 @@ class PluginController extends AbstractController
     public function installedAction(Request $request)
     {
         $status = 200;
-        $plugins = $this->composerService->getAll(['--installed'])['installed'];
+        $plugins = $this->composerService->getAll(['--installed']);
 
         return new Response(json_encode($plugins), $status, ['Content-type' => 'application/json']);
     }
