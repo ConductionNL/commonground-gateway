@@ -4,7 +4,6 @@ namespace App\Service;
 
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
-use App\Exception\GatewayException;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -572,7 +571,7 @@ class ZgwToVrijbrpService
     public function createVrijBrpSoapZaakgegevens(ObjectEntity $zaakObjectEntity): array
     {
         return [
-            'zaakId'      => $zaakObjectEntity->getValue('identificatie')?? $zaakObjectEntity->getId()->toString(),
+            'zaakId'      => $zaakObjectEntity->getValue('identificatie') ?? $zaakObjectEntity->getId()->toString(),
             'bron'        => 'eDienst',
             'leverancier' => $zaakObjectEntity->getValue('opdrachtgevendeOrganisatie'),
             //            'medewerker' => $zaakObjectEntity->getValue('identificatie'),
@@ -1008,7 +1007,7 @@ class ZgwToVrijbrpService
         $zaakDocumentObjectEntity = $this->entityManager->find('App:ObjectEntity', $zgwDocument['id']);
 
         $zaakInformatieObjecten = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakInformatieObjectEntity, ['informatieobject' => $zaakDocumentObjectEntity->getId()->toString()]);
-        $zaakInformatieObject = count($zaakInformatieObjecten) == 1 ? $zaakInformatieObjecten[0]: null;
+        $zaakInformatieObject = count($zaakInformatieObjecten) == 1 ? $zaakInformatieObjecten[0] : null;
         if ($zaakDocumentObjectEntity instanceof ObjectEntity && $zaakInformatieObject->getValue('zaak')) {
             $vrijBrpDossierEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['vrijBrpDossierEntityId']);
 

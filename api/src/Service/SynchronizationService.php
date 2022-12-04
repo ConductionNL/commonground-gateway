@@ -141,6 +141,7 @@ class SynchronizationService
         }
         if ($this->asyncError) {
             $this->asyncError = false;
+
             throw new AsynchronousException('Synchronization failed');
         }
 

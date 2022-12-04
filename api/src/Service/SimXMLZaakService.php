@@ -283,13 +283,14 @@ class SimXMLZaakService
     }
 
     /**
-     * Creates a 'zaakInformatieobject' to link the zgw case to the 'enkelvoudigInformatieobject'
+     * Creates a 'zaakInformatieobject' to link the zgw case to the 'enkelvoudigInformatieobject'.
      *
      * @param ObjectEntity $informatieObject The information object to link to a case
      * @param ObjectEntity $zaak             The case to link the information object to
      *
-     * @return void
      * @throws Exception
+     *
+     * @return void
      */
     public function createZaakInformatieObject(ObjectEntity $informatieObject, ObjectEntity $zaak): void
     {
@@ -409,7 +410,7 @@ class SimXMLZaakService
         // add bijlagen
         $documenten = $this->createZgwEnkelvoudigInformatieObject($simXml, $simXmlBody, $simXmlStuurgegevens);
 
-        foreach($documenten as $document) {
+        foreach ($documenten as $document) {
             $this->createZaakInformatieObject($document, $zaak);
         }
 
