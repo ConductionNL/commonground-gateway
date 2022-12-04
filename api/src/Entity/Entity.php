@@ -1108,6 +1108,7 @@ class Entity
         // Basic stuff
         if (array_key_exists('$id', $schema)) {
             $this->setReference($schema['$id']);
+            $this->setSchema($schema['$id']);
         }
         if (array_key_exists('title', $schema)) {
             $this->setName($schema['title']);
@@ -1127,52 +1128,22 @@ class Entity
                 $attribute->setName($name);
             }
 
-            // Handle the property setup
-            if (array_key_exists('type', $property)) {
-                $attribute->setType($property['type']);
-            }
-            if (array_key_exists('format', $property)) {
-                $attribute->setFormat($property['format']);
-            }
-            if (array_key_exists('example', $property)) {
-                $attribute->setExample($property['example']);
-            }
-            if (array_key_exists('readOnly', $property)) {
-                $attribute->setReadOnly($property['readOnly']);
-            }
-            if (array_key_exists('description', $property)) {
-                $attribute->setDescription($property['description']);
-            }
-            if (array_key_exists('$ref', $property)) {
-            }
-            if (array_key_exists('items', $property)) {
-            }
-            if (array_key_exists('maxLength', $property)) {
-                $attribute->setMaxLength($property['maxLength']);
-            }
-            if (array_key_exists('enum', $property)) {
-                $attribute->setEnum($property['enum']);
-            }
-            if (array_key_exists('default', $property)) {
-                $attribute->setDefaultValue($property['default']);
-            }
-
-            $this->addAttribute($attribute);
+            $this->addAttribute($attribute->fromSchema($property));
         }
 
-        // Requered stuff
+        // Required stuff
         if (array_key_exists('required', $schema)) {
             foreach ($schema['required'] as $required) {
-                $atribute = $this->getAttributeByName($required);
-                $atribute->setRequired(true);
+                $attribute = $this->getAttributeByName($required);
+                $attribute->setRequired(true);
             }
         }
 
         // Bit of cleanup
         foreach ($this->getAttributes() as $attribute) {
             // Remove Required if no longer valid
-            if (array_key_exists('required', $schema) && !in_array($attribute->getName(), $schema['required']) && $atribute->getRequired() == true) {
-                $atribute->setRequired(false);
+            if (array_key_exists('required', $schema) && !in_array($attribute->getName(), $schema['required']) && $attribute->getRequired() == true) {
+                $attribute->setRequired(false);
             }
             // Remove atribute if no longer present
             if (!array_key_exists($attribute->getName(), $schema['properties'])) {

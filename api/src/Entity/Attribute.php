@@ -692,25 +692,65 @@ class Attribute
         $this->attributeValues = new ArrayCollection();
     }
 
+    /**
+     * JSON schema to attribute
+     * 
+     * @throws GatewayException
+     */
+    public function fromSchema(array $property): Attribute
+    {
+        // Handle the property setup
+        if (array_key_exists('type', $property)) {
+            $this->setType($property['type']);
+        }
+        if (array_key_exists('format', $property)) {
+            $this->setFormat($property['format']);
+        }
+        if (array_key_exists('example', $property)) {
+            $this->setExample($property['example']);
+        }
+        if (array_key_exists('readOnly', $property)) {
+            $this->setReadOnly($property['readOnly']);
+        }
+        if (array_key_exists('description', $property)) {
+            $this->setDescription($property['description']);
+        }
+        if (array_key_exists('$ref', $property)) {
+            $this->setSchema($property['$ref']);
+        }
+        if (array_key_exists('items', $property)) {
+        }
+        if (array_key_exists('maxLength', $property)) {
+            $this->setMaxLength($property['maxLength']);
+        }
+        if (array_key_exists('enum', $property)) {
+            $this->setEnum($property['enum']);
+        }
+        if (array_key_exists('default', $property)) {
+            $this->setDefaultValue($property['default']);
+        }
+        return $this;
+    }
+
     public function export()
     {
         if ($this->getEntity() !== null) {
             $entity = $this->getEntity()->getId()->toString();
-            $entity = '@'.$entity;
+            $entity = '@' . $entity;
         } else {
             $entity = null;
         }
 
         if ($this->getObject() !== null) {
             $object = $this->getObject()->getId()->toString();
-            $object = '@'.$object;
+            $object = '@' . $object;
         } else {
             $object = null;
         }
 
         if ($this->getInversedBy() !== null) {
             $inversed = $this->getInversedBy()->getId()->toString();
-            $inversed = '@'.$inversed;
+            $inversed = '@' . $inversed;
         } else {
             $inversed = null;
         }
