@@ -140,6 +140,8 @@ class SynchronizationService
             $this->entityManager->flush();
         }
         if ($this->asyncError) {
+            $this->asyncError = false;
+
             throw new AsynchronousException('Synchronization failed');
         }
 
@@ -468,6 +470,7 @@ class SynchronizationService
         }
 
         $renderData = array_key_exists('replaceTwigLocation', $this->configuration) && $this->configuration['replaceTwigLocation'] === 'objectEntityData' ? $objectArray : $this->data;
+
         $location = $this->twig->createTemplate($this->configuration['location'])->render($renderData);
 
         if (isset($this->configuration['queryParams']['syncSourceId'])) {
@@ -727,6 +730,7 @@ class SynchronizationService
         $synchronization->setSource($source);
         $synchronization->setEntity($entity);
         $synchronization->setSourceId($objectEntity->getId());
+        $synchronization->setBlocked(false);
         $this->entityManager->persist($synchronization);
         $this->entityManager->flush();
 
@@ -775,7 +779,11 @@ class SynchronizationService
      */
     private function setLastChangedDate(Synchronization $synchronization, array $sourceObject): Synchronization
     {
-        $hash = hash('sha384', serialize($sourceObject));
+        if (!$synchronization->getSource()->getTest()) {
+            $hash = hash('sha384', serialize($sourceObject));
+        } else {
+            $hash = serialize($sourceObject);
+        }
         $dot = new Dot($sourceObject);
         if (isset($this->configuration['apiSource']['location']['dateChangedField'])) {
             $lastChanged = $dot->get($this->configuration['apiSource']['location']['dateChangedField']);
@@ -1076,7 +1084,11 @@ class SynchronizationService
         if ($body->has($this->configuration['apiSource']['location']['idField'])) {
             $synchronization->setSourceId($body->get($this->configuration['apiSource']['location']['idField']));
         }
-        $synchronization->setHash(hash('sha384', serialize($body->jsonSerialize())));
+        if (!$synchronization->getSource()->getTest()) {
+            $synchronization->setHash(hash('sha384', serialize($body->jsonSerialize())));
+        } else {
+            $synchronization->setHash(serialize($body->jsonSerialize()));
+        }
 
         return $synchronization;
     }
@@ -1142,6 +1154,9 @@ class SynchronizationService
     {
         if (isset($this->io)) {
             $this->io->text("syncToSource for Synchronization with id = {$synchronization->getId()->toString()}");
+        }
+        if ($synchronization->isBlocked()) {
+            return $synchronization;
         }
         $object = $synchronization->getObject();
         $objectArray = $object->toArray(1, $this->configuration['apiSource']['extend'] ?? ['id']);
