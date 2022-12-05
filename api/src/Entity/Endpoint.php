@@ -295,12 +295,11 @@ class Endpoint
 
             // Lets make a path
             $path = mb_strtolower(str_replace(' ', '_', $entity->getName()));
-            if(!$entity->getCollections()->isEmpty() && $entity->getCollections()->first()->getPrefix()){
+            if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->first()->getPrefix()) {
                 $path = $entity->getCollections()->first()->getPrefix().$path;
             }
             $pathRegEx = '^'.$path.'/?([a-z0-9-]+)?$';
             $this->setPathRegex($pathRegEx);
-
 
             /*@depricated kept here for lagacy */
             $this->setOperationType('GET');

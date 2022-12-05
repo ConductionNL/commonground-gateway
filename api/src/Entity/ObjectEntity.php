@@ -1177,7 +1177,6 @@ class ObjectEntity
         return $this;
     }
 
-
     /**
      * @return Collection|Synchronization[]
      */
