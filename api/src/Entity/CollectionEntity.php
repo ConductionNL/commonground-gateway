@@ -231,6 +231,8 @@ class CollectionEntity
     private $dateModified;
 
     /**
+     * @todo
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $plugin;

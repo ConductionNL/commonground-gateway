@@ -688,6 +688,9 @@ class Attribute
     private $dateModified;
 
     /**
+     * @todo
+     *
+     * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $reference;
