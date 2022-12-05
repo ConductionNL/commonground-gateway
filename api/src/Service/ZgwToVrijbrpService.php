@@ -404,6 +404,9 @@ class ZgwToVrijbrpService
                 case 'huisnummertoevoeging_nieuw':
                     $relocationArray['newAddress']['houseNumberAddition'] = $eigenschap['waarde'];
                     continue 2;
+                case 'huisletter_nieuw':
+                    $relocationArray['newAddress']['houseLetter'] = $eigenschap['waarde'];
+                    continue 2;
                 case 'emailadres':
                     $relocator['email'] = $eigenschap['waarde'];
                     continue 2;
