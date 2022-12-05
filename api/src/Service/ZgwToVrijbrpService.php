@@ -423,11 +423,20 @@ class ZgwToVrijbrpService
                 case 'bsn_hoofdbewoner':
                     $bsnHoofdbewoner = $eigenschap['waarde'];
                     continue 2;
+                case 'emailadres':
+                    $email = $eigenschap['waarde'];
+                    continue 2;
+                case 'telefoonnummer':
+                    $telephone = $eigenschap['waarde'];
+                    continue 2;
+
             }
         }
 
         if (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) {
             $relocationArray['declarant']['bsn'] = $bsn;
+            $relocationArray['declarant']['contactInformation']['email'] = $email ?? null;
+            $relocationArray['declarant']['contactInformation']['telephoneNumber'] = $telephone ?? null;
             $relocationArray['newAddress']['mainOccupant']['bsn'] = $bsn;
             $relocationArray = $this->createLiveInObject($relocationArray, $bsn, $bsnHoofdbewoner ?? null, $wijzeBewoning ?? null);
         }
