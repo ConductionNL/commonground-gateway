@@ -384,6 +384,7 @@ class ZgwToVrijbrpService
                     $dateTimeObject = new DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
                     $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
+                    $relocationArray['dossier']['startDate'] = $dateTimeFormatted;
                     $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
                     continue 2;
                 case 'woonplaats_nieuw':
@@ -404,6 +405,9 @@ class ZgwToVrijbrpService
                 case 'huisnummertoevoeging_nieuw':
                     $relocationArray['newAddress']['houseNumberAddition'] = $eigenschap['waarde'];
                     continue 2;
+                case 'huisletter_nieuw':
+                    $relocationArray['newAddress']['houseLetter'] = $eigenschap['waarde'];
+                    continue 2;
                 case 'emailadres':
                     $relocator['email'] = $eigenschap['waarde'];
                     continue 2;
@@ -423,11 +427,20 @@ class ZgwToVrijbrpService
                 case 'bsn_hoofdbewoner':
                     $bsnHoofdbewoner = $eigenschap['waarde'];
                     continue 2;
+                case 'emailadres':
+                    $email = $eigenschap['waarde'];
+                    continue 2;
+                case 'telefoonnummer':
+                    $telephone = $eigenschap['waarde'];
+                    continue 2;
+
             }
         }
 
         if (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) {
             $relocationArray['declarant']['bsn'] = $bsn;
+            $relocationArray['declarant']['contactInformation']['email'] = $email ?? null;
+            $relocationArray['declarant']['contactInformation']['telephoneNumber'] = $telephone ?? null;
             $relocationArray['newAddress']['mainOccupant']['bsn'] = $bsn;
             $relocationArray = $this->createLiveInObject($relocationArray, $bsn, $bsnHoofdbewoner ?? null, $wijzeBewoning ?? null);
         }
@@ -438,15 +451,6 @@ class ZgwToVrijbrpService
 
         $relocationArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
         $relocationArray['dossier']['dossierId'] = $zaakArray['identificatie'] ?? $zaakArray['id'];
-
-        $dateTimeObject = new DateTime($zaakArray['startdatum']);
-        $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
-        $relocationArray['dossier']['startDate'] = $dateTimeFormatted;
-
-        $dateTimeObject = new DateTime($zaakArray['registratiedatum']);
-        $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-        $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
-        $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
 
         // Save in gateway
         $relocationObjectEntity = new ObjectEntity();
@@ -833,7 +837,7 @@ class ZgwToVrijbrpService
 
         $geheimhoudingBetrokkenen[] = [
             'burgerservicenummer' => key_exists('bsn_geheimhouding', $zaakEigenschappen) ? $zaakEigenschappen['bsn_geheimhouding'] : null,
-            'codeGeheimhouding'   => key_exists('code_geheimhouding', $zaakEigenschappen) ? $zaakEigenschappen['code_geheimhouding'] : null,
+            'codeGeheimhouding'   => key_exists('code_geheimhouding', $zaakEigenschappen) ? "{$zaakEigenschappen['code_geheimhouding']}" : "0",
         ];
 
         $soapConfidentialityArray['aanvraaggegevens'] = [
