@@ -455,11 +455,6 @@ class ZgwToVrijbrpService
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
         $relocationArray['dossier']['startDate'] = $dateTimeFormatted;
 
-        $dateTimeObject = new DateTime($zaakArray['registratiedatum']);
-        $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-        $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
-        $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
-
         // Save in gateway
         $relocationObjectEntity = new ObjectEntity();
         $relocationObjectEntity->setEntity($isInterRelocation ? $interRelocationEntity : $intraRelocationEntity);
