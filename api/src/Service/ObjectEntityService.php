@@ -854,7 +854,7 @@ class ObjectEntityService
      *
      * @return void
      */
-    private function setUnread(ObjectEntity $objectEntity)
+    public function setUnread(ObjectEntity $objectEntity)
     {
         // First, check if there is an Unread object for this Object+User. If so, do nothing.
         $user = $this->security->getUser();
