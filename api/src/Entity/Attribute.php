@@ -698,8 +698,8 @@ class Attribute
     }
 
     /**
-     * JSON schema to attribute
-     * 
+     * JSON schema to attribute.
+     *
      * @throws GatewayException
      */
     public function fromSchema(array $property): Attribute
@@ -734,6 +734,7 @@ class Attribute
         if (array_key_exists('default', $property)) {
             $this->setDefaultValue($property['default']);
         }
+
         return $this;
     }
 
@@ -741,21 +742,21 @@ class Attribute
     {
         if ($this->getEntity() !== null) {
             $entity = $this->getEntity()->getId()->toString();
-            $entity = '@' . $entity;
+            $entity = '@'.$entity;
         } else {
             $entity = null;
         }
 
         if ($this->getObject() !== null) {
             $object = $this->getObject()->getId()->toString();
-            $object = '@' . $object;
+            $object = '@'.$object;
         } else {
             $object = null;
         }
 
         if ($this->getInversedBy() !== null) {
             $inversed = $this->getInversedBy()->getId()->toString();
-            $inversed = '@' . $inversed;
+            $inversed = '@'.$inversed;
         } else {
             $inversed = null;
         }
