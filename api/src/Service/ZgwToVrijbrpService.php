@@ -840,7 +840,7 @@ class ZgwToVrijbrpService
 
         $geheimhoudingBetrokkenen[] = [
             'burgerservicenummer' => key_exists('bsn_geheimhouding', $zaakEigenschappen) ? $zaakEigenschappen['bsn_geheimhouding'] : null,
-            'codeGeheimhouding'   => key_exists('code_geheimhouding', $zaakEigenschappen) ? $zaakEigenschappen['code_geheimhouding'] : null,
+            'codeGeheimhouding'   => key_exists('code_geheimhouding', $zaakEigenschappen) ? "{$zaakEigenschappen['code_geheimhouding']}" : "0",
         ];
 
         $soapConfidentialityArray['aanvraaggegevens'] = [
