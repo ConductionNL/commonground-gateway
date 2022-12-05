@@ -291,8 +291,15 @@ class Endpoint
             $this->setName($entity->getName());
             $this->setDescription($entity->getDescription());
             $this->setMethods(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
-            $this->setPathRegex('^'.mb_strtolower(str_replace(' ', '_', $entity->getName())).'/?([a-z0-9-]+)?$');
             $this->setPath([1=>'id']);
+
+            // Lets make a path
+            $path = mb_strtolower(str_replace(' ', '_', $entity->getName()));
+            if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->first()->getPrefix()) {
+                $path = $entity->getCollections()->first()->getPrefix().$path;
+            }
+            $pathRegEx = '^'.$path.'/?([a-z0-9-]+)?$';
+            $this->setPathRegex($pathRegEx);
 
             /*@depricated kept here for lagacy */
             $this->setOperationType('GET');

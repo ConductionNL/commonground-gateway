@@ -687,9 +687,58 @@ class Attribute
      */
     private $dateModified;
 
+    /**
+     * @todo
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $reference;
+
     public function __construct()
     {
         $this->attributeValues = new ArrayCollection();
+    }
+
+    /**
+     * JSON schema to attribute.
+     *
+     * @throws GatewayException
+     */
+    public function fromSchema(array $property): Attribute
+    {
+        // Handle the property setup
+        if (array_key_exists('type', $property)) {
+            $this->setType($property['type']);
+        }
+        if (array_key_exists('format', $property)) {
+            $this->setFormat($property['format']);
+        }
+        if (array_key_exists('example', $property)) {
+            $this->setExample($property['example']);
+        }
+        if (array_key_exists('readOnly', $property)) {
+            $this->setReadOnly($property['readOnly']);
+        }
+        if (array_key_exists('description', $property)) {
+            $this->setDescription($property['description']);
+        }
+        if (array_key_exists('$ref', $property)) {
+            $this->setSchema($property['$ref']);
+        }
+        if (array_key_exists('items', $property)) {
+        }
+        if (array_key_exists('maxLength', $property)) {
+            $this->setMaxLength($property['maxLength']);
+        }
+        if (array_key_exists('enum', $property)) {
+            $this->setEnum($property['enum']);
+        }
+        if (array_key_exists('default', $property)) {
+            $this->setDefaultValue($property['default']);
+        }
+
+        return $this;
     }
 
     public function export()
@@ -1681,6 +1730,18 @@ class Attribute
     public function setSchema(?string $schema): self
     {
         $this->schema = $schema;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
 
         return $this;
     }
