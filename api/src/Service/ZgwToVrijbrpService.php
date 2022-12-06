@@ -384,6 +384,7 @@ class ZgwToVrijbrpService
                     $dateTimeObject = new DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
                     $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
+                    $relocationArray['dossier']['startDate'] = $dateTimeObject->format('Y-m-d');
                     $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
                     continue 2;
                 case 'woonplaats_nieuw':

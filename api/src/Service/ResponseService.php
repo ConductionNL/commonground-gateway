@@ -37,7 +37,7 @@ class ResponseService
     // todo: ...data in RenderResult (and other function after that, untill we come back to RenderResult again, because of 'recursion')
     // todo: other examples we could use this for when we cleanup this service: $fields, $extend, $acceptType, $skipAuthCheck
     // todo: use this as example (checking for $level when setting this data only once is very important):
-    private array $xCommongatewayMetadata;
+    public array $xCommongatewayMetadata;
 
     public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, SessionInterface $session, Security $security, CacheInterface $cache)
     {
@@ -497,7 +497,7 @@ class ResponseService
      *
      * @return void
      */
-    private function addToMetadata(array &$metadata, string $key, $value, ?string $overwriteKey = null)
+    public function addToMetadata(array &$metadata, string $key, $value, ?string $overwriteKey = null)
     {
         if (array_key_exists('all', $this->xCommongatewayMetadata) || array_key_exists($key, $this->xCommongatewayMetadata)) {
             // Make sure we only do getDateRead function when it is present in $this->xCommongatewayMetadata
