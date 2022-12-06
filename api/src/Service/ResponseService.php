@@ -505,6 +505,7 @@ class ResponseService
                 // If the api-call is an getItem call show NOW instead!
                 $value = isset($this->xCommongatewayMetadata['dateRead']) && $this->xCommongatewayMetadata['dateRead'] === 'getItem'
                     ? new DateTime() : $this->getDateRead($value);
+                $value = $value == null ? $value : $value->format('c');
             }
             $metadata[$overwriteKey ?? $key] = $value;
         }
