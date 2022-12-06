@@ -1009,7 +1009,9 @@ class ObjectEntity
                 } elseif (!$attribute->getMultiple() && $level < 5) {
                     $value = $valueObject->getObjects()->first()->toArray($level + 1, $extend, $onlyMetadata, $embedded);
                     if ($embedded) {
-                        $array[$attribute->getName()] = $valueObject->getObjects()->first()->getSelf();
+                        $array[$attribute->getName()] = $value;
+                        //todo: should be this instead:
+//                        $array[$attribute->getName()] = $valueObject->getObjects()->first()->getSelf();
                         $array['embedded'][$attribute->getName()] = $value;
                         continue;
                     }
@@ -1018,7 +1020,9 @@ class ObjectEntity
                     foreach ($valueObject->getObjects() as $object) {
                         $value = $object->toArray($level + 1, $extend, $onlyMetadata, $embedded);
                         if ($embedded) {
-                            $array[$attribute->getName()][] = $object->getSelf();
+                            $array[$attribute->getName()][] = $value;
+                            //todo: should be this instead:
+//                            $array[$attribute->getName()][] = $object->getSelf();
                             $array['embedded'][$attribute->getName()][] = $value;
                             continue;
                         }
