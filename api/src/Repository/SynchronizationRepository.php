@@ -19,22 +19,17 @@ class SynchronizationRepository extends ServiceEntityRepository
         parent::__construct($registry, Synchronization::class);
     }
 
-    // /**
-    //  * @return Synchronization[] Returns an array of Synchronization objects
-    //  */
-    /*
-    public function findByExampleField($value)
+    /**
+     * @return Synchronization[] Returns an array of Synchronization objects where lastSync is NULL
+     */
+    public function findByLastSyncIsNull()
     {
         return $this->createQueryBuilder('s')
-            ->andWhere('s.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('s.id', 'ASC')
-            ->setMaxResults(10)
+            ->where('s.lastSynced is NULL')
             ->getQuery()
-            ->getResult()
-        ;
+            ->getResult();
     }
-    */
+
 
     /*
     public function findOneBySomeField($value): ?Synchronization
