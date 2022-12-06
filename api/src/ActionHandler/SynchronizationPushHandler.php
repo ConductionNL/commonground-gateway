@@ -7,14 +7,16 @@ use App\Service\SynchronizationService;
 
 class SynchronizationPushHandler implements ActionHandlerInterface
 {
-    private SynchronizationService $synchronizationService;
 
     /**
+     * Gets the SynchronizationService trough autowiring
+     *
      * @param SynchronizationService $synchronizationService
+     * @return SynchronizationService
      */
-    public function __construct(SynchronizationService $synchronizationService)
+    private function getSynchronizationService(SynchronizationService $synchronizationService):SynchronizationService
     {
-        $this->synchronizationService = $synchronizationService;
+        return $synchronizationService;
     }
 
     /**

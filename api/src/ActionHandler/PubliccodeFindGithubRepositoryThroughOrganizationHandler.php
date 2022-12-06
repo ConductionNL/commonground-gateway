@@ -6,11 +6,15 @@ use App\Service\PubliccodeService;
 
 class PubliccodeFindGithubRepositoryThroughOrganizationHandler implements ActionHandlerInterface
 {
-    private PubliccodeService $publiccodeService;
-
-    public function __construct(PubliccodeService $publiccodeService)
+    /**
+     * Gets the PubliccodeService trough autowiring
+     *
+     * @param PubliccodeService $publiccodeService
+     * @return PubliccodeService
+     */
+    private function getPubliccodeService(PubliccodeService $publiccodeService):PubliccodeService
     {
-        $this->publiccodeService = $publiccodeService;
+        return $publiccodeService;
     }
 
     public function getConfiguration()
@@ -34,6 +38,6 @@ class PubliccodeFindGithubRepositoryThroughOrganizationHandler implements Action
 
     public function run(array $data, array $configuration): array
     {
-        return $this->publiccodeService->enrichOrganizationWithCatalogi($data, $configuration);
+        return $this->getPubliccodeService()->enrichOrganizationWithCatalogi($data, $configuration);
     }
 }

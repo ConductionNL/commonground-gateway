@@ -7,14 +7,15 @@ use App\Service\SynchronizationService;
 
 class SynchronizationItemHandler implements ActionHandlerInterface
 {
-    private SynchronizationService $synchronizationService;
-
     /**
+     * Gets the SynchronizationService trough autowiring
+     *
      * @param SynchronizationService $synchronizationService
+     * @return SynchronizationService
      */
-    public function __construct(SynchronizationService $synchronizationService)
+    private function getSynchronizationService(SynchronizationService $synchronizationService):SynchronizationService
     {
-        $this->synchronizationService = $synchronizationService;
+        return $synchronizationService;
     }
 
     /**
@@ -46,7 +47,7 @@ class SynchronizationItemHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        $result = $this->synchronizationService->synchronizationItemHandler($data, $configuration);
+        $result = $this->getSynchronizationService()->synchronizationItemHandler($data, $configuration);
 
         return $data;
     }

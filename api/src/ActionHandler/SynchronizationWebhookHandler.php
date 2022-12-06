@@ -10,14 +10,16 @@ use Respect\Validation\Exceptions\ComponentException;
 
 class SynchronizationWebhookHandler implements ActionHandlerInterface
 {
-    private SynchronizationService $synchronizationService;
 
     /**
+     * Gets the SynchronizationService trough autowiring
+     *
      * @param SynchronizationService $synchronizationService
+     * @return SynchronizationService
      */
-    public function __construct(SynchronizationService $synchronizationService)
+    public function getSynchronizationService(SynchronizationService $synchronizationService):SynchronizationService
     {
-        $this->synchronizationService = $synchronizationService;
+        return $synchronizationService;
     }
 
     /**
@@ -81,7 +83,7 @@ class SynchronizationWebhookHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        $result = $this->synchronizationService->SynchronizationWebhookHandler($data, $configuration);
+        $result = $this->getSynchronizationService()->SynchronizationWebhookHandler($data, $configuration);
 
         return $data;
     }
