@@ -8,6 +8,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Entity\Gateway as Source;
 use App\Repository\SubscriberRepository;
 use DateTime;
 use DateTimeInterface;
@@ -225,13 +226,13 @@ class Subscriber
     private ?Endpoint $endpoint;
 
     /**
-     * @var ?Gateway The Gateway of this Subscriber
+     * @var ?Source The Source of this Subscriber
      *
      * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="subscribers")
      * @MaxDepth(1)
      */
-    private ?Gateway $gateway;
+    private ?Source $gateway;
 
     /**
      * @var Datetime The moment this resource was created
@@ -484,14 +485,14 @@ class Subscriber
         return $this;
     }
 
-    public function getGateway(): ?Gateway
+    public function getSource(): ?Source
     {
         return $this->gateway;
     }
 
-    public function setGateway(?Gateway $gateway): self
+    public function setSource(?Source $source): self
     {
-        $this->gateway = $gateway;
+        $this->gateway = $source;
 
         return $this;
     }

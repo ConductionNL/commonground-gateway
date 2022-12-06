@@ -8,6 +8,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Entity\Gateway as Source;
 use App\Exception\GatewayException;
 use DateTime;
 use DateTimeInterface;
@@ -18,6 +19,7 @@ use Doctrine\ORM\Mapping as ORM;
 use EasyRdf\Literal\Boolean;
 use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
+use phpDocumentor\Reflection\Types\This;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -96,7 +98,7 @@ class Entity
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      */
-    private ?Gateway $gateway;
+    private ?Source $gateway = null;
 
     /**
      * @var string The type of this Entity
@@ -139,11 +141,8 @@ class Entity
      * @var string The description of this Entity
      *
      * @Gedmo\Versioned
-     * @Assert\Length(
-     *     max = 255
-     * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     private $description;
 
@@ -348,6 +347,32 @@ class Entity
      */
     private $dateModified;
 
+    /**
+     * @var array|null The properties used to set the name for ObjectEntities created linked to this Entity.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", length=255, nullable=true, options={"default": null})
+     */
+    private ?array $nameProperties = null;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $reference;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $version;
+
+    //todo: do we want read/write groups here?
+    /**
+     * @ORM\ManyToMany(targetEntity=Endpoint::class, mappedBy="entities")
+     */
+    private $endpoints;
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
@@ -361,19 +386,20 @@ class Entity
         $this->subscribers = new ArrayCollection();
         $this->subscriberOut = new ArrayCollection();
         $this->collections = new ArrayCollection();
+        $this->endpoints = new ArrayCollection();
     }
 
     public function export()
     {
-        if ($this->getGateway() !== null) {
-            $gateway = $this->getGateway()->getId()->toString();
-            $gateway = '@'.$gateway;
+        if ($this->getSource() !== null) {
+            $source = $this->getSource()->getId()->toString();
+            $source = '@'.$source;
         } else {
-            $gateway = null;
+            $source = null;
         }
 
         $data = [
-            'gateway'             => $gateway,
+            'gateway'             => $source,
             'endpoint'            => $this->getEndpoint(),
             'name'                => $this->getName(),
             'description'         => $this->getDescription(),
@@ -415,14 +441,14 @@ class Entity
         return $this->id;
     }
 
-    public function getGateway(): ?Gateway
+    public function getSource(): ?Source
     {
         return $this->gateway;
     }
 
-    public function setGateway(?Gateway $gateway): self
+    public function setSource(?Source $source): self
     {
-        $this->gateway = $gateway;
+        $this->gateway = $source;
 
         return $this;
     }
@@ -1080,14 +1106,70 @@ class Entity
     /**
      * @throws GatewayException
      */
+    public function fromSchema(array $schema): Entity
+    {
+        // Basic stuff
+        if (array_key_exists('$id', $schema)) {
+            $this->setReference($schema['$id']);
+            $this->setSchema($schema['$id']);
+        }
+        if (array_key_exists('title', $schema)) {
+            $this->setName($schema['title']);
+        }
+        if (array_key_exists('description', $schema)) {
+            $this->setDescription($schema['description']);
+        }
+        if (array_key_exists('version', $schema)) {
+            $this->setVersion($schema['version']);
+        }
+
+        // Properties
+        foreach ($schema['properties'] as $name => $property) {
+            // Let see if the attribute exists
+            if (!$attribute = $this->getAttributeByName($name)) {
+                $attribute = new Attribute();
+                $attribute->setName($name);
+            }
+
+            $this->addAttribute($attribute->fromSchema($property));
+        }
+
+        // Required stuff
+        if (array_key_exists('required', $schema)) {
+            foreach ($schema['required'] as $required) {
+                $attribute = $this->getAttributeByName($required);
+                $attribute->setRequired(true);
+            }
+        }
+
+        // Bit of cleanup
+        foreach ($this->getAttributes() as $attribute) {
+            // Remove Required if no longer valid
+            if (array_key_exists('required', $schema) && !in_array($attribute->getName(), $schema['required']) && $attribute->getRequired() == true) {
+                $attribute->setRequired(false);
+            }
+            // Remove atribute if no longer present
+            if (!array_key_exists($attribute->getName(), $schema['properties'])) {
+                $this->removeAttribute($attribute);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @throws GatewayException
+     */
     public function toSchema(?ObjectEntity $objectEntity): array
     {
         $schema = [
-            '$id'          => 'https://example.com/person.schema.json', //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema'      => 'https://json-schema.org/draft/2020-12/schema',
-            'title'        => $this->getName(),
-            'required'     => [],
-            'properties'   => [],
+            '$id'            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'        => 'https://json-schema.org/draft/2020-12/schema',
+            'title'          => $this->getName(),
+            'description'    => $this->getDescription(),
+            'version'        => $this->getVersion(),
+            'required'       => [],
+            'properties'     => [],
         ];
 
         if ($objectEntity && $objectEntity->getEntity() !== $this) {
@@ -1127,5 +1209,68 @@ class Entity
         }
 
         return $schema;
+    }
+
+    public function getNameProperties(): ?array
+    {
+        return $this->nameProperties;
+    }
+
+    public function setNameProperties(?array $nameProperties): self
+    {
+        $this->nameProperties = $nameProperties;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getVersion(): ?string
+    {
+        return $this->version;
+    }
+
+    public function setVersion(?string $version): self
+    {
+        $this->version = $version;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Endpoint[]
+     */
+    public function getEndpoints(): Collection
+    {
+        return $this->endpoints;
+    }
+
+    public function addEndpoint(Endpoint $endpoint): self
+    {
+        if (!$this->endpoints->contains($endpoint)) {
+            $this->endpoints[] = $endpoint;
+            $endpoint->addEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEndpoint(Endpoint $endpoint): self
+    {
+        if ($this->endpoints->removeElement($endpoint)) {
+            $endpoint->removeEntity($this);
+        }
+
+        return $this;
     }
 }

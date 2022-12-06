@@ -70,8 +70,19 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "validate"=false,
  *          "path"="/admin/objects/schema/{schemaId}"
  *      },
+ *     "create_sync"={
+ *          "method"="POST",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "deserialize"=false,
+ *          "write"=false,
+ *          "serialize"=false,
+ *          "query_parameter_validate"=false,
+ *          "path"="/admin/object_entities/{id}/sync/{sourceId}"
+ *      },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
+ * @ORM\HasLifecycleCallbacks
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -97,6 +108,14 @@ class ObjectEntity
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
+
+    /**
+     * @var ?string The name of this Object (configured from a attribute)
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $name;
 
     /**
      * @var string The {at sign}id or self->href of this Object.
@@ -156,7 +175,7 @@ class ObjectEntity
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"persist","remove"})
+     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"persist","remove"}, orphanRemoval=true)
      * @MaxDepth(1)
      */
     private $objectValues;
@@ -228,6 +247,12 @@ class ObjectEntity
     private Collection $synchronizations;
 
     /**
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="object", fetch="EXTRA_LAZY", cascade={"remove","persist"})
+     */
+    private Collection $usedIn;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -252,6 +277,7 @@ class ObjectEntity
         $this->subresourceOf = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
         $this->synchronizations = new ArrayCollection();
+        $this->usedIn = new ArrayCollection();
 
         if ($entity) {
             $this->setEntity($entity);
@@ -265,7 +291,19 @@ class ObjectEntity
 
     public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
+
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(?string $name): self
+    {
+        $this->name = $name;
 
         return $this;
     }
@@ -667,17 +705,19 @@ class ObjectEntity
      * Sets a value based on the attribute string name or atribute object.
      *
      * @param string|Attribute $attribute
+     * @param $value
+     * @param bool $unsafe
      *
      * @throws Exception
      *
      * @return false|Value
      */
-    public function setValue($attribute, $value)
+    public function setValue($attribute, $value, bool $unsafe = false)
     {
         $valueObject = $this->getValueObject($attribute);
         // If we find the Value object we set the value
         if ($valueObject instanceof Value) {
-            return $valueObject->setValue($value);
+            return $valueObject->setValue($value, $unsafe);
         }
 
         // If not return false
@@ -687,18 +727,29 @@ class ObjectEntity
     /**
      * Populate this object with an array of values, where attributes are diffined by key.
      *
-     * @param array $array
+     * @param array $array  the data to set
+     * @param bool  $unsafe unset atributes that are not inlcuded in the hydrator array
      *
      * @throws Exception
      *
      * @return ObjectEntity
      */
-    public function hydrate(array $array): ObjectEntity
+    public function hydrate(array $array, bool $unsafe = false): ObjectEntity
     {
         $array = $this->includeEmbeddedArray($array);
+        $hydratedValues = [];
 
         foreach ($array as $key => $value) {
-            $this->setValue($key, $value);
+            $this->setValue($key, $value, $unsafe);
+            $hydratedValues[] = $key;
+        }
+
+        if ($unsafe) {
+            foreach ($this->getObjectValues() as $value) {
+                if (!in_array($value->getAttribute()->getName(), $hydratedValues)) {
+                    $this->removeObjectValue($value);
+                }
+            }
         }
 
         return $this;
@@ -943,8 +994,10 @@ class ObjectEntity
     {
         $array = [];
         in_array('id', $extend) && $array['id'] = (string) $this->getId();
+        //in_array('id', $extend) && $array['_id'] = (string) $this->getId();
         in_array('self', $extend) && $array['x-commongateway-metadata']['self'] = $this->getSelf(); //todo? $this->getSelf() ?? $this->setSelf(???->createSelf($this))->getSelf()
         in_array('synchronizations', $extend) && $array['x-commongateway-metadata']['synchronizations'] = $this->getReadableSyncDataArray();
+        in_array('schema', $extend) && $array['_schema'] = $this->getEntity()->toSchema($this);
         if ($onlyMetadata) {
             return $array;
         }
@@ -981,9 +1034,9 @@ class ObjectEntity
                 $synchronizations[] = [
                     'id'      => $synchronization->getId()->toString(),
                     'gateway' => [
-                        'id'       => $synchronization->getGateway()->getId()->toString(),
-                        'name'     => $synchronization->getGateway()->getName(),
-                        'location' => $synchronization->getGateway()->getLocation(),
+                        'id'       => $synchronization->getSource()->getId()->toString(),
+                        'name'     => $synchronization->getSource()->getName(),
+                        'location' => $synchronization->getSource()->getLocation(),
                     ],
                     'endpoint'          => $synchronization->getEndpoint(),
                     'sourceId'          => $synchronization->getSourceId(),
@@ -1124,6 +1177,37 @@ class ObjectEntity
         return $this;
     }
 
+    /**
+     * @return Collection|Synchronization[]
+     */
+    public function getUsedIn(): Collection
+    {
+        return $this->usedIn;
+    }
+
+    public function addUsedIn(Attribute $attribute): self
+    {
+        if (!$this->usedIn->contains($attribute)) {
+            $this->usedIn[] = $attribute;
+            $attribute->setObject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUsedIn(Attribute $attribute): self
+    {
+        if ($this->usedIn->removeElement($attribute)) {
+            // set the owning side to null (unless already changed)
+            if ($attribute->getObject() === $this) {
+                $attribute->setObject(null);
+                $attribute->setReference(null);
+            }
+        }
+
+        return $this;
+    }
+
     public function getDateCreated(): ?DateTimeInterface
     {
         return $this->dateCreated;
@@ -1146,5 +1230,38 @@ class ObjectEntity
         $this->dateModified = $dateModified;
 
         return $this;
+    }
+
+    /**
+     * Set name on pre persist.
+     *
+     * This function makes sure that each and every oject alwys has a name when saved
+     *
+     * @ORM\PrePersist
+     */
+    public function prePersist(): void
+    {
+        // Lets see if the name is congigured
+        if ($this->entity->getNameProperties()) {
+            $name = null;
+            foreach ($this->entity->getNameProperties() as $nameProperty) {
+                if ($nameProperty && $namePart = $this->getValue($nameProperty)) {
+                    $name = "$name $namePart";
+                }
+            }
+            $this->setName(trim($name));
+
+            return;
+        }
+        // Lets check agains common names
+        $nameProperties = ['name', 'title', 'naam', 'titel'];
+        foreach ($nameProperties as $nameProperty) {
+            if ($name = $this->getValue($nameProperty)) {
+                $this->setName($name);
+
+                return;
+            }
+        }
+        $this->setName($this->getId());
     }
 }

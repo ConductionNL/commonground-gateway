@@ -8,6 +8,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Entity\Gateway as Source;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
@@ -86,13 +87,13 @@ class Synchronization
     private ?Action $action = null;
 
     /**
-     * @var Gateway The gateway (source) of this resource
+     * @var Source The Source of this resource
      *
      * @Groups({"read","write"})
-     * @ORM\ManyToOne(targetEntity=Gateway::class)
+     * @ORM\ManyToOne(targetEntity=Gateway::class, cascade={"persist"}, inversedBy="synchronizations")
      * @ORM\JoinColumn(nullable=false)
      */
-    private Gateway $gateway;
+    private Source $gateway;
 
     /**
      * @var string|null
@@ -119,12 +120,20 @@ class Synchronization
     private ?string $hash = '';
 
     /**
+     * @var bool Whether or not the synchronization is blocked
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", options={"default": true})
+     */
+    private bool $blocked = false;
+
+    /**
      * @var ?DateTimeInterface The moment the source of this resource was last changed
      *
      * @Groups({"read","write"})
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private ?DateTimeInterface $sourceLastChanged;
+    private ?DateTimeInterface $sourceLastChanged = null;
 
     /**
      * @var ?DateTimeInterface The moment this resource was last checked
@@ -186,6 +195,8 @@ class Synchronization
     {
         $this->object = $object;
 
+        $this->setEntity($object->getEntity());
+
         return $this;
     }
 
@@ -201,14 +212,14 @@ class Synchronization
         return $this;
     }
 
-    public function getGateway(): ?Gateway
+    public function getSource(): ?Source
     {
         return $this->gateway;
     }
 
-    public function setGateway(?Gateway $gateway): self
+    public function setSource(?Source $source): self
     {
-        $this->gateway = $gateway;
+        $this->gateway = $source;
 
         return $this;
     }
@@ -281,6 +292,7 @@ class Synchronization
     public function setLastSynced(?\DateTimeInterface $lastSynced): self
     {
         $this->lastSynced = $lastSynced;
+        isset($this->gateway) && $this->gateway->setLastSync($lastSynced);
 
         return $this;
     }
@@ -305,6 +317,24 @@ class Synchronization
     public function setDateModified(?\DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isBlocked(): bool
+    {
+        return $this->blocked;
+    }
+
+    /**
+     * @param bool $blocked
+     */
+    public function setBlocked(bool $blocked): self
+    {
+        $this->blocked = $blocked;
 
         return $this;
     }

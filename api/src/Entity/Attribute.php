@@ -484,7 +484,7 @@ class Attribute
      *
      * @Assert\Length(max = 255)
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     private $example;
 
@@ -687,9 +687,58 @@ class Attribute
      */
     private $dateModified;
 
+    /**
+     * @todo
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $reference;
+
     public function __construct()
     {
         $this->attributeValues = new ArrayCollection();
+    }
+
+    /**
+     * JSON schema to attribute.
+     *
+     * @throws GatewayException
+     */
+    public function fromSchema(array $property): Attribute
+    {
+        // Handle the property setup
+        if (array_key_exists('type', $property)) {
+            $this->setType($property['type']);
+        }
+        if (array_key_exists('format', $property)) {
+            $this->setFormat($property['format']);
+        }
+        if (array_key_exists('example', $property)) {
+            $this->setExample($property['example']);
+        }
+        if (array_key_exists('readOnly', $property)) {
+            $this->setReadOnly($property['readOnly']);
+        }
+        if (array_key_exists('description', $property)) {
+            $this->setDescription($property['description']);
+        }
+        if (array_key_exists('$ref', $property)) {
+            $this->setSchema($property['$ref']);
+        }
+        if (array_key_exists('items', $property)) {
+        }
+        if (array_key_exists('maxLength', $property)) {
+            $this->setMaxLength($property['maxLength']);
+        }
+        if (array_key_exists('enum', $property)) {
+            $this->setEnum($property['enum']);
+        }
+        if (array_key_exists('default', $property)) {
+            $this->setDefaultValue($property['default']);
+        }
+
+        return $this;
     }
 
     public function export()
@@ -769,7 +818,7 @@ class Attribute
 
     public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
@@ -1386,39 +1435,39 @@ class Attribute
     {
         //TODO: this list of validations is not complete!
         $validations = [];
-        $validations['multipleOf'] = $this->getMultipleOf();
-        $validations['pattern'] = $this->getPattern();
-        $validations['maximum'] = $this->getMaximum();
-        $validations['exclusiveMaximum'] = $this->getExclusiveMaximum();
-        $validations['minimum'] = $this->getMinimum();
-        $validations['exclusiveMinimum'] = $this->getExclusiveMinimum();
-        $validations['maxLength'] = $this->getMaxLength();
-        $validations['minLength'] = $this->getMinLength();
-        $validations['maxItems'] = $this->getMaxItems();
-        $validations['minItems'] = $this->getMinItems();
-        $validations['uniqueItems'] = $this->getUniqueItems();
-        $validations['maxProperties'] = $this->getMaxProperties();
-        $validations['minProperties'] = $this->getMinProperties();
-        $validations['required'] = $this->getRequired();
-        $validations['requiredIf'] = $this->getRequiredIf();
-        $validations['forbiddenIf'] = $this->getForbiddenIf();
-        $validations['enum'] = $this->getEnum();
-        $validations['allOf'] = $this->getAllOf(); //todo: validation/BL toevoegen
-        $validations['anyOf'] = $this->getAnyOf(); //todo: validation/BL toevoegen
-        $validations['oneOf'] = $this->getOneOf(); //todo: validation/BL toevoegen
-        $validations['defaultValue'] = $this->getDefaultValue(); //todo: validation/BL toevoegen
-        $validations['nullable'] = $this->getNullable();
-        $validations['mustBeUnique'] = $this->getMustBeUnique(); //todo: validation/BL toevoegen
-        $validations['maxDate'] = $this->getMaxDate();
-        $validations['minDate'] = $this->getMinDate();
-        $validations['multiple'] = $this->getMultiple();
-        $validations['maxFileSize'] = $this->getMaxFileSize();
-        $validations['minFileSize'] = $this->getMinFileSize();
-        $validations['fileTypes'] = $this->getFileTypes();
-        $validations['cascade'] = $this->getCascade();
-        $validations['immutable'] = $this->getImmutable();
-        $validations['unsetable'] = $this->getUnsetable();
-        $validations['readOnly'] = $this->getReadOnly();
+        (isset($this->multipleOf) ? $validations['multipleOf'] = $this->getMultipleOf() : '');
+        (isset($this->pattern) ? $validations['pattern'] = $this->getPattern() : '');
+        (isset($this->maximum) ? $validations['maximum'] = $this->getMaximum() : '');
+        (isset($this->exclusiveMaximum) ? $validations['exclusiveMaximum'] = $this->getExclusiveMaximum() : '');
+        (isset($this->minimum) ? $validations['minimum'] = $this->getMinimum() : '');
+        (isset($this->exclusiveMinimum) ? $validations['exclusiveMinimum'] = $this->getExclusiveMinimum() : '');
+        (isset($this->maxLength) ? $validations['maxLength'] = $this->getMaxLength() : '');
+        (isset($this->minLength) ? $validations['minLength'] = $this->getMinLength() : '');
+        (isset($this->maxItems) ? $validations['maxItems'] = $this->getMaxItems() : '');
+        (isset($this->minItems) ? $validations['minItems'] = $this->getMinItems() : '');
+        (isset($this->uniqueItems) ? $validations['uniqueItems'] = $this->getUniqueItems() : '');
+        (isset($this->maxProperties) ? $validations['maxProperties'] = $this->getMaxProperties() : '');
+        (isset($this->minProperties) ? $validations['minProperties'] = $this->getMinProperties() : '');
+        (isset($this->required) ? $validations['required'] = $this->getRequired() : '');
+        (isset($this->requiredIf) ? $validations['requiredIf'] = $this->getRequiredIf() : '');
+        (isset($this->forbiddenIf) ? $validations['forbiddenIf'] = $this->getForbiddenIf() : '');
+        (isset($this->enum) ? $validations['enum'] = $this->getEnum() : '');
+        (isset($this->allOf) ? $validations['allOf'] = $this->getAllOf() : ''); //todo: validation/BL toevoegen
+        (isset($this->anyOf) ? $validations['anyOf'] = $this->getAnyOf() : ''); //todo: validation/BL toevoegen
+        (isset($this->oneOf) ? $validations['oneOf'] = $this->getOneOf() : ''); //todo: validation/BL toevoegen
+        (isset($this->defaultValue) ? $validations['defaultValue'] = $this->getDefaultValue() : ''); //todo: validation/BL toevoegen
+        (isset($this->nullable) ? $validations['nullable'] = $this->getNullable() : '');
+        (isset($this->mustBeUnique) ? $validations['mustBeUnique'] = $this->getMustBeUnique() : ''); //todo: validation/BL toevoegen
+        (isset($this->maxDate) ? $validations['maxDate'] = $this->getMaxDate() : '');
+        (isset($this->minDate) ? $validations['minDate'] = $this->getMinDate() : '');
+        (isset($this->multiple) ? $validations['multiple'] = $this->getMultiple() : '');
+        (isset($this->maxFileSize) ? $validations['maxFileSize'] = $this->getMaxFileSize() : '');
+        (isset($this->minFileSize) ? $validations['minFileSize'] = $this->getMinFileSize() : '');
+        (isset($this->fileTypes) ? $validations['fileTypes'] = $this->getFileTypes() : '');
+        (isset($this->cascade) ? $validations['cascade'] = $this->getCascade() : '');
+        (isset($this->imutable) ? $validations['immutable'] = $this->getImmutable() : '');
+        (isset($this->unsetable) ? $validations['unsetable'] = $this->getUnsetable() : '');
+        (isset($this->readOnly) ? $validations['readOnly'] = $this->getReadOnly() : '');
 
         return $validations;
     }
@@ -1681,6 +1730,18 @@ class Attribute
     public function setSchema(?string $schema): self
     {
         $this->schema = $schema;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
 
         return $this;
     }

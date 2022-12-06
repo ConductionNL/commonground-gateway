@@ -2,6 +2,9 @@
     "adbario/php-dot-notation": {
         "version": "2.2.0"
     },
+    "alcaeus/mongo-php-adapter": {
+        "version": "1.2.2"
+    },
     "api-platform/api-pack": {
         "version": "v1.3.0"
     },
@@ -33,6 +36,12 @@
     },
     "brick/reflection": {
         "version": "0.4.1"
+    },
+    "common-gateway/formio-bundle": {
+        "version": "dev-main"
+    },
+    "common-gateway/waardepapieren-bundle": {
+        "version": "dev-main"
     },
     "commongateway/corebundle": {
         "version": "dev-master"
@@ -218,8 +227,17 @@
             "fixtures/.gitignore"
         ]
     },
+    "jean85/pretty-package-versions": {
+        "version": "2.0.5"
+    },
     "jwadhams/json-logic-php": {
         "version": "1.4.2"
+    },
+    "khanamiryan/qrcode-detector-decoder": {
+        "version": "1.0.6"
+    },
+    "klantinteractie-servicesysteem/kiss-bundle": {
+        "version": "dev-main"
     },
     "knplabs/knp-markdown-bundle": {
         "version": "1.9.0"
@@ -229,6 +247,9 @@
     },
     "laminas/laminas-escaper": {
         "version": "2.9.0"
+    },
+    "larping-base/larping-bundle": {
+        "version": "1.0.2"
     },
     "league/html-to-markdown": {
         "version": "4.10.0"
@@ -241,6 +262,9 @@
     },
     "mollie/mollie-api-php": {
         "version": "v2.37.1"
+    },
+    "mongodb/mongodb": {
+        "version": "1.15.0"
     },
     "myclabs/deep-copy": {
         "version": "1.10.2"
@@ -275,6 +299,9 @@
     },
     "onelogin/php-saml": {
         "version": "4.0.0"
+    },
+    "open-catalogi/open-catalogi-bundle": {
+        "version": "dev-main"
     },
     "paragonie/random_compat": {
         "version": "v9.99.100"

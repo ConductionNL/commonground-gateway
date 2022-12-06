@@ -36,6 +36,8 @@ class ZZController extends AbstractController
         // Below is hacky tacky
         // @todo refactor
         $id = substr($path, strrpos($path, '/') + 1);
+
+        /*
         if (Uuid::isValid($id)) {
             $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => str_replace('/'.$id, '', $path)]);
             if ($document instanceof Document) {
@@ -46,6 +48,7 @@ class ZZController extends AbstractController
         if ($path === 'postalCodes') {
             return $validationService->dutchPC4ToJson();
         }
+        */
         // End of hacky tacky
 
         // default acceptType for if we throw an error response.
@@ -75,6 +78,7 @@ class ZZController extends AbstractController
         // Let create the variable
         // Create array for filtering (in progress, should be moved to the correct service)
         $parameters = ['path' => [], 'query' => [], 'post' => []];
+
         $pathArray = array_values(array_filter(explode('/', $path)));
         foreach ($endpoint->getPath() as $key => $pathPart) {
             // Let move path parts that are defined as variables to the filter array
@@ -85,13 +89,23 @@ class ZZController extends AbstractController
 
         // Lets add the query parameters to the variables
         //todo use eavService->realRequestQueryAll(), maybe replace this function to another service than eavService?
-        $parameters['query'] = $request->query->all();
 
-        // Lets get all the post variables
-        $parameters['post'] = $request->request->all();
+        $parameters['querystring'] = $request->getQueryString();
+        $parameters['endpoint'] = $endpoint;
+
+        try {
+            $parameters['body'] = $request->toArray();
+        } catch (\Exception $exception) {
+        }
+
+        $parameters['method'] = $request->getMethod();
+        $parameters['query'] = $request->query->all();
 
         // Lets get all the headers
         $parameters['headers'] = $request->headers->all();
+
+        // Lets get all the post variables
+        $parameters['post'] = $request->request->all();
 
         // Try handler proces and catch exceptions
         try {

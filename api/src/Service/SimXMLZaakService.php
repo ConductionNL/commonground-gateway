@@ -283,6 +283,31 @@ class SimXMLZaakService
     }
 
     /**
+     * Creates a 'zaakInformatieobject' to link the zgw case to the 'enkelvoudigInformatieobject'.
+     *
+     * @param ObjectEntity $informatieObject The information object to link to a case
+     * @param ObjectEntity $zaak             The case to link the information object to
+     *
+     * @throws Exception
+     *
+     * @return void
+     */
+    public function createZaakInformatieObject(ObjectEntity $informatieObject, ObjectEntity $zaak): void
+    {
+        $zaakInformatieObjectEntity = $zaak->getAttributeObject('zaakinformatieobjecten')->getObject();
+
+        $zaakInformatieobject = new ObjectEntity($zaakInformatieObjectEntity);
+        $zaakInformatieobject->setValue('informatieobject', $informatieObject);
+        $zaakInformatieobject->setValue('zaak', $zaak);
+        $zaakInformatieobject->setValue('aardRelatieWeergave', $informatieObject->getValue('titel'));
+        $zaakInformatieobject->setValue('titel', $informatieObject->getValue('titel'));
+        $zaakInformatieobject->setValue('beschrijving', $informatieObject->getValue('beschrijving'));
+
+        $this->synchronizationService->setApplicationAndOrganization($zaakInformatieobject);
+        $this->entityManager->persist($zaakInformatieobject);
+    }
+
+    /**
      * This function converts a zds message to zgw.
      *
      * @param array $data          The data from the call
@@ -384,6 +409,10 @@ class SimXMLZaakService
 
         // add bijlagen
         $documenten = $this->createZgwEnkelvoudigInformatieObject($simXml, $simXmlBody, $simXmlStuurgegevens);
+
+        foreach ($documenten as $document) {
+            $this->createZaakInformatieObject($document, $zaak);
+        }
 
         $this->entityManager->persist($zaak);
 

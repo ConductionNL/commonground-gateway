@@ -770,7 +770,7 @@ class ObjectEntityService
         // set session with sessionInfo
         $sessionInfo = [
             'entity' => $handler->getEntity()->getId()->toString(),
-            'source' => $handler->getEntity()->getGateway() ? $handler->getEntity()->getGateway()->getId()->toString() : null,
+            'source' => $handler->getEntity()->getSource() ? $handler->getEntity()->getSource()->getId()->toString() : null,
         ];
         $this->session->set('entitySource', $sessionInfo);
 
@@ -854,7 +854,7 @@ class ObjectEntityService
      *
      * @return void
      */
-    private function setUnread(ObjectEntity $objectEntity)
+    public function setUnread(ObjectEntity $objectEntity)
     {
         // First, check if there is an Unread object for this Object+User. If so, do nothing.
         $user = $this->security->getUser();
@@ -1052,10 +1052,10 @@ class ObjectEntityService
                         if (Uuid::isValid($object) == false) {
                             // We should also allow commonground Uri's like: https://taalhuizen-bisc.commonground.nu/api/v1/wrc/organizations/008750e5-0424-440e-aea0-443f7875fbfe
                             // TODO: support /$attribute->getObject()->getEndpoint()/uuid?
-                            if ($object == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($object)) {
+                            if ($object == $attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($object)) {
                                 $object = $this->commonGroundService->getUuidFromUrl($object);
                             } else {
-//                                var_dump('The given value ('.$object.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
+//                                var_dump('The given value ('.$object.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
                                 continue;
                             }
                         }
@@ -1194,10 +1194,10 @@ class ObjectEntityService
                     if (Uuid::isValid($value) == false) {
                         // We should also allow commonground Uri's like: https://taalhuizen-bisc.commonground.nu/api/v1/wrc/organizations/008750e5-0424-440e-aea0-443f7875fbfe
                         // TODO: support /$attribute->getObject()->getEndpoint()/uuid?
-//                        if ($value == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
+//                        if ($value == $attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
 //                            $value = $this->commonGroundService->getUuidFromUrl($value);
 //                        } else {
-////                            var_dump('The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
+////                            var_dump('The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
 //                            break;
 //                        }
                     }
@@ -1629,8 +1629,8 @@ class ObjectEntityService
     {
         // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
         $this->entityManager->persist($objectEntity);
-        if ($objectEntity->getEntity()->getGateway() && $objectEntity->getEntity()->getGateway()->getLocation() && $objectEntity->getExternalId()) {
-            return $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
+        if ($objectEntity->getEntity()->getSource() && $objectEntity->getEntity()->getSource()->getLocation() && $objectEntity->getExternalId()) {
+            return $objectEntity->getEntity()->getSource()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
         }
 
         $uri = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== 'localhost' ? 'https://'.$_SERVER['HTTP_HOST'] : 'http://localhost';
@@ -1728,7 +1728,7 @@ class ObjectEntityService
         foreach ($objects as $object) {
             // We allow cascading on promises, but only if the gateway of the parent entity and subresource match.
             $results[] =
-                $object->getEntity()->getGateway() == $attribute->getEntity()->getGateway() ?
+                $object->getEntity()->getSource() == $attribute->getEntity()->getSource() ?
                     $this->renderPostBody($object) :
                     $object->getUri();
         }
@@ -1758,7 +1758,7 @@ class ObjectEntityService
         $results = [];
         foreach ($objects as $object) {
             $results[] =
-                $object->getEntity()->getGateway() == $attribute->getEntity()->getGateway() ?
+                $object->getEntity()->getSource() == $attribute->getEntity()->getSource() ?
                     "/{$object->getEntity()->getEndpoint()}/{$object->getExternalId()}" :
                     $object->getUri();
         }
@@ -1835,7 +1835,7 @@ class ObjectEntityService
      */
     public function encodeBody(ObjectEntity $objectEntity, array $body, array &$headers): string
     {
-        switch ($objectEntity->getEntity()->getGateway()->getType()) {
+        switch ($objectEntity->getEntity()->getSource()->getType()) {
             case 'json':
                 $body = json_encode($body);
                 break;
@@ -1874,7 +1874,7 @@ class ObjectEntityService
             !array_key_exists('method', $config[$oldMethod]) ?: $method = $config[$oldMethod]['method'];
             !array_key_exists('headers', $config[$oldMethod]) ?: $headers = array_merge($headers, $config[$oldMethod]['headers']);
             !array_key_exists('query', $config[$oldMethod]) ?: $headers = array_merge($query, $config[$oldMethod]['headers']);
-            !array_key_exists('endpoint', $config[$oldMethod]) ?: $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.str_replace('{id}', $objectEntity->getExternalId(), $config[$oldMethod]['endpoint']);
+            !array_key_exists('endpoint', $config[$oldMethod]) ?: $url = $objectEntity->getEntity()->getSource()->getLocation().'/'.str_replace('{id}', $objectEntity->getExternalId(), $config[$oldMethod]['endpoint']);
         }
     }
 
@@ -1889,14 +1889,14 @@ class ObjectEntityService
      */
     public function decideMethodAndUrl(ObjectEntity $objectEntity, string &$url, string &$method): void
     {
-        if ($method == 'POST' && $objectEntity->getUri() != $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId()) {
-            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint();
+        if ($method == 'POST' && $objectEntity->getUri() != $objectEntity->getEntity()->getSource()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId()) {
+            $url = $objectEntity->getEntity()->getSource()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint();
         } elseif ($objectEntity->getUri()) {
             $method = 'PUT';
             $url = $objectEntity->getUri();
         } elseif ($objectEntity->getExternalId()) {
             $method = 'PUT';
-            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
+            $url = $objectEntity->getEntity()->getSource()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
         }
     }
 
@@ -1930,7 +1930,7 @@ class ObjectEntityService
      */
     private function decodeResponse($response, ObjectEntity $objectEntity): array
     {
-        switch ($objectEntity->getEntity()->getGateway()->getType()) {
+        switch ($objectEntity->getEntity()->getSource()->getType()) {
             case 'json':
                 $result = json_decode($response->getBody()->getContents(), true);
                 break;
@@ -2082,7 +2082,7 @@ class ObjectEntityService
      */
     public function createPromise(ObjectEntity $objectEntity, string &$method): PromiseInterface
     {
-        $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
+        $component = $this->gatewayService->sourceToArray($objectEntity->getEntity()->getSource());
         $query = [];
         $headers = [];
         $url = '';

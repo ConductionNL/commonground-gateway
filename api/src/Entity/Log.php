@@ -9,6 +9,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Entity\Gateway as Source;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -291,14 +292,15 @@ class Log
      * @ORM\ManyToOne(targetEntity=Gateway::class)
      * @MaxDepth(1)
      */
-    private $gateway;
+    private ?Source $gateway;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\ManyToOne(targetEntity=Handler::class)
+     * @ORM\ManyToOne(targetEntity=Handler::class, inversedBy="logs")
+     * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      */
-    private $handler;
+    private ?Handler $handler;
 
     // todo: It would be nice if we could use a relation here instead of $objectId...
     // todo: ...but this will have the side-effect that we have to delete all logs of an Object if we delete the Object.
@@ -605,14 +607,14 @@ class Log
         return $this;
     }
 
-    public function getGateway(): ?Gateway
+    public function getSource(): ?Source
     {
         return $this->gateway;
     }
 
-    public function setGateway(?Gateway $gateway): self
+    public function setSource(?Source $source): self
     {
-        $this->gateway = $gateway;
+        $this->gateway = $source;
 
         return $this;
     }

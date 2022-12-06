@@ -239,7 +239,7 @@ class SynchronizationPushHandler implements ActionHandlerInterface
      */
     public function run(array $data, array $configuration): array
     {
-        $this->getSynchronizationService()->synchronisationPushHandler($data, $configuration);
+        $this->synchronizationService->synchronizationPushHandler($data, $configuration);
 
         return $data;
     }

@@ -859,13 +859,13 @@ App\Entity\Authentication:
 
 App\Entity\Cronjob:
     sync:
-        name: synchronisations
-        description: a cronjob that sets off the synchronisations for the various sources
+        name: synchronizations
+        description: a cronjob that sets off the synchronizations for the various sources
         crontab: '*/1 * * * *'
         throws: 
             - 'commongateway.cronjob.trigger'
         data: []
-        isActive: true
+        isEnabled: true
 
 #App\Entity\Action:
 #    NotificationAction:

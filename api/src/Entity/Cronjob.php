@@ -91,7 +91,7 @@ class Cronjob
      * @Groups({"read","write"})
      * @ORM\Column(type="string")
      */
-    private string $crontab;
+    private string $crontab = '*/5 * * * *';
 
     /**
      * @var array The actions that put on the stack by the crontab.
@@ -124,6 +124,42 @@ class Cronjob
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $nextRun;
+
+    /**
+     * @var ?bool true if action should be ran
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true, options={"default": true})
+     */
+    private ?bool $isEnabled = true;
+
+    /**
+     * @var Datetime The moment this resource was created
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="create")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private DateTimeInterface $dateCreated;
+
+    /**
+     * @var Datetime The moment this resource was last Modified
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="update")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private DateTimeInterface $dateModified;
+
+    public function __construct(
+        $action = false
+    ) {
+        if ($action) {
+            $this->setName($action->getName());
+            $this->setDescription($action->getDescription());
+            $this->setThrows([reset($action->getListens()->first())]);
+        }
+    }
 
     public function getId()
     {
@@ -210,6 +246,42 @@ class Cronjob
     public function setNextRun(?DateTimeInterface $nextRun): self
     {
         $this->nextRun = $nextRun;
+
+        return $this;
+    }
+
+    public function getIsEnabled(): ?bool
+    {
+        return $this->isEnabled;
+    }
+
+    public function setIsEnabled(?bool $isEnabled): self
+    {
+        $this->isEnabled = $isEnabled;
+
+        return $this;
+    }
+
+    public function getDateCreated(): ?DateTimeInterface
+    {
+        return $this->dateCreated;
+    }
+
+    public function setDateCreated(?DateTimeInterface $dateCreated): self
+    {
+        $this->dateCreated = $dateCreated;
+
+        return $this;
+    }
+
+    public function getDateModified(): ?DateTimeInterface
+    {
+        return $this->dateModified;
+    }
+
+    public function setDateModified(DateTimeInterface $dateModified): self
+    {
+        $this->dateModified = $dateModified;
 
         return $this;
     }

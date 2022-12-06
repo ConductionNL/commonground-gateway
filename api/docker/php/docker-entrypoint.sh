@@ -36,8 +36,8 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		bin/console doctrine:schema:update --force --no-interaction
 
 		# If you want to retain data in your dev enviroment comment this command out
-		echo "Loading fixtures"
-		bin/console hautelook:fixtures:load -n --no-bundles
+		#echo "Loading fixtures"
+		#bin/console hautelook:fixtures:load -n --no-bundles
 		#if [ "$APP_URL" == 'http://localhost' ]; then
 			# Lets update the docs to show the latest chages
 			#echo "Creating OAS documentation"
@@ -54,8 +54,8 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		#fi
 
     # Load PUBLICCODE from .env and create Collections
-		echo "Loading publiccode collections"
-		bin/console app:load-publiccodes
+		echo "Update commongateway plugins"
+		bin/console commongateway:composer:update
 	fi
 fi
 exec docker-php-entrypoint "$@"

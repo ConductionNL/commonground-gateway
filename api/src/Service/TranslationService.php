@@ -3,7 +3,9 @@
 namespace App\Service;
 
 use Adbar\Dot;
+use App\Entity\Gateway as Source;
 use App\Entity\Synchronization;
+use CommonGateway\CoreBundle\Service\CallService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -13,9 +15,11 @@ class TranslationService
 {
     private SessionInterface $sessionInterface;
     private EntityManagerInterface $entityManager;
+    private CallService $callService;
 
-    public function __construct(SessionInterface $sessionInterface, EntityManagerInterface $entityManager)
+    public function __construct(SessionInterface $sessionInterface, EntityManagerInterface $entityManager, CallService $callService)
     {
+        $this->callService = $callService;
         $this->sessionInterface = $sessionInterface;
         $this->entityManager = $entityManager;
     }
@@ -125,7 +129,40 @@ class TranslationService
             return $synchronizations[0]->getObject()->getId()->toString();
         }
 
-        return $sourceId;
+        return null;
+    }
+
+    public function getSourceFromUrl(string $url): ?Source
+    {
+        $url = substr($url, strlen('https://'));
+        $split = explode('/', $url);
+        $baseUrl = '';
+
+        $i = 0;
+        while ($split[$i]) {
+            $baseUrl .= $baseUrl ? '/'.$split[$i] : $split[$i];
+            $sources = $this->entityManager->getRepository(Source::class)->findBy(['location' => 'https://'.$baseUrl]);
+            if ($sources && $sources[0] instanceof Source) {
+                return $sources[0];
+            }
+            $i++;
+        }
+
+        return null;
+    }
+
+    public function getDataFromUrl(string $url): ?string
+    {
+        $source = $this->getSourceFromUrl($url);
+
+        if (!$source) {
+            return null;
+        }
+
+        $endpoint = substr($url, strlen($source->getLocation()));
+        $result = $this->callService->call($source, $endpoint);
+
+        return base64_encode($result->getBody()->getContents());
     }
 
     /**
@@ -146,7 +183,6 @@ class TranslationService
         $destination = new \Adbar\Dot($destination);
         $source = new \Adbar\Dot($source);
         $mapping = $this->iterateNumericArrays($mapping, $source);
-
         // Lets use the mapping to hydrate the array
         foreach ($mapping as $replace => $search) {
             if (strpos($search, '|')) {
@@ -185,6 +221,8 @@ class TranslationService
                 $destination[$replace] = $datum->format('Y-m-d\TH:i:s');
             } elseif ($format == 'uuidFromUrl') {
                 $destination[$replace] = $this->getUuidFromUrl($source[$search]) ?? ($destination[$replace]) ?? null;
+            } elseif ($format == 'download') {
+                $destination[$replace] = $this->getDataFromUrl($source[$search]);
             } elseif (strpos($format, 'concatenation') !== false) {
                 $separator = substr($format, strlen('concatenation') + 1);
                 $separator = str_replace('&nbsp;', ' ', $separator);

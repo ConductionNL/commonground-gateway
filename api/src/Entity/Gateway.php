@@ -44,19 +44,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *                  "description"="routes POST calls through gateway"
  *              }
  *          },
- *          "post_proxy_endpoint"={
- *              "path"="/admin/sources/{id}/proxy/{endpoint}",
- *              "method"="POST",
- *              "read"=false,
- *              "validate"=false,
- *              "requirements"={
- *                  "endpoint"=".+"
- *              },
- *              "openapi_context"={
- *                  "summary"="Proxy POST call to source",
- *                  "description"="Proxy POST call to source",
- *              }
- *          },
  *          "post_proxy"={
  *              "path"="/admin/sources/{id}/proxy",
  *              "method"="POST",
@@ -78,48 +65,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          },
  * 	        "put"={"path"="/admin/gateways/{id}"},
  * 	        "delete"={"path"="/admin/gateways/{id}"},
- *          "get_proxy_endpoint"={
- *              "path"="/admin/sources/{id}/proxy/{endpoint}",
- *              "method"="GET",
- *              "read"=false,
- *              "validate"=false,
- *              "requirements"={
- *                  "endpoint"=".+"
- *              },
- *              "openapi_context"={
- *                  "summary"="Proxy GET call to source",
- *                  "description"="Proxy GET call to source",
- *              }
- *          },
  *          "get_proxy"={
  *              "path"="/admin/sources/{id}/proxy",
  *              "method"="GET",
- *              "read"=false,
- *              "validate"=false,
- *              "requirements"={
- *                  "endpoint"=".+"
- *              },
- *              "openapi_context"={
- *                  "summary"="Proxy GET call to source",
- *                  "description"="Proxy GET call to source",
- *              }
- *          },
- *          "put_proxy_single"={
- *              "path"="/admin/sources/{id}/proxy/{endpoint}",
- *              "method"="PUT",
- *              "read"=false,
- *              "validate"=false,
- *              "requirements"={
- *                  "endpoint"=".+"
- *              },
- *              "openapi_context"={
- *                  "summary"="Proxy PUT call to source",
- *                  "description"="Proxy GET call to source",
- *              }
- *          },
- *          "delete_proxy_single"={
- *              "path"="/admin/sources/{id}/proxy/{endpoint}",
- *              "method"="DELETE",
  *              "read"=false,
  *              "validate"=false,
  *              "requirements"={
@@ -251,6 +199,14 @@ class Gateway
      * @ORM\Column(type="string", length=255)
      */
     private string $location;
+
+    /**
+     * @var bool true if this Source is enabled and can be used.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", options={"default": true})
+     */
+    private bool $isEnabled = true;
 
     /**
      * @var string The type of this gatewat
@@ -570,6 +526,86 @@ class Gateway
     private ?array $configuration = [];
 
     /**
+     * @var string The status from the last call made to this source
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="200 OK status received on /api-endpoint"
+     *         }
+     *     }
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", nullable=true, options={"default":"No calls have been made yet to this source"})
+     */
+    private string $status = 'No calls have been made yet to this source';
+
+    /**
+     * @var ?Datetime The datetime from the last request made to this source
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="datetime",
+     *             "example"="2020-02-15T120:50:00"
+     *         }
+     *     }
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private ?Datetime $lastCall;
+
+    /**
+     * @var ?Datetime The datetime from the last synchronization made to this source
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="datetime",
+     *             "example"="2020-02-15T120:50:00"
+     *         }
+     *     }
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private ?Datetime $lastSync;
+
+    /**
+     * @var int The count of total sync objects from this source
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="integer",
+     *             "example"=52
+     *         }
+     *     }
+     * )
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="integer", options={"default":0})
+     */
+    private int $objectCount = 0;
+
+    /**
+     * @var Collection The synchronizations of this source
+     *
+     * @Groups({"write"})
+     * @ORM\OneToMany(targetEntity=Synchronization::class, fetch="EXTRA_LAZY", mappedBy="gateway", orphanRemoval=true)
+     */
+    private Collection $synchronizations;
+
+    /**
+     * @var Collection The call logs of this source
+     *
+     * @Groups({"write"})
+     * @ORM\OneToMany(targetEntity=CallLog::class, fetch="EXTRA_LAZY", mappedBy="source", orphanRemoval=true)
+     */
+    private Collection $callLogs;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -587,12 +623,22 @@ class Gateway
      */
     private $dateModified;
 
+    /**
+     * @var bool Whether the source is in test mode
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private bool $test = false;
+
     public function __construct()
     {
         $this->responceLogs = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->subscribers = new ArrayCollection();
+        $this->synchronizations = new ArrayCollection();
+        $this->callLogs = new ArrayCollection();
     }
 
     public function export(): ?array
@@ -664,6 +710,18 @@ class Gateway
     public function setLocation(string $location): self
     {
         $this->location = $location;
+
+        return $this;
+    }
+
+    public function getIsEnabled(): ?bool
+    {
+        return $this->isEnabled;
+    }
+
+    public function setIsEnabled(bool $isEnabled): self
+    {
+        $this->isEnabled = $isEnabled;
 
         return $this;
     }
@@ -836,7 +894,7 @@ class Gateway
     {
         if (!$this->responceLogs->contains($responceLog)) {
             $this->responceLogs[] = $responceLog;
-            $responceLog->setGateway($this);
+            $responceLog->setSource($this);
         }
 
         return $this;
@@ -846,8 +904,8 @@ class Gateway
     {
         if ($this->responceLogs->removeElement($responceLog)) {
             // set the owning side to null (unless already changed)
-            if ($responceLog->getGateway() === $this) {
-                $responceLog->setGateway(null);
+            if ($responceLog->getSource() === $this) {
+                $responceLog->setSource(null);
             }
         }
 
@@ -914,7 +972,7 @@ class Gateway
     {
         if (!$this->requestLogs->contains($requestLog)) {
             $this->requestLogs[] = $requestLog;
-            $requestLog->setGateway($this);
+            $requestLog->setSource($this);
         }
 
         return $this;
@@ -924,8 +982,8 @@ class Gateway
     {
         if ($this->requestLogs->removeElement($requestLog)) {
             // set the owning side to null (unless already changed)
-            if ($requestLog->getGateway() === $this) {
-                $requestLog->setGateway(null);
+            if ($requestLog->getSource() === $this) {
+                $requestLog->setSource(null);
             }
         }
 
@@ -974,7 +1032,7 @@ class Gateway
     {
         if (!$this->subscribers->contains($subscriber)) {
             $this->subscribers[] = $subscriber;
-            $subscriber->setGateway($this);
+            $subscriber->setSource($this);
         }
 
         return $this;
@@ -984,9 +1042,94 @@ class Gateway
     {
         if ($this->subscribers->removeElement($subscriber)) {
             // set the owning side to null (unless already changed)
-            if ($subscriber->getGateway() === $this) {
-                $subscriber->setGateway(null);
+            if ($subscriber->getSource() === $this) {
+                $subscriber->setSource(null);
             }
+        }
+
+        return $this;
+    }
+
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function getLastCall(): ?DateTime
+    {
+        return $this->lastCall;
+    }
+
+    public function setLastCall(?DateTime $lastCall): self
+    {
+        $this->lastCall = $lastCall;
+
+        return $this;
+    }
+
+    public function getLastSync(): ?DateTime
+    {
+        return $this->lastSync;
+    }
+
+    public function setLastSync(?DateTime $lastSync): self
+    {
+        $this->lastSync = $lastSync;
+
+        return $this;
+    }
+
+    public function getObjectCount(): int
+    {
+        return $this->synchronizations->count();
+    }
+
+    // Should not be used or needed
+    // public function setObjectCount(int $objectCount): self
+    // {
+    //     $this->objectCount = $objectCount;
+
+    //     return $this;
+    // }
+
+    /**
+     * @return Collection|Synchronization[]
+     */
+    public function getSynchronizations(): Collection
+    {
+        return $this->synchronizations;
+    }
+
+    public function addSynchronization(Synchronization $synchronization): self
+    {
+        if (!$this->synchronizations->contains($synchronization)) {
+            $this->synchronizations[] = $synchronization;
+            $synchronization->setSource($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|CallLog[]
+     */
+    public function getCallLogs(): Collection
+    {
+        return $this->callLogs;
+    }
+
+    public function addCallLog(CallLog $callLog): self
+    {
+        if (!$this->callLogs->contains($callLog)) {
+            $this->callLogs[] = $callLog;
+            $callLog->setSource($this);
         }
 
         return $this;
@@ -1042,6 +1185,18 @@ class Gateway
     public function setConfiguration(?array $configuration = []): self
     {
         $this->configuration = $configuration;
+
+        return $this;
+    }
+
+    public function getTest(): ?bool
+    {
+        return $this->test;
+    }
+
+    public function setTest(?bool $test): self
+    {
+        $this->test = $test;
 
         return $this;
     }

@@ -88,7 +88,7 @@ class ProcessingLogService
             'uitvoerder'                      => $user->getUserIdentifier(),
             'systeem'                         => 'placeholder',
             'gebruiker'                       => isset($object) && $object->getOwner() ? $object->getOwner() : null,
-            'gegevensbron'                    => isset($object) && $object->getEntity()->getGateway() ? $object->getEntity()->getGateway()->getName() : null,
+            'gegevensbron'                    => isset($object) && $object->getEntity()->getSource() ? $object->getEntity()->getSource()->getName() : null,
             'soortAfnemerId'                  => 'placeholder',
             'afnemerId'                       => 'placeholder',
             'verwerkingsactiviteitIdAfnemer'  => 'placeholder',

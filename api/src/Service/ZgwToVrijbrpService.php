@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Entity;
 use App\Entity\ObjectEntity;
+use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use phpDocumentor\Reflection\Types\This;
@@ -52,18 +53,39 @@ class ZgwToVrijbrpService
 
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             $childIndex = '';
-            if (in_array(substr_replace($eigenschap['naam'], '', -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding'])) {
+            $date = $time = new DateTime();
+            if (
+                in_array(substr_replace($eigenschap['naam'], '', -1), ['voornamen', 'geboortedatum', 'geslachtsaanduiding', 'geboortetijd']) &&
+                $eigenschap['naam'] != 'voornamen' && $eigenschap['naam'] != 'geboortedatum' && $eigenschap['naam'] != 'geslachtsaanduiding'
+            ) {
                 $childIndex = substr($eigenschap['naam'], -1);
                 $childIndexInt = intval($childIndex) - 1;
+            } elseif ($eigenschap['naam'] == 'voornamen' || $eigenschap['naam'] == 'geboortedatum' || $eigenschap['naam'] == 'geslachtsaanduiding' || $eigenschap == 'geboortedatum') {
+                continue;
             }
             switch ($eigenschap['naam']) {
                 case 'voornamen'.$childIndex:
                     $birthArray['children'][$childIndexInt]['firstname'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geboortedatum'.$childIndex:
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-                    $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTimeFormatted;
+                    $date = new \DateTime($eigenschap['waarde']);
+                    if (isset($birthArray['children'][$childIndexInt]['birthDateTime'])) {
+                        $time = new \DateTime($birthArray['children'][$childIndexInt]['birthDateTime']);
+                        $dateTime = new \DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
+                    } else {
+                        $dateTime = $date;
+                    }
+                    $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTime->format('Y-m-d\TH:i:s');
+                    continue 2;
+                case 'geboortetijd'.$childIndex:
+                    $time = new \DateTime($eigenschap['waarde']);
+                    if (isset($birthArray['children'][$childIndexInt]['birthDateTime'])) {
+                        $date = new \DateTime($birthArray['children'][$childIndexInt]['birthDateTime']);
+                        $dateTime = new \DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
+                    } else {
+                        $dateTime = $time;
+                    }
+                    $birthArray['children'][$childIndexInt]['birthDateTime'] = $dateTime->format('Y-m-d\TH:i:s');
                     continue 2;
                 case 'geslachtsaanduiding'.$childIndex:
                     in_array($eigenschap['waarde'], ['MAN', 'WOMAN', 'UNKNOWN']) && $birthArray['children'][$childIndexInt]['gender'] = $eigenschap['waarde'];
@@ -71,27 +93,32 @@ class ZgwToVrijbrpService
                 case 'geslachtsnaam':
                     $birthArray['nameSelection']['lastname'] = $eigenschap['waarde'];
                     continue 2;
+                case 'inp.bsn':
+                    $birthArray['mother']['bsn'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'relatie':
+                    $birthArray['qualificationForDeclaringType'] = $eigenschap['waarde'];
+                    continue 2;
             }
         }
 
         isset($birthArray['children']) && $birthArray['children'] = array_values($birthArray['children']);
 
         $birthArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
-        $birthArray['dossier']['dossierId'] = $zaakArray['id'];
-        $birthArray['qualificationForDeclaringType'] = 'MOTHER';
+        $birthArray['dossier']['dossierId'] = $zaakArray['identificatie'] ?? $zaakArray['id'];
 
-        $dateTimeObject = new \DateTime($zaakArray['startdatum']);
+        $dateTimeObject = new DateTime($zaakArray['startdatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
         $birthArray['dossier']['startDate'] = $dateTimeFormatted;
 
-        $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
+        $dateTimeObject = new DateTime($zaakArray['registratiedatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
         $birthArray['dossier']['entryDateTime'] = $dateTimeFormatted;
         $birthArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
 
         if (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'])) {
             $birthArray['declarant']['bsn'] = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'];
-            $birthArray['mother']['bsn'] = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'];
+            isset($birthArray['mother']['bsn']) ?: $birthArray['mother']['bsn'] = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn'];
 
             // Save in gateway (only save when we have a declarant/mother)
             $birthObjectEntity = new ObjectEntity();
@@ -106,6 +133,17 @@ class ZgwToVrijbrpService
         }
 
         return $this->data;
+    }
+
+    private function getInitiatorBsn(array $zaakArray): ?string
+    {
+        foreach ($zaakArray['rollen'] as $rol) {
+            if ($rol['omschrijvingGeneriek'] == 'initiator' && $rol['betrokkeneType'] == 'natuurlijk_persoon') {
+                return $rol['betrokkeneIdentificatie']['inpBsn'];
+            }
+        }
+
+        return null;
     }
 
     private function createCommitmentObject(array $zaakArray): array
@@ -129,52 +167,92 @@ class ZgwToVrijbrpService
             ],
         ];
 
+        $date = $time = new DateTime();
         foreach ($zaakArray['eigenschappen'] as $eigenschap) {
             switch ($eigenschap['naam']) {
-                case 'identificatie':
-                    $commitmentArray['dossier']['dossierId'] = $eigenschap['waarde'];
-                    continue 2;
                 case 'omschrijving':
                     $commitmentArray['dossier']['description'] = $eigenschap['waarde'];
                     $commitmentArray['dossier']['type']['description'] = $eigenschap['waarde'];
                     continue 2;
-                case 'bsn1':
-                    $commitmentArray['partner1']['bsn'] = $eigenschap['waarde'];
-                    continue 2;
                 case 'geslachtsnaam1':
                     $commitmentArray['partner1']['nameAfterCommitment']['lastname'] = $eigenschap['waarde'];
                     continue 2;
+                case 'inp.bsn':
+                    if (isset($commitmentArray['partner1']['bsn'])) {
+                        $commitmentArray['partner2']['bsn'] = $eigenschap['waarde'];
+                    } else {
+                        $commitmentArray['partner1']['bsn'] = $eigenschap['waarde'];
+                    }
+                    continue 2;
                 case 'geselecteerdNaamgebruik':
-                    $commitmentArray['partner1']['nameAfterCommitment']['nameUseType'] = $eigenschap['waarde'];
-                    $commitmentArray['partner2']['nameAfterCommitment']['nameUseType'] = $eigenschap['waarde'];
+                    if (isset($commitmentArray['partner1']['nameAfterCommitment']['nameUseType'])) {
+                        $commitmentArray['partner2']['nameAfterCommitment']['nameUseType'] = $eigenschap['waarde'];
+                    } else {
+                        $commitmentArray['partner1']['nameAfterCommitment']['nameUseType'] = $eigenschap['waarde'];
+                    }
+                    continue 2;
+                case 'bsn1':
+                    $commitmentArray['witnesses'][1]['bsn'] = $eigenschap['waarde'];
                     continue 2;
                 case 'bsn2':
-                    $commitmentArray['partner2']['bsn'] = $eigenschap['waarde'];
+                    $commitmentArray['witnesses'][1]['bsn'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'bsn3':
+                    $commitmentArray['witnesses'][1]['bsn'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'bsn4':
+                    $commitmentArray['witnesses'][1]['bsn'] = $eigenschap['waarde'];
                     continue 2;
                 case 'geslachtsnaam2':
                     $commitmentArray['partner2']['nameAfterCommitment']['lastname'] = $eigenschap['waarde'];
+                    continue 2;
                 case 'verbintenisType':
                     in_array($eigenschap['waarde'], ['MARRIAGE', 'GPS']) && $commitmentArray['planning']['commitmentType'] = $eigenschap['waarde'];
                     continue 2;
                 case 'verbintenisDatum':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
-                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-                    $commitmentArray['planning']['commitmentDateTime'] = $dateTimeFormatted;
+                    $date = new DateTime($eigenschap['waarde']);
                     continue 2;
-                case 'gor.openbareRuimteNaam':
+                case 'verbintenisTijd':
+                    $time = new DateTime($eigenschap['waarde']);
+                    continue 2;
+                case 'naam':
                     $commitmentArray['location']['name'] = $eigenschap['waarde'];
                     continue 2;
+                case 'naam1':
+                    $commitmentArray['officials']['preferences'][0]['name'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'naam2':
+                    $commitmentArray['officials']['preferences'][1]['name'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'verzorgdgem':
+                    $commitmentArray['witnesses']['numberOfMunicipalWitnesses'] = intval($eigenschap['waarde']);
             }
         }
 
-        $commitmentArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
-        $commitmentArray['dossier']['dossierId'] = $zaakArray['id'];
+        $dateTime = new DateTime($date->format('Y-m-d\T').$time->format('H:i:s'));
+        $commitmentArray['planning']['commitmentDateTime'] = $dateTime->format('Y-m-d\TH:i:s');
 
-        $dateTimeObject = new \DateTime($zaakArray['startdatum']);
+        if (!isset($commitmentArray['partner2']['nameAfterCommitment']['nameUseType'])) {
+            $commitmentArray['partner2']['nameAfterCommitment']['nameUseType'] = 'N';
+        }
+        if (!isset($commitmentArray['partner1']['nameAfterCommitment']['nameUseType'])) {
+            $commitmentArray['partner1']['nameAfterCommitment']['nameUseType'] = 'N';
+        }
+
+        if (!isset($commitmentArray['partner2']['bsn'])) {
+            $commitmentArray['partner2']['bsn'] = $this->getInitiatorBsn($zaakArray);
+        }
+
+        isset($commitmentArray['witnesses']['numberOfMunicipalWitnesses']) ?: $commitmentArray['witnesses']['numberOfMunicipalWitnesses'] = 0;
+
+        $commitmentArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
+        $commitmentArray['dossier']['dossierId'] = $zaakArray['identificatie'] ?? $zaakArray['id'];
+
+        $dateTimeObject = new DateTime($zaakArray['startdatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
         $commitmentArray['dossier']['startDate'] = $dateTimeFormatted;
 
-        $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
+        $dateTimeObject = new DateTime($zaakArray['registratiedatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
         $commitmentArray['dossier']['entryDateTime'] = $dateTimeFormatted;
         $commitmentArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
@@ -205,6 +283,7 @@ class ZgwToVrijbrpService
      */
     private function mapRelocators(array $eigenschap): array
     {
+        $relocators = [];
         foreach (json_decode($eigenschap['waarde'], true) as $meeverhuizende) {
             switch ($meeverhuizende['rol']) {
                 case 'P':
@@ -213,9 +292,11 @@ class ZgwToVrijbrpService
                 case 'K':
                     $declarationType = 'ADULT_CHILD_LIVING_WITH_PARENTS';
                     break;
-                default:
-                    $declarationType = 'ADULT_CHILD_LIVING_WITH_PARENTS';
+                case 'I':
+                    $declarationType = 'REGISTERED';
                     break;
+                default:
+                    continue 2;
             }
             $relocators[] = [
                 'bsn'             => $meeverhuizende['bsn'],
@@ -224,6 +305,48 @@ class ZgwToVrijbrpService
         }
 
         return $relocators;
+    }
+
+    /**
+     * Adds the objects for living in approval if applicable.
+     *
+     * @param array       $relocationArray The relocation array to edit
+     * @param string      $bsn             The BSN of the initiator
+     * @param string|null $bsnHoofdbewoner The BSN of the main occupant
+     * @param string|null $wijzeBewoning   The type of habitation
+     *
+     * @return array
+     */
+    private function createLiveInObject(array $relocationArray, string $bsn, ?string $bsnHoofdbewoner = null, ?string $wijzeBewoning = null): array
+    {
+        if (
+            $wijzeBewoning &&
+            isset($this->configuration['relocationConsentRequired']) &&
+            in_array($wijzeBewoning, $this->configuration['relocationConsentRequired'])
+        ) {
+            $relocationArray['newAddress']['liveIn'] = $bsnHoofdbewoner ?
+                [
+                    'liveInApplicable' => true,
+                    'consent'          => 'PENDING',
+                    'consenter'        => [
+                        'bsn' => $bsnHoofdbewoner,
+                    ],
+                ] :
+                [
+                    'liveInApplicable'  => true,
+                    'consent'           => 'APPROVED',
+                    'consenter'         => [
+                        'bsn' => $bsn,
+                    ],
+                ];
+            $relocationArray['newAddress']['mainOccupant']['bsn'] = $bsnHoofdbewoner ?: $bsn;
+        } else {
+            $relocationArray['newAddress']['liveIn'] = [
+                'liveInApplicable' => false,
+            ];
+        }
+
+        return $relocationArray;
     }
 
     private function createRelocationObject(array $zaakArray): array
@@ -258,9 +381,10 @@ class ZgwToVrijbrpService
                 case 'bsn':
                     continue 2;
                 case 'verhuisdatum':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeObject = new DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
                     $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
+                    $relocationArray['dossier']['startDate'] = $dateTimeObject->format('Y-m-d');
                     $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
                     continue 2;
                 case 'woonplaats_nieuw':
@@ -281,6 +405,9 @@ class ZgwToVrijbrpService
                 case 'huisnummertoevoeging_nieuw':
                     $relocationArray['newAddress']['houseNumberAddition'] = $eigenschap['waarde'];
                     continue 2;
+                case 'huisletter_nieuw':
+                    $relocationArray['newAddress']['houseLetter'] = $eigenschap['waarde'];
+                    continue 2;
                 case 'emailadres':
                     $relocator['email'] = $eigenschap['waarde'];
                     continue 2;
@@ -288,51 +415,42 @@ class ZgwToVrijbrpService
                     $relocationArray['newAddress']['numberOfResidents'] = intval($eigenschap['waarde']);
                     continue 2;
                 case 'gemeentecode':
-                    $relocationArray['newAddress']['municipality']['code'] = $eigenschap['waarde'];
+                    $relocationArray['previousMunicipality']['code'] = $eigenschap['waarde'];
                     if ($eigenschap['waarde'] !== $this->configuration['gemeentecode']) {
-                        $relocationArray['previousMunicipality']['code'] = $this->configuration['gemeentecode'];
+                        $relocationArray['newAddress']['municipality']['code'] = $this->configuration['gemeentecode'];
                         $isInterRelocation = true;
                     }
                     continue 2;
+                case 'wijze_bewoning':
+                    $wijzeBewoning = $eigenschap['waarde'];
+                    continue 2;
+                case 'bsn_hoofdbewoner':
+                    $bsnHoofdbewoner = $eigenschap['waarde'];
+                    continue 2;
+                case 'emailadres':
+                    $email = $eigenschap['waarde'];
+                    continue 2;
+                case 'telefoonnummer':
+                    $telephone = $eigenschap['waarde'];
+                    continue 2;
+
             }
         }
 
         if (isset($zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) && $bsn = $zaakArray['rollen'][0]['betrokkeneIdentificatie']['inpBsn']) {
             $relocationArray['declarant']['bsn'] = $bsn;
+            $relocationArray['declarant']['contactInformation']['email'] = $email ?? null;
+            $relocationArray['declarant']['contactInformation']['telephoneNumber'] = $telephone ?? null;
             $relocationArray['newAddress']['mainOccupant']['bsn'] = $bsn;
-            $relocationArray['newAddress']['liveIn'] = [
-                'liveInApplicable' => true,
-                'consent'          => 'PENDING',
-                'consenter'        => [
-                    'bsn' => $bsn,
-                ],
-            ];
+            $relocationArray = $this->createLiveInObject($relocationArray, $bsn, $bsnHoofdbewoner ?? null, $wijzeBewoning ?? null);
         }
-
-        $relocationArray['newAddress']['liveIn']['consenter']['contactInformation'] = [
-            'email'           => $relocator['email'] ?? null,
-            'telephoneNumber' => $relocator['telephoneNumber'] ?? null,
-        ];
-        $relocationArray['newAddress']['mainOccupant']['contactInformation'] = [
-            'email'           => $relocator['email'] ?? null,
-            'telephoneNumber' => $relocator['telephoneNumber'] ?? null,
-        ];
         $relocationArray['newAddress']['addressFunction'] = 'LIVING_ADDRESS';
 
         $relocationArray['relocators'] = $relocators;
-        $relocationArray['relocators'][] = array_merge($relocationArray['newAddress']['mainOccupant'], ['declarationType' => 'ADULT_AUTHORIZED_REPRESENTATIVE']);
+        $relocationArray['relocators'][] = array_merge($relocationArray['newAddress']['mainOccupant'], ['declarationType' => 'REGISTERED']);
 
         $relocationArray['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
-        $relocationArray['dossier']['dossierId'] = $zaakArray['id'];
-
-        $dateTimeObject = new \DateTime($zaakArray['startdatum']);
-        $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
-        $relocationArray['dossier']['startDate'] = $dateTimeFormatted;
-
-        $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
-        $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
-        $relocationArray['dossier']['entryDateTime'] = $dateTimeFormatted;
-        $relocationArray['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
+        $relocationArray['dossier']['dossierId'] = $zaakArray['identificatie'] ?? $zaakArray['id'];
 
         // Save in gateway
         $relocationObjectEntity = new ObjectEntity();
@@ -400,17 +518,37 @@ class ZgwToVrijbrpService
                     $deathArrayObject['municipality']['code'] = $eigenschap['waarde'];
                     continue 2;
                 case 'datumoverlijden':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeObject = new DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
                     $deathArrayObject['dateOfDeath'] = $dateTimeFormatted;
                     continue 2;
                 case 'tijdoverlijden':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeObject = new DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('H:i');
                     $deathArrayObject['timeOfDeath'] = $dateTimeFormatted;
                     continue 2;
+                case 'datumlijkvinding':
+                    $dateTimeObject = new DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
+                    $deathArrayObject['dateOfFinding'] = $dateTimeFormatted;
+                    continue 2;
+                case 'tijdlijkvinding':
+                    $dateTimeObject = new DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = $dateTimeObject->format('H:i');
+                    $deathArrayObject['timeOfFinding'] = $dateTimeFormatted;
+                    continue 2;
                 case 'type':
                     in_array($eigenschap['waarde'], ['BURIAL_CREMATION', 'DISSECTION']) && $deathArrayObject['funeralServices']['serviceType'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'datumuitvaart':
+                    $dateTimeObject = new DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
+                    $deathArrayObject['funeralServices']['date'] = $dateTimeFormatted;
+                    continue 2;
+                case 'tijduitvaart':
+                    $dateTimeObject = new DateTime($eigenschap['waarde']);
+                    $dateTimeFormatted = $dateTimeObject->format('H:i');
+                    $deathArrayObject['funeralServices']['time'] = $dateTimeFormatted;
                     continue 2;
                 case 'amount'.$extractIndex:
                     $deathArrayObject['extracts'][$extractIndex]['amount'] = (int) $eigenschap['waarde'];
@@ -419,7 +557,7 @@ class ZgwToVrijbrpService
                     $deathArrayObject['extracts'][$extractIndex]['code'] = $eigenschap['waarde'];
                     continue 2;
                 case 'datum':
-                    $dateTimeObject = new \DateTime($eigenschap['waarde']);
+                    $dateTimeObject = new DateTime($eigenschap['waarde']);
                     $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
                     $deathArrayObject['funeralServices']['date'] = $dateTimeFormatted;
                     continue 2;
@@ -428,6 +566,18 @@ class ZgwToVrijbrpService
                     continue 2;
                 case 'communicatietype':
                     in_array($eigenschap['waarde'], ['EMAIL', 'POST']) && $deathArrayObject['correspondence']['communicationType'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'landcode':
+                    $deathArrayObject['funeralServices']['countryOfDestination']['code'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'plaatsbest':
+                    $deathArrayObject['funeralServices']['placeOfDestination'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'viabest':
+                    $deathArrayObject['funeralServices']['via'] = $eigenschap['waarde'];
+                    continue 2;
+                case 'voertuigbest':
+                    $deathArrayObject['funeralServices']['transportation'] = $eigenschap['waarde'];
                     continue 2;
                 case 'contact.naam':
                     $deathArrayObject['correspondence']['name'] = $eigenschap['waarde'];
@@ -450,7 +600,7 @@ class ZgwToVrijbrpService
                 case 'wpl.woonplaatsnaam':
                     $deathArrayObject['correspondence']['residence'] = $eigenschap['waarde'];
                     continue 2;
-                case 'lnd.landcode':
+                case 'aangevertype':
                     !empty($eigenschap['waarde']) && $event = 'commongateway.vrijbrp.foundbody.created';
                     continue 2;
                 case 'contact.inp.bsn':
@@ -464,13 +614,13 @@ class ZgwToVrijbrpService
         $deathArrayObject['funeralServices']['causeOfDeathType'] = $deathArrayObject['deathByNaturalCauses'] == true ? 'NATURAL_CAUSES' : 'NON_CONTAGIOUS_DISEASE';
 
         $deathArrayObject['dossier']['type']['code'] = $zaakArray['zaaktype']['identificatie'];
-        $deathArrayObject['dossier']['dossierId'] = $zaakArray['id'];
+        $deathArrayObject['dossier']['dossierId'] = $zaakArray['identificatie'] ?? $zaakArray['id'];
 
-        $dateTimeObject = new \DateTime($zaakArray['startdatum']);
+        $dateTimeObject = new DateTime($zaakArray['startdatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d');
         $deathArrayObject['dossier']['startDate'] = $dateTimeFormatted;
 
-        $dateTimeObject = new \DateTime($zaakArray['registratiedatum']);
+        $dateTimeObject = new DateTime($zaakArray['registratiedatum']);
         $dateTimeFormatted = $dateTimeObject->format('Y-m-d\TH:i:s');
         $deathArrayObject['dossier']['entryDateTime'] = $dateTimeFormatted;
         $deathArrayObject['dossier']['status']['entryDateTime'] = $dateTimeFormatted;
@@ -497,11 +647,11 @@ class ZgwToVrijbrpService
      *
      * @return array zaakgegevens
      */
-    public function createVrijBrpSoapZaakgegevens(ObjectEntity $zaakObjectEntity, ?string $type = null): array
+    public function createVrijBrpSoapZaakgegevens(ObjectEntity $zaakObjectEntity): array
     {
         return [
-            'zaakId'      => $type !== null ? $zaakObjectEntity->getId()->toString() : $zaakObjectEntity->getValue('identificatie'),
-            'bron'        => $zaakObjectEntity->getValue('omschrijving'),
+            'zaakId'      => $zaakObjectEntity->getValue('identificatie') ?? $zaakObjectEntity->getId()->toString(),
+            'bron'        => 'eDienst',
             'leverancier' => $zaakObjectEntity->getValue('opdrachtgevendeOrganisatie'),
             //            'medewerker' => $zaakObjectEntity->getValue('identificatie'),
             'datumAanvraag' => $zaakObjectEntity->getValue('registratiedatum'),
@@ -621,7 +771,17 @@ class ZgwToVrijbrpService
         }
 
         $meeEmigranten = [];
+
+        $meeEmigranten[] = [
+            'burgerservicenummer'  => key_exists('bsn', $zaakEigenschappen) && $zaakEigenschappen['bsn'] !== null ? $zaakEigenschappen['bsn'] : $bsn,
+            'omschrijvingAangifte' => 'G',
+            'duur'                 => 'l',
+        ];
+
         foreach ($meeverhuizende_gezinsleden as $meeverhuizende_gezinslid) {
+            if (!$meeverhuizende_gezinslid['bsn']) {
+                continue;
+            }
             $meeEmigranten[] = [
                 'burgerservicenummer'  => key_exists('bsn', $meeverhuizende_gezinslid) ? $meeverhuizende_gezinslid['bsn'] : null,
                 'omschrijvingAangifte' => key_exists('rol', $meeverhuizende_gezinslid) ? $meeverhuizende_gezinslid['rol'] : null,
@@ -677,7 +837,7 @@ class ZgwToVrijbrpService
 
         $geheimhoudingBetrokkenen[] = [
             'burgerservicenummer' => key_exists('bsn_geheimhouding', $zaakEigenschappen) ? $zaakEigenschappen['bsn_geheimhouding'] : null,
-            'codeGeheimhouding'   => key_exists('code_geheimhouding', $zaakEigenschappen) ? $zaakEigenschappen['code_geheimhouding'] : null,
+            'codeGeheimhouding'   => key_exists('code_geheimhouding', $zaakEigenschappen) ? "{$zaakEigenschappen['code_geheimhouding']}" : "0",
         ];
 
         $soapConfidentialityArray['aanvraaggegevens'] = [
@@ -922,11 +1082,15 @@ class ZgwToVrijbrpService
      */
     public function createVrijBrpDocumenten(array $zgwDocument, string $type): void
     {
+        $zaakInformatieObjectEntity = $this->entityManager->find('App:Entity', $this->configuration['zaakInformatieObjectEntityId']);
         $zaakDocumentObjectEntity = $this->entityManager->find('App:ObjectEntity', $zgwDocument['id']);
-        if ($zaakDocumentObjectEntity instanceof ObjectEntity) {
+
+        $zaakInformatieObjecten = $this->entityManager->getRepository('App:ObjectEntity')->findByEntity($zaakInformatieObjectEntity, ['informatieobject' => $zaakDocumentObjectEntity->getId()->toString()]);
+        $zaakInformatieObject = count($zaakInformatieObjecten) == 1 ? $zaakInformatieObjecten[0] : null;
+        if ($zaakDocumentObjectEntity instanceof ObjectEntity && $zaakInformatieObject->getValue('zaak')) {
             $vrijBrpDossierEntity = $this->entityManager->getRepository('App:Entity')->find($this->configuration['vrijBrpDossierEntityId']);
 
-            $date = new \DateTime($zaakDocumentObjectEntity->getValue('creatiedatum'));
+            $date = new DateTime($zaakDocumentObjectEntity->getValue('creatiedatum'));
             $dateTimeFormatted = $date->format('Y-m-d\TH:i:s');
 
             $vrijBrpDossierArray = [
@@ -934,8 +1098,7 @@ class ZgwToVrijbrpService
                 'filename'      => $zaakDocumentObjectEntity->getValue('bestandsnaam') ?? $zaakDocumentObjectEntity->getValue('titel'),
                 'entryDateTime' => $dateTimeFormatted,
                 'content'       => $zaakDocumentObjectEntity->getValue('inhoud'),
-                'zaakgegevens'  => $this->data['response']['soapZaak']['zaakgegevens'] ?? null,
-                'dossier'       => $this->data['response']['dossier'] ?? null,
+                'dossier'       => $zaakInformatieObject->getValue('zaak')->getValue('identificatie') ?? $zaakInformatieObject->getValue('zaak')->getId()->toString(),
             ];
 
             $this->createSoapObject($vrijBrpDossierEntity, $vrijBrpDossierArray);
