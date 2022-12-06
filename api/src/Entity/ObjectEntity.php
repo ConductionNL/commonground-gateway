@@ -990,7 +990,7 @@ class ObjectEntity
      *
      * @return array the array holding all the data     *
      */
-    public function toArray(int $level = 1, array $extend = ['id'], bool $onlyMetadata = false): array
+    public function toArray(int $level = 1, array $extend = ['id'], bool $onlyMetadata = false, bool $embedded = false): array
     {
         $array = [];
         in_array('id', $extend) && $array['id'] = (string) $this->getId();
@@ -1007,10 +1007,22 @@ class ObjectEntity
                 if ($valueObject->getValue() == null) {
                     $array[$attribute->getName()] = null;
                 } elseif (!$attribute->getMultiple() && $level < 5) {
-                    $array[$attribute->getName()] = $valueObject->getObjects()->first()->toArray($level + 1, $extend);
+                    $value = $valueObject->getObjects()->first()->toArray($level + 1, $extend, $onlyMetadata, $embedded);
+                    if ($embedded) {
+                        $array[$attribute->getName()] = $valueObject->getObjects()->first()->getSelf();
+                        $array['embedded'][$attribute->getName()] = $value;
+                        continue;
+                    }
+                    $array[$attribute->getName()] = $value;
                 } elseif ($level < 5) {
                     foreach ($valueObject->getObjects() as $object) {
-                        $array[$attribute->getName()][] = $object->toArray($level + 1, $extend); // getValue will return a single ObjectEntity
+                        $value = $object->toArray($level + 1, $extend, $onlyMetadata, $embedded);
+                        if ($embedded) {
+                            $array[$attribute->getName()][] = $object->getSelf();
+                            $array['embedded'][$attribute->getName()][] = $value;
+                            continue;
+                        }
+                        $array[$attribute->getName()][] = $value; // getValue will return a single ObjectEntity
                     }
                 }
             } else {
