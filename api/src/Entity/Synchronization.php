@@ -34,6 +34,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\SynchronizationRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ * @ORM\HasLifecycleCallbacks
  *
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
@@ -168,6 +169,20 @@ class Synchronization
      * @ORM\Column(type="datetime", nullable=true)
      */
     private ?DateTimeInterface $dateModified;
+
+    /**
+     * The amount of times that we have tried to sync this item, counted by the amount of times it has been "touched"
+     *
+     * @ORM\Column(type="integer", options={"default" : 1})
+     */
+    private $tryCounter = 0;
+
+    /**
+     * An updated timer that tels the sync service to wait a specific increment beofre trying again
+     *
+     * @ORM\Column(type="datetime", options={"default" : "CURRENT_TIMESTAMP"})
+     */
+    private $dontSyncBefore;
 
     public function getId(): ?UuidInterface
     {
@@ -337,5 +352,44 @@ class Synchronization
         $this->blocked = $blocked;
 
         return $this;
+    }
+
+    public function getTryCounter(): ?int
+    {
+        return $this->tryCounter;
+    }
+
+    public function setTryCounter(int $tryCounter): self
+    {
+        $this->tryCounter = $tryCounter;
+
+        return $this;
+    }
+
+    public function getDontSyncBefore(): ?\DateTimeInterface
+    {
+        return $this->dontSyncBefore;
+    }
+
+    public function setDontSyncBefore(\DateTimeInterface $dontSyncBefore): self
+    {
+        $this->dontSyncBefore = $dontSyncBefore;
+
+        return $this;
+    }
+
+    /**
+     * Set name on pre persist.
+     *
+     * This function makes sure that each and every oject alwys has a name when saved
+     *
+     * @ORM\PrePersist
+     */
+    public function prePersist(): void
+    {
+        // If we have ten trys or more we want to block the sync
+        if($this->tryCounter >= 10){
+            $this->blocked = true;
+        }
     }
 }
