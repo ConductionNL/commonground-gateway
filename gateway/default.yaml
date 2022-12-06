@@ -47,7 +47,14 @@ App\Entity\Entity:
         name: address
         description: Entity Address exists of an id, a name, a bagnummeraanduiding, a street, a houseNumber, a houseNumberSufix, a postalCode, a region, a locality and country, one or more people and one or more organisations.
         endpoint: "addresses"
-
+        
+App\Entity\Application:
+    # Localhost Application
+    localhost:
+        name: "Main application"
+        description: "This application is mainly used for local development and the github postman workflow. This application can be removed from your online environment or removed from the fixtures before loading them into the environment."
+        domains: ["http://localhost"]
+        publicKey: 6c287220-50ac-4ff3-8974-0d9dc8b4ceeb
 
 # Attributes
 App\Entity\Attribute:

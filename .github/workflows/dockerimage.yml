@@ -1,181 +1,530 @@
 name: Docker Image CI
 
 on:
-  pull_request:
-    branches:
-      - master
-      - staging
-      - development
-      - feature-soap
-      - odyssey-hackathon-2022
+    pull_request:
+        branches:
+            - master
+            - staging
+            - development
+            - acceptance
 
-  push:
-    branches:
-      - master
-      - staging
-      - development
-      - feature-soap
-      - feature-soap-extra
-      - feature-cleanup
+    push:
+        branches:
+            - master
+            - staging
+            - development
+            - acceptance
+            - 'feature/**'
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
-      - name: Export release code
-        if: (success() || failure())
-        id: releasecode #version number in a more comprehensible format: 0.1.YearMonthDay in UTC
-        run: |
-          export VERSION=$(grep APP_VERSION= .env | cut -d '=' -f2)
-          export RELEASE=$VERSION.$(date --utc +%y%m%d)
-          echo "RELEASE=$RELEASE" >> $GITHUB_ENV
-          echo "##[set-output name=releasename]$RELEASE"
-      - name: Create vendor folder
-        run: | 
-          mkdir api/vendor
-          chmod +777 api/vendor
-          chmod +777 -R api/public
-      - name: Setting APP_NAME
-        run: |
-          export NAME=$(grep APP_NAME= .env | cut -d '=' -f2)
-          echo "APP_NAME=$NAME" >> $GITHUB_ENV
-      - name: Print app name
-        run: echo "APP_NAME = $APP_NAME"
-      - name: Setting APP_ENV to dev
-        run: |
-          echo "APP_ENV=dev">> $GITHUB_ENV
-          echo "APP_BUILD=dev-$RELEASE">> $GITHUB_ENV
-          echo "set APP_ENV to $APP_ENV"
-      - name: Setting APP_ENV to prod
-        if: contains( github.ref, 'master' ) || contains( github.base_ref, 'master' )
-        run: |
-          echo "APP_ENV=latest">> $GITHUB_ENV
-          echo "APP_BUILD=$RELEASE">> $GITHUB_ENV
-          echo "set APP_ENV to $APP_ENV"
-      - name: Setting APP_ENV to stag
-        if: contains( github.ref, 'staging' ) || contains( github.base_ref, 'staging' )
-        run: |
-          echo "APP_ENV=stag">> $GITHUB_ENV
-          echo "APP_BUILD=stag-$RELEASE">> $GITHUB_ENV
-          echo "set APP_ENV to $APP_ENV"
-      - name: Setting APP_ENV to soap
-        if: contains( github.ref, 'feature-soap' ) || contains( github.base_ref, 'feature-soap' )
-        run: |
-          echo "APP_ENV=soap">> $GITHUB_ENV
-          echo "APP_BUILD=soap-$RELEASE">> $GITHUB_ENV
-          echo "set APP_ENV to $APP_ENV"
-      - name: Setting APP_ENV to feature-cleanup
-        if: contains( github.ref, 'feature-cleanup' ) || contains( github.base_ref, 'feature-cleanup' )
-        run: |
-          echo "APP_ENV=cleanup">> $GITHUB_ENV
-          echo "APP_BUILD=cleanup-$RELEASE">> $GITHUB_ENV
-          echo "set APP_ENV to $APP_ENV"
-      - name: Setting APP_ENV to soap-extensions
-        if: contains( github.ref, 'feature-soap-extra' ) || contains( github.base_ref, 'feature-soap-extra' )
-        run: |
-          echo "APP_ENV=soapextensions">> $GITHUB_ENV
-          echo "APP_BUILD=soapextensions-$RELEASE">> $GITHUB_ENV
-          echo "set APP_ENV to $APP_ENV"
-      - name: Print definitive APP_ENV
-        run: echo "APP_ENV is now $APP_ENV and APP_BUILD is now $APP_BUILD"
-      - name: Build the Docker image
-        run: docker-compose build --build-arg APP_ENV=$APP_ENV --build-arg APP_BUILD=$APP_BUILD --build-arg APP_BUILD_ALL_FIXTURES=true
-      - name: Run the docker image
-        run: docker-compose up -d
-      - name: Taking some sleep (for containers to come up)
-        run: sleep 45
-      - name: Check if all containers are running
-        run: docker ps
-      - name: Dumping the logs
-        run: docker-compose logs
-      - name: Database Update
-        run: docker-compose exec -T php bin/console doctrine:schema:update --force
-      #- name: Taking some more sleep (for database to be updated)
-      #  run: sleep 20
-      #- name: Database Check
-      #  run: docker-compose exec -T php bin/console doctrine:schema:validate
-      #- name: Security Checks
-      #  run: |
-      #    curl -L -sS --output local-php-security-checker https://github.com/fabpot/local-php-security-checker/releases/download/v1.0.0/local-php-security-checker_1.0.0_linux_amd64
-      #    chmod +x ./local-php-security-checker
-      #    ./local-php-security-checker --path ./api/composer.lock
-#      - name: Run PHPUnit
-#        run: ./vendor/bin/phpunit --coverage-clover coverage.xml
-#      - uses: codecov/codecov-action@v1
-#        with:
-#            token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-#            name: codecov-umbrella
-#            fail_ci_if_error: true
-#            verbose: true
-      #- name: Run Postman Tests
-      #  if: contains( github.ref, 'master' ) == false && contains( github.base_ref, 'master' ) == false
-      #  run: newman run api/public/schema/*.postman_collection.json
-      - name: Add docker tags
-        run: |
-          images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
-          for image in $images
-          do
-            docker tag "${image}":${APP_ENV} "${image}":"${APP_BUILD}"
-          done
-          echo 'IMAGES=$images' >> $GITHUB_ENV
-      - name: Show all images
-        run: docker images
-      - name: Login to Container Registry
-        id: containerregistry-login
-        run: |
-         if [ "${{ secrets.GITHUB_TOKEN }}" != "" ]; then
-           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $(cut -d'/' -f1 <<< $GITHUB_REPOSITORY) --password-stdin
-           echo "##[set-output name=success;]true"
-         else
-           echo "##[set-output name=success;]false"
-         fi
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup')
-        name: Push to Container Registry
-        run: docker-compose push
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - uses: actions/setup-node@v1
+              with:
+                  node-version: '16'
+            - name: show bin folder
+              run: ls -la api/bin
+            - name: Export release code
+              if: (success() || failure())
+              id: releasecode #version number in a more comprehensible format: 0.1.YearMonthDay in UTC
+              run: |
+                  export VERSION=$(grep APP_VERSION= .env | cut -d '=' -f2)
+                  export RELEASE=$VERSION.$(date --utc +%y%m%d)
+                  echo "RELEASE=$RELEASE" >> $GITHUB_ENV
+                  echo "##[set-output name=releasename]$RELEASE"
+            - name: Create vendor folder
+              run: |
+                  mkdir api/vendor
+                  chmod +777 api/vendor
+                  chmod +777 -R api/public
+            - name: Setting APP_NAME
+              run: |
+                  export NAME=$(grep APP_NAME= .env | cut -d '=' -f2)
+                  echo "APP_NAME=$NAME" >> $GITHUB_ENV
+            - name: Print app name
+              run: echo "APP_NAME = $APP_NAME"
+            - name: Setting APP_ENV to dev
+              run: |
+                  echo "APP_ENV=dev">> $GITHUB_ENV
+                  echo "APP_BUILD=dev-$RELEASE">> $GITHUB_ENV
+                  echo "set APP_ENV to $APP_ENV"
+            - name: Setting APP_ENV to prod
+              if: contains( github.ref, 'master' ) || contains( github.base_ref, 'master' )
+              run: |
+                  echo "APP_ENV=latest">> $GITHUB_ENV
+                  echo "APP_BUILD=$RELEASE">> $GITHUB_ENV
+                  echo "set APP_ENV to $APP_ENV"
+            - name: Setting APP_ENV to stag
+              if: contains( github.ref, 'staging' ) || contains( github.base_ref, 'staging' )
+              run: |
+                  echo "APP_ENV=stag">> $GITHUB_ENV
+                  echo "APP_BUILD=stag-$RELEASE">> $GITHUB_ENV
+                  echo "set APP_ENV to $APP_ENV"
+            - name: Setting APP_ENV to soap
+              if: contains( github.ref, 'feature-soap' ) || contains( github.base_ref, 'feature-soap' )
+              run: |
+                  echo "APP_ENV=soap">> $GITHUB_ENV
+                  echo "APP_BUILD=soap-$RELEASE">> $GITHUB_ENV
+                  echo "set APP_ENV to $APP_ENV"
+            - name: Setting APP_ENV to feature-cleanup
+              if: contains( github.ref, 'feature-cleanup' ) || contains( github.base_ref, 'feature-cleanup' )
+              run: |
+                  echo "APP_ENV=cleanup">> $GITHUB_ENV
+                  echo "APP_BUILD=cleanup-$RELEASE">> $GITHUB_ENV
+                  echo "set APP_ENV to $APP_ENV"
+            - name: Setting APP_ENV to soap-extensions
+              if: contains( github.ref, 'feature-soap-extra' ) || contains( github.base_ref, 'feature-soap-extra' )
+              run: |
+                  echo "APP_ENV=soapextensions">> $GITHUB_ENV
+                  echo "APP_BUILD=soapextensions-$RELEASE">> $GITHUB_ENV
+                  echo "set APP_ENV to $APP_ENV"
+            - name: Print definitive APP_ENV
+              run: echo "APP_ENV is now $APP_ENV and APP_BUILD is now $APP_BUILD"
+            - name: Build the Docker image
+              run: docker-compose build --build-arg APP_ENV=$APP_ENV --build-arg APP_BUILD=$APP_BUILD --build-arg APP_BUILD_ALL_FIXTURES=true
+            - name: Run the docker image
+              run: docker-compose up -d
+            - name: Taking some sleep (for containers to come up)
+              run: sleep 10
+            - name: Check if all containers are running
+              run: docker ps
+            - name: Dumping the logs
+              run: docker-compose logs
+                #     - name: Taking some more sleep (for database to be updated)
+                #       run: sleep 20
+                #     - name: Database Check
+                #       run: docker-compose exec -T php bin/console doctrine:schema:validate
+                #      - uses: codecov/codecov-action@v1
+                #        with:
+                #            token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
+                #            name: codecov-umbrella
+                #            fail_ci_if_error: true
+                #            verbose: true
+                #- name: Run Postman Tests
+                #  if: contains( github.ref, 'master' ) == false && contains( github.base_ref, 'master' ) == false
+                #  run: newman run api/public/schema/*.postman_collection.json
+                # name: Run PHP Unit Tests
+                # run: docker-compose exec -T php bin/phpunit --coverage-clover coverage.xml
+                # uses: actions/upload-artifact@v3
+                # with:
+                #     name: coverage.xml
+                #     path: api/unit-coverage.xml  
 
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup')
-        name: Push versioned containers to Container Registry
-        run: |
-          images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
-          for image in $images
-          do
-            docker push "${image}":"${APP_BUILD}"
-          done
-      - name: Create kube config
-        id: kubeconfig
-        if: contains( github.ref, 'development' )
-        run: |
-          if [ "${{ secrets.KUBECONFIG }}" != "" ]; then
-            printf "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
-            echo "##[set-output name=success]true"
-          else
-            echo "##[set-output name=success]false"
-          fi
-      #            - name: Export release code
-      #              if: (success() || failure())
-      #              id: releasecode
-      #              run: |
-      #                  export RELEASE=$APP_BUILD-$(git rev-parse --short $GITHUB_SHA)
-      #                  echo "##[set-output name=releasename]$RELEASE"
-      - name: Print release name
-        if: (success() || failure())
-        run: echo $RELEASENAME
-        env:
-          RELEASENAME: ${{ steps.releasecode.outputs.releasename }}
-      - name: Create Release
-        if: contains( github.ref, 'master' ) && steps.kubeconfig.outputs.success == 'true' && ( success() || failure() )
-        id: create_release
-        uses: actions/create-release@v1
-        continue-on-error: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-        with:
-          tag_name: ${{ steps.releasecode.outputs.releasename }}
-          release_name: ${{ steps.releasecode.outputs.releasename }}
-          draft: false
-          prerelease: false
-      - name: Chores
-        if: (success() || failure())
-        run: docker-compose down
+                # Postman      
+                #      - name: Install postman dependencies
+                #        run: npm install -g openapi-to-postmanv2
+                #      - name: Create tests folder
+                #        run: mkdir -p ./tests/postman
+                #      - name: Generate Postman collection
+                #        run: openapi2postmanv2 -s ./api/public/schema/openapi.yaml -o ./tests/postman/collection.json --pretty
+                #      - name: Run Postman checks
+                #        uses: matt-ball/newman-action@master
+                #        with:
+                #            collection: ./tests/postman/collection.json      
+                # Unit      
+            #      - name: Run PHPUnit tests
+            #        uses: php-actions/phpunit@v3
+            #       with:
+            #            configuration: api/phpunit.xml.dist
+            #            memory_limit: 256M
+            - name: Add docker tags
+              run: |
+                  images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
+                  for image in $images
+                  do
+                    docker tag "${image}":${APP_ENV} "${image}":"${APP_BUILD}"
+                  done
+                  echo 'IMAGES=$images' >> $GITHUB_ENV
+            - name: Show all images
+              run: docker images
+            # Lets save the images
+            - name: Create PHP Artifact
+              run: docker save -o php.tar ghcr.io/conductionnl/commonground-gateway-php
+            - name: Upload PHP artifact
+              uses: actions/upload-artifact@v2
+              with:
+                  name: php.tar
+                  path: php.tar
+            - name: Create NGINX Artifact
+              run: docker save -o nginx.tar ghcr.io/conductionnl/commonground-gateway-nginx
+            - name: Upload NGINX artifact
+              uses: actions/upload-artifact@v2
+              with:
+                  name: nginx.tar
+                  path: nginx.tar
+            - name: Create postgres Artifact
+              run: docker save -o postgres.tar postgres
+            - name: Upload postgres artifact
+              uses: actions/upload-artifact@v2
+              with:
+                  name: postgres.tar
+                  path: postgres.tar
+    Trivy:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - uses: actions/setup-node@v1
+              with:
+                  node-version: '16'
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: php.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: nginx.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: postgres.tar
+            - name: Load Docker images from previous workflows
+              run: docker load --input  php.tar && docker load --input nginx.tar && docker load --input postgres.tar
+            - name: Show all images
+              run: docker images
+            - name: Up the images
+              run: docker compose up -d
+            - name: Run Trivy to check for vulnerabilities
+              uses: aquasecurity/trivy-action@master
+              with:
+                  image-ref: php
+                  format: 'sarif'
+                  ignore-unfixed: true
+                  vuln-type: 'os,library'
+                  severity: 'CRITICAL,HIGH'
+                  output: trivy-results.sarif
+            - name: Upload results as artifact
+              uses: actions/upload-artifact@v3
+              with:
+                  name: 'trivy-results'
+                  path: trivy-results.sarif
+    Gryphe:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - uses: actions/setup-node@v1
+              with:
+                  node-version: '16'
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: php.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: nginx.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: postgres.tar
+            - name: Load Docker images from previous workflows
+              run: docker load --input  php.tar && docker load --input nginx.tar && docker load --input postgres.tar
+            - name: Show all images
+              run: docker images
+            - name: Up the images
+              run: docker compose up -d
+            - name: Run Gryphe to check for vulnerabilities
+              uses: anchore/scan-action@v3
+              with:
+                  image: php
+                  fail-build: false
+                  severity-cutoff: critical
+                  output-format: table
+            # - name: Upload results as artifact
+            #   uses: actions/upload-artifact@v3
+            #   with:
+            #       name: 'gryphe-results'
+            #       path: '${{ steps.scan.outputs.sarif }}'
+    Postman:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - uses: actions/setup-node@v1
+              with:
+                  node-version: '16'
+            - name: Install newman
+              run: |
+                  npm install -g newman
+                  npm install -g newman-reporter-htmlextra
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: php.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: nginx.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: postgres.tar
+            - name: Load Docker images from previous workflows
+              run: docker load --input  php.tar && docker load --input nginx.tar && docker load --input postgres.tar
+            - name: Show all images
+              run: docker images
+            - name: Up the images
+              run: docker compose -f docker-compose.check.yml up -d
+            - name: Wait for the containers to run
+              run: sleep 60
+            - name: Dumping the logs
+              run: docker-compose -f docker-compose.check.yml logs
+            - name: Load fixtures
+              run: docker-compose exec -T php bin/console hautelook:fixtures:load -n
+            - name: Run Core Postman checks
+              run: |
+                  mkdir tests
+                  mkdir tests/results
+                  newman run api/postman.json -r htmlextra --reporter-htmlextra-export tests/results/htmlreport.html --reporter-htmlextra-darkTheme  > tests/results/runreport1.html
+            #          - name: Run Core Postman checks
+            #            uses: matt-ball/newman-action@master
+            #            with:
+            #                collection: api/postman.json
+            #                reporters: '["htmlextra"]'
+            #                reporter: '{"htmlextra":{"export":"tests/results/runreport1.html"}}'
+            - name: Output the run Details
+              if: (success() || failure())
+              uses: actions/upload-artifact@v2
+              with:
+                  name: RunReports
+                  path: tests/results
+    Dependencies:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - uses: actions/setup-node@v1
+              with:
+                  node-version: '16'
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: php.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: nginx.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: postgres.tar
+            - name: Load Docker images from previous workflows
+              run: docker load --input  php.tar && docker load --input nginx.tar && docker load --input postgres.tar
+            - name: Show all images
+              run: docker images
+            - name: Up the images
+              run: docker compose up -d
+            - name: Checksing al dependencies for known security issues
+              run: |
+                  curl -L -sS --output local-php-security-checker https://github.com/fabpot/local-php-security-checker/releases/download/v1.0.0/local-php-security-checker_1.0.0_linux_amd64
+                  chmod +x ./local-php-security-checker
+                  ./local-php-security-checker --path ./api/composer.lock
+    Unit:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - uses: actions/setup-node@v1
+              with:
+                  node-version: '16'
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: php.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: nginx.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: postgres.tar
+            - name: Load Docker images from previous workflows
+              run: docker load --input  php.tar && docker load --input nginx.tar && docker load --input postgres.tar
+            - name: Show all images
+              run: docker images
+            - name: Up the images
+              run: docker compose -f docker-compose.check.yml up -d
+            - name: Run PHPUnit
+              run: docker-compose exec -T php bin/phpunit
+    Fossa:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - uses: actions/setup-node@v1
+              with:
+                  node-version: '16'
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: php.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: nginx.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: postgres.tar
+            - name: Load Docker images from previous workflows
+              run: docker load --input  php.tar && docker load --input nginx.tar && docker load --input postgres.tar
+            - name: Show all images
+              run: docker images
+            - name: Up the images
+              run: docker compose up -d
+            - name: Run Fossa checks
+              uses: fossas/fossa-action@main # Use a specific version if locking is preferred
+              with:
+                  api-key: ${{secrets.fossaApiKey}}
+                  container: php
+                  debug: true
+            - name: Upload results as artifact
+              uses: actions/upload-artifact@v3
+              with:
+                  name: 'fossa-results'
+                  path: ./fossa.debug.json.gz
+    Snyk:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - uses: actions/setup-node@v1
+              with:
+                  node-version: '16'
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: php.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: nginx.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: postgres.tar
+            - name: Load Docker images from previous workflows
+              run: docker load --input  php.tar && docker load --input nginx.tar && docker load --input postgres.tar
+            - name: Show all images
+              run: docker images
+            - name: Up the images
+              run: docker compose up -d
+            # @todo add snyk  
+    Database:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - uses: actions/setup-node@v1
+              with:
+                  node-version: '16'
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: php.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: nginx.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: postgres.tar
+            - name: Load Docker images from previous workflows
+              run: docker load --input php.tar && docker load --input nginx.tar && docker load --input postgres.tar
+            - name: Show all images
+              run: docker images
+            - name: Up the images
+              run: docker compose -f docker-compose.check.yml up -d
+            - name: Wait for the containers to run
+              run: sleep 20
+            - name: Database Update
+              run: docker-compose -f docker-compose.check.yml exec -T php bin/console doctrine:schema:update --force
+    publish:
+        needs: [Trivy, Gryphe, Dependencies,Database]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v1
+            - uses: actions/setup-node@v1
+              with:
+                  node-version: '16'
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: php.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: nginx.tar
+            - name: Download a single artifact
+              uses: actions/download-artifact@v3
+              with:
+                  name: postgres.tar
+            - name: Load Docker images from previous workflows
+              run: docker load --input  php.tar && docker load --input nginx.tar && docker load --input postgres.tar
+            - name: Show all images
+              run: docker images
+            - name: Up the images
+              run: docker compose up -d
+            - name: Login to Container Registry
+              id: containerregistry-login
+              run: |
+                  if [ "${{ secrets.GITHUB_TOKEN }}" != "" ]; then
+                    echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $(cut -d'/' -f1 <<< $GITHUB_REPOSITORY) --password-stdin
+                    echo "##[set-output name=success;]true"
+                  else
+                    echo "##[set-output name=success;]false"
+                  fi
+            - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup')
+              name: Push to Container Registry
+              run: docker-compose push
+
+            - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup')
+              name: Push versioned containers to Container Registry
+              run: |
+                  images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
+                  for image in $images
+                  do
+                    docker push "${image}":"${APP_BUILD}"
+                  done
+            - name: Create kube config
+              id: kubeconfig
+              if: contains( github.ref, 'development' )
+              run: |
+                  if [ "${{ secrets.KUBECONFIG }}" != "" ]; then
+                    printf "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+                    echo "##[set-output name=success]true"
+                  else
+                    echo "##[set-output name=success]false"
+                  fi
+                #            - name: Export release code
+                #              if: (success() || failure())
+                #              id: releasecode
+                #              run: |
+                #                  export RELEASE=$APP_BUILD-$(git rev-parse --short $GITHUB_SHA)
+                #                  echo "##[set-output name=releasename]$RELEASE"
+            - name: Print release name
+              if: (success() || failure())
+              run: echo $RELEASENAME
+              env:
+                  RELEASENAME: ${{ steps.releasecode.outputs.releasename }}
+            - name: Create Release
+              if: contains( github.ref, 'master' ) && steps.kubeconfig.outputs.success == 'true' && ( success() || failure() )
+              id: create_release
+              uses: actions/create-release@v1
+              continue-on-error: true
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+              with:
+                  tag_name: ${{ steps.releasecode.outputs.releasename }}
+                  release_name: ${{ steps.releasecode.outputs.releasename }}
+                  draft: false
+                  prerelease: false
+            - name: Chores
+              if: (success() || failure())
+              run: docker-compose down

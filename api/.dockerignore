@@ -15,6 +15,6 @@
 .php_cs.cache
 bin/*
 !bin/console
+!bin/phpunit
 docker/db/data/
 var/
-vendor/
