@@ -16,6 +16,11 @@ services:
   #    ports:
   #      - "83:80"
   
+  cron:
+    build: ./dockerized-cron
+    depends_on:
+      - api
+    
   ui:
     &ui
     image: ghcr.io/conductionnl/gateway-ui:stag
