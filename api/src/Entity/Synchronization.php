@@ -171,14 +171,14 @@ class Synchronization
     private ?DateTimeInterface $dateModified;
 
     /**
-     * The amount of times that we have tried to sync this item, counted by the amount of times it has been "touched"
+     * The amount of times that we have tried to sync this item, counted by the amount of times it has been "touched".
      *
      * @ORM\Column(type="integer", options={"default" : 1})
      */
     private $tryCounter = 0;
 
     /**
-     * An updated timer that tels the sync service to wait a specific increment beofre trying again
+     * An updated timer that tels the sync service to wait a specific increment beofre trying again.
      *
      * @ORM\Column(type="datetime", options={"default" : "CURRENT_TIMESTAMP"})
      */
@@ -388,7 +388,7 @@ class Synchronization
     public function prePersist(): void
     {
         // If we have ten trys or more we want to block the sync
-        if($this->tryCounter >= 10){
+        if ($this->tryCounter >= 10) {
             $this->blocked = true;
         }
     }
