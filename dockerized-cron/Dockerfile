@@ -2,7 +2,7 @@
 FROM ubuntu:20.04
 
 # Updating packages and installing cron
-RUN apt-get update && apt-get install cron -y && apt-get install curl
+RUN apt-get update && apt-get install cron -y && apt-get install curl -y
 
 # Copying script file into the container.
 COPY date-script.sh .
