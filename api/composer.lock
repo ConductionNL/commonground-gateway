@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "83a3fd8f6cedb21da09d0e57920175e5",
+    "content-hash": "c4d7983ca10b69def9ed7bd557ce69d4",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -695,45 +695,6 @@
                 "source": "https://github.com/CommonGateway/FormIOBundle/tree/main"
             },
             "time": "2022-11-16T13:35:03+00:00"
-        },
-        {
-            "name": "common-gateway/waardepapieren-bundle",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CommonGateway/WaardepapierenBundle.git",
-                "reference": "189702ed9954d7d96083697295e8c8f201bf6d44"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/WaardepapierenBundle/zipball/189702ed9954d7d96083697295e8c8f201bf6d44",
-                "reference": "189702ed9954d7d96083697295e8c8f201bf6d44",
-                "shasum": ""
-            },
-            "require": {
-                "endroid/qr-code-bundle": "3.4",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "default-branch": true,
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "CommonGateway\\WaardepapierenBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An example package for creating symfony flex bundles as plugins",
-            "support": {
-                "issues": "https://github.com/CommonGateway/WaardepapierenBundle/issues",
-                "source": "https://github.com/CommonGateway/WaardepapierenBundle/tree/main"
-            },
-            "time": "2022-11-02T13:47:27+00:00"
         },
         {
             "name": "commongateway/corebundle",
@@ -4276,56 +4237,6 @@
             "time": "2022-06-29T09:25:13+00:00"
         },
         {
-            "name": "klantinteractie-servicesysteem/kiss-bundle",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Klantinteractie-Servicesysteem/KissBundle.git",
-                "reference": "5217bfdb54522eed42300de3560ec2634fb35773"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/5217bfdb54522eed42300de3560ec2634fb35773",
-                "reference": "5217bfdb54522eed42300de3560ec2634fb35773",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": "dev-master",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "default-branch": true,
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "Kiss\\KissBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An example package for creating symfony flex bundles as plugins",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "dimpact",
-                "gateway",
-                "kiss",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/issues",
-                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/main"
-            },
-            "time": "2022-12-01T22:26:41+00:00"
-        },
-        {
             "name": "knplabs/knp-markdown-bundle",
             "version": "1.9.0",
             "source": {
@@ -4512,54 +4423,6 @@
                 }
             ],
             "time": "2021-09-02T17:10:53+00:00"
-        },
-        {
-            "name": "larping-base/larping-bundle",
-            "version": "1.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "2c7e36128ddf03e18d5eb3ca8660edd5b167a7f6"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/2c7e36128ddf03e18d5eb3ca8660edd5b167a7f6",
-                "reference": "2c7e36128ddf03e18d5eb3ca8660edd5b167a7f6",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": "dev-master",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "LarpingBase\\LarpingBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An Commong Gateay bundle for the larping application",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "larping",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.2"
-            },
-            "time": "2022-12-03T21:07:14+00:00"
         },
         {
             "name": "league/html-to-markdown",
@@ -14634,12 +14497,10 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "common-gateway/formio-bundle": 20,
-        "common-gateway/waardepapieren-bundle": 20,
         "commongateway/corebundle": 20,
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,
-        "conduction/samlbundle": 20,
-        "klantinteractie-servicesysteem/kiss-bundle": 20
+        "conduction/samlbundle": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
