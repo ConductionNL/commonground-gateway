@@ -1,8 +1,8 @@
 # Installation
-_________________________________________________________________________________________________________________________________________
 
 
 We dever the installation of the gateway between local en server installations, keep in mind that local installations are meant for development, testing en demo purposes ande are (by there nature) not suited for production environments. When installing the gateway for production purposes ALWAYS follow the steps as set out under the server installation manual. 
+
 
 
 ## Local installation
@@ -18,7 +18,10 @@ Steps
 5. You should now see the gateway initiating the virtual machines that it needs on your command line tool. 
 6. When it it done you can find the gateway api in your browser under localhost and the gateway ui under [localhost:8000](localhost:8000)
 
+
 >__Note__:  These steps should not be used for production, please follow server installation for production setups
+
+
 
 ## Server Installation
 
@@ -26,8 +29,10 @@ There are three main routes to install the Common gateway, but we advice to use 
 
 ### Installation through composer (Linux / Lamp)
 
+
+
 ### Installation trough docker compose
-The gateway repository contains a docker compose, 
+The gateway repository contains a docker compose, and an .env file containing all setting options. These are the same files that are used for the local development environment. However when using this route to install the gateway for production you *Must* set the `APP_ENV` variable tp `PROD` (enabling caching and security features) and you must change al passwords  (convieantly labeld _!ChangeMe!_) *NEVER* run your database from docker compose, docker compose is non persist and you will lose your data. Alway use a separate managed database solution. 
 
 ### Installation trough Helm charts
 
