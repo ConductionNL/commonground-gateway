@@ -42,7 +42,6 @@ services:
       - "8000:80"
     volumes:
       - ./ui/env.js:/usr/share/nginx/html/env.js:rw,cached
-      - 
   php:
     &php
     image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php:${APP_ENV}
