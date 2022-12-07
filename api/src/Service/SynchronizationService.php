@@ -833,8 +833,8 @@ class SynchronizationService
         $synchronization->setTryCounter($counter);
 
         // Set dont try before, expensional so in minutes  1,8,27,64,125,216,343,512,729,1000
-        $addMinutes = pow($counter,3);
-        $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT' . $addMinutes . 'M'));
+        $addMinutes = pow($counter, 3);
+        $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT'.$addMinutes.'M'));
         $synchronization->getDontSyncBefore($dontTryBefore);
 
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
