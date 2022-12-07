@@ -6,6 +6,7 @@ x-cache:
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-nginx
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-ui
+    - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-cron
 
 services:
   #  gateway-frontend:
@@ -16,7 +17,18 @@ services:
   #    ports:
   #      - "83:80"
   
+  oc:
+    &ui
+    image: ghcr.io/opencatalogi/web-app:dev
+    depends_on:
+      - api
+    ports:
+      - "81:80"
+    volumes:
+      - ./ui/oc.js:/usr/share/nginx/html/env.js:rw,cached 
+        
   cron:
+    &cron
     build: ./dockerized-cron
     depends_on:
       - api
@@ -30,6 +42,7 @@ services:
       - "8000:80"
     volumes:
       - ./ui/env.js:/usr/share/nginx/html/env.js:rw,cached
+      - 
   php:
     &php
     image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php:${APP_ENV}

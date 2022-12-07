@@ -37,8 +37,11 @@ class DashboardCardDoctrineSubscriber implements EventSubscriberInterface
             return null;
         }
 
-        $className = 'App:'.$entity;
-        $object = $this->entityManager->find($className, $dashboardCard->getEntityId());
+        if (strpos($entity, "App\\Entity")) {
+            $entity = 'App:'.$entity;
+        }
+
+        $object = $this->entityManager->find($entity, $dashboardCard->getEntityId());
 
         return $dashboardCard->setObject($object);
     }
