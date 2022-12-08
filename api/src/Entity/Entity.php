@@ -19,6 +19,7 @@ use Doctrine\ORM\Mapping as ORM;
 use EasyRdf\Literal\Boolean;
 use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
+use phpDocumentor\Reflection\Types\Integer;
 use phpDocumentor\Reflection\Types\This;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -354,6 +355,14 @@ class Entity
      * @ORM\Column(type="array", length=255, nullable=true, options={"default": null})
      */
     private ?array $nameProperties = null;
+
+    /**
+     * @var integer The maximum depth that should be used when casting objects of this entity to array
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="integer", length=1, options={"default": 3})
+     */
+    private int $maxDepth = 3;
 
     /**
      * @Groups({"read", "write"})
@@ -1243,6 +1252,18 @@ class Entity
     public function setVersion(?string $version): self
     {
         $this->version = $version;
+
+        return $this;
+    }
+
+    public function getMaxDepth(): Integer
+    {
+        return $this->maxDepth;
+    }
+
+    public function setMaxDepth(Integer $maxDepth): self
+    {
+        $this->maxDepth = $maxDepth;
 
         return $this;
     }
