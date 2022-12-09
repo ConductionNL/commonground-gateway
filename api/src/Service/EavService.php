@@ -690,7 +690,7 @@ class EavService
      */
     public function getRequestFields(Request $request): ?array
     {
-        $fields = $request->query->get('fields');
+        $fields = $request->query->has('fields') ? $request->query->get('fields') : $request->query->get('_fields');
 
         if ($fields) {
             // Lets deal with a comma seperated list
@@ -719,7 +719,7 @@ class EavService
      */
     public function getRequestExtend(Request $request): ?array
     {
-        $extend = $request->query->get('extend');
+        $extend = $request->query->has('extend') ? $request->query->get('extend') : $request->query->get('_extend');
 
         if ($extend) {
             // Lets deal with a comma seperated list
@@ -956,7 +956,7 @@ class EavService
      *
      * @return array
      */
-    public function handleGet(ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType = 'jsonld'): array
+    public function handleGet(ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType = 'json'): array
     {
         return $this->responseService->renderResult($object, $fields, $extend, $acceptType);
     }
@@ -1017,7 +1017,7 @@ class EavService
      *
      * @return array|array[]
      */
-    public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'jsonld', ?array $query = null): array
+    public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'json', ?array $query = null): array
     {
         $query = $query ?? $this->realRequestQueryAll($request->getMethod());
         unset($query['limit']);
@@ -1073,12 +1073,10 @@ class EavService
         $filterCheck = $this->em->getRepository('App:ObjectEntity')->getFilterParameters($entity);
 
         // Lets add generic filters
-        $filterCheck[] = 'fields';
-        $filterCheck[] = 'extend';
+        $filterCheck = array_merge($filterCheck, ['fields', '_fields', 'extend', '_extend']);
         if (!empty($entity->getSearchPartial())) {
-            $filterCheck[] = 'search';
+            $filterCheck = array_merge($filterCheck, ['search', '_search']);
         }
-        $filterCheck[] = '_dateRead';
 
         foreach ($query as $param => $value) {
             if (!in_array($param, $filterCheck)) {
@@ -1126,7 +1124,14 @@ class EavService
                 $object = $object[0];
                 // $object['stringValue'] contains the value we are ordering on.
             }
-            $results[] = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
+            // todo: remove the following function
+            // This is a quick fix for a problem where filtering would return to many result if we are filtering on a value...
+            // ...that is also present in a subobject of the main $object we are filtering on.
+            if (!$this->checkIfFilteredCorrectly($query, $object)) {
+                continue;
+            }
+            $result = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
+            $results[] = $result;
             $this->stopwatch->lap('renderResults');
         }
         $this->stopwatch->stop('renderResults');
@@ -1139,6 +1144,38 @@ class EavService
 
         // If not lets make it pretty
         return $this->handlePagination($acceptType, $entity, $results, $repositoryResult['total'], $limit, $offset);
+    }
+
+    /**
+     * This is a quick fix for a problem where filtering would return to many result if we are filtering on a value
+     * that is also present in a subobject of the main $object we are filtering on.
+     * todo: remove this function.
+     *
+     * @param array        $query  The query/filters we need to check.
+     * @param ObjectEntity $object The object to check.
+     *
+     * @return bool true by default, false if filtering wasn't done correctly and this object should not be shown in the results.
+     */
+    private function checkIfFilteredCorrectly(array $query, ObjectEntity $object): bool
+    {
+        unset(
+            $query['search'], $query['_search'],
+            $query['fields'], $query['_fields'],
+            $query['extend'], $query['_extend']
+        );
+        if (!empty($query)) {
+            $resultDot = new Dot($object->toArray());
+            foreach ($query as $filter => $value) {
+                $filter = str_replace('|valueScopeFilter', '', $filter);
+                $resultFilter = $resultDot->get($filter);
+                $resultFilter = $resultFilter === true ? 'true' : ($resultFilter === false ? 'false' : $resultDot->get($filter));
+                if (!is_array($value) && $resultDot->get($filter) !== null && $resultFilter != $value && (is_string($value) && !str_contains($value, 'NULL'))) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -1232,7 +1269,7 @@ class EavService
         // Check mayBeOrphaned
         // Get all attributes with mayBeOrphaned == false and one or more objects
         $cantBeOrphaned = $object->getEntity()->getAttributes()->filter(function (Attribute $attribute) use ($object) {
-            if (!$attribute->getMayBeOrphaned() && count($object->getValueByAttribute($attribute)->getObjects()) > 0) {
+            if (!$attribute->getMayBeOrphaned() && count($object->getSubresources($attribute)) > 0) {
                 return true;
             }
 
@@ -1242,7 +1279,7 @@ class EavService
             $data = [];
             foreach ($cantBeOrphaned as $attribute) {
                 $data[] = $attribute->getName();
-                //                $data[$attribute->getName()] = $object->getValueByAttribute($attribute)->getId();
+                //                $data[$attribute->getName()] = $object->getValueObject($attribute)->getId();
             }
 
             return [
@@ -1262,23 +1299,23 @@ class EavService
         foreach ($object->getEntity()->getAttributes() as $attribute) {
             // If this object has subresources and cascade delete is set to true, delete the subresources as well.
             // TODO: use switch for type? ...also delete type file?
-            if ($attribute->getType() == 'object' && $attribute->getCascadeDelete() && !is_null($object->getValueByAttribute($attribute)->getValue())) {
+            if ($attribute->getType() == 'object' && $attribute->getCascadeDelete() && !is_null($object->getValue($attribute))) {
                 if ($attribute->getMultiple()) {
                     // !is_null check above makes sure we do not try to loop through null
-                    foreach ($object->getValueByAttribute($attribute)->getValue() as $subObject) {
+                    foreach ($object->getValue($attribute) as $subObject) {
                         if ($subObject && !$maxDepth->contains($subObject)) {
                             $this->handleDelete($subObject, $maxDepth);
                         }
                     }
-                } else {
-                    $subObject = $object->getValueByAttribute($attribute)->getValue();
-                    if ($subObject && !$maxDepth->contains($subObject)) {
-                        $this->handleDelete($subObject, $maxDepth);
-                    }
+                }
+            } else {
+                $subObject = $object->getValue($attribute);
+                if ($subObject instanceof ObjectEntity && !$maxDepth->contains($subObject)) {
+                    $this->handleDelete($subObject, $maxDepth);
                 }
             }
         }
-        if ($object->getEntity()->getGateway() && $object->getEntity()->getGateway()->getLocation() && $object->getEntity()->getEndpoint() && $object->getExternalId()) {
+        if ($object->getEntity()->getSource() && $object->getEntity()->getSource()->getLocation() && $object->getEntity()->getEndpoint() && $object->getExternalId()) {
             if ($resource = $this->commonGroundService->isResource($object->getUri())) {
                 $this->commonGroundService->deleteResource(null, $object->getUri()); // could use $resource instead?
             }
@@ -1325,7 +1362,7 @@ class EavService
         $this->em->clear();
         //TODO: test and make sure extern objects are not created after an error, and if they are, maybe add this;
         //        var_dump($createdObject->getUri());
-        //        if ($createdObject->getEntity()->getGateway() && $createdObject->getEntity()->getGateway()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
+        //        if ($createdObject->getEntity()->getSource() && $createdObject->getEntity()->getSource()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
         //            try {
         //                $resource = $this->commonGroundService->getResource($createdObject->getUri(), [], false);
         //                var_dump('Delete extern object for: '.$createdObject->getEntity()->getName());

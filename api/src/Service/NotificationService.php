@@ -83,7 +83,7 @@ class NotificationService
             'dataref'=> $this->configuration['dataref'].$object['id'],
             //"sequence"=>"1234",
             //"sequencetype"=>"integer",
-            'datacontenttype'=> $this->configuration['source'],
+            'datacontenttype'=> $this->configuration['datacontenttype'],
         ];
 
         // Include data if so required
@@ -97,7 +97,7 @@ class NotificationService
         // Send the notification
         try {
             $this->commonGroundService->callService(
-                $this->gatewayService->gatewayToArray($source),
+                $this->gatewayService->sourceToArray($source),
                 $source->getLocation().$this->configuration['endpoint'].($object['id'] ? '/'.$object['id'] : ''),
                 json_encode($notification),
                 array_key_exists('query', $this->configuration) ? $this->configuration['query'] : [],

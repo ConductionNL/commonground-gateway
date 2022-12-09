@@ -8,7 +8,7 @@ use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 
-class ZdsToZGWHandler
+class ZdsToZGWHandler implements ActionHandlerInterface
 {
     private ZdsZaakService $zdsZaakService;
 
@@ -27,18 +27,51 @@ class ZdsToZGWHandler
         return [
             '$id'         => 'https://example.com/person.schema.json',
             '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
-            'title'       => 'Zaakeigenschappen Action',
-            'description' => 'This handler posts zaak eigenschappen from ZDS to ZGW',
-            'required'    => ['identifierPath'],
+            'title'       => 'ZdsToZGWHandler',
+            'description' => 'This handler posts a zaak from ZDS to ZGW',
+            'required'    => ['zaakEntityId', 'zaakTypeEntityId', 'eigenschapEntityId', 'zaakEigenschapEntityId', 'rolEntityId', 'rolTypeEntityId'],
             'properties'  => [
-                'identifierPath' => [
-                    'type'        => 'string',
-                    'description' => 'The DNS of the mail provider, see https://symfony.com/doc/6.2/mailer.html for details',
-                    'example'     => 'native://default',
+                'zaakEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the zaak entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true,
                 ],
-                'eigenschappen' => [
-                    'type'        => 'array',
-                    'description' => '',
+                'zaakTypeEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the zaakType entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true,
+                ],
+                'eigenschapEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the eigenschap entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true,
+                ],
+                'zaakEigenschapEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the zaakEigenschap entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true,
+                ],
+                'rolEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the rol entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true,
+                ],
+                'rolTypeEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the rolType entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true,
+                ],
+                'enrichData' => [
+                    'type'        => 'boolean',
+                    'description' => 'Boolean for enrich data',
+                    'example'     => 'true',
+                    'nullable'    => true,
                 ],
             ],
         ];
@@ -59,8 +92,6 @@ class ZdsToZGWHandler
      */
     public function run(array $data, array $configuration): array
     {
-        var_dump('hoi');
-
         return $this->zdsZaakService->zdsToZGWHandler($data, $configuration);
     }
 }

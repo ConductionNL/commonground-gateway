@@ -72,3 +72,7 @@ Create the name of the service account to use
 {{- define "rabbitmq.fullname" -}}
 {{- printf "%s-%s" .Release.Name "rabbitmq" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{- define "mongodb.fullname" -}}
+{{- printf "%s-%s" .Release.Name "mongodb" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}

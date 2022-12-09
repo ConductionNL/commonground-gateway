@@ -8,6 +8,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Entity\Gateway as Source;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
@@ -33,6 +34,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\SynchronizationRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ * @ORM\HasLifecycleCallbacks
  *
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
@@ -41,6 +43,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "entity.id": "exact",
  *     "gateway.id": "exact",
  *     "object.id": "exact",
+ *     "sourceId": "exact"
  * })
  */
 class Synchronization
@@ -85,13 +88,13 @@ class Synchronization
     private ?Action $action = null;
 
     /**
-     * @var Gateway The gateway (source) of this resource
+     * @var Source The Source of this resource
      *
      * @Groups({"read","write"})
-     * @ORM\ManyToOne(targetEntity=Gateway::class)
+     * @ORM\ManyToOne(targetEntity=Gateway::class, cascade={"persist"}, inversedBy="synchronizations")
      * @ORM\JoinColumn(nullable=false)
      */
-    private Gateway $gateway;
+    private Source $gateway;
 
     /**
      * @var string|null
@@ -118,12 +121,20 @@ class Synchronization
     private ?string $hash = '';
 
     /**
+     * @var bool Whether or not the synchronization is blocked
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", options={"default": true})
+     */
+    private bool $blocked = false;
+
+    /**
      * @var ?DateTimeInterface The moment the source of this resource was last changed
      *
      * @Groups({"read","write"})
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private ?DateTimeInterface $sourceLastChanged;
+    private ?DateTimeInterface $sourceLastChanged = null;
 
     /**
      * @var ?DateTimeInterface The moment this resource was last checked
@@ -159,6 +170,20 @@ class Synchronization
      */
     private ?DateTimeInterface $dateModified;
 
+    /**
+     * The amount of times that we have tried to sync this item, counted by the amount of times it has been "touched".
+     *
+     * @ORM\Column(type="integer", options={"default" : 1})
+     */
+    private $tryCounter = 0;
+
+    /**
+     * An updated timer that tels the sync service to wait a specific increment beofre trying again.
+     *
+     * @ORM\Column(type="datetime", options={"default" : "CURRENT_TIMESTAMP"})
+     */
+    private $dontSyncBefore;
+
     public function getId(): ?UuidInterface
     {
         return $this->id;
@@ -185,6 +210,8 @@ class Synchronization
     {
         $this->object = $object;
 
+        $this->setEntity($object->getEntity());
+
         return $this;
     }
 
@@ -200,14 +227,14 @@ class Synchronization
         return $this;
     }
 
-    public function getGateway(): ?Gateway
+    public function getSource(): ?Source
     {
         return $this->gateway;
     }
 
-    public function setGateway(?Gateway $gateway): self
+    public function setSource(?Source $source): self
     {
-        $this->gateway = $gateway;
+        $this->gateway = $source;
 
         return $this;
     }
@@ -280,6 +307,7 @@ class Synchronization
     public function setLastSynced(?\DateTimeInterface $lastSynced): self
     {
         $this->lastSynced = $lastSynced;
+        isset($this->gateway) && $this->gateway->setLastSync($lastSynced);
 
         return $this;
     }
@@ -306,5 +334,62 @@ class Synchronization
         $this->dateModified = $dateModified;
 
         return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isBlocked(): bool
+    {
+        return $this->blocked;
+    }
+
+    /**
+     * @param bool $blocked
+     */
+    public function setBlocked(bool $blocked): self
+    {
+        $this->blocked = $blocked;
+
+        return $this;
+    }
+
+    public function getTryCounter(): ?int
+    {
+        return $this->tryCounter;
+    }
+
+    public function setTryCounter(int $tryCounter): self
+    {
+        $this->tryCounter = $tryCounter;
+
+        return $this;
+    }
+
+    public function getDontSyncBefore(): ?\DateTimeInterface
+    {
+        return $this->dontSyncBefore;
+    }
+
+    public function setDontSyncBefore(\DateTimeInterface $dontSyncBefore): self
+    {
+        $this->dontSyncBefore = $dontSyncBefore;
+
+        return $this;
+    }
+
+    /**
+     * Set name on pre persist.
+     *
+     * This function makes sure that each and every oject alwys has a name when saved
+     *
+     * @ORM\PrePersist
+     */
+    public function prePersist(): void
+    {
+        // If we have ten trys or more we want to block the sync
+        if ($this->tryCounter >= 10) {
+            $this->blocked = true;
+        }
     }
 }

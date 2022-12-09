@@ -12,7 +12,7 @@ framework:
                 dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
 
                 retry_strategy:
-                    max_retries: 2
+                    max_retries: 5
                     delay: 5000
                     multiplier: 2
                     max_delay: 300000
@@ -26,6 +26,6 @@ framework:
 
         routing:
             # Route your messages to the transports
-            'App\Message\PromiseMessage': async
+            'App\Message\ActionMessage': async
             'App\Message\NotificationMessage': async
             'App\Message\SyncPageMessage': async

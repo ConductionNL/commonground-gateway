@@ -3,18 +3,17 @@
 namespace App\ActionHandler;
 
 use App\Exception\GatewayException;
-use App\Service\MapSimXMLService;
-use Psr\Cache\CacheException;
+use App\Service\ZdsZaakService;
 use Psr\Cache\InvalidArgumentException;
 use Respect\Validation\Exceptions\ComponentException;
 
-class MapSimXMLHandler
+class CreeerGebruiksrechtHandler implements ActionHandlerInterface
 {
-    private MapSimXMLService $mapSimXMLService;
+    private ZdsZaakService $zdsZaakService;
 
-    public function __construct(MapSimXMLService $mapSimXMLService)
+    public function __construct(ZdsZaakService $zdsZaakService)
     {
-        $this->mapSimXMLService = $mapSimXMLService;
+        $this->zdsZaakService = $zdsZaakService;
     }
 
     /**
@@ -27,27 +26,27 @@ class MapSimXMLHandler
         return [
             '$id'         => 'https://example.com/person.schema.json',
             '$schema'     => 'https://json-schema.org/draft/2020-12/schema',
-            'title'       => 'Sim XML Action',
-            'description' => 'This handler customly maps sim xml to zgw zaak and document ',
-            'required'    => ['simXMLEntityId'],
+            'title'       => 'CreeerGebruiksrechtHandler',
+            'description' => 'This handler posts a zaak document from ZDS to ZGW',
+            'required'    => ['informatieObjectTypeEntityId', 'enkelvoudigInformatieObjectEntityId', 'zaakTypeInformatieObjectTypeEntityId'],
             'properties'  => [
-                'simXMLEntityId' => [
-                    'type'        => 'string',
-                    'description' => 'The UUID of the case entitEntity on the gateway',
-                    'example'     => '',
+                'gebruiksrechtEntityId' => [
+                    'type'        => 'uuid',
+                    'description' => 'The uuid of the Gebruiksrecht entity',
+                    'example'     => 'b484ba0b-0fb7-4007-a303-1ead3ab48846',
+                    'required'    => true,
                 ],
             ],
         ];
     }
 
     /**
-     * This function runs the service for validating cases.
+     * This function runs the zaakeigenschappen plugin.
      *
      * @param array $data          The data from the call
      * @param array $configuration The configuration of the action
      *
      * @throws GatewayException
-     * @throws CacheException
      * @throws InvalidArgumentException
      * @throws ComponentException
      *
@@ -55,6 +54,6 @@ class MapSimXMLHandler
      */
     public function run(array $data, array $configuration): array
     {
-        return $this->mapSimXMLService->mapSimXMLHandler($data, $configuration);
+        return $this->zdsZaakService->creeerGebruiksrechtHandler($data, $configuration);
     }
 }

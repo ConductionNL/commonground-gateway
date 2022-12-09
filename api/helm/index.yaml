@@ -2,8 +2,34 @@ apiVersion: v1
 entries:
   commonground-gateway:
   - apiVersion: v2
+    appVersion: "2.2"
+    created: "2022-11-30T15:22:31.079839396+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    description: A Helm chart for Kubernetes
+    digest: 181be97fa0a3b9ae51a48019e231383dc837ba2168214e0ca70c0015bd4afb36
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.0.0.tgz
+    version: 1.0.0
+  - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-10-05T15:21:20.272546634+02:00"
+    created: "2022-11-30T15:22:30.845160605+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -17,7 +43,7 @@ entries:
       repository: https://charts.bitnami.com/bitnami
       version: 9.0.1
     description: A Helm chart for Kubernetes
-    digest: a4c33a8ea7095911c57608e121eb208322da46941865624f7f8f2ab2fab75b33
+    digest: 829a29caaaf5b18101cf6e295f60c624c16dc3126b24b4cdf0936ac0780c7cb8
     name: commonground-gateway
     type: application
     urls:
@@ -25,7 +51,7 @@ entries:
     version: 0.1.12
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-10-05T15:21:20.260231797+02:00"
+    created: "2022-11-30T15:22:30.823406001+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -47,7 +73,7 @@ entries:
     version: 0.1.11
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-10-05T15:21:20.248652235+02:00"
+    created: "2022-11-30T15:22:30.798656614+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -69,7 +95,7 @@ entries:
     version: 0.1.10
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-10-05T15:21:20.365193485+02:00"
+    created: "2022-11-30T15:22:31.04140967+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -91,7 +117,7 @@ entries:
     version: 0.1.9
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-10-05T15:21:20.352715788+02:00"
+    created: "2022-11-30T15:22:31.004467214+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -113,7 +139,7 @@ entries:
     version: 0.1.8
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-10-05T15:21:20.340839309+02:00"
+    created: "2022-11-30T15:22:30.976912898+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -135,7 +161,7 @@ entries:
     version: 0.1.7
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-10-05T15:21:20.324738981+02:00"
+    created: "2022-11-30T15:22:30.945625684+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -154,7 +180,7 @@ entries:
     version: 0.1.6
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-10-05T15:21:20.316047566+02:00"
+    created: "2022-11-30T15:22:30.927231311+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -173,7 +199,7 @@ entries:
     version: 0.1.5
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-10-05T15:21:20.30772077+02:00"
+    created: "2022-11-30T15:22:30.907967663+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -192,7 +218,7 @@ entries:
     version: 0.1.4
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-10-05T15:21:20.298436518+02:00"
+    created: "2022-11-30T15:22:30.891234681+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -211,7 +237,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-10-05T15:21:20.288354519+02:00"
+    created: "2022-11-30T15:22:30.877337986+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -230,7 +256,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-10-05T15:21:20.237119519+02:00"
+    created: "2022-11-30T15:22:30.774746967+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -249,7 +275,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-10-05T15:21:20.221803846+02:00"
+    created: "2022-11-30T15:22:30.748985779+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -266,20 +292,58 @@ entries:
     urls:
     - commonground-gateway-0.1.0.tgz
     version: 0.1.0
+  mongodb:
+  - annotations:
+      category: Database
+    apiVersion: v2
+    appVersion: 6.0.3
+    created: "2022-11-30T15:22:31.097881841+01:00"
+    dependencies:
+    - name: common
+      repository: https://charts.bitnami.com/bitnami
+      tags:
+      - bitnami-common
+      version: 2.x.x
+    description: MongoDB(R) is a relational open source NoSQL database. Easy to use,
+      it stores data in JSON-like documents. Automated scalability and high-performance.
+      Ideal for developing cloud native applications.
+    digest: b4d41081a9930cf227964b8ae3b15fd445b86d811ec1137ab86d229821eb6e5c
+    home: https://github.com/bitnami/charts/tree/main/bitnami/mongodb
+    icon: https://bitnami.com/assets/stacks/mongodb/img/mongodb-stack-220x234.png
+    keywords:
+    - mongodb
+    - database
+    - nosql
+    - cluster
+    - replicaset
+    - replication
+    maintainers:
+    - name: Bitnami
+      url: https://github.com/bitnami/charts
+    name: mongodb
+    sources:
+    - https://github.com/bitnami/containers/tree/main/bitnami/mongodb
+    - https://mongodb.org
+    urls:
+    - charts/mongodb-13.4.4.tgz
+    version: 13.4.4
   postgresql:
   - annotations:
       category: Database
     apiVersion: v2
-    appVersion: 11.13.0
-    created: "2022-10-05T15:21:20.370693425+02:00"
+    appVersion: 15.1.0
+    created: "2022-11-30T15:22:31.116121484+01:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
-      version: 1.x.x
-    description: Chart for PostgreSQL, an object-relational database management system
-      (ORDBMS) with an emphasis on extensibility and on standards-compliance.
-    digest: 871e4726cd44dddc531dc9bcdbd4fb6e7da875fbe0c6ec347bfcda33acc2d246
-    home: https://github.com/bitnami/charts/tree/master/bitnami/postgresql
+      tags:
+      - bitnami-common
+      version: 2.x.x
+    description: PostgreSQL (Postgres) is an open source object-relational database
+      known for reliability and data integrity. ACID-compliant, it supports foreign
+      keys, joins, views, triggers and stored procedures.
+    digest: 6706df44c06603a6e43d8ff250e5587e2d9223518259825d73ba4f98b1ef0ea7
+    home: https://github.com/bitnami/charts/tree/main/bitnami/postgresql
     icon: https://bitnami.com/assets/stacks/postgresql/img/postgresql-stack-220x234.png
     keywords:
     - postgresql
@@ -289,23 +353,21 @@ entries:
     - replication
     - cluster
     maintainers:
-    - email: containers@bitnami.com
-      name: Bitnami
-    - email: cedric@desaintmartin.fr
-      name: desaintmartin
+    - name: Bitnami
+      url: https://github.com/bitnami/charts
     name: postgresql
     sources:
-    - https://github.com/bitnami/bitnami-docker-postgresql
+    - https://github.com/bitnami/containers/tree/main/bitnami/postgresql
     - https://www.postgresql.org/
     urls:
-    - charts/postgresql-10.9.5.tgz
-    version: 10.9.5
+    - charts/postgresql-12.1.2.tgz
+    version: 12.1.2
   rabbitmq:
   - annotations:
       category: Infrastructure
     apiVersion: v2
     appVersion: 3.9.16
-    created: "2022-10-05T15:21:20.376508972+02:00"
+    created: "2022-11-30T15:22:31.128668158+01:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -336,34 +398,31 @@ entries:
   - annotations:
       category: Database
     apiVersion: v2
-    appVersion: 6.2.5
-    created: "2022-10-05T15:21:20.383489656+02:00"
+    appVersion: 7.0.5
+    created: "2022-11-30T15:22:31.145391351+01:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
       tags:
       - bitnami-common
-      version: 1.x.x
-    description: Open source, advanced key-value store. It is often referred to as
-      a data structure server since keys can contain strings, hashes, lists, sets
-      and sorted sets.
-    digest: f8fa3b0bdaecf7f9aa1669b027c5452f7efaab21c10b0dbcf7148e17c54ac5b7
-    home: https://github.com/bitnami/charts/tree/master/bitnami/redis
+      version: 2.x.x
+    description: Redis(R) is an open source, advanced key-value store. It is often
+      referred to as a data structure server since keys can contain strings, hashes,
+      lists, sets and sorted sets.
+    digest: ceeaecfb2219b385a957ed32fc4e91adfb0c748a5b930086146784a5b4b482dd
+    home: https://github.com/bitnami/charts/tree/main/bitnami/redis
     icon: https://bitnami.com/assets/stacks/redis/img/redis-stack-220x234.png
     keywords:
     - redis
     - keyvalue
     - database
     maintainers:
-    - email: containers@bitnami.com
-      name: Bitnami
-    - email: cedric@desaintmartin.fr
-      name: desaintmartin
+    - name: Bitnami
+      url: https://github.com/bitnami/charts
     name: redis
     sources:
-    - https://github.com/bitnami/bitnami-docker-redis
-    - http://redis.io/
+    - https://github.com/bitnami/containers/tree/main/bitnami/redis
     urls:
-    - charts/redis-15.3.2.tgz
-    version: 15.3.2
-generated: "2022-10-05T15:21:20.20797147+02:00"
+    - charts/redis-17.3.11.tgz
+    version: 17.3.11
+generated: "2022-11-30T15:22:30.728548267+01:00"

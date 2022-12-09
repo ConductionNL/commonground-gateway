@@ -44,7 +44,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(SearchFilter::class, properties={
  *     "name": "exact",
  *     "operationType": "exact",
- *     "pathRegex": "ipartial"
+ *     "pathRegex": "ipartial",
+ *     "entities.id": "exact"
  * })
  */
 class Endpoint
@@ -195,6 +196,30 @@ class Endpoint
     private ?array $pathArray = [];
 
     /**
+     * @var ?array needs to be refined
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $methods = [];
+
+    /**
+     * @var ?array needs to be refined
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $throws = [];
+
+    /**
+     * @var ?bool needs to be refined
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private ?bool $status = null;
+
+    /**
      * @var Collection|null Properties of this Endpoint
      *
      * @MaxDepth(1)
@@ -238,13 +263,47 @@ class Endpoint
      */
     private ?string $defaultContentType = 'application/json';
 
-    public function __construct()
+    /**
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="endpoints")
+     */
+    private $Entity;
+
+    /**
+     * The Entities of this Endpoint.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\ManyToMany(targetEntity=Entity::class, inversedBy="endpoints")
+     */
+    private $entities;
+
+    public function __construct(?Entity $entity = null)
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
         $this->applications = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->properties = new ArrayCollection();
+        $this->entities = new ArrayCollection();
+
+        // Create simple endpoints for entities
+        if ($entity) {
+            $this->setEntity($entity);
+            $this->setName($entity->getName());
+            $this->setDescription($entity->getDescription());
+            $this->setMethods(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+            $this->setPath([1=>'id']);
+
+            // Lets make a path
+            $path = mb_strtolower(str_replace(' ', '_', $entity->getName()));
+            if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->first()->getPrefix()) {
+                $path = $entity->getCollections()->first()->getPrefix().$path;
+            }
+            $pathRegEx = '^'.$path.'/?([a-z0-9-]+)?$';
+            $this->setPathRegex($pathRegEx);
+
+            /*@depricated kept here for lagacy */
+            $this->setOperationType('GET');
+        }
     }
 
     public function getId(): ?UuidInterface
@@ -339,6 +398,42 @@ class Endpoint
     public function setPath(array $path): self
     {
         $this->path = $path;
+
+        return $this;
+    }
+
+    public function getMethods(): ?array
+    {
+        return $this->methods;
+    }
+
+    public function setMethods(?array $methods): self
+    {
+        $this->methods = $methods;
+
+        return $this;
+    }
+
+    public function getThrows(): ?array
+    {
+        return $this->throws;
+    }
+
+    public function setThrows(?array $throws): self
+    {
+        $this->throws = $throws;
+
+        return $this;
+    }
+
+    public function getStatus(): ?bool
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?bool $status): self
+    {
+        $this->status = $status;
 
         return $this;
     }
@@ -586,6 +681,45 @@ class Endpoint
     public function setDefaultContentType(?string $defaultContentType): self
     {
         $this->defaultContentType = $defaultContentType;
+
+        return $this;
+    }
+
+    public function getEntity(): ?Entity
+    {
+        return $this->Entity;
+    }
+
+    public function setEntity(?Entity $entity): self
+    {
+        // Also put it in the array
+        $this->addEntity($entity);
+
+        $this->entity = $entity;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Entity[]
+     */
+    public function getEntities(): Collection
+    {
+        return $this->entities;
+    }
+
+    public function addEntity(Entity $entity): self
+    {
+        if (!$this->entities->contains($entity)) {
+            $this->entities[] = $entity;
+        }
+
+        return $this;
+    }
+
+    public function removeEntity(Entity $entity): self
+    {
+        $this->entities->removeElement($entity);
 
         return $this;
     }

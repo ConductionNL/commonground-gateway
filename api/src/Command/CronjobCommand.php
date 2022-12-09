@@ -77,6 +77,11 @@ class CronjobCommand extends Command
         foreach ($throws as $key => $throw) {
             $io->block("Dispatch ActionEvent for Throw: \"$throw\"");
             $this->session->set('currentCronJobThrow', $throw);
+            $this->session->set('currentCronJobSubThrow', null);
+            if (!in_array($throw, ActionEvent::EVENTS)) {
+                $this->session->set('currentCronJobThrow', 'commongateway.action.event');
+                $this->session->set('currentCronJobSubThrow', $throw);
+            }
             $actionEvent = new ActionEvent($throw, ($cronjob->getData()));
             $this->eventDispatcher->dispatch($actionEvent, $actionEvent->getType());
 
@@ -95,6 +100,8 @@ class CronjobCommand extends Command
                 $io->newLine();
             }
             $io->newLine();
+            $this->session->remove('currentCronJobThrow');
+            $this->session->remove('currentCronJobSubThrow');
         }
         $throwProgressBar->setMessage('Finished looping through all Throws of this Cronjob');
         $throwProgressBar->finish();

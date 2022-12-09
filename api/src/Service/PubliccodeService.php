@@ -13,18 +13,15 @@ class PubliccodeService
 {
     private EntityManagerInterface $entityManager;
     private GithubApiService $githubService;
-    private GitlabApiService $gitlabService;
     private array $configuration;
     private array $data;
 
     public function __construct(
         EntityManagerInterface $entityManager,
-        GithubApiService $githubService,
-        GitlabApiService $gitlabService
+        GithubApiService $githubService
     ) {
         $this->entityManager = $entityManager;
         $this->githubService = $githubService;
-        $this->gitlabService = $gitlabService;
         $this->configuration = [];
         $this->data = [];
     }
@@ -109,6 +106,7 @@ class PubliccodeService
             $component->setValue('platforms', $publiccode['platforms'] ?? null);
             $component->setValue('categories', $publiccode['categories'] ?? null);
             $component->setValue('developmentStatus', $publiccode['developmentStatus'] ?? null);
+            $repository->setValue('url', $publiccode['url'] ?? null);
 
 //            $component->setValue('releaseDate', $publiccode['releaseDate']);
 //            $component->setValue('dependsOn', $publiccode['dependsOn']['open']['name']);
@@ -131,6 +129,7 @@ class PubliccodeService
             $component->setValue('description', $description);
             $this->entityManager->persist($description);
 
+            $component->setValue('url', $repository);
             $this->entityManager->persist($component);
             $repository->setValue('component', $component);
             $this->entityManager->persist($repository);
@@ -297,6 +296,7 @@ class PubliccodeService
                     }
 
                     $repository = $this->setRepositoryWithGithubInfo($repository, $github);
+
                     $this->entityManager->flush();
 
                     return $repository;
@@ -320,23 +320,41 @@ class PubliccodeService
      */
     public function enrichRepositoryWithOrganisationRepos(ObjectEntity $organisation, Entity $repositoryEntity): ?ObjectEntity
     {
+        $ownsRepositories = [];
         if ($owns = $organisation->getValue('owns')) {
             foreach ($owns as $repositoryUrl) {
-                $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+                if (!$repository = $this->getOrganisationRepos($repositoryUrl, $repositoryEntity)) {
+                    return $organisation;
+                }
+                $ownsRepositories[] = $repository->getId()->toString();
             }
         }
+        $organisation->setValue('owns', $ownsRepositories);
 
+        $usesRepositories = [];
         if ($uses = $organisation->getValue('uses')) {
             foreach ($uses as $repositoryUrl) {
-                $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+                if (!$repository = $this->getOrganisationRepos($repositoryUrl, $repositoryEntity)) {
+                    return $organisation;
+                }
+                $usesRepositories[] = $repository->getId()->toString();
             }
         }
+        $organisation->setValue('uses', $usesRepositories);
 
+        $supportsRepositories = [];
         if ($supports = $organisation->getValue('supports')) {
             foreach ($supports as $repositoryUrl) {
-                $this->getOrganisationRepos($repositoryUrl, $repositoryEntity);
+                if (!$repository = $this->getOrganisationRepos($repositoryUrl, $repositoryEntity)) {
+                    return $organisation;
+                }
+                $supportsRepositories[] = $repository->getId()->toString();
             }
         }
+        $organisation->setValue('supports', $supportsRepositories);
+
+        $this->entityManager->persist($organisation);
+        $this->entityManager->flush();
 
         return $organisation;
     }
@@ -378,16 +396,20 @@ class PubliccodeService
     {
         if ($this->githubService->getGithubRepoFromOrganization($organization->getValue('name'))) {
             if ($catalogi = $this->githubService->getOpenCatalogiFromGithubRepo($organization->getValue('name'))) {
-                $organization->setValue('name', $catalogi['name']);
-                $organization->setValue('description', $catalogi['description']);
-                $organization->setValue('type', $catalogi['type']);
-                $organization->setValue('telephone', $catalogi['telephone']);
-                $organization->setValue('email', $catalogi['email']);
-                $organization->setValue('website', $catalogi['website']);
-                $organization->setValue('logo', $catalogi['logo']);
-                $organization->setValue('catalogusAPI', $catalogi['catalogusAPI']);
-                $organization->setValue('uses', $catalogi['uses']);
-                $organization->setValue('supports', $catalogi['supports']);
+                try {
+                    $organization->setValue('name', $catalogi['name']);
+                    $organization->setValue('description', $catalogi['description']);
+                    $organization->setValue('type', $catalogi['type']);
+                    $organization->setValue('telephone', $catalogi['telephone']);
+                    $organization->setValue('email', $catalogi['email']);
+                    $organization->setValue('website', $catalogi['website']);
+                    $organization->setValue('logo', $catalogi['logo']);
+                    $organization->setValue('catalogusAPI', $catalogi['catalogusAPI']);
+                    $organization->setValue('uses', $catalogi['uses']);
+                    $organization->setValue('supports', $catalogi['supports']);
+                } catch (Exception $exception) {
+                    var_dump("Data error for {$organization->getValue('name')}, {$exception->getMessage()}");
+                }
 
                 $this->entityManager->persist($organization);
                 $this->entityManager->flush();

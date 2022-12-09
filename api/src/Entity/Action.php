@@ -9,6 +9,8 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\ActionRepository;
+use DateTime;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -124,7 +126,7 @@ class Action
      *
      * @ORM\Column(type="integer")
      */
-    private int $priority;
+    private int $priority = 1;
 
     /**
      * @var bool Whether the action should be run asynchronous
@@ -167,19 +169,67 @@ class Action
     private ?int $lastRunTime = 0;
 
     /**
+     * @var ?bool true if last run went good and false if something went wrong
+     *
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true, options={"default": null})
      */
     private ?bool $status = null;
 
     /**
+     * @var ?bool true if action should be ran
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true, options={"default": true})
+     */
+    private ?bool $isEnabled = true;
+
+    /**
      * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="action", orphanRemoval=true, fetch="EXTRA_LAZY")
      */
     private $actionLogs;
 
-    public function __construct()
-    {
+    /**
+     * @var array|null The configuration of the action handler
+     *
+     * @Groups({"read","write"})
+     *
+     * @ORM\Column(type="array", length=255, nullable=true)
+     */
+    private ?array $actionHandlerConfiguration;
+
+    /**
+     * @var Datetime The moment this resource was created
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="create")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $dateCreated;
+
+    /**
+     * @var Datetime The moment this resource was last Modified
+     *
+     * @Groups({"read"})
+     * @Gedmo\Timestampable(on="update")
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $dateModified;
+
+    public function __construct(
+        $actionHandler = false
+    ) {
         $this->actionLogs = new ArrayCollection();
+
+        if ($actionHandler) {
+            if (!$schema = $actionHandler->getConfiguration()) {
+                return;
+            }
+
+            (isset($schema['title']) ? $this->setName($schema['title']) : '');
+            (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
+            $this->setClass(get_class($actionHandler));
+        }
     }
 
     public function getId(): ?UuidInterface
@@ -355,6 +405,18 @@ class Action
         return $this;
     }
 
+    public function getIsEnabled(): ?bool
+    {
+        return $this->isEnabled;
+    }
+
+    public function setIsEnabled(?bool $isEnabled): self
+    {
+        $this->isEnabled = $isEnabled;
+
+        return $this;
+    }
+
     /**
      * @return Collection|ActionLog[]
      */
@@ -381,6 +443,42 @@ class Action
                 $actionLog->setAction(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getActionHandlerConfiguration(): ?array
+    {
+        return $this->actionHandlerConfiguration;
+    }
+
+    public function setActionHandlerConfiguration(?array $actionHandlerConfiguration): self
+    {
+        $this->actionHandlerConfiguration = $actionHandlerConfiguration;
+
+        return $this;
+    }
+
+    public function getDateCreated(): ?DateTimeInterface
+    {
+        return $this->dateCreated;
+    }
+
+    public function setDateCreated(DateTimeInterface $dateCreated): self
+    {
+        $this->dateCreated = $dateCreated;
+
+        return $this;
+    }
+
+    public function getDateModified(): ?DateTimeInterface
+    {
+        return $this->dateModified;
+    }
+
+    public function setDateModified(DateTimeInterface $dateModified): self
+    {
+        $this->dateModified = $dateModified;
 
         return $this;
     }

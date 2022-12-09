@@ -27,11 +27,11 @@ class GatewayDocumentationService
     {
         $paths = [];
 
-        foreach ($this->em->getRepository('App:Gateway')->findAll() as $gateway) {
-            if ($gateway->getDocumentation()) {
-                $gateway = $this->getPathsForGateway($gateway);
+        foreach ($this->em->getRepository('App:Gateway')->findAll() as $source) {
+            if ($source->getDocumentation()) {
+                $source = $this->getPathsForGateway($source);
 
-                $this->em->persist($gateway);
+                $this->em->persist($source);
             }
             continue;
         }
@@ -45,12 +45,12 @@ class GatewayDocumentationService
      *
      * @return bool returns true if succcesfull or false on failure
      */
-    public function getPathsForGateway(Gateway $gateway)
+    public function getPathsForGateway(Gateway $source)
     {
         try {
             // Get the docs
-            if (empty($gateway->getOas()) && $gateway->getDocumentation()) {
-                $response = $this->client->get($gateway->getDocumentation());
+            if (empty($source->getOas()) && $source->getDocumentation()) {
+                $response = $this->client->get($source->getDocumentation());
                 $response = $response->getBody()->getContents();
                 // Handle json
                 if ($oas = json_decode($response, true)) {
@@ -59,17 +59,17 @@ class GatewayDocumentationService
                 elseif ($oas = Yaml::parse($response)) {
                 }
 
-                $gateway->setOas($oas);
+                $source->setOas($oas);
             }
 
-            $gateway->setPaths($this->getPathsFromOas($gateway->getOas()));
+            $source->setPaths($this->getPathsFromOas($source->getOas()));
         } catch (\Guzzle\Http\Exception\BadResponseException $e) {
             $raw_response = explode("\n", $e->getResponse());
 
             throw new IDPException(end($raw_response));
         }
 
-        return $gateway;
+        return $source;
     }
 
     /**

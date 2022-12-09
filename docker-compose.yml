@@ -5,6 +5,8 @@ x-cache:
   cache_from:
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-nginx
+    - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-ui
+    - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-cron
 
 services:
   #  gateway-frontend:
@@ -14,6 +16,32 @@ services:
   #      - php
   #    ports:
   #      - "83:80"
+  
+  oc:
+    &ui
+    image: ghcr.io/opencatalogi/web-app:dev
+    depends_on:
+      - api
+    ports:
+      - "81:80"
+    volumes:
+      - ./ui/oc.js:/usr/share/nginx/html/env.js:rw,cached 
+        
+  cron:
+    &cron
+    build: ./dockerized-cron
+    depends_on:
+      - api
+    
+  ui:
+    &ui
+    image: ghcr.io/conductionnl/gateway-ui:stag
+    depends_on:
+      - api
+    ports:
+      - "8000:80"
+    volumes:
+      - ./ui/env.js:/usr/share/nginx/html/env.js:rw,cached
   php:
     &php
     image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php:${APP_ENV}
@@ -33,8 +61,8 @@ services:
 #      - DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1
 #      - DATABASE_URL=mysql://api-platform:!ChangeMe!@db/api?serverVersion=10.1
       - DATABASE_URL=sqlsrv://api-platform:!ChangeMe!@db/api?TrustServerCertificate=1
+      - CACHE_URL=mongodb://api-platform:!ChangeMe!@mongodb
       - APP_ENV=${APP_ENV}
-      - APP_CONTAINER=${APP_CONTAINER}
       - APP_DEBUG=${APP_DEBUG}
       - APP_CACHE=${APP_CACHE}
       - APP_VERSION=${APP_VERSION}
@@ -49,11 +77,9 @@ services:
       - APP_DESCRIPTION=${APP_DESCRIPTION}
       - APP_LOGO=${APP_LOGO}
       - APP_HOME=${APP_HOME}
-      - APP_COMMONGROUND_ID=${APP_COMMONGROUND_ID}
       - APP_APPLICATION_KEY=${APP_APPLICATION_KEY}
       - APP_BUILD_ALL_FIXTURES=${APP_BUILD_ALL_FIXTURES}
       - APP_WEB=${APP_WEB}
-      - BADGES=${BADGES}
       - APP_BUILD=${APP_BUILD}
       - APP_INTERNAL=${APP_INTERNAL}
       - APP_URL=${APP_URL}
@@ -67,7 +93,6 @@ services:
       - LICENCE_NAME=${LICENCE_NAME}
       - TRUSTED_PROXIES=${TRUSTED_PROXIES}
       - TRUSTED_HOSTS=${TRUSTED_HOSTS}
-      - AUTH_ENABLED=${AUTH_ENABLED}
       - AUDITTRAIL_ENABLED=${AUDITTRAIL_ENABLED}
       - NOTIFICATION_ENABLED=${NOTIFICATION_ENABLED}
       - REDIS_HOST=redis
@@ -180,6 +205,14 @@ services:
       - ./mssql/docker-entrypoint.sh:/entrypoint.sh
       - ./mssql/db-init.sh:/db-init.sh
       - ./mssql/db-init.sql:/db-init.sql
+  mongodb:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: api-platform
+      MONGO_INITDB_ROOT_PASSWORD: '!ChangeMe!'
+    ports:
+      - "27017:27017"
         
   user-component:
     image: ghcr.io/conductionnl/user-component-nginx:latest

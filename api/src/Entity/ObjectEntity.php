@@ -36,14 +36,53 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "method"="GET",
  *          "path"="/admin/object_entities/{id}/sync"
  *      },
+ *     "get_object"={
+ *          "method"="GET",
+ *          "path"="/admin/objects/{id}"
+ *      },
  *     "put"={"path"="/admin/object_entities/{id}"},
- *     "delete"={"path"="/admin/object_entities/{id}"}
+ *     "put_object"={
+ *          "method"="PUT",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "path"="/admin/objects/{id}"
+ *      },
+ *     "delete"={"path"="/admin/object_entities/{id}"},
+ *     "delete_object"={
+ *          "method"="DELETE",
+ *          "path"="/admin/objects/{id}"
+ *      }
  *  },
  *  collectionOperations={
  *     "get"={"path"="/admin/object_entities"},
- *     "post"={"path"="/admin/object_entities"}
+ *     "get_objects"={
+ *          "method"="GET",
+ *          "path"="/admin/objects"
+ *      },
+ *     "get_objects_schema"={
+ *          "method"="GET",
+ *          "path"="/admin/objects/schema/{schemaId}"
+ *      },
+ *     "post"={"path"="/admin/object_entities"},
+ *     "post_objects_schema"={
+ *          "method"="POST",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "path"="/admin/objects/schema/{schemaId}"
+ *      },
+ *     "create_sync"={
+ *          "method"="POST",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "deserialize"=false,
+ *          "write"=false,
+ *          "serialize"=false,
+ *          "query_parameter_validate"=false,
+ *          "path"="/admin/object_entities/{id}/sync/{sourceId}"
+ *      },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
+ * @ORM\HasLifecycleCallbacks
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -69,6 +108,14 @@ class ObjectEntity
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
+
+    /**
+     * @var ?string The name of this Object (configured from a attribute)
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $name;
 
     /**
      * @var string The {at sign}id or self->href of this Object.
@@ -128,7 +175,7 @@ class ObjectEntity
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"persist","remove"})
+     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"persist","remove"}, orphanRemoval=true)
      * @MaxDepth(1)
      */
     private $objectValues;
@@ -200,6 +247,12 @@ class ObjectEntity
     private Collection $synchronizations;
 
     /**
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="object", fetch="EXTRA_LAZY", cascade={"remove","persist"})
+     */
+    private Collection $usedIn;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -223,6 +276,8 @@ class ObjectEntity
         $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
+        $this->synchronizations = new ArrayCollection();
+        $this->usedIn = new ArrayCollection();
 
         if ($entity) {
             $this->setEntity($entity);
@@ -236,7 +291,19 @@ class ObjectEntity
 
     public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
+
+        return $this;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(?string $name): self
+    {
+        $this->name = $name;
 
         return $this;
     }
@@ -549,7 +616,7 @@ class ObjectEntity
      *
      * @param string|Attribute $attribute
      *
-     * @return array|bool|string|int|object Returns a Value if its found or false when its not found
+     * @return array|bool|string|int|object Returns a Value if its found or false when its not found.
      */
     public function getValue($attribute)
     {
@@ -568,36 +635,17 @@ class ObjectEntity
      *
      * @param string|Attribute $attribute
      *
-     * @return Value|bool Returns a Value if its found or false when its not found
+     * @return Value|bool Returns a Value if its found or false when its not found.
      */
     public function getValueObject($attribute)
     {
         if (is_string($attribute)) {
-            $attribute = $this->getEntity()->getAttributeByName($attribute);
+            $attribute = $this->getAttributeObject($attribute);
         }
 
-        if (!$attribute instanceof Attribute) {
-            return false;
-        }
-
-        return $this->getValueByAttribute($attribute);
-    }
-
-    /**
-     * Sets a value based on the attribute string name or atribute object.
-     *
-     * @param string|Attribute $attribute
-     *
-     * @throws Exception
-     *
-     * @return false|Value
-     */
-    public function setValue($attribute, $value)
-    {
-        $valueObject = $this->getValueObject($attribute);
-        // If we find the Value object we set the value
-        if ($valueObject instanceof Value) {
-            return $valueObject->setValue($value);
+        // If we have a valid Attribute object
+        if ($attribute instanceof Attribute) {
+            return $this->getValueByAttribute($attribute);
         }
 
         // If not return false
@@ -605,31 +653,33 @@ class ObjectEntity
     }
 
     /**
-     * Populate this object with an array of values, where attributes are diffined by key.
+     * Gets a Attribute object based on the attribute string name.
      *
-     * @param array $array
+     * @param string $attributeName
      *
-     * @throws Exception
-     *
-     * @return ObjectEntity
+     * @return Attribute|false Returns an Attribute if its found or false when its not found.
      */
-    public function hydrate(array $array): ObjectEntity
+    public function getAttributeObject(string $attributeName)
     {
-        foreach ($array as $key => $value) {
-            $this->setValue($key, $value);
+        $attribute = $this->getEntity()->getAttributeByName($attributeName);
+
+        // If we have a valid Attribute object
+        if ($attribute instanceof Attribute) {
+            return $attribute;
         }
 
-        return $this;
+        // If not return false
+        return false;
     }
 
     /**
-     * Get an value based on a attribut.
+     * Get a value based on an attribute.
      *
      * @param Attribute $attribute the attribute that you are searching for
      *
-     * @return Value Iether the current value for this attribute or a new value for the attribute if there isnt a current value
+     * @return Value Either the current value for this attribute or a new value for the attribute if there isnt a current value
      */
-    public function getValueByAttribute(Attribute $attribute): Value
+    private function getValueByAttribute(Attribute $attribute): Value
     {
         if (!$this->getEntity()->getAttributes()->contains($attribute)) {
             $this->addError($attribute->getName(), 'The entity: '.$this->getEntity()->getName().' does not have this attribute. (intern getValueByAttribute error)');
@@ -651,12 +701,126 @@ class ObjectEntity
         return $values->first();
     }
 
+    /**
+     * Sets a value based on the attribute string name or atribute object.
+     *
+     * @param string|Attribute $attribute
+     * @param $value
+     * @param bool $unsafe
+     *
+     * @throws Exception
+     *
+     * @return false|Value
+     */
+    public function setValue($attribute, $value, bool $unsafe = false)
+    {
+        $valueObject = $this->getValueObject($attribute);
+        // If we find the Value object we set the value
+        if ($valueObject instanceof Value) {
+            return $valueObject->setValue($value, $unsafe);
+        }
+
+        // If not return false
+        return false;
+    }
+
+    /**
+     * Populate this object with an array of values, where attributes are diffined by key.
+     *
+     * @param array $array  the data to set
+     * @param bool  $unsafe unset atributes that are not inlcuded in the hydrator array
+     *
+     * @throws Exception
+     *
+     * @return ObjectEntity
+     */
+    public function hydrate(array $array, bool $unsafe = false): ObjectEntity
+    {
+        $array = $this->includeEmbeddedArray($array);
+        $hydratedValues = [];
+
+        foreach ($array as $key => $value) {
+            $this->setValue($key, $value, $unsafe);
+            $hydratedValues[] = $key;
+        }
+
+        if ($unsafe) {
+            foreach ($this->getObjectValues() as $value) {
+                if (!in_array($value->getAttribute()->getName(), $hydratedValues)) {
+                    $this->removeObjectValue($value);
+                }
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * This function will check if the given array has an embedded array, if so it will move all objects from the
+     * embedded array to the keys outside this embedded array and (by default) unset the entire embedded array.
+     *
+     * @param array $array              The array to move and unset embedded array from.
+     * @param bool  $unsetEmbeddedArray Default=true. If false the embedded array will not be removed from $array.
+     *
+     * @return array The updated/changed $array. Or unchanged $array if it did not contain an embedded array.
+     */
+    public function includeEmbeddedArray(array $array, bool $unsetEmbeddedArray = true): array
+    {
+        // Check if array has embedded array
+        if ($embeddedKey = $this->getEmbeddedKey($array)) {
+            $embedded = $this->getEmbeddedArray($array, $embeddedKey);
+            foreach ($embedded as $key => $value) {
+                // Replace array[$key] with the embedded array value
+                $array[$key] = $this->includeEmbeddedArray($value);
+            }
+
+            // Unset the embedded array if we want to
+            if ($unsetEmbeddedArray) {
+                unset($array[$embeddedKey]);
+            }
+        }
+
+        return $array;
+    }
+
+    /**
+     * Check if the given array has an embedded array and if so return it.
+     *
+     * @param array $array       An array to check.
+     * @param null  $embeddedKey If we already (used getEmbeddedKey() function or) know what the key is of the embedded array. ('embedded', '@embedded' or '_embedded')
+     *
+     * @return false|mixed The embedded array found in $array or false if we didn't find an embedded array.
+     */
+    private function getEmbeddedArray(array $array, $embeddedKey = null)
+    {
+        $embeddedKey = $embeddedKey ?? $this->getEmbeddedKey($array);
+
+        return $embeddedKey ? $array[$embeddedKey] : false;
+    }
+
+    /**
+     * Looks for the embedded key, the key used for the embedded array. This is different for json, jsonld and jsonhal.
+     *
+     * @param array $array The array to check.
+     *
+     * @return false|string
+     */
+    private function getEmbeddedKey(array $array)
+    {
+        return
+            isset($array['embedded']) ? 'embedded' : (
+                isset($array['@embedded']) ? '@embedded' : (
+                    isset($array['_embedded']) ? '_embedded' : false
+                )
+            );
+    }
+
     /*
      * A recursion save way of getting subresources
      */
-    public function getAllSubresources(?ArrayCollection $result): ArrayCollection
+    public function getAllSubresources(?ArrayCollection $result, Attribute $attribute = null): ArrayCollection
     {
-        $subresources = $this->getSubresources();
+        $subresources = $this->getSubresources($attribute);
 
         foreach ($subresources as $subresource) {
             if (!$result->contains($subresource)) {
@@ -672,7 +836,7 @@ class ObjectEntity
      *
      * @return ArrayCollection the subresources of this object entity
      */
-    public function getSubresources(): ArrayCollection
+    public function getSubresources(Attribute $attribute = null): ArrayCollection
     {
         // Get all values of this ObjectEntity with attribute type object
         //$values = $this->getObjectValues()->filter(function (Value $value) {
@@ -689,6 +853,9 @@ class ObjectEntity
         */
         $subresources = new ArrayCollection();
         foreach ($this->getObjectValues() as $value) {
+            if ($attribute && $value->getAttribute() !== $attribute) {
+                continue;
+            }
             foreach ($value->getObjects() as $objectEntity) {
                 // prevent double work and downward recurions
                 $subresources->add($objectEntity);
@@ -709,19 +876,19 @@ class ObjectEntity
     public function addResponseLog(GatewayResponseLog $responseLog): self
     {
         if (!$this->responseLogs->contains($responseLog)) {
-            $this->responseLogs->add($responceLog);
-            $responceLog->setObjectEntity($this);
+            $this->responseLogs->add($responseLog);
+            $responseLog->setObjectEntity($this);
         }
 
         return $this;
     }
 
-    public function removeResponseLog(GatewayResponseLog $responceLog): self
+    public function removeResponseLog(GatewayResponseLog $responseLog): self
     {
-        if ($this->responceLogs->removeElement($responceLog)) {
+        if ($this->responseLogs->removeElement($responseLog)) {
             // set the owning side to null (unless already changed)
-            if ($responceLog->getObjectEntity() === $this) {
-                $responceLog->setObjectEntity(null);
+            if ($responseLog->getObjectEntity() === $this) {
+                $responseLog->setObjectEntity(null);
             }
         }
 
@@ -783,7 +950,7 @@ class ObjectEntity
                         // Hacky
                         //if($convar == 'true'  ) {$convar = true;}
                         //if($convar == 'false'  ) {$convar = false;}
-                        $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
+                        $checkAgainst = $this->getValue($conditionProperty);
                         if (!is_array($checkAgainst) && $checkAgainst == $convar) {
                             $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$convar);
                         } elseif (is_array($checkAgainst) && in_array($convar, $checkAgainst)) {
@@ -794,7 +961,7 @@ class ObjectEntity
                     // Hacky
                     //if($conditionValue == 'true'  ) {$conditionValue = true;}
                     //if($conditionValue == 'false'  ) {$conditionValue = false;}
-                    $checkAgainst = $this->getValueByAttribute($this->getEntity()->getAttributeByName($conditionProperty))->getValue();
+                    $checkAgainst = $this->getValue($conditionProperty);
                     if (!is_array($checkAgainst) && $checkAgainst == $conditionValue) {
                         $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$conditionValue);
                     } elseif (is_array($checkAgainst) && in_array($conditionValue, $checkAgainst)) {
@@ -823,20 +990,43 @@ class ObjectEntity
      *
      * @return array the array holding all the data     *
      */
-    public function toArray(int $level = 1, array $extend = ['id']): array
+    public function toArray(int $level = 1, array $extend = ['id'], bool $onlyMetadata = false, bool $embedded = false): array
     {
         $array = [];
         in_array('id', $extend) && $array['id'] = (string) $this->getId();
+        //in_array('id', $extend) && $array['_id'] = (string) $this->getId();
+        in_array('self', $extend) && $array['x-commongateway-metadata']['self'] = $this->getSelf(); //todo? $this->getSelf() ?? $this->setSelf(???->createSelf($this))->getSelf()
+        in_array('synchronizations', $extend) && $array['x-commongateway-metadata']['synchronizations'] = $this->getReadableSyncDataArray();
+        in_array('schema', $extend) && $array['_schema'] = $this->getEntity()->toSchema($this);
+        if ($onlyMetadata) {
+            return $array;
+        }
         foreach ($this->getEntity()->getAttributes() as $attribute) {
-            $valueObject = $this->getValueByAttribute($attribute);
+            $valueObject = $this->getValueObject($attribute);
             if ($attribute->getType() == 'object') {
                 if ($valueObject->getValue() == null) {
                     $array[$attribute->getName()] = null;
                 } elseif (!$attribute->getMultiple() && $level < 5) {
-                    $array[$attribute->getName()] = $valueObject->getObjects()->first()->toArray($level + 1, $extend);
+                    $value = $valueObject->getObjects()->first()->toArray($level + 1, $extend, $onlyMetadata, $embedded);
+                    if ($embedded) {
+                        $array[$attribute->getName()] = $value;
+                        //todo: should be this instead:
+//                        $array[$attribute->getName()] = $valueObject->getObjects()->first()->getSelf();
+                        $array['embedded'][$attribute->getName()] = $value;
+                        continue;
+                    }
+                    $array[$attribute->getName()] = $value;
                 } elseif ($level < 5) {
                     foreach ($valueObject->getObjects() as $object) {
-                        $array[$attribute->getName()][] = $object->toArray($level + 1, $extend); // getValue will return a single ObjectEntity
+                        $value = $object->toArray($level + 1, $extend, $onlyMetadata, $embedded);
+                        if ($embedded) {
+                            $array[$attribute->getName()][] = $value;
+                            //todo: should be this instead:
+//                            $array[$attribute->getName()][] = $object->getSelf();
+                            $array['embedded'][$attribute->getName()][] = $value;
+                            continue;
+                        }
+                        $array[$attribute->getName()][] = $value; // getValue will return a single ObjectEntity
                     }
                 }
             } else {
@@ -848,11 +1038,63 @@ class ObjectEntity
     }
 
     /**
+     * Adds the most important data of all synchronizations this Object has to an array and returns this array or null if this Object has no Synchronizations.
+     *
+     * @return array|null
+     */
+    public function getReadableSyncDataArray(): ?array
+    {
+        if (!empty($this->getSynchronizations()) && is_countable($this->getSynchronizations()) && count($this->getSynchronizations()) > 0) {
+            $synchronizations = [];
+            foreach ($this->getSynchronizations() as $synchronization) {
+                $synchronizations[] = [
+                    'id'      => $synchronization->getId()->toString(),
+                    'gateway' => [
+                        'id'       => $synchronization->getSource()->getId()->toString(),
+                        'name'     => $synchronization->getSource()->getName(),
+                        'location' => $synchronization->getSource()->getLocation(),
+                    ],
+                    'endpoint'          => $synchronization->getEndpoint(),
+                    'sourceId'          => $synchronization->getSourceId(),
+                    'dateCreated'       => $synchronization->getDateCreated(),
+                    'dateModified'      => $synchronization->getDateModified(),
+                    'lastChecked'       => $synchronization->getLastChecked(),
+                    'lastSynced'        => $synchronization->getLastSynced(),
+                    'sourceLastChanged' => $synchronization->getSourceLastChanged(),
+                ];
+            }
+
+            return $synchronizations;
+        }
+
+        return null;
+    }
+
+    /**
      * @return Collection|Value[]
      */
     public function getSubresourceOf(): Collection
     {
         return $this->subresourceOf;
+    }
+
+    /**
+     * Try to find a Value this ObjectEntity is a child of. Searching/filtering these values by a specific Attribute.
+     *
+     * @param Attribute $attribute
+     *
+     * @return ArrayCollection
+     */
+    public function findSubresourceOf(Attribute $attribute): ArrayCollection
+    {
+        $subresourceOfFound = $this->subresourceOf->filter(function ($subresourceOf) use ($attribute) {
+            return $subresourceOf->getAttribute() === $attribute;
+        });
+        if (count($subresourceOfFound) > 0) {
+            return $subresourceOfFound;
+        }
+
+        return new ArrayCollection();
     }
 
     public function addSubresourceOf(Value $subresourceOf): self
@@ -921,6 +1163,67 @@ class ObjectEntity
         return $this;
     }
 
+    /**
+     * @return Collection|Synchronization[]
+     */
+    public function getSynchronizations(): Collection
+    {
+        return $this->synchronizations;
+    }
+
+    public function addSynchronization(Synchronization $synchronization): self
+    {
+        if (!$this->synchronizations->contains($synchronization)) {
+            $this->synchronizations[] = $synchronization;
+            $synchronization->setObject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSynchronization(Synchronization $synchronization): self
+    {
+        if ($this->synchronizations->removeElement($synchronization)) {
+            // set the owning side to null (unless already changed)
+            if ($synchronization->getObject() === $this) {
+                $synchronization->setObject(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Synchronization[]
+     */
+    public function getUsedIn(): Collection
+    {
+        return $this->usedIn;
+    }
+
+    public function addUsedIn(Attribute $attribute): self
+    {
+        if (!$this->usedIn->contains($attribute)) {
+            $this->usedIn[] = $attribute;
+            $attribute->setObject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUsedIn(Attribute $attribute): self
+    {
+        if ($this->usedIn->removeElement($attribute)) {
+            // set the owning side to null (unless already changed)
+            if ($attribute->getObject() === $this) {
+                $attribute->setObject(null);
+                $attribute->setReference(null);
+            }
+        }
+
+        return $this;
+    }
+
     public function getDateCreated(): ?DateTimeInterface
     {
         return $this->dateCreated;
@@ -943,5 +1246,38 @@ class ObjectEntity
         $this->dateModified = $dateModified;
 
         return $this;
+    }
+
+    /**
+     * Set name on pre persist.
+     *
+     * This function makes sure that each and every oject alwys has a name when saved
+     *
+     * @ORM\PrePersist
+     */
+    public function prePersist(): void
+    {
+        // Lets see if the name is congigured
+        if ($this->entity->getNameProperties()) {
+            $name = null;
+            foreach ($this->entity->getNameProperties() as $nameProperty) {
+                if ($nameProperty && $namePart = $this->getValue($nameProperty)) {
+                    $name = "$name $namePart";
+                }
+            }
+            $this->setName(trim($name));
+
+            return;
+        }
+        // Lets check agains common names
+        $nameProperties = ['name', 'title', 'naam', 'titel'];
+        foreach ($nameProperties as $nameProperty) {
+            if ($name = $this->getValue($nameProperty)) {
+                $this->setName($name);
+
+                return;
+            }
+        }
+        $this->setName($this->getId());
     }
 }

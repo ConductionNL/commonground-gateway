@@ -37,7 +37,7 @@ class ResponseService
     // todo: ...data in RenderResult (and other function after that, untill we come back to RenderResult again, because of 'recursion')
     // todo: other examples we could use this for when we cleanup this service: $fields, $extend, $acceptType, $skipAuthCheck
     // todo: use this as example (checking for $level when setting this data only once is very important):
-    private array $xCommongatewayMetadata;
+    public array $xCommongatewayMetadata;
 
     public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, SessionInterface $session, Security $security, CacheInterface $cache)
     {
@@ -166,7 +166,7 @@ class ResponseService
      *
      * @return array|string[]|string Only returns a string if $level is higher than 3 and acceptType is not jsonld.
      */
-    public function renderResult(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType = 'jsonld', bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
+    public function renderResult(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType = 'json', bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
     {
         $response = [];
         if ($level === 0) {
@@ -181,10 +181,10 @@ class ResponseService
         }
 
         if (
-            $result->getEntity()->getGateway() !== null &&
-            ($result->getEntity()->getGateway()->getType() == 'soap' ||
-                $result->getEntity()->getGateway()->getType() == 'xml' ||
-                $result->getEntity()->getGateway()->getAuth() == 'vrijbrp-jwt')
+            $result->getEntity()->getSource() !== null &&
+            ($result->getEntity()->getSource()->getType() == 'soap' ||
+                $result->getEntity()->getSource()->getType() == 'xml' ||
+                $result->getEntity()->getSource()->getAuth() == 'vrijbrp-jwt')
         ) {
             return $response;
         }
@@ -224,7 +224,7 @@ class ResponseService
 
         // todo: do we still want to do this if we have BL for syncing objects?
         // Lets start with the external result
-        if ($result->getEntity()->getGateway() && $result->getEntity()->getEndpoint()) {
+        if ($result->getEntity()->getSource() && $result->getEntity()->getEndpoint()) {
             if (!empty($result->getExternalResult())) {
                 $response = array_merge($response, $result->getExternalResult());
             } elseif (!$result->getExternalResult() === [] && $this->commonGroundService->isResource($result->getExternalResult())) {
@@ -237,7 +237,7 @@ class ResponseService
             if (!is_null($result->getEntity()->getAvailableProperties() || !empty($fields))) {
                 $response = array_filter($response, function ($propertyName) use ($result, $fields) {
                     $attTypeObject = false;
-                    if ($attribute = $result->getEntity()->getAttributeByName($propertyName)) {
+                    if ($attribute = $result->getAttributeObject($propertyName)) {
                         $attTypeObject = $attribute->getType() === 'object';
                     }
 
@@ -355,6 +355,7 @@ class ResponseService
         if (array_key_exists('@context', $response)) {
             $gatewayContext['@gateway/context'] = $response['@context'];
         }
+        $gatewayContext['@synchronizations'] = $result->getReadableSyncDataArray();
         if (is_array($extend)) {
             $gatewayContext['@extend'] = $extend;
         }
@@ -409,6 +410,7 @@ class ResponseService
         if (array_key_exists('@context', $response)) {
             $gatewayContext['_metadata']['_gateway/context'] = $response['@context'];
         }
+        $gatewayContext['_metadata']['_synchronizations'] = $result->getReadableSyncDataArray();
         if (is_array($extend)) {
             $gatewayContext['_metadata']['_extend'] = $extend;
         }
@@ -472,6 +474,7 @@ class ResponseService
         if (array_key_exists('@context', $response)) {
             $this->addToMetadata($metadata, 'gateway/context', $response['@context']);
         }
+        $this->addToMetadata($metadata, 'synchronizations', $result->getReadableSyncDataArray());
         if (is_array($extend)) {
             $this->addToMetadata($metadata, 'extend', $extend);
         }
@@ -494,7 +497,7 @@ class ResponseService
      *
      * @return void
      */
-    private function addToMetadata(array &$metadata, string $key, $value, ?string $overwriteKey = null)
+    public function addToMetadata(array &$metadata, string $key, $value, ?string $overwriteKey = null)
     {
         if (array_key_exists('all', $this->xCommongatewayMetadata) || array_key_exists($key, $this->xCommongatewayMetadata)) {
             // Make sure we only do getDateRead function when it is present in $this->xCommongatewayMetadata
@@ -502,6 +505,7 @@ class ResponseService
                 // If the api-call is an getItem call show NOW instead!
                 $value = isset($this->xCommongatewayMetadata['dateRead']) && $this->xCommongatewayMetadata['dateRead'] === 'getItem'
                     ? new DateTime() : $this->getDateRead($value);
+                $value = $value == null ? $value : $value->format('c');
             }
             $metadata[$overwriteKey ?? $key] = $value;
         }
@@ -553,7 +557,7 @@ class ResponseService
                 continue;
             }
 
-            $valueObject = $result->getValueByAttribute($attribute);
+            $valueObject = $result->getValueObject($attribute);
             if ($attribute->getType() == 'object') {
                 // Lets deal with extending
                 if (!$this->checkExtendAttribute($response, $attribute, $valueObject, $extend, $acceptType)) {
@@ -893,7 +897,7 @@ class ResponseService
         $requestLog->setEntity($entity ?? null);
         $requestLog->setDocument(null); // todo
         $requestLog->setFile(null); // todo
-        $requestLog->setGateway($requestLog->getEntity() ? $requestLog->getEntity()->getGateway() : null);
+        $requestLog->setSource($requestLog->getEntity() ? $requestLog->getEntity()->getSource() : null);
 
         if ($this->session->has('application') && Uuid::isValid($this->session->get('application'))) {
             $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);

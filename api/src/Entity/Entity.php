@@ -8,6 +8,8 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Entity\Gateway as Source;
+use App\Exception\GatewayException;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -17,6 +19,7 @@ use Doctrine\ORM\Mapping as ORM;
 use EasyRdf\Literal\Boolean;
 use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
+use phpDocumentor\Reflection\Types\This;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -35,12 +38,36 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "method"="GET",
  *          "path"="/admin/entities/{id}/sync"
  *      },
+ *     "get_object"={
+ *          "method"="GET",
+ *          "path"="/admin/schemas/{id}/objects/{objectId}"
+ *      },
  *     "put"={"path"="/admin/entities/{id}"},
- *     "delete"={"path"="/admin/entities/{id}"}
+ *     "put_object"={
+ *          "method"="PUT",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "path"="/admin/schemas/{id}/objects/{objectId}"
+ *      },
+ *     "delete"={"path"="/admin/entities/{id}"},
+ *     "delete_object"={
+ *          "method"="DELETE",
+ *          "path"="/admin/schemas/{id}/objects/{objectId}"
+ *      }
  *  },
  *  collectionOperations={
  *     "get"={"path"="/admin/entities"},
- *     "post"={"path"="/admin/entities"}
+ *     "get_objects"={
+ *          "method"="GET",
+ *          "path"="/admin/schemas/{id}/objects"
+ *      },
+ *     "post"={"path"="/admin/entities"},
+ *     "post_objects"={
+ *          "method"="POST",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "path"="/admin/schemas/{id}/objects"
+ *      },
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -71,7 +98,7 @@ class Entity
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      */
-    private ?Gateway $gateway;
+    private ?Source $gateway = null;
 
     /**
      * @var string The type of this Entity
@@ -114,11 +141,8 @@ class Entity
      * @var string The description of this Entity
      *
      * @Gedmo\Versioned
-     * @Assert\Length(
-     *     max = 255
-     * )
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     private $description;
 
@@ -170,6 +194,7 @@ class Entity
     /**
      * @Groups({"write"})
      * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="entity", cascade={"remove"}, fetch="EXTRA_LAZY")
+     * @ORM\OrderBy({"dateCreated" = "DESC"})
      * @MaxDepth(1)
      */
     private Collection $objectEntities;
@@ -322,6 +347,32 @@ class Entity
      */
     private $dateModified;
 
+    /**
+     * @var array|null The properties used to set the name for ObjectEntities created linked to this Entity.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", length=255, nullable=true, options={"default": null})
+     */
+    private ?array $nameProperties = null;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $reference;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $version;
+
+    //todo: do we want read/write groups here?
+    /**
+     * @ORM\ManyToMany(targetEntity=Endpoint::class, mappedBy="entities")
+     */
+    private $endpoints;
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
@@ -335,19 +386,20 @@ class Entity
         $this->subscribers = new ArrayCollection();
         $this->subscriberOut = new ArrayCollection();
         $this->collections = new ArrayCollection();
+        $this->endpoints = new ArrayCollection();
     }
 
     public function export()
     {
-        if ($this->getGateway() !== null) {
-            $gateway = $this->getGateway()->getId()->toString();
-            $gateway = '@'.$gateway;
+        if ($this->getSource() !== null) {
+            $source = $this->getSource()->getId()->toString();
+            $source = '@'.$source;
         } else {
-            $gateway = null;
+            $source = null;
         }
 
         $data = [
-            'gateway'             => $gateway,
+            'gateway'             => $source,
             'endpoint'            => $this->getEndpoint(),
             'name'                => $this->getName(),
             'description'         => $this->getDescription(),
@@ -361,19 +413,42 @@ class Entity
         return array_filter($data, fn ($value) => !is_null($value) && $value !== '' && $value !== []);
     }
 
+    private const SUPPORTED_VALIDATORS = [
+        'multipleOf',
+        'maximum',
+        'exclusiveMaximum',
+        'minimum',
+        'exclusiveMinimum',
+        'maxLength',
+        'minLength',
+        'maxItems',
+        'uniqueItems',
+        'maxProperties',
+        'minProperties',
+        'required',
+        'enum',
+        'allOf',
+        'oneOf',
+        'anyOf',
+        'not',
+        'items',
+        'additionalProperties',
+        'default',
+    ];
+
     public function getId()
     {
         return $this->id;
     }
 
-    public function getGateway(): ?Gateway
+    public function getSource(): ?Source
     {
         return $this->gateway;
     }
 
-    public function setGateway(?Gateway $gateway): self
+    public function setSource(?Source $source): self
     {
-        $this->gateway = $gateway;
+        $this->gateway = $source;
 
         return $this;
     }
@@ -1024,6 +1099,177 @@ class Entity
     public function setSchema(?string $schema): self
     {
         $this->schema = $schema;
+
+        return $this;
+    }
+
+    /**
+     * @throws GatewayException
+     */
+    public function fromSchema(array $schema): Entity
+    {
+        // Basic stuff
+        if (array_key_exists('$id', $schema)) {
+            $this->setReference($schema['$id']);
+            $this->setSchema($schema['$id']);
+        }
+        if (array_key_exists('title', $schema)) {
+            $this->setName($schema['title']);
+        }
+        if (array_key_exists('description', $schema)) {
+            $this->setDescription($schema['description']);
+        }
+        if (array_key_exists('version', $schema)) {
+            $this->setVersion($schema['version']);
+        }
+
+        // Properties
+        foreach ($schema['properties'] as $name => $property) {
+            // Let see if the attribute exists
+            if (!$attribute = $this->getAttributeByName($name)) {
+                $attribute = new Attribute();
+                $attribute->setName($name);
+            }
+
+            $this->addAttribute($attribute->fromSchema($property));
+        }
+
+        // Required stuff
+        if (array_key_exists('required', $schema)) {
+            foreach ($schema['required'] as $required) {
+                $attribute = $this->getAttributeByName($required);
+                $attribute->setRequired(true);
+            }
+        }
+
+        // Bit of cleanup
+        foreach ($this->getAttributes() as $attribute) {
+            // Remove Required if no longer valid
+            if (array_key_exists('required', $schema) && !in_array($attribute->getName(), $schema['required']) && $attribute->getRequired() == true) {
+                $attribute->setRequired(false);
+            }
+            // Remove atribute if no longer present
+            if (!array_key_exists($attribute->getName(), $schema['properties'])) {
+                $this->removeAttribute($attribute);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @throws GatewayException
+     */
+    public function toSchema(?ObjectEntity $objectEntity): array
+    {
+        $schema = [
+            '$id'            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'        => 'https://json-schema.org/draft/2020-12/schema',
+            'title'          => $this->getName(),
+            'description'    => $this->getDescription(),
+            'version'        => $this->getVersion(),
+            'required'       => [],
+            'properties'     => [],
+        ];
+
+        if ($objectEntity && $objectEntity->getEntity() !== $this) {
+            throw new GatewayException('The given objectEntity has not have the same entity as this entity');
+        }
+
+        foreach ($this->getAttributes() as $attribute) {
+            // Zetten van required
+            if ($attribute->getRequired()) {
+                $schema['required'][] = $attribute->getName();
+            }
+
+            $property = [];
+
+            // Aanmaken property
+            // @todo ik laad dit nu in als array maar eigenlijk wil je testen en alleen zetten als er waardes in zitten
+
+            $attribute->getType() && $property['type'] = $attribute->getType();
+            $attribute->getFormat() && $property['format'] = $attribute->getFormat();
+            $attribute->getDescription() && $property['description'] = $attribute->getDescription();
+            $attribute->getExample() && $property['example'] = $attribute->getExample();
+
+            // What if we have an $object entity
+            if ($objectEntity) {
+                $property['value'] = $objectEntity->getValue($attribute);
+            }
+
+            // Zetten van de property
+            $schema['properties'][$attribute->getName()] = $property;
+
+            // Add the validators
+            foreach ($attribute->getValidations() as $validator => $validation) {
+                if (!array_key_exists($validator, Entity::SUPPORTED_VALIDATORS) && $validation != null) {
+                    $schema['properties'][$attribute->getName()][$validator] = $validation;
+                }
+            }
+        }
+
+        return $schema;
+    }
+
+    public function getNameProperties(): ?array
+    {
+        return $this->nameProperties;
+    }
+
+    public function setNameProperties(?array $nameProperties): self
+    {
+        $this->nameProperties = $nameProperties;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getVersion(): ?string
+    {
+        return $this->version;
+    }
+
+    public function setVersion(?string $version): self
+    {
+        $this->version = $version;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Endpoint[]
+     */
+    public function getEndpoints(): Collection
+    {
+        return $this->endpoints;
+    }
+
+    public function addEndpoint(Endpoint $endpoint): self
+    {
+        if (!$this->endpoints->contains($endpoint)) {
+            $this->endpoints[] = $endpoint;
+            $endpoint->addEntity($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEndpoint(Endpoint $endpoint): self
+    {
+        if ($this->endpoints->removeElement($endpoint)) {
+            $endpoint->removeEntity($this);
+        }
 
         return $this;
     }

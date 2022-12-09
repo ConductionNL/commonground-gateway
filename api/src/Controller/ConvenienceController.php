@@ -15,7 +15,6 @@ use App\Subscriber\ActionSubscriber;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
-use JWadhams\JsonLogic;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -226,16 +225,11 @@ class ConvenienceController extends AbstractController
         $contentType = $this->handlerService->getRequestType('content-type');
         $data = $this->handlerService->getDataFromRequest();
 
-        $conditions = $action->getConditions();
-        $result = JsonLogic::apply($conditions, $data);
+        $data = $this->actionSubscriber->runFunction($action, $data, $action->getListens()[0]);
 
-        if ($result) {
-            $data = $this->actionSubscriber->runFunction($action, $data);
-
-            // throw events
-            foreach ($action->getThrows() as $throw) {
-                $this->objectEntityService->dispatchEvent('commongateway.action.event', $data, $throw);
-            }
+        // throw events
+        foreach ($action->getThrows() as $throw) {
+            $this->objectEntityService->dispatchEvent('commongateway.action.event', $data, $throw);
         }
 
         return new Response(
@@ -254,7 +248,11 @@ class ConvenienceController extends AbstractController
      */
     public function githubEvents(Request $request): Response
     {
-        $content = json_decode($request->request->get('payload'), true);
+        if (!$content = json_decode($request->request->get('payload'), true)) {
+//            var_dump($content = $this->handlerService->getDataFromRequest());
+
+            return $this->publiccodeService->updateRepositoryWithEventResponse($this->handlerService->getDataFromRequest());
+        }
 
         return $this->publiccodeService->updateRepositoryWithEventResponse($content);
     }
