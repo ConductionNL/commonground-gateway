@@ -1000,7 +1000,7 @@ class ObjectEntity
         (!isset($configuration['maxdepth'])? $configuration['maxdepth'] = $this->getEntity()->getMaxDepth():'');
         (!isset($configuration['renderdObjects'])? $configuration['renderdObjects'] = []:'');
         (!isset($configuration['embedded'])? $configuration['embedded'] = false:'');
-        (!isset($configuration['onlyMetadata'])? $configuration['embedded'] = false:'');
+        (!isset($configuration['onlyMetadata'])? $configuration['onlyMetadata'] = false:'');
 
         // Working arrays
         $array = [];
@@ -1040,7 +1040,9 @@ class ObjectEntity
                     // Only add an object if it hasn't bean added yet
                     if(!in_array($object, $configuration['renderdObjects']))
                     {
-                        $array[$attribute->getName()] = $object->toArray($configuration); // getValue will return a single ObjectEntity
+                        $config = $configuration;
+                        $config['renderdObjects'] [] = $valueObject->getObjects()->first();
+                        $array[$attribute->getName()] = $object->toArray($config); // getValue will return a single ObjectEntity
                     }
                     // If we don't set the full object then we want to set na id
                     else{
@@ -1058,9 +1060,10 @@ class ObjectEntity
                         // Only add an object if it hasn't bean added yet
                         if(!in_array($object, $configuration['renderdObjects']))
                         {
-                            array_merge($configuration['renderdObjects'], $currentObjects);
+                            $config = $configuration;
+                            $config['renderdObjects'] = array_merge($configuration['renderdObjects'], $currentObjects);
 
-                            $array[$attribute->getName()][] = $object->toArray($configuration); // getValue will return a single ObjectEntity
+                            $array[$attribute->getName()][] = $object->toArray($config); // getValue will return a single ObjectEntity
                         }
                         // If we don't set the full object then we want to set na id
                         else{
