@@ -988,10 +988,11 @@ class ObjectEntity
     /**
      * Convienance API for throwing an data object and is children into an array.
      *
-     * @param integer $level the current level of the array (used for counting the max dept)
-     * @param array $extend
-     * @param bool $onlyMetadata
-     * @param integer $maxdepth the maximum depth of objects within the to array, default to the max depth of the entity if not provided
+     * @param integer $level The current level of the array (used for counting the max dept)
+     * @param array $extend Get additional dat for the objects
+     * @param bool $onlyMetadata Only get the meta data of objects
+     * @param integer $maxdepth The maximum depth of objects within the to array, default to the max depth of the entity if not provided
+     * @param array $renderdObjects Al objects that have been previusly renderd at LOWER layers
      *
      * @return array the array holding all the data     *
      */
@@ -1004,33 +1005,68 @@ class ObjectEntity
     {
         $array = [];
         $currentObjects = [];
-        in_array('id', $extend) && $array['id'] = (string) $this->getId();
-        //in_array('id', $extend) && $array['_id'] = (string) $this->getId();
-        in_array('self', $extend) && $array['x-commongateway-metadata']['self'] = $this->getSelf(); //todo? $this->getSelf() ?? $this->setSelf(???->createSelf($this))->getSelf()
-        in_array('synchronizations', $extend) && $array['x-commongateway-metadata']['synchronizations'] = $this->getReadableSyncDataArray();
-        in_array('schema', $extend) && $array['_schema'] = $this->getEntity()->toSchema($this);
-        //
-        if ($onlyMetadata) {
-            return $array;
-        }
+
         if ($maxdepth == 0) {
             $maxdepth = $this->getEntity();
         }
+
+        // Build the metadata
+        in_array('id', $extend) && $array['id'] = (string) $this->getId();
+        //in_array('id', $extend) && $array['_id'] = (string) $this->getId();
+        in_array('self', $extend) && $array['x-commongateway-metadata']['self'] = $this->getSelf(); //todo? $this->getSelf() ?? $this->setSelf(???->createSelf($this))->getSelf()
+        //in_array('synchronizations', $extend) && $array['x-commongateway-metadata']['synchronizations'] = $this->getReadableSyncDataArray();
+        //in_array('schema', $extend) && $array['_schema'] = $this->getEntity()->toSchema($this);
+
+        // The new metadata
+        $array['_self'] = [
+            'id' => $this->getId(),
+            'owner' => $this->getOwner(),
+            'organization' => $this->getOrganization(),
+            'application' => $this->getApplication(),
+            'dateCreated' => $this->getDateCreated(),
+            'dateModified' => $this->getDateModified(),
+            'schema' => [
+                'id' => $this->getEntity()->getId(),
+                'ref' => $this->getEntity()->getReference()
+                ],
+            'synchronizations' => $this->getReadableSyncDataArray(),
+        ];
+
+        // If we dont need the actual object data we can exit here
+        if ($onlyMetadata) {
+            return $array;
+        }
+
+        // Let loop trough al the values
         foreach ($this->getEntity()->getAttributes() as $attribute) {
             $valueObject = $this->getValueObject($attribute);
+            // Subobjects are a bit complicated
             if ($attribute->getType() == 'object') {
                 if ($valueObject->getValue() == null) {
                     $array[$attribute->getName()] = null;
                 } elseif (!$attribute->getMultiple() && $level < $maxdepth) {
-                    array_merge($renderdObjects, $currentObjects);
-                    $renderdObjects[] = $valueObject->getObjects()->first();
-                    $array[$attribute->getName()] = $valueObject->getObjects()->first()->toArray($level + 1, $extend, $onlyMetadata, $maxdepth, $renderdObjects);
+                    $object = $valueObject->getObjects()->first();
+                    $currentObjects[] = $object;
+                    if(!in_array($object, $renderdObjects))
+                    {
+                        $array[$attribute->getName()] = $object->toArray($level + 1, $extend, $onlyMetadata, $maxdepth, array_merge($renderdObjects, $currentObjects)); // getValue will return a single ObjectEntity
+                    }
+                    else{
+                        $array[$attribute->getName()] = $object->getId();
+                    }
                 } elseif ($level < $maxdepth) {
+                    $currentObjects[] = $valueObject->getObjects()->toArray();
                     foreach ($valueObject->getObjects() as $object) {
-                        array_merge($renderdObjects, $valueObject->getObjects());
-                        $array[$attribute->getName()][] = $object->toArray($level + 1, $extend, $onlyMetadata, $maxdepth, $renderdObjects); // getValue will return a single ObjectEntity
+                        if(!in_array($object, $renderdObjects))
+                        {
+                            $array[$attribute->getName()][] = $object->toArray($level + 1, $extend, $onlyMetadata, $maxdepth, array_merge($renderdObjects, $currentObjects)); // getValue will return a single ObjectEntity
+                        }
+                        else{
+                            $array[$attribute->getName()][] = $object->getId();
+                        }
                     }
                 }
+            // But normal values are simple
             } else {
                 $array[$attribute->getName()] = $valueObject->getValue();
             }
