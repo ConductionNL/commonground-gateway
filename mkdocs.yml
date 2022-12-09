@@ -8,6 +8,7 @@ nav:
     - Getting Started: "getting_started.md"
     - How does it work: "how_does_it_work.md"
     - Features:  "./features/index.md"
+    - Api: "api.md"
     - Plugins: "plugins.md"
     - Schemas: "schemas.md"
     - Mappings: "mappings.md"
