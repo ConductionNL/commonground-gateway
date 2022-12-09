@@ -702,12 +702,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/WaardepapierenBundle.git",
-                "reference": "189702ed9954d7d96083697295e8c8f201bf6d44"
+                "reference": "361cf8b2e04912dfbbb0831f0f8acdbe469d2e68"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/WaardepapierenBundle/zipball/189702ed9954d7d96083697295e8c8f201bf6d44",
-                "reference": "189702ed9954d7d96083697295e8c8f201bf6d44",
+                "url": "https://api.github.com/repos/CommonGateway/WaardepapierenBundle/zipball/361cf8b2e04912dfbbb0831f0f8acdbe469d2e68",
+                "reference": "361cf8b2e04912dfbbb0831f0f8acdbe469d2e68",
                 "shasum": ""
             },
             "require": {
@@ -729,11 +729,20 @@
                 "EUPL-1.2"
             ],
             "description": "An example package for creating symfony flex bundles as plugins",
+            "homepage": "https://commongatway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "symfony"
+            ],
             "support": {
                 "issues": "https://github.com/CommonGateway/WaardepapierenBundle/issues",
                 "source": "https://github.com/CommonGateway/WaardepapierenBundle/tree/main"
             },
-            "time": "2022-11-02T13:47:27+00:00"
+            "time": "2022-12-09T12:51:17+00:00"
         },
         {
             "name": "commongateway/corebundle",
