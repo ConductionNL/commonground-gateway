@@ -993,7 +993,7 @@ class ObjectEntity
      * @return array the array holding all the data     *
      */
     public function toArray(
-        $configuration
+        array $configuration = []): array
     {
         // Let's default the config array
         (!isset($configuration['level'])? $configuration['level'] = 1:'');
@@ -1002,10 +1002,10 @@ class ObjectEntity
         (!isset($configuration['embedded'])? $configuration['embedded'] = false:'');
         (!isset($configuration['onlyMetadata'])? $configuration['embedded'] = false:'');
 
-
         // Working arrays
         $array = [];
         $currentObjects = [];
+        $embedded = [];
 
         // The new metadata
         $array['_self'] = [
@@ -1037,24 +1037,38 @@ class ObjectEntity
                 } elseif (!$attribute->getMultiple() && $configuration['level'] < $configuration['maxdepth']) {
                     $object = $valueObject->getObjects()->first();
                     $currentObjects[] = $object;
+                    // Only add an object if it hasn't bean added yet
                     if(!in_array($object, $configuration['renderdObjects']))
                     {
                         $array[$attribute->getName()] = $object->toArray($configuration); // getValue will return a single ObjectEntity
                     }
+                    // If we don't set the full object then we want to set na id
                     else{
                         $array[$attribute->getName()] = $object->getId();
                     }
+
+                    // Check if we want an emedded array
+                    if($configuration['embedded']){
+                        $embedded[$attribute->getName()][] = $object->getId();
+                    }
+
                 } elseif ($configuration['level'] < $configuration['maxdepth']) {
                     $currentObjects[] = $valueObject->getObjects()->toArray();
                     foreach ($valueObject->getObjects() as $object) {
+                        // Only add an object if it hasn't bean added yet
                         if(!in_array($object, $configuration['renderdObjects']))
                         {
                             array_merge($configuration['renderdObjects'], $currentObjects);
 
                             $array[$attribute->getName()][] = $object->toArray($configuration); // getValue will return a single ObjectEntity
                         }
+                        // If we don't set the full object then we want to set na id
                         else{
                             $array[$attribute->getName()][] = $object->getId();
+                        }
+                        // Check if we want an emedded array
+                        if($configuration['embedded']){
+                            $embedded[$attribute->getName()][] = $object->getId();
                         }
                     }
                 }
@@ -1064,6 +1078,9 @@ class ObjectEntity
             }
         }
 
+        if(!empty($embedded)){
+            $array['embedded'] = $embedded;
+        }
         return $array;
     }
 
