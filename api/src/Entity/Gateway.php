@@ -181,6 +181,22 @@ class Gateway
     private string $name;
 
     /**
+     * @var string The description of the Gateway which is used in the commonGround service
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="arc"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="text")
+     */
+    private string $description;
+
+    /**
      * @var string The location where the Gateway needs to be accessed
      *
      * @Assert\NotNull
@@ -698,6 +714,18 @@ class Gateway
     public function setName(string $name): self
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(string $description): self
+    {
+        $this->description = $description;
 
         return $this;
     }
