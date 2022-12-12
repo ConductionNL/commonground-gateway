@@ -277,6 +277,8 @@ class Endpoint
     private $entities;
 
     /**
+     *
+     * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="proxies")
      */
     private $proxy;
