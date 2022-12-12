@@ -178,7 +178,7 @@ class Gateway
      * @Groups({"read","read_secure","write"})
      * @ORM\Column(type="string", length=255)
      */
-    private string $name;
+    private string $name = '';
 
     /**
      * @var string The description of the Gateway which is used in the commonGround service
@@ -194,7 +194,7 @@ class Gateway
      * @Groups({"read","read_secure","write"})
      * @ORM\Column(type="text")
      */
-    private string $description;
+    private string $description = '';
 
     /**
      * @var string The location where the Gateway needs to be accessed

@@ -144,7 +144,7 @@ class Entity
      * @Groups({"read","write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $description;
+    private $description = '';
 
     /**
      * @var string The function of this Entity. This is used for making specific entity types/functions work differently
