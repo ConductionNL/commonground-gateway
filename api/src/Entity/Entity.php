@@ -19,7 +19,6 @@ use Doctrine\ORM\Mapping as ORM;
 use EasyRdf\Literal\Boolean;
 use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
-use phpDocumentor\Reflection\Types\Integer;
 use phpDocumentor\Reflection\Types\This;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -1256,12 +1255,12 @@ class Entity
         return $this;
     }
 
-    public function getMaxDepth(): Integer
+    public function getMaxDepth(): int
     {
         return $this->maxDepth;
     }
 
-    public function setMaxDepth(Integer $maxDepth): self
+    public function setMaxDepth(int $maxDepth): self
     {
         $this->maxDepth = $maxDepth;
 
