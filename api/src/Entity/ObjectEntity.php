@@ -1008,15 +1008,15 @@ class ObjectEntity
 
         // The new metadata
         $array['_self'] = [
-            'id'           => $this->getId(),
+            'id'           => $this->getId()->toString(),
             'self'         => $this->getSelf(),
             'owner'        => $this->getOwner(),
             'organization' => $this->getOrganization(),
             'application'  => $this->getApplication(),
-            'dateCreated'  => $this->getDateCreated(),
-            'dateModified' => $this->getDateModified(),
+            'dateCreated'  => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
+            'dateModified' => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
             'schema'       => [
-                'id'  => $this->getEntity()->getId(),
+                'id'  => $this->getEntity()->getId()->toString(),
                 'ref' => $this->getEntity()->getReference(),
             ],
             'synchronizations' => $this->getReadableSyncDataArray(),
