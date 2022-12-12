@@ -992,14 +992,12 @@ class ObjectEntity
      *
      * @return array the array holding all the data     *
      */
-    public function toArray(
-        array $configuration = []
-    ): array
+    public function toArray(array $configuration = []): array
     {
         // Let's default the config array
         (!isset($configuration['level']) ? $configuration['level'] = 1 : '');
         (!isset($configuration['maxdepth']) ? $configuration['maxdepth'] = $this->getEntity()->getMaxDepth() : '');
-        (!isset($configuration['renderdObjects']) ? $configuration['renderdObjects'] = [] : '');
+        (!isset($configuration['renderedObjects']) ? $configuration['renderedObjects'] = [] : '');
         (!isset($configuration['embedded']) ? $configuration['embedded'] = false : '');
         (!isset($configuration['onlyMetadata']) ? $configuration['onlyMetadata'] = false : '');
 
@@ -1011,6 +1009,7 @@ class ObjectEntity
         // The new metadata
         $array['_self'] = [
             'id'           => $this->getId(),
+            'self'         => $this->getSelf(),
             'owner'        => $this->getOwner(),
             'organization' => $this->getOrganization(),
             'application'  => $this->getApplication(),
@@ -1039,37 +1038,41 @@ class ObjectEntity
                     $object = $valueObject->getObjects()->first();
                     $currentObjects[] = $object;
                     // Only add an object if it hasn't bean added yet
-                    if (!in_array($object, $configuration['renderdObjects'])) {
+                    if (!in_array($object, $configuration['renderedObjects'])) {
                         $config = $configuration;
-                        $config['renderdObjects'][] = $valueObject->getObjects()->first();
+                        $config['renderedObjects'][] = $valueObject->getObjects()->first();
+
+                        // Check if we want an embedded array
+                        if ($configuration['embedded']) {
+                            $array[$attribute->getName()] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
+                            $embedded[$attribute->getName()] = $object->toArray($config);
+                            continue;
+                        }
                         $array[$attribute->getName()] = $object->toArray($config); // getValue will return a single ObjectEntity
                     }
-                    // If we don't set the full object then we want to set na id
+                    // If we don't set the full object then we want to set self
                     else {
-                        $array[$attribute->getName()] = $object->getId();
-                    }
-
-                    // Check if we want an emedded array
-                    if ($configuration['embedded']) {
-                        $embedded[$attribute->getName()][] = $object->getId();
+                        $array[$attribute->getName()] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
                     }
                 } elseif ($configuration['level'] < $configuration['maxdepth']) {
                     $currentObjects[] = $valueObject->getObjects()->toArray();
                     foreach ($valueObject->getObjects() as $object) {
                         // Only add an object if it hasn't bean added yet
-                        if (!in_array($object, $configuration['renderdObjects'])) {
+                        if (!in_array($object, $configuration['renderedObjects'])) {
                             $config = $configuration;
-                            $config['renderdObjects'] = array_merge($configuration['renderdObjects'], $currentObjects);
+                            $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
 
+                            // Check if we want an embedded array
+                            if ($configuration['embedded']) {
+                                $array[$attribute->getName()][] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
+                                $embedded[$attribute->getName()][] = $object->toArray($config);
+                                continue;
+                            }
                             $array[$attribute->getName()][] = $object->toArray($config); // getValue will return a single ObjectEntity
                         }
-                        // If we don't set the full object then we want to set na id
+                        // If we don't set the full object then we want to set self
                         else {
-                            $array[$attribute->getName()][] = $object->getId();
-                        }
-                        // Check if we want an emedded array
-                        if ($configuration['embedded']) {
-                            $embedded[$attribute->getName()][] = $object->getId();
+                            $array[$attribute->getName()][] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
                         }
                     }
                 }
@@ -1080,6 +1083,7 @@ class ObjectEntity
         }
 
         if (!empty($embedded)) {
+            // todo: this should be _embedded
             $array['embedded'] = $embedded;
         }
 
