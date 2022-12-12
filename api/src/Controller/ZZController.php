@@ -107,7 +107,7 @@ class ZZController extends AbstractController
         // Lets get all the post variables
         $parameters['post'] = $request->request->all();
 
-        if($endpoint->getProxy()){
+        if ($endpoint->getProxy()) {
             return $this->requestservice->handleProxy([], $parameters);
         }
 
