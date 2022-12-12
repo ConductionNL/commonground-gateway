@@ -2,13 +2,13 @@
 
 namespace App\Subscriber;
 
-use ApiPlatform\Core\EventListener\EventPriorities;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
+use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Event\LifecycleEventArgs;
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Doctrine\ORM\Events;
+use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Ramsey\Uuid\Uuid;
 
 class ValueSubscriber implements EventSubscriberInterface
 {
@@ -20,29 +20,39 @@ class ValueSubscriber implements EventSubscriberInterface
         $this->entityManager = $entityManager;
     }
 
-    public static function getSubscribedEvents()
+    public function getSubscribedEvents(): array
     {
         return [
-            Events::prePersist
+            Events::preUpdate,
+            Events::prePersist,
+            Events::preRemove,
         ];
     }
 
-    public function prePersist (LifecycleEventArgs $args)
+    public function preUpdate (LifecycleEventArgs $args): void
     {
-        $object = $args->getObject();
-        if($object instanceof Value && $object->getAttribute()->getType() == 'object') {
-            if($uuid = $object->getStringValue()) {
-                $subObject = $this->entityManager->find(ObjectEntity::class, $uuid);
-                $object->setStringValue(null);
-                $object->addObject($subObject);
-            } elseif ($object->getArrayValue()) {
-                foreach($object->getArrayValue() as $uuid) {
+        $value = $args->getObject();
+        if($value instanceof Value && $value->getAttribute()->getType() == 'object') {
+            if ($value->getArrayValue()) {
+                foreach($value->getArrayValue() as $uuid) {
                     $subObject = $this->entityManager->find(ObjectEntity::class, $uuid);
-                    $object->addObject($subObject);
+                    $value->addObject($subObject);
                 }
-                $object->setArrayValue([]);
-                $object->setSimpleArrayValue([]);
+                $value->setArrayValue([]);
+            } elseif($uuid = $value->getStringValue() && Uuid::isValid($value->getStringValue())) {
+                $subObject = $this->entityManager->find(ObjectEntity::class, $uuid);
+                $value->addObject($subObject);
             }
         }
+    }
+
+    public function prePersist (LifecycleEventArgs $args): void
+    {
+        $this->preUpdate($args);
+    }
+
+    public function preRemove (LifecycleEventArgs $args): void
+    {
+        return;
     }
 }
