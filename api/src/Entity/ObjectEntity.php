@@ -993,14 +993,15 @@ class ObjectEntity
      * @return array the array holding all the data     *
      */
     public function toArray(
-        array $configuration = []): array
+        array $configuration = []
+    ): array
     {
         // Let's default the config array
-        (!isset($configuration['level'])? $configuration['level'] = 1:'');
-        (!isset($configuration['maxdepth'])? $configuration['maxdepth'] = $this->getEntity()->getMaxDepth():'');
-        (!isset($configuration['renderdObjects'])? $configuration['renderdObjects'] = []:'');
-        (!isset($configuration['embedded'])? $configuration['embedded'] = false:'');
-        (!isset($configuration['onlyMetadata'])? $configuration['onlyMetadata'] = false:'');
+        (!isset($configuration['level']) ? $configuration['level'] = 1 : '');
+        (!isset($configuration['maxdepth']) ? $configuration['maxdepth'] = $this->getEntity()->getMaxDepth() : '');
+        (!isset($configuration['renderdObjects']) ? $configuration['renderdObjects'] = [] : '');
+        (!isset($configuration['embedded']) ? $configuration['embedded'] = false : '');
+        (!isset($configuration['onlyMetadata']) ? $configuration['onlyMetadata'] = false : '');
 
         // Working arrays
         $array = [];
@@ -1009,16 +1010,16 @@ class ObjectEntity
 
         // The new metadata
         $array['_self'] = [
-            'id' => $this->getId(),
-            'owner' => $this->getOwner(),
+            'id'           => $this->getId(),
+            'owner'        => $this->getOwner(),
             'organization' => $this->getOrganization(),
-            'application' => $this->getApplication(),
-            'dateCreated' => $this->getDateCreated(),
+            'application'  => $this->getApplication(),
+            'dateCreated'  => $this->getDateCreated(),
             'dateModified' => $this->getDateModified(),
-            'schema' => [
-                'id' => $this->getEntity()->getId(),
-                'ref' => $this->getEntity()->getReference()
-                ],
+            'schema'       => [
+                'id'  => $this->getEntity()->getId(),
+                'ref' => $this->getEntity()->getReference(),
+            ],
             'synchronizations' => $this->getReadableSyncDataArray(),
         ];
 
@@ -1038,55 +1039,52 @@ class ObjectEntity
                     $object = $valueObject->getObjects()->first();
                     $currentObjects[] = $object;
                     // Only add an object if it hasn't bean added yet
-                    if(!in_array($object, $configuration['renderdObjects']))
-                    {
+                    if (!in_array($object, $configuration['renderdObjects'])) {
                         $config = $configuration;
-                        $config['renderdObjects'] [] = $valueObject->getObjects()->first();
+                        $config['renderdObjects'][] = $valueObject->getObjects()->first();
                         $array[$attribute->getName()] = $object->toArray($config); // getValue will return a single ObjectEntity
                     }
                     // If we don't set the full object then we want to set na id
-                    else{
+                    else {
                         $array[$attribute->getName()] = $object->getId();
                     }
 
                     // Check if we want an emedded array
-                    if($configuration['embedded']){
+                    if ($configuration['embedded']) {
                         $embedded[$attribute->getName()][] = $object->getId();
                     }
-
                 } elseif ($configuration['level'] < $configuration['maxdepth']) {
                     $currentObjects[] = $valueObject->getObjects()->toArray();
                     foreach ($valueObject->getObjects() as $object) {
                         // Only add an object if it hasn't bean added yet
-                        if(!in_array($object, $configuration['renderdObjects']))
-                        {
+                        if (!in_array($object, $configuration['renderdObjects'])) {
                             $config = $configuration;
                             $config['renderdObjects'] = array_merge($configuration['renderdObjects'], $currentObjects);
 
                             $array[$attribute->getName()][] = $object->toArray($config); // getValue will return a single ObjectEntity
                         }
                         // If we don't set the full object then we want to set na id
-                        else{
+                        else {
                             $array[$attribute->getName()][] = $object->getId();
                         }
                         // Check if we want an emedded array
-                        if($configuration['embedded']){
+                        if ($configuration['embedded']) {
                             $embedded[$attribute->getName()][] = $object->getId();
                         }
                     }
                 }
-            // But normal values are simple
+                // But normal values are simple
             } else {
                 $array[$attribute->getName()] = $valueObject->getValue();
             }
         }
 
-        if(!empty($embedded)){
+        if (!empty($embedded)) {
             $array['embedded'] = $embedded;
         }
+
         return $array;
     }
-
 
     /**
      * Adds the most important data of all synchronizations this Object has to an array and returns this array or null if this Object has no Synchronizations.

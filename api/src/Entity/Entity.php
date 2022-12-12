@@ -357,7 +357,7 @@ class Entity
     private ?array $nameProperties = null;
 
     /**
-     * @var integer The maximum depth that should be used when casting objects of this entity to array
+     * @var int The maximum depth that should be used when casting objects of this entity to array
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", length=1, options={"default": 3})
