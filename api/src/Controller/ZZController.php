@@ -107,6 +107,10 @@ class ZZController extends AbstractController
         // Lets get all the post variables
         $parameters['post'] = $request->request->all();
 
+        if($endpoint->getProxy()){
+            $this->callservice->handleProxy([], $parameters);
+        }
+
         // Try handler proces and catch exceptions
         try {
             $result = $handlerService->handleEndpoint($endpoint, $parameters);
