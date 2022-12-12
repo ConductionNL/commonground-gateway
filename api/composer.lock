@@ -702,12 +702,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/WaardepapierenBundle.git",
-                "reference": "189702ed9954d7d96083697295e8c8f201bf6d44"
+                "reference": "361cf8b2e04912dfbbb0831f0f8acdbe469d2e68"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/WaardepapierenBundle/zipball/189702ed9954d7d96083697295e8c8f201bf6d44",
-                "reference": "189702ed9954d7d96083697295e8c8f201bf6d44",
+                "url": "https://api.github.com/repos/CommonGateway/WaardepapierenBundle/zipball/361cf8b2e04912dfbbb0831f0f8acdbe469d2e68",
+                "reference": "361cf8b2e04912dfbbb0831f0f8acdbe469d2e68",
                 "shasum": ""
             },
             "require": {
@@ -729,11 +729,20 @@
                 "EUPL-1.2"
             ],
             "description": "An example package for creating symfony flex bundles as plugins",
+            "homepage": "https://commongatway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "symfony"
+            ],
             "support": {
                 "issues": "https://github.com/CommonGateway/WaardepapierenBundle/issues",
                 "source": "https://github.com/CommonGateway/WaardepapierenBundle/tree/main"
             },
-            "time": "2022-11-02T13:47:27+00:00"
+            "time": "2022-12-09T12:51:17+00:00"
         },
         {
             "name": "commongateway/corebundle",
@@ -741,12 +750,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "5639d4248556d359ce2e37ab17aae6f6cb984fd6"
+                "reference": "f0c5390901d485c3d351f4c128987992a2994835"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/5639d4248556d359ce2e37ab17aae6f6cb984fd6",
-                "reference": "5639d4248556d359ce2e37ab17aae6f6cb984fd6",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/f0c5390901d485c3d351f4c128987992a2994835",
+                "reference": "f0c5390901d485c3d351f4c128987992a2994835",
                 "shasum": ""
             },
             "require": {
@@ -804,7 +813,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2022-12-08T14:31:43+00:00"
+            "time": "2022-12-12T08:12:18+00:00"
         },
         {
             "name": "composer/ca-bundle",
