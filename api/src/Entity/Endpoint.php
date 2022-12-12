@@ -276,6 +276,12 @@ class Endpoint
      */
     private $entities;
 
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="proxies")
+     */
+    private $proxy;
+
     public function __construct(?Entity $entity = null)
     {
         $this->requestLogs = new ArrayCollection();
@@ -720,6 +726,18 @@ class Endpoint
     public function removeEntity(Entity $entity): self
     {
         $this->entities->removeElement($entity);
+
+        return $this;
+    }
+
+    public function getProxy(): ?Gateway
+    {
+        return $this->proxy;
+    }
+
+    public function setProxy(?Gateway $proxy): self
+    {
+        $this->proxy = $proxy;
 
         return $this;
     }

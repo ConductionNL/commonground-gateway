@@ -539,11 +539,11 @@ class Value
 
     /**
      * @param $value The value to set
-     * @param bool $unsave Wheter the setter can also remove values
+     * @param bool $unsafe Wheter the setter can also remove values
      *
      * @throws Exception
      */
-    public function setValue($value, bool $unsave = false): self
+    public function setValue($value, bool $unsafe = false): self
     {
         if ($this->getAttribute()) {
 
@@ -553,8 +553,9 @@ class Value
                 return $this->setSimpleArrayValue($value);
             } elseif ($this->getAttribute()->getMultiple()) {
                 // Lest deal with multiple file subobjects
-
-                $this->objects->clear();
+                if ($unsafe) {
+                    $this->objects->clear();
+                }
 
                 if (!$value) {
                     return $this;
@@ -570,20 +571,23 @@ class Value
                         $valueObject->setOwner($this->getObjectEntity()->getOwner());
                         $valueObject->setApplication($this->getObjectEntity()->getApplication());
                         $valueObject->setOrganization($this->getObjectEntity()->getOrganization());
-                        $valueObject->hydrate($value, $unsave);
+                        $valueObject->hydrate($value, $unsafe);
                         $value = $valueObject;
                     }
 
-                    if (is_string($value) || $value == null) {
+                    if (is_string($value)) {
+                        $idArray[] = $value;
+                    } elseif ($value == null) {
                         continue;
+                    } else {
+                        $this->addObject($value);
+                        var_dump(count($this->getObjects()));
                     }
-
-                    $idArray[] = $value->getId();
-                    $this->addObject($value);
                 }
 
                 // Set a string reprecentation of the object
                 $this->stringValue = ','.implode(',', $idArray);
+                $this->setArrayValue($idArray);
 
                 return $this;
             }
@@ -633,6 +637,8 @@ class Value
                     // Catch empty input
                     if ($value === null) {
                         return $this;
+                    } elseif (is_string($value)) {
+                        return $this->setStringValue($value);
                     }
 
                     // Catch Array input (for hydrator)
