@@ -1041,14 +1041,15 @@ class ObjectEntity
                     if (!in_array($object, $configuration['renderedObjects'])) {
                         $config = $configuration;
                         $config['renderedObjects'][] = $valueObject->getObjects()->first();
+                        $objectToArray = $object->toArray($config);
 
                         // Check if we want an embedded array
                         if ($configuration['embedded']) {
                             $array[$attribute->getName()] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
-                            $embedded[$attribute->getName()] = $object->toArray($config);
-                            continue;
+                            $embedded[$attribute->getName()] = $objectToArray;
+//                            continue; // todo: put this continue back later!
                         }
-                        $array[$attribute->getName()] = $object->toArray($config); // getValue will return a single ObjectEntity
+                        $array[$attribute->getName()] = $objectToArray; // getValue will return a single ObjectEntity
                     }
                     // If we don't set the full object then we want to set self
                     else {
@@ -1061,14 +1062,15 @@ class ObjectEntity
                         if (!in_array($object, $configuration['renderedObjects'])) {
                             $config = $configuration;
                             $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
+                            $objectToArray = $object->toArray($config);
 
                             // Check if we want an embedded array
                             if ($configuration['embedded']) {
                                 $array[$attribute->getName()][] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
-                                $embedded[$attribute->getName()][] = $object->toArray($config);
-                                continue;
+                                $embedded[$attribute->getName()][] = $objectToArray;
+//                                continue; // todo: put this continue back later!
                             }
-                            $array[$attribute->getName()][] = $object->toArray($config); // getValue will return a single ObjectEntity
+                            $array[$attribute->getName()][] = $objectToArray;
                         }
                         // If we don't set the full object then we want to set self
                         else {
