@@ -1015,6 +1015,7 @@ class ObjectEntity
             'application'  => $this->getApplication(),
             'dateCreated'  => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
             'dateModified' => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
+            'level'        => $configuration['level'],
             'schema'       => [
                 'id'  => $this->getEntity()->getId()->toString(),
                 'ref' => $this->getEntity()->getReference(),
