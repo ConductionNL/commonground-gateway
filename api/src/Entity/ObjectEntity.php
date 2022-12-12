@@ -1045,7 +1045,8 @@ class ObjectEntity
 
                         // Check if we want an embedded array
                         if ($configuration['embedded']) {
-                            $array[$attribute->getName()] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
+                            // todo: put this line back later, with the continue below.
+//                            $array[$attribute->getName()] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
                             $embedded[$attribute->getName()] = $objectToArray;
 //                            continue; // todo: put this continue back later!
                         }
@@ -1066,7 +1067,8 @@ class ObjectEntity
 
                             // Check if we want an embedded array
                             if ($configuration['embedded']) {
-                                $array[$attribute->getName()][] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
+                                // todo: put this line back later, with the continue below.
+//                                $array[$attribute->getName()][] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
                                 $embedded[$attribute->getName()][] = $objectToArray;
 //                                continue; // todo: put this continue back later!
                             }
