@@ -553,8 +553,9 @@ class Value
                 return $this->setSimpleArrayValue($value);
             } elseif ($this->getAttribute()->getMultiple()) {
                 // Lest deal with multiple file subobjects
-                if($unsafe)
+                if ($unsafe) {
                     $this->objects->clear();
+                }
 
                 if (!$value) {
                     return $this;
@@ -582,7 +583,6 @@ class Value
                         $this->addObject($value);
                         var_dump(count($this->getObjects()));
                     }
-
                 }
 
                 // Set a string reprecentation of the object
