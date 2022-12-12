@@ -60,7 +60,6 @@ class ZZController extends AbstractController
         // Get full path
         try {
             $endpoint = $this->getDoctrine()->getRepository('App:Endpoint')->findByMethodRegex($request->getMethod(), $path);
-//            if(in_array($endpoint->getMethods(), $request->getMethod()))
         } catch (NonUniqueResultException $exception) {
             return new Response(
                 $serializer->serialize(['message' =>  'Found more than one Endpoint with this path and/or method', 'data' => ['path' => $path, 'method' => $request->getMethod()], 'path' => $path], $acceptType),
