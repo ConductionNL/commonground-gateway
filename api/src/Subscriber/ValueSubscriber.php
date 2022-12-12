@@ -52,6 +52,5 @@ class ValueSubscriber implements EventSubscriberInterface
 
     public function preRemove(LifecycleEventArgs $args): void
     {
-
     }
 }
