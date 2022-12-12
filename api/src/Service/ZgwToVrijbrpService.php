@@ -146,6 +146,28 @@ class ZgwToVrijbrpService
         return null;
     }
 
+    private function getInitiatorLastname(array $zaakArray): ?string
+    {
+        foreach ($zaakArray['rollen'] as $rol) {
+            if ($rol['omschrijvingGeneriek'] == 'initiator' && $rol['betrokkeneType'] == 'natuurlijk_persoon') {
+                return $rol['betrokkeneIdentificatie']['geslachtsnaam'];
+            }
+        }
+
+        return null;
+    }
+
+    private function getInitiatorLastnamePrefix(array $zaakArray): ?string
+    {
+        foreach ($zaakArray['rollen'] as $rol) {
+            if ($rol['omschrijvingGeneriek'] == 'initiator' && $rol['betrokkeneType'] == 'natuurlijk_persoon') {
+                return $rol['betrokkeneIdentificatie']['voorvoegselGeslachtsnaam'];
+            }
+        }
+
+        return null;
+    }
+
     private function createCommitmentObject(array $zaakArray): array
     {
         isset($this->configuration['entities']['Commitment']) && $commitmentEntity = $this->entityRepo->find($this->configuration['entities']['Commitment']);
@@ -174,9 +196,6 @@ class ZgwToVrijbrpService
                     $commitmentArray['dossier']['description'] = $eigenschap['waarde'];
                     $commitmentArray['dossier']['type']['description'] = $eigenschap['waarde'];
                     continue 2;
-                case 'geslachtsnaam1':
-                    $commitmentArray['partner1']['nameAfterCommitment']['lastname'] = $eigenschap['waarde'];
-                    continue 2;
                 case 'inp.bsn':
                     if (isset($commitmentArray['partner1']['bsn'])) {
                         $commitmentArray['partner2']['bsn'] = $eigenschap['waarde'];
@@ -203,8 +222,19 @@ class ZgwToVrijbrpService
                 case 'bsn4':
                     $commitmentArray['witnesses'][1]['bsn'] = $eigenschap['waarde'];
                     continue 2;
-                case 'geslachtsnaam2':
-                    $commitmentArray['partner2']['nameAfterCommitment']['lastname'] = $eigenschap['waarde'];
+                case 'geslachtsnaam':
+                    if (isset($commitmentArray['partner1']['nameAfterCommitment']['lastname'])) {
+                        $commitmentArray['partner2']['nameAfterCommitment']['lastname'] = $eigenschap['waarde'];
+                    } else {
+                        $commitmentArray['partner1']['nameAfterCommitment']['lastname'] = $eigenschap['waarde'];
+                    }
+                    continue 2;
+                case 'voorvoegselGeslachtsnaam':
+                    if (isset($commitmentArray['partner1']['nameAfterCommitment']['lastname'])) {
+                        $commitmentArray['partner2']['nameAfterCommitment']['prefix'] = $eigenschap['waarde'];
+                    } else {
+                        $commitmentArray['partner1']['nameAfterCommitment']['prefix'] = $eigenschap['waarde'];
+                    }
                     continue 2;
                 case 'verbintenisType':
                     in_array($eigenschap['waarde'], ['MARRIAGE', 'GPS']) && $commitmentArray['planning']['commitmentType'] = $eigenschap['waarde'];
@@ -241,6 +271,13 @@ class ZgwToVrijbrpService
 
         if (!isset($commitmentArray['partner2']['bsn'])) {
             $commitmentArray['partner2']['bsn'] = $this->getInitiatorBsn($zaakArray);
+        }
+
+        if (!isset($commitmentArray['partner2']['nameAfterCommitment']['lastname'])) {
+            $commitmentArray['partner2']['nameAfterCommitment']['lastname'] = $this->getInitiatorLastname($zaakArray);
+            if (!isset($commitmentArray['partner2']['nameAfterCommitment']['prefix'])) {
+                $commitmentArray['partner2']['nameAfterCommitment']['lastname'] = $this->getInitiatorLastnamePrefix($zaakArray);
+            }
         }
 
         isset($commitmentArray['witnesses']['numberOfMunicipalWitnesses']) ?: $commitmentArray['witnesses']['numberOfMunicipalWitnesses'] = 0;
