@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Annotation\Route;
  * Class SearchControllerc.
  *
  *
- * @Route("api/search")
+ * Route("api/search")
  */
 class SearchController extends AbstractController
 {
@@ -26,7 +26,7 @@ class SearchController extends AbstractController
     }
 
     /**
-     * @Route("/", methods={"GET"})
+     * Route("/", methods={"GET"})
      */
     public function installedAction(Request $request)
     {
