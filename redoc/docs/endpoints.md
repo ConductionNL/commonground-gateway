@@ -41,4 +41,5 @@ If no proxy, entities or throws are defined the endpoint will return an error
 ## Security
 Endpoints MAY be secured by assigning them to user groups, this is done on the bases of methods.  
 
-
+> **Warning**
+> This file is maintained at (google drive](https://docs.google.com/document/d/1b0yGB1Q_IR27ik8XUurdFq9VUFqTWC62P-ZhZZF62EI/edit)
