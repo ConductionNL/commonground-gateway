@@ -1305,7 +1305,7 @@ class Entity
     /**
      * @return bool
      */
-    public function isExclude(): bool
+    public function isExcluded(): bool
     {
         return $this->exclude;
     }

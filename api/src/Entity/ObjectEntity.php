@@ -1032,14 +1032,14 @@ class ObjectEntity
         foreach ($this->getEntity()->getAttributes() as $attribute) {
             $valueObject = $this->getValueObject($attribute);
             // Subobjects are a bit complicated
-            if ($attribute->getType() == 'object' && !$attribute->getObject()->isExclude()) {
+            if ($attribute->getType() == 'object') {
                 if ($valueObject->getValue() == null) {
                     $array[$attribute->getName()] = null;
                 } elseif (!$attribute->getMultiple() && $configuration['level'] < $configuration['maxdepth']) {
                     $object = $valueObject->getObjects()->first();
                     $currentObjects[] = $object;
                     // Only add an object if it hasn't bean added yet
-                    if (!in_array($object, $configuration['renderedObjects'])) {
+                    if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
                         $config = $configuration;
                         $config['renderedObjects'][] = $valueObject->getObjects()->first();
                         $objectToArray = $object->toArray($config);
@@ -1061,7 +1061,7 @@ class ObjectEntity
                     $currentObjects[] = $valueObject->getObjects()->toArray();
                     foreach ($valueObject->getObjects() as $object) {
                         // Only add an object if it hasn't bean added yet
-                        if (!in_array($object, $configuration['renderedObjects'])) {
+                        if (!in_array($object, $configuration['renderedObjects'])  && !$attribute->getObject()->isExcluded()) {
                             $config = $configuration;
                             $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
                             $objectToArray = $object->toArray($config);
