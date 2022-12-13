@@ -84,8 +84,7 @@ class ZZController extends AbstractController
         $pathArray = array_values(array_filter(explode('/', $path)));
         var_dump($pathArray);
         foreach ($endpoint->getPath() as $key => $pathPart) {
-
-            if($pathPart == '{route}') {
+            if ($pathPart == '{route}') {
                 $parameters['path'][$pathPart] = implode('/', array_slice($pathArray, $key));
                 break;
             }
