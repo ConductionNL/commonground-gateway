@@ -750,15 +750,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/XxllncZGWBundle.git",
-                "reference": "c078e065a28430148b110e8b6a1692570cd8088f"
+                "reference": "41932be24173793f50e062ead2d3d0c48e8e2fd3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/XxllncZGWBundle/zipball/c078e065a28430148b110e8b6a1692570cd8088f",
-                "reference": "c078e065a28430148b110e8b6a1692570cd8088f",
+                "url": "https://api.github.com/repos/CommonGateway/XxllncZGWBundle/zipball/41932be24173793f50e062ead2d3d0c48e8e2fd3",
+                "reference": "41932be24173793f50e062ead2d3d0c48e8e2fd3",
                 "shasum": ""
             },
             "require": {
+                "common-gateway/zgw-bundle": "^0.0.5",
                 "commongateway/corebundle": "dev-master",
                 "php": ">=7.4"
             },
@@ -791,7 +792,55 @@
                 "issues": "https://github.com/CommonGateway/XxllncZGWBundle/issues",
                 "source": "https://github.com/CommonGateway/XxllncZGWBundle/tree/main"
             },
-            "time": "2022-12-09T16:23:29+00:00"
+            "time": "2022-12-13T13:00:49+00:00"
+        },
+        {
+            "name": "common-gateway/zgw-bundle",
+            "version": "0.0.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/ZGWBundle.git",
+                "reference": "936c1889fd1bba074cfb526aa00a74bf307b5ed2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/936c1889fd1bba074cfb526aa00a74bf307b5ed2",
+                "reference": "936c1889fd1bba074cfb526aa00a74bf307b5ed2",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": "dev-master",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\ZGWBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "Symfony bundle for zgw standard functionality",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "symfony",
+                "zgw"
+            ],
+            "support": {
+                "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
+                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.0.5"
+            },
+            "time": "2022-12-09T13:48:26+00:00"
         },
         {
             "name": "commongateway/corebundle",

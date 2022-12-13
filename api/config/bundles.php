@@ -27,4 +27,5 @@ return [
     Kiss\KissBundle\KissBundle::class => ['all' => true],
     LarpingBase\LarpingBundle\LarpingBundle::class => ['all' => true],
     CommonGateway\XxllncZGWBundle\XxllncZGWBundle::class => ['all' => true],
+    CommonGateway\ZGWBundle\ZGWBundle::class => ['all' => true],
 ];
