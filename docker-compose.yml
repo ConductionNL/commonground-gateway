@@ -20,6 +20,8 @@ services:
   oc:
     &ui
     image: ghcr.io/opencatalogi/web-app:dev
+    depends_on:
+      - api
     ports:
       - "81:80"
     volumes:
@@ -34,6 +36,8 @@ services:
   ui:
     &ui
     image: ghcr.io/conductionnl/gateway-ui:stag
+    depends_on:
+      - api
     ports:
       - "8000:80"
     volumes:
