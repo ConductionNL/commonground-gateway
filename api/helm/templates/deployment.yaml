@@ -62,7 +62,7 @@ spec:
             name: {{ include "commonground-gateway.fullname" . }}-framework
             defaultMode: 420
         {{- end }}
-        {{- if eq(.Values.databaseType "mssql")}}
+        {{- if eq .Values.databaseType "mssql" }}
         - name: doctrine
           configMap:
             name: {{ include "commonground-gateway.fullname" . }}-doctrineconfig
@@ -104,7 +104,7 @@ spec:
               name: framework
               readOnly: true
             {{- end }}
-            {{- if eq(.Values.databaseType "mssql") }}
+            {{- if eq .Values.databaseType "mssql" }}
             - mountPath: /srv/api/config/packages/prod/doctrine.yaml
               subPath: doctrine.yaml
               name: doctrine

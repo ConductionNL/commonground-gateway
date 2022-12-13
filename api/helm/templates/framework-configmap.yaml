@@ -18,7 +18,7 @@ data:
             samesite: {{ .Values.config.samesiteCookie }}
 {{- end }}
 ---
-    {{- if eq(.Values.databaseType "mssql") }}
+    {{- if eq .Values.databaseType "mssql" }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
