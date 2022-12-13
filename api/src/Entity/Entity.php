@@ -356,6 +356,14 @@ class Entity
     private ?array $nameProperties = null;
 
     /**
+     * @var int The maximum depth that should be used when casting objects of this entity to array
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="integer", length=1, options={"default": 3})
+     */
+    private int $maxDepth = 3;
+
+    /**
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
@@ -1251,6 +1259,18 @@ class Entity
     public function setVersion(?string $version): self
     {
         $this->version = $version;
+
+        return $this;
+    }
+
+    public function getMaxDepth(): int
+    {
+        return $this->maxDepth;
+    }
+
+    public function setMaxDepth(int $maxDepth): self
+    {
+        $this->maxDepth = $maxDepth;
 
         return $this;
     }
