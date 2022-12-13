@@ -242,7 +242,7 @@
 #    # Openpub proxy
 #    pubSource:
 #        name: openPub API
-#        location: https://openweb.kiss-dev.commonground.nu/wp-json/wp/v2
+#        location: https://openweb.kiss.commonground.nu/wp-json/wp/v2 # TODO: for now is this the dev url, will change later
 #        headers:
 #            accept: 'application/json'
 #        auth: none
