@@ -82,7 +82,13 @@ class ZZController extends AbstractController
         $parameters = ['path' => [], 'query' => [], 'post' => []];
 
         $pathArray = array_values(array_filter(explode('/', $path)));
+        var_dump($pathArray);
         foreach ($endpoint->getPath() as $key => $pathPart) {
+
+            if($pathPart == '{route}') {
+                $parameters['path'][$pathPart] = implode('/', array_slice($pathArray, $key));
+                break;
+            }
             // Let move path parts that are defined as variables to the filter array
             if (array_key_exists($key, $pathArray)) {
                 $parameters['path'][$pathPart] = $pathArray[$key];
