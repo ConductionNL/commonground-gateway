@@ -1012,7 +1012,7 @@ class ObjectEntity
             'self'         => $this->getSelf(),
             'owner'        => $this->getOwner(),
             'organization' => $this->getOrganization(),
-            'application'  => $this->getApplication()->getId()->toString(),
+            'application'  => $this->getApplication() ? $this->getApplication()->getId()->toString() : null,
             'dateCreated'  => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
             'dateModified' => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
             'level'        => $configuration['level'],
