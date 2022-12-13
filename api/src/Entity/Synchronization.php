@@ -181,7 +181,7 @@ class Synchronization
     /**
      * An updated timer that tels the sync service to wait a specific increment beofre trying again
      *
-     * @ORM\Column(type="datetime", options={"default" : "CURRENT_TIMESTAMP"})
+     * @ORM\Column(type="datetime", nullable=true, options={"default" : "CURRENT_TIMESTAMP"})
      */
     private $dontSyncBefore;
 
