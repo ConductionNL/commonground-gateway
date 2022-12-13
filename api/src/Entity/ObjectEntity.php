@@ -1003,7 +1003,7 @@ class ObjectEntity
         }
         foreach ($this->getEntity()->getAttributes() as $attribute) {
             $valueObject = $this->getValueObject($attribute);
-            if ($attribute->getType() == 'object') {
+            if ($attribute->getType() == 'object' && !$attribute->getObject()->isExclude()) {
                 if ($valueObject->getValue() == null) {
                     $array[$attribute->getName()] = null;
                 } elseif (!$attribute->getMultiple() && $level < 5) {
@@ -1254,9 +1254,13 @@ class ObjectEntity
      * This function makes sure that each and every oject alwys has a name when saved
      *
      * @ORM\PrePersist
+     * @ORM\PreUpdate
      */
     public function prePersist(): void
     {
+        foreach($this->subresourceOf as $subresourceOf) {
+            $this->addSubresourceOf($subresourceOf->setObjectEntity($subresourceOf->getObjectEntity()->setDateModified(new DateTime())));
+        }
         // Lets see if the name is congigured
         if ($this->entity->getNameProperties()) {
             $name = null;
@@ -1279,5 +1283,6 @@ class ObjectEntity
             }
         }
         $this->setName($this->getId());
+
     }
 }

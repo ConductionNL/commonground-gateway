@@ -373,6 +373,14 @@ class Entity
      */
     private $endpoints;
 
+    /**
+     * @var bool Whether the entity should be excluded from rendering as sub object
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="boolean", options={"default": false}, nullable=true)
+     */
+    private bool $exclude = false;
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
@@ -1270,6 +1278,25 @@ class Entity
         if ($this->endpoints->removeElement($endpoint)) {
             $endpoint->removeEntity($this);
         }
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExclude(): bool
+    {
+        return $this->exclude;
+    }
+
+    /**
+     * @param bool $exclude
+     * @return Entity
+     */
+    public function setExclude(bool $exclude): self
+    {
+        $this->exclude = $exclude;
 
         return $this;
     }
