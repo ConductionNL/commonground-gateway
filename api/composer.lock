@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d0fd53c9eed4049855d3764774dff11c",
+    "content-hash": "7c1f68f79c927e53e9b3f51043d27e5d",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -5175,16 +5175,16 @@
         },
         {
             "name": "open-catalogi/open-catalogi-bundle",
-            "version": "0.0.4",
+            "version": "0.0.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/OpenCatalogi/OpenCatalogiBundle.git",
-                "reference": "f08bac60c290be697ef7903c269718c47b17b297"
+                "reference": "b4ef4b804ba220fa8646231a9aa14b3d8d56f05d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/f08bac60c290be697ef7903c269718c47b17b297",
-                "reference": "f08bac60c290be697ef7903c269718c47b17b297",
+                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/b4ef4b804ba220fa8646231a9aa14b3d8d56f05d",
+                "reference": "b4ef4b804ba220fa8646231a9aa14b3d8d56f05d",
                 "shasum": ""
             },
             "require": {
@@ -5217,9 +5217,9 @@
             ],
             "support": {
                 "issues": "https://github.com/OpenCatalogi/OpenCatalogiBundle/issues",
-                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/0.0.4"
+                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/0.0.5"
             },
-            "time": "2022-12-12T19:32:07+00:00"
+            "time": "2022-12-13T20:36:04+00:00"
         },
         {
             "name": "paragonie/random_compat",
