@@ -1116,11 +1116,11 @@ class ObjectEntity
                     ],
                     'endpoint'          => $synchronization->getEndpoint(),
                     'sourceId'          => $synchronization->getSourceId(),
-                    'dateCreated'       => $synchronization->getDateCreated(),
-                    'dateModified'      => $synchronization->getDateModified(),
-                    'lastChecked'       => $synchronization->getLastChecked(),
-                    'lastSynced'        => $synchronization->getLastSynced(),
-                    'sourceLastChanged' => $synchronization->getSourceLastChanged(),
+                    'dateCreated'       => $synchronization->getDateCreated() ? $synchronization->getDateCreated()->format('c') : null,
+                    'dateModified'      => $synchronization->getDateModified() ? $synchronization->getDateModified()->format('c') : null,
+                    'lastChecked'       => $synchronization->getLastChecked() ? $synchronization->getLastChecked()->format('c') : null,
+                    'lastSynced'        => $synchronization->getLastSynced() ? $synchronization->getLastSynced()->format('c') : null,
+                    'sourceLastChanged' => $synchronization->getSourceLastChanged() ? $synchronization->getSourceLastChanged()->format('c') : null,
                 ];
             }
 
