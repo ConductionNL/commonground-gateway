@@ -975,7 +975,7 @@ class EavService
         if (strtolower($method) === 'get' && empty($_SERVER['QUERY_STRING'])) {
             return $vars;
         }
-        $pairs = explode('&', strtolower($method) == 'post' ? file_get_contents('php://input') : $_SERVER['QUERY_STRING']);
+        $pairs = explode('&', $_SERVER['QUERY_STRING']);
         foreach ($pairs as $pair) {
             $nv = explode('=', $pair);
             $name = urldecode($nv[0]);

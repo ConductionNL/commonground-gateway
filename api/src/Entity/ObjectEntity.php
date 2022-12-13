@@ -1041,7 +1041,7 @@ class ObjectEntity
                     // Only add an object if it hasn't bean added yet
                     if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
                         $config = $configuration;
-                        $config['renderedObjects'][] = $valueObject->getObjects()->first();
+                        $config['renderedObjects'][] = $object;
                         $config['level'] = $config['level'] + 1;
                         $objectToArray = $object->toArray($config);
 
