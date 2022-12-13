@@ -1042,6 +1042,7 @@ class ObjectEntity
                     if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
                         $config = $configuration;
                         $config['renderedObjects'][] = $valueObject->getObjects()->first();
+                        $config['level'] = $config['level'] + 1;
                         $objectToArray = $object->toArray($config);
 
                         // Check if we want an embedded array
@@ -1064,6 +1065,7 @@ class ObjectEntity
                         if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
                             $config = $configuration;
                             $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
+                            $config['level'] = $config['level'] + 1;
                             $objectToArray = $object->toArray($config);
 
                             // Check if we want an embedded array
