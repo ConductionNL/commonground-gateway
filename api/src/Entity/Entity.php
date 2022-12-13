@@ -1312,6 +1312,7 @@ class Entity
 
     /**
      * @param bool $exclude
+     *
      * @return Entity
      */
     public function setExclude(bool $exclude): self
