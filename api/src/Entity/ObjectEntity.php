@@ -1061,7 +1061,7 @@ class ObjectEntity
                     $currentObjects[] = $valueObject->getObjects()->toArray();
                     foreach ($valueObject->getObjects() as $object) {
                         // Only add an object if it hasn't bean added yet
-                        if (!in_array($object, $configuration['renderedObjects'])  && !$attribute->getObject()->isExcluded()) {
+                        if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
                             $config = $configuration;
                             $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
                             $objectToArray = $object->toArray($config);
