@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "83a3fd8f6cedb21da09d0e57920175e5",
+    "content-hash": "232e96d5acf4d8dce9e586596f2b6961",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -743,6 +743,55 @@
                 "source": "https://github.com/CommonGateway/WaardepapierenBundle/tree/main"
             },
             "time": "2022-12-09T12:51:17+00:00"
+        },
+        {
+            "name": "common-gateway/xxllnc-zgw-bundle",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/XxllncZGWBundle.git",
+                "reference": "c078e065a28430148b110e8b6a1692570cd8088f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/XxllncZGWBundle/zipball/c078e065a28430148b110e8b6a1692570cd8088f",
+                "reference": "c078e065a28430148b110e8b6a1692570cd8088f",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": "dev-master",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "default-branch": true,
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\XxllncZGWBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "A package for a symfony flex bundle containing functionality for mapping ZGW api standard to XXLLNC api",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "symfony",
+                "zgw"
+            ],
+            "support": {
+                "issues": "https://github.com/CommonGateway/XxllncZGWBundle/issues",
+                "source": "https://github.com/CommonGateway/XxllncZGWBundle/tree/main"
+            },
+            "time": "2022-12-09T16:23:29+00:00"
         },
         {
             "name": "commongateway/corebundle",
@@ -14644,6 +14693,7 @@
     "stability-flags": {
         "common-gateway/formio-bundle": 20,
         "common-gateway/waardepapieren-bundle": 20,
+        "common-gateway/xxllnc-zgw-bundle": 20,
         "commongateway/corebundle": 20,
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,
