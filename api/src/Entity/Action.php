@@ -230,7 +230,7 @@ class Action
             (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
             $this->setClass(get_class($actionHandler));
             $this->setConditions(['==' => [1, 1]]);
-            $this->setConfiguration($this->getDefaultConfigFromSchema());
+            $this->setConfiguration($this->getDefaultConfigFromSchema($schema));
         }
     }
 

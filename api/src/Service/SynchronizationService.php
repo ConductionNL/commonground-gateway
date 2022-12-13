@@ -839,7 +839,12 @@ class SynchronizationService
 
         // Set dont try before, expensional so in minutes  1,8,27,64,125,216,343,512,729,1000
         $addMinutes = pow($counter,3);
-        $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT' . $addMinutes . 'M'));
+        if($synchronization->getDontSyncBefore()){
+            $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT' . $addMinutes . 'M'));
+        }
+        else{
+            $dontTryBefore = new \DateTime();
+        }
         $synchronization->getDontSyncBefore($dontTryBefore);
 
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
@@ -946,7 +951,10 @@ class SynchronizationService
             $objectEntity->setApplication($application);
             $objectEntity->setOrganization($application->getOrganization());
         } elseif (
-            ($application = $this->entityManager->getRepository('App:Application')->findAll()[0]) && $application instanceof Application
+            (  $applications = $this->entityManager->getRepository('App:Application')->findAll()
+                && !empty($applications)
+                && $application = $applications[0])
+                && $application instanceof Application
         ) {
             $objectEntity->setApplication($application);
             $objectEntity->setOrganization($application->getOrganization());

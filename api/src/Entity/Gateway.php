@@ -192,7 +192,7 @@ class Gateway
      *     }
      * )
      * @Groups({"read","read_secure","write"})
-     * @ORM\Column(type="text")
+     * @ORM\Column(type="text",nullable=true)
      */
     private string $description = '';
 

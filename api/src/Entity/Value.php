@@ -229,9 +229,9 @@ class Value
 
     public function setStringValue($stringValue): self
     {
-        //@todo this is a hack
+        //@We no longer use string value?
         if (is_array($stringValue)) {
-            $stringValue = implode(',', $stringValue);
+            return $this;
         }
         $this->stringValue = $stringValue;
 
