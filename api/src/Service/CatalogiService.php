@@ -485,7 +485,7 @@ class CatalogiService
         $domain = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== 'localhost' ? 'https://'.$_SERVER['HTTP_HOST'] : 'http://localhost';
         foreach ($knownComponents as &$component) {
             // We only need the metadata and/or id in this specific case to get the ComponentLocation.
-            $component = $component->toArray(1, ['id', 'synchronizations', 'self'], true);
+            $component = $component->toArray(['onlyMetadata' => true]);
             $component = $this->getComponentLocation($component, $domain);
         }
 
@@ -493,9 +493,9 @@ class CatalogiService
     }
 
     /**
-     * Gets the location of a single Component. First tries to look for a synchronization in x-commongateway-metadata,
+     * Gets the location of a single Component. First tries to look for a synchronization in _self,
      * of the given $component, to combine gateway location, endpoint and sourceId.
-     * Else looks for self in x-commongateway-metadata and combines this with the given catalogiLocation.
+     * Else looks for self in _self and combines this with the given catalogiLocation.
      * And lastly if we still haven't found a location combines the given catalogiLocation with the Action configuration
      * componentsLocation and the $component id.
      *
@@ -507,8 +507,8 @@ class CatalogiService
     private function getComponentLocation(array $component, string $catalogiLocation): string
     {
         // todo: always key=0?
-        if (isset($component['x-commongateway-metadata']['synchronizations'][0])) {
-            $componentSync = $component['x-commongateway-metadata']['synchronizations'][0];
+        if (isset($component['_self']['synchronizations'][0])) {
+            $componentSync = $component['_self']['synchronizations'][0];
 
             // Endpoint could be set to "" or null. Isset() won't pass this check so use array_key_exists!
             if (isset($componentSync['gateway']['location']) && isset($componentSync['sourceId']) &&
@@ -516,9 +516,9 @@ class CatalogiService
                 return $componentSync['gateway']['location'].$componentSync['endpoint'].'/'.$componentSync['sourceId'];
             }
         }
-        if (isset($component['x-commongateway-metadata']['self']) &&
-            str_contains($component['x-commongateway-metadata']['self'], $this->configuration['componentsLocation'])) {
-            return $catalogiLocation.$component['x-commongateway-metadata']['self'];
+        if (isset($component['_self']['self']) &&
+            str_contains($component['_self']['self'], $this->configuration['componentsLocation'])) {
+            return $catalogiLocation.$component['_self']['self'];
         }
 
         return $catalogiLocation.$this->configuration['componentsLocation'].'/'.$component['id'];
@@ -592,8 +592,8 @@ class CatalogiService
                 !in_array($checkComponentLocation, $knownComponentLocations)) {
                 // If $checkComponent has no synchronizations, add the catalogi source as synchronization gateway...
                 // ...for when we are going to add a Synchronization (for a new Component) later.
-                if (!isset($checkComponent['x-commongateway-metadata']['synchronizations'][0])) {
-                    $checkComponent['x-commongateway-metadata']['synchronizations'][0]['gateway'] = $catalogi['source'];
+                if (!isset($checkComponent['_self']['synchronizations'][0])) {
+                    $checkComponent['_self']['synchronizations'][0]['gateway'] = $catalogi['source'];
                 }
                 $unknownComponents[] = $checkComponent;
 
@@ -640,7 +640,7 @@ class CatalogiService
             $object = new ObjectEntity();
             $object->setEntity($entity);
             $addComponentWithMetadata = $addComponent;
-            unset($addComponent['x-commongateway-metadata']); // Not sure if this is needed before populateObject
+            unset($addComponent['_self']); // Not sure if this is needed before populateObject
             $addComponent = $object->includeEmbeddedArray($addComponent);
             $newComponent = $this->synchronizationService->populateObject($addComponent, $object);
             $synchronization = $this->createSyncForComponent(['object' => $newComponent, 'entity' => $entity], $addComponentWithMetadata);
@@ -676,7 +676,7 @@ class CatalogiService
         if (isset($this->io)) {
             $this->io->text("Creating a Synchronization for Component {$addComponent['name']}...");
         }
-        $componentMetaData = $addComponent['x-commongateway-metadata'];
+        $componentMetaData = $addComponent['_self'];
         $componentSync = $componentMetaData['synchronizations'][0] ?? null; // todo: always key=0?
 
         $synchronization = new Synchronization();
@@ -700,7 +700,7 @@ class CatalogiService
                 $now
             )
         );
-        // Note that we hash here with the x-commongateway-metadata fields (synchronizations, self and dateModified)
+        // Note that we hash here with the _self fields (synchronizations, self and dateModified)
         $synchronization->setHash(hash('sha384', serialize($addComponent)));
         $this->entityManager->persist($synchronization);
         $this->entityManager->flush();
