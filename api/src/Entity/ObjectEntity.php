@@ -1335,6 +1335,9 @@ class ObjectEntity
         $nameProperties = ['name', 'title', 'naam', 'titel'];
         foreach ($nameProperties as $nameProperty) {
             if ($name = $this->getValue($nameProperty)) {
+                if (!is_string($name)) {
+                    continue;
+                }
                 $this->setName($name);
 
                 return;
