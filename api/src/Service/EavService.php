@@ -984,7 +984,7 @@ class EavService
                 $value = urldecode($nv[1]);
             }
 
-            $this->recursiveRequestQueryKey($vars, $name, explode('[',$name)[0], $value);
+            $this->recursiveRequestQueryKey($vars, $name, explode('[', $name)[0], $value);
         }
 
         return $vars;
@@ -998,10 +998,10 @@ class EavService
      * this function will add given value to an array of [queryParam][$nameKey][] = $value or [queryParam][] = $value.
      * If none of the above this function will just add [queryParam] = $value to $vars.
      *
-     * @param array $vars The vars array we are going to store the query parameter in
-     * @param string $name The full $name of the query param, like this: ?$name=$value
+     * @param array  $vars    The vars array we are going to store the query parameter in
+     * @param string $name    The full $name of the query param, like this: ?$name=$value
      * @param string $nameKey The full $name of the query param, unless it contains [] like: ?queryParam[$nameKey]=$value
-     * @param string $value The full $value of the query param, like this: ?$name=$value
+     * @param string $value   The full $value of the query param, like this: ?$name=$value
      *
      * @return void
      */
