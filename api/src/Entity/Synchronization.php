@@ -9,6 +9,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Gateway as Source;
+use App\Entity\Entity;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
@@ -107,9 +108,9 @@ class Synchronization
      * @var string The id of object in the related source
      *
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private string $sourceId;
+    private ?string $sourceId = null;
 
     /**
      * @var ?string The hash of this resource
@@ -168,6 +169,16 @@ class Synchronization
      * @ORM\Column(type="datetime", nullable=true)
      */
     private ?DateTimeInterface $dateModified;
+
+    public function __construct(?Source $source, ?Entity $entity)
+    {
+        if(isset($source)){
+            $this->gateway = $source;
+        }
+        if(isset($entity)){
+            $this->entity = $entity;
+        }
+    }
 
     public function getId(): ?UuidInterface
     {

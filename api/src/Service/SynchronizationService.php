@@ -1206,6 +1206,11 @@ class SynchronizationService
      */
     private function mapInput(array $sourceObject): array
     {
+        // What if we do not have a cnnfiguration?
+        if(!isset($this->configuration) || empty($this->configuration)){
+            return  $sourceObject;
+        }
+
         if (array_key_exists('mappingIn', $this->configuration['apiSource']) && array_key_exists('skeletonIn', $this->configuration['apiSource'])) {
             $sourceObject = $this->translationService->dotHydrator(array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']), $sourceObject, $this->configuration['apiSource']['mappingIn']);
         } elseif (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
@@ -1260,6 +1265,7 @@ class SynchronizationService
 
         $object = $this->populateObject($sourceObject, $object, $method);
         $object->setUri($synchronization->getSource()->getLocation().$this->getCallServiceEndpoint($synchronization->getSourceId()));
+
         if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
             $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
         }
