@@ -1039,7 +1039,7 @@ class ObjectEntity
                     $object = $valueObject->getObjects()->first();
                     $currentObjects[] = $object;
                     // Only add an object if it hasn't bean added yet
-                    if (!in_array($object, $configuration['renderedObjects'])) {
+                    if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
                         $config = $configuration;
                         $config['renderedObjects'][] = $valueObject->getObjects()->first();
                         $objectToArray = $object->toArray($config);
@@ -1061,7 +1061,7 @@ class ObjectEntity
                     $currentObjects[] = $valueObject->getObjects()->toArray();
                     foreach ($valueObject->getObjects() as $object) {
                         // Only add an object if it hasn't bean added yet
-                        if (!in_array($object, $configuration['renderedObjects'])) {
+                        if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
                             $config = $configuration;
                             $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
                             $objectToArray = $object->toArray($config);
@@ -1312,9 +1312,13 @@ class ObjectEntity
      * This function makes sure that each and every oject alwys has a name when saved
      *
      * @ORM\PrePersist
+     * @ORM\PreUpdate
      */
     public function prePersist(): void
     {
+        foreach ($this->subresourceOf as $subresourceOf) {
+            $this->addSubresourceOf($subresourceOf->setObjectEntity($subresourceOf->getObjectEntity()->setDateModified(new DateTime())));
+        }
         // Lets see if the name is congigured
         if ($this->entity->getNameProperties()) {
             $name = null;
