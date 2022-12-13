@@ -790,6 +790,7 @@ class SynchronizationService
             if (!empty($lastChanged)) {
                 $synchronization->setSourcelastChanged(new DateTime($lastChanged));
                 $synchronization->setHash($hash);
+
                 return $synchronization;
             }
         }
