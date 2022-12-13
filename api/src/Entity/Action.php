@@ -247,6 +247,7 @@ class Action
             return $config;
         }
 
+        // Lets grap al the default values
         foreach($schema['properties'] as $key => $property){
             if(isset($property['default'])){
                 $config[$key] = $property['default'];
