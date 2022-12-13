@@ -62,6 +62,12 @@ spec:
             name: {{ include "commonground-gateway.fullname" . }}-framework
             defaultMode: 420
         {{- end }}
+        {{- if eq .Values.databaseType "mssql" }}
+        - name: doctrine
+          configMap:
+            name: {{ include "commonground-gateway.fullname" . }}-doctrineconfig
+            defaultMode: 420
+        {{- end }}
         - name: vendor
           persistentVolumeClaim:
               claimName: {{ include "commonground-gateway.fullname" . }}-vendor
@@ -96,6 +102,12 @@ spec:
             - mountPath: /srv/api/config/packages/prod/framework.additions.yaml
               subPath: framework.yaml
               name: framework
+              readOnly: true
+            {{- end }}
+            {{- if eq .Values.databaseType "mssql" }}
+            - mountPath: /srv/api/config/packages/prod/doctrine.yaml
+              subPath: doctrine.yaml
+              name: doctrine
               readOnly: true
             {{- end }}
           env:

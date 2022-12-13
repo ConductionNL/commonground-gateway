@@ -647,6 +647,11 @@ class Gateway
      */
     private bool $test = false;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Endpoint::class, mappedBy="proxy")
+     */
+    private $proxies;
+
     public function __construct()
     {
         $this->responceLogs = new ArrayCollection();
@@ -655,6 +660,7 @@ class Gateway
         $this->subscribers = new ArrayCollection();
         $this->synchronizations = new ArrayCollection();
         $this->callLogs = new ArrayCollection();
+        $this->proxies = new ArrayCollection();
     }
 
     public function export(): ?array
@@ -1225,6 +1231,36 @@ class Gateway
     public function setTest(?bool $test): self
     {
         $this->test = $test;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Endpoint[]
+     */
+    public function getProxies(): Collection
+    {
+        return $this->proxies;
+    }
+
+    public function addProxy(Endpoint $proxy): self
+    {
+        if (!$this->proxies->contains($proxy)) {
+            $this->proxies[] = $proxy;
+            $proxy->setProxy($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProxy(Endpoint $proxy): self
+    {
+        if ($this->proxies->removeElement($proxy)) {
+            // set the owning side to null (unless already changed)
+            if ($proxy->getProxy() === $this) {
+                $proxy->setProxy(null);
+            }
+        }
 
         return $this;
     }

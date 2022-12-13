@@ -9,6 +9,7 @@ use App\Service\HandlerService;
 use App\Service\LogService;
 use App\Service\ProcessingLogService;
 use App\Service\ValidationService;
+use CommonGateway\CoreBundle\Service\RequestService;
 use Doctrine\ORM\NonUniqueResultException;
 use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,7 +32,8 @@ class ZZController extends AbstractController
         HandlerService $handlerService,
         SerializerInterface $serializer,
         LogService $logService,
-        ProcessingLogService $processingLogService
+        ProcessingLogService $processingLogService,
+        RequestService $requestService
     ): Response {
         // Below is hacky tacky
         // @todo refactor
@@ -81,6 +83,10 @@ class ZZController extends AbstractController
 
         $pathArray = array_values(array_filter(explode('/', $path)));
         foreach ($endpoint->getPath() as $key => $pathPart) {
+            if ($pathPart == '{route}') {
+                $parameters['path'][$pathPart] = implode('/', array_slice($pathArray, $key));
+                break;
+            }
             // Let move path parts that are defined as variables to the filter array
             if (array_key_exists($key, $pathArray)) {
                 $parameters['path'][$pathPart] = $pathArray[$key];
@@ -98,6 +104,8 @@ class ZZController extends AbstractController
         } catch (\Exception $exception) {
         }
 
+        $parameters['crude_body'] = $request->getContent();
+
         $parameters['method'] = $request->getMethod();
         $parameters['query'] = $request->query->all();
 
@@ -106,6 +114,10 @@ class ZZController extends AbstractController
 
         // Lets get all the post variables
         $parameters['post'] = $request->request->all();
+
+        if ($endpoint->getProxy()) {
+            return $requestService->proxyHandler($parameters, []);
+        }
 
         // Try handler proces and catch exceptions
         try {

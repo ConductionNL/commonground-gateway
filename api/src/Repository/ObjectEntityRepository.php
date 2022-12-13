@@ -882,8 +882,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @return array The array with allowed filters.
      */
-    public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1): array
+    public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1, bool $embedded = false): array
     {
+        $prefix = $embedded && $level === 2 ? "embedded.$prefix" : $prefix;
+
         //todo: we only check for the allowed keys/attributes to filter on, if this attribute is a dateTime (or date), we should also check if the value is a valid dateTime string?
         // NOTE:
         // Filter id looks for ObjectEntity id and externalId
@@ -901,7 +903,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 $filters[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
                 $attribute->getSearchable() && $filters[] = $prefix.$attribute->getName();
-                $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
+                $embeddedString = $embedded && $level > 1 ? 'embedded.' : '';
+                $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$embeddedString.$attribute->getName().'.', $level + 1, $embedded));
             }
         }
 
@@ -917,8 +920,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @return array The array with allowed attributes to sort by.
      */
-    public function getOrderParameters(Entity $Entity, string $prefix = '', int $level = 1): array
+    public function getOrderParameters(Entity $Entity, string $prefix = '', int $level = 1, bool $embedded = false): array
     {
+        $prefix = $embedded && $level === 2 ? "embedded.$prefix" : $prefix;
         // defaults
         $sortable = [$prefix.'_dateCreated', $prefix.'_dateModified'];
 
@@ -926,7 +930,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
             if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'float', 'number']) && $attribute->getSortable()) {
                 $sortable[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
-                $sortable = array_merge($sortable, $this->getOrderParameters($attribute->getObject(), $prefix.$attribute->getName().'.', $level + 1));
+                $embeddedString = $embedded && $level > 1 ? 'embedded.' : '';
+                $sortable = array_merge($sortable, $this->getOrderParameters($attribute->getObject(), $prefix.$embeddedString.$attribute->getName().'.', $level + 1));
             }
         }
 

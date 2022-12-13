@@ -356,6 +356,14 @@ class Entity
     private ?array $nameProperties = null;
 
     /**
+     * @var int The maximum depth that should be used when casting objects of this entity to array
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="integer", length=1, options={"default": 3})
+     */
+    private int $maxDepth = 3;
+
+    /**
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
@@ -372,6 +380,14 @@ class Entity
      * @ORM\ManyToMany(targetEntity=Endpoint::class, mappedBy="entities")
      */
     private $endpoints;
+
+    /**
+     * @var bool Whether the entity should be excluded from rendering as sub object
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="boolean", options={"default": false}, nullable=true)
+     */
+    private bool $exclude = false;
 
     public function __construct()
     {
@@ -1247,6 +1263,18 @@ class Entity
         return $this;
     }
 
+    public function getMaxDepth(): int
+    {
+        return $this->maxDepth;
+    }
+
+    public function setMaxDepth(int $maxDepth): self
+    {
+        $this->maxDepth = $maxDepth;
+
+        return $this;
+    }
+
     /**
      * @return Collection|Endpoint[]
      */
@@ -1270,6 +1298,26 @@ class Entity
         if ($this->endpoints->removeElement($endpoint)) {
             $endpoint->removeEntity($this);
         }
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExcluded(): bool
+    {
+        return $this->exclude;
+    }
+
+    /**
+     * @param bool $exclude
+     *
+     * @return Entity
+     */
+    public function setExclude(bool $exclude): self
+    {
+        $this->exclude = $exclude;
 
         return $this;
     }

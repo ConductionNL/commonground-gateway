@@ -975,7 +975,7 @@ class EavService
         if (strtolower($method) === 'get' && empty($_SERVER['QUERY_STRING'])) {
             return $vars;
         }
-        $pairs = explode('&', strtolower($method) == 'post' ? file_get_contents('php://input') : $_SERVER['QUERY_STRING']);
+        $pairs = explode('&', $_SERVER['QUERY_STRING']);
         foreach ($pairs as $pair) {
             $nv = explode('=', $pair);
             $name = urldecode($nv[0]);
@@ -1169,7 +1169,8 @@ class EavService
                 $filter = str_replace('|valueScopeFilter', '', $filter);
                 $resultFilter = $resultDot->get($filter);
                 $resultFilter = $resultFilter === true ? 'true' : ($resultFilter === false ? 'false' : $resultDot->get($filter));
-                if (!is_array($value) && $resultDot->get($filter) !== null && $resultFilter != $value && (is_string($value) && !str_contains($value, 'NULL'))) {
+                if (!is_array($value) && $resultDot->get($filter) !== null && $resultFilter != $value &&
+                    (is_string($value) && !str_contains($value, 'NULL')) && !str_contains($value, '%')) {
                     return false;
                 }
             }
