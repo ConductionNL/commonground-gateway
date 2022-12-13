@@ -1316,7 +1316,7 @@ class ObjectEntity
      */
     public function prePersist(): void
     {
-        foreach($this->subresourceOf as $subresourceOf) {
+        foreach ($this->subresourceOf as $subresourceOf) {
             $this->addSubresourceOf($subresourceOf->setObjectEntity($subresourceOf->getObjectEntity()->setDateModified(new DateTime())));
         }
         // Lets see if the name is congigured
@@ -1341,6 +1341,5 @@ class ObjectEntity
             }
         }
         $this->setName($this->getId());
-
     }
 }
