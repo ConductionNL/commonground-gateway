@@ -22,8 +22,8 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-    name: {{ include "commonground-gateway.fullname" . }}-doctrineconfig
-    labels:
+  name: {{ include "commonground-gateway.fullname" . }}-doctrineconfig
+  labels:
     {{- include "commonground-gateway.labels" . | nindent 4 }}
 data:
     doctrine.yaml: |
