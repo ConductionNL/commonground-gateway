@@ -787,8 +787,13 @@ class SynchronizationService
         $dot = new Dot($sourceObject);
         if (isset($this->configuration['apiSource']['location']['dateChangedField'])) {
             $lastChanged = $dot->get($this->configuration['apiSource']['location']['dateChangedField']);
-            $synchronization->setSourcelastChanged(new DateTime($lastChanged));
-        } elseif ($synchronization->getHash() != $hash) {
+            if (!empty($lastChanged)) {
+                $synchronization->setSourcelastChanged(new DateTime($lastChanged));
+                $synchronization->setHash($hash);
+                return $synchronization;
+            }
+        }
+        if ($synchronization->getHash() != $hash) {
             $lastChanged = new DateTime();
             $synchronization->setSourcelastChanged($lastChanged);
         }
@@ -830,7 +835,7 @@ class SynchronizationService
 
         //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
         // todo: this if, elseif, else needs fixing, conditions aren't correct for if we ever want to syncToSource with this handleSync function
-        if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() > $synchronization->getObject()->getDateModified())) {
+        if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() >= $synchronization->getObject()->getDateModified())) {
             $synchronization = $this->syncToGateway($synchronization, $sourceObject, $method);
         }
         // todo: we currently never use handleSync to do syncToSource, so let's make sure we aren't trying to by accident
