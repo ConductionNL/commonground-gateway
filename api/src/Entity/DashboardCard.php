@@ -108,17 +108,17 @@ class DashboardCard
 
     public function __construct($object = null)
     {
-       if($object && is_object($object)){
-           //(method_exists($object,"getName" ) ?  : '')
-           //(method_exists($object,"getDescription") ? ) : '');
-           $this->setName($object->getName());
-           $this->setDescription($object->getDescription());
-           $this->setEntityId($object->getId());
-           $class = get_class($object);
-           $this->setEntity($class);
+        if ($object && is_object($object)) {
+            //(method_exists($object,"getName" ) ?  : '')
+            //(method_exists($object,"getDescription") ? ) : '');
+            $this->setName($object->getName());
+            $this->setDescription($object->getDescription());
+            $this->setEntityId($object->getId());
+            $class = get_class($object);
+            $this->setEntity($class);
 
-           // Lets set the type
-           switch ($class) {
+            // Lets set the type
+            switch ($class) {
             case 'App\Entity\Entity':
                 $this->setType('schema');
                 break;
@@ -135,10 +135,10 @@ class DashboardCard
                $this->setType('cronjob');
                break;
                default:
-                echo "i equals 2";
+                echo 'i equals 2';
                 break;
             }
-       }
+        }
     }
 
     public function getId()

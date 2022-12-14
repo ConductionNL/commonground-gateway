@@ -7,21 +7,20 @@ namespace App\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
+use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * Fires the cronjon service from an api endpoint
+ * Fires the cronjon service from an api endpoint.
  *
  *
  * @Route("cronjob")
  */
 class CronjobController extends AbstractController
 {
-
     /**
-     * This function is a wrapper for the cronjob command
+     * This function is a wrapper for the cronjob command.
      *
      * @Route("/", methods={"GET"})
      */
@@ -29,9 +28,8 @@ class CronjobController extends AbstractController
     {
         $status = 200;
 
-
         // Start the procces
-        $process = new Process("cronjob:command");
+        $process = new Process('cronjob:command');
         $process->setWorkingDirectory('/srv/api');
         $process->setTimeout(3600);
         $process->run();

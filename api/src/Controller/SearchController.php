@@ -26,7 +26,7 @@ class SearchController extends AbstractController
     }
 
     /**
-     * Route("/", methods={"GET"})
+     * Route("/", methods={"GET"}).
      */
     public function installedAction(Request $request)
     {
