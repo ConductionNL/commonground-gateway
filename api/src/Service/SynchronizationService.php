@@ -790,6 +790,7 @@ class SynchronizationService
             if (!empty($lastChanged)) {
                 $synchronization->setSourcelastChanged(new DateTime($lastChanged));
                 $synchronization->setHash($hash);
+
                 return $synchronization;
             }
         }
@@ -838,11 +839,10 @@ class SynchronizationService
         $synchronization->setTryCounter($counter);
 
         // Set dont try before, expensional so in minutes  1,8,27,64,125,216,343,512,729,1000
-        $addMinutes = pow($counter,3);
-        if($synchronization->getDontSyncBefore()){
-            $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT' . $addMinutes . 'M'));
-        }
-        else{
+        $addMinutes = pow($counter, 3);
+        if ($synchronization->getDontSyncBefore()) {
+            $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT'.$addMinutes.'M'));
+        } else {
             $dontTryBefore = new \DateTime();
         }
         $synchronization->getDontSyncBefore($dontTryBefore);
@@ -951,7 +951,7 @@ class SynchronizationService
             $objectEntity->setApplication($application);
             $objectEntity->setOrganization($application->getOrganization());
         } elseif (
-            (  $applications = $this->entityManager->getRepository('App:Application')->findAll()
+            ($applications = $this->entityManager->getRepository('App:Application')->findAll()
                 && !empty($applications)
                 && $application = $applications[0])
                 && $application instanceof Application
@@ -1231,7 +1231,7 @@ class SynchronizationService
     private function mapInput(array $sourceObject): array
     {
         // What if we do not have a cnnfiguration?
-        if(!isset($this->configuration) || empty($this->configuration)){
+        if (!isset($this->configuration) || empty($this->configuration)) {
             return  $sourceObject;
         }
 

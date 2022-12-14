@@ -235,21 +235,23 @@ class Action
     }
 
     /**
-     * Gets the default config from a json schema definition of an ActionHandler
+     * Gets the default config from a json schema definition of an ActionHandler.
      *
      * @param array $schema
+     *
      * @return array
      */
-    private function getDefaultConfigFromSchema(array $schema): array{
+    private function getDefaultConfigFromSchema(array $schema): array
+    {
         $config = [];
 
-        if(!isset($schema['properties'])){
+        if (!isset($schema['properties'])) {
             return $config;
         }
 
         // Lets grap al the default values
-        foreach($schema['properties'] as $key => $property){
-            if(isset($property['default'])){
+        foreach ($schema['properties'] as $key => $property) {
+            if (isset($property['default'])) {
                 $config[$key] = $property['default'];
             }
         }

@@ -9,7 +9,6 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Gateway as Source;
-use App\Entity\Entity;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
@@ -172,14 +171,14 @@ class Synchronization
     private ?DateTimeInterface $dateModified;
 
     /**
-     * The amount of times that we have tried to sync this item, counted by the amount of times it has been "touched"
+     * The amount of times that we have tried to sync this item, counted by the amount of times it has been "touched".
      *
      * @ORM\Column(type="integer", options={"default" : 1})
      */
     private $tryCounter = 0;
 
     /**
-     * An updated timer that tels the sync service to wait a specific increment beofre trying again
+     * An updated timer that tels the sync service to wait a specific increment beofre trying again.
      *
      * @ORM\Column(type="datetime", nullable=true, options={"default" : "CURRENT_TIMESTAMP"})
      */
@@ -187,10 +186,10 @@ class Synchronization
 
     public function __construct(?Source $source, ?Entity $entity)
     {
-        if(isset($source)){
+        if (isset($source)) {
             $this->gateway = $source;
         }
-        if(isset($entity)){
+        if (isset($entity)) {
             $this->entity = $entity;
         }
     }
@@ -399,7 +398,7 @@ class Synchronization
     public function prePersist(): void
     {
         // If we have ten trys or more we want to block the sync
-        if($this->tryCounter >= 10){
+        if ($this->tryCounter >= 10) {
             $this->blocked = true;
         }
     }
