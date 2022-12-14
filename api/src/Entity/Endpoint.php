@@ -296,8 +296,9 @@ class Endpoint
             $this->setEntity($entity);
             $this->setName($entity->getName());
             $this->setDescription($entity->getDescription());
+            $this->setMethod('GET');
             $this->setMethods(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
-            $this->setPath([1=>'id']);
+            $this->setPath([strtolower($entity->getName())]);
 
             // Lets make a path
             $path = mb_strtolower(str_replace(' ', '_', $entity->getName()));
