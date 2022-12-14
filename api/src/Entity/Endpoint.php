@@ -129,7 +129,7 @@ class Endpoint
      * @Groups({"read", "write"})
      * @ORM\Column(type="array")
      */
-    private ?array $path;
+    private ?array $path = [];
 
     /**
      * @MaxDepth(1)

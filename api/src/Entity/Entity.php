@@ -144,7 +144,7 @@ class Entity
      * @Groups({"read","write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $description;
+    private $description = '';
 
     /**
      * @var string The function of this Entity. This is used for making specific entity types/functions work differently
@@ -234,7 +234,7 @@ class Entity
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private ?array $usedProperties;
+    private ?array $usedProperties = [];
 
     /**
      * @ORM\OneToMany(targetEntity=GatewayResponseLog::class, mappedBy="entity", fetch="EXTRA_LAZY")

@@ -12,6 +12,7 @@ use App\Repository\DashboardCardRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use phpDocumentor\Reflection\Types\Integer;
+use phpDocumentor\Reflection\Types\This;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -103,7 +104,42 @@ class DashboardCard
      * @Groups({"read","write"})
      * @ORM\Column(type="integer")
      */
-    private int $ordering;
+    private int $ordering = 1;
+
+    public function __construct($object = null)
+    {
+        if ($object && is_object($object)) {
+            //(method_exists($object,"getName" ) ?  : '')
+            //(method_exists($object,"getDescription") ? ) : '');
+            $this->setName($object->getName());
+            $this->setDescription($object->getDescription());
+            $this->setEntityId($object->getId());
+            $class = get_class($object);
+            $this->setEntity($class);
+
+            // Lets set the type
+            switch ($class) {
+            case 'App\Entity\Entity':
+                $this->setType('schema');
+                break;
+           case 'App\Entity\Gateway':
+               $this->setType('gateway');
+               break;
+           case 'App\Entity\Endpoint':
+               $this->setType('endpoint');
+               break;
+           case 'App\Entity\Action':
+               $this->setType('action');
+               break;
+           case 'App\Entity\Cronjob':
+               $this->setType('cronjob');
+               break;
+               default:
+                echo 'i equals 2';
+                break;
+            }
+        }
+    }
 
     public function getId()
     {

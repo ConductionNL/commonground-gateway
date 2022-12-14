@@ -790,6 +790,7 @@ class SynchronizationService
             if (!empty($lastChanged)) {
                 $synchronization->setSourcelastChanged(new DateTime($lastChanged));
                 $synchronization->setHash($hash);
+
                 return $synchronization;
             }
         }
@@ -829,8 +830,23 @@ class SynchronizationService
             return $synchronization;
         }
 
+        // Let check
         $now = new DateTime();
         $synchronization->setLastChecked($now);
+
+        // Counter
+        $counter = $synchronization->getTryCounter() + 1;
+        $synchronization->setTryCounter($counter);
+
+        // Set dont try before, expensional so in minutes  1,8,27,64,125,216,343,512,729,1000
+        $addMinutes = pow($counter, 3);
+        if ($synchronization->getDontSyncBefore()) {
+            $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT'.$addMinutes.'M'));
+        } else {
+            $dontTryBefore = new \DateTime();
+        }
+        $synchronization->getDontSyncBefore($dontTryBefore);
+
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
 
         //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
@@ -935,7 +951,10 @@ class SynchronizationService
             $objectEntity->setApplication($application);
             $objectEntity->setOrganization($application->getOrganization());
         } elseif (
-            ($application = $this->entityManager->getRepository('App:Application')->findAll()[0]) && $application instanceof Application
+            ($applications = $this->entityManager->getRepository('App:Application')->findAll()
+                && !empty($applications)
+                && $application = $applications[0])
+                && $application instanceof Application
         ) {
             $objectEntity->setApplication($application);
             $objectEntity->setOrganization($application->getOrganization());
@@ -1211,6 +1230,11 @@ class SynchronizationService
      */
     private function mapInput(array $sourceObject): array
     {
+        // What if we do not have a cnnfiguration?
+        if (!isset($this->configuration) || empty($this->configuration)) {
+            return  $sourceObject;
+        }
+
         if (array_key_exists('mappingIn', $this->configuration['apiSource']) && array_key_exists('skeletonIn', $this->configuration['apiSource'])) {
             $sourceObject = $this->translationService->dotHydrator(array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']), $sourceObject, $this->configuration['apiSource']['mappingIn']);
         } elseif (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
@@ -1265,6 +1289,7 @@ class SynchronizationService
 
         $object = $this->populateObject($sourceObject, $object, $method);
         $object->setUri($synchronization->getSource()->getLocation().$this->getCallServiceEndpoint($synchronization->getSourceId()));
+
         if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
             $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
         }

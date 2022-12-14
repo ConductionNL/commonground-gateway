@@ -43,9 +43,6 @@
     "common-gateway/formio-bundle": {
         "version": "dev-main"
     },
-    "common-gateway/waardepapieren-bundle": {
-        "version": "dev-main"
-    },
     "commongateway/corebundle": {
         "version": "dev-master"
     },
@@ -251,9 +248,6 @@
     "khanamiryan/qrcode-detector-decoder": {
         "version": "1.0.6"
     },
-    "klantinteractie-servicesysteem/kiss-bundle": {
-        "version": "dev-main"
-    },
     "knplabs/knp-markdown-bundle": {
         "version": "1.9.0"
     },
@@ -262,9 +256,6 @@
     },
     "laminas/laminas-escaper": {
         "version": "2.9.0"
-    },
-    "larping-base/larping-bundle": {
-        "version": "1.0.2"
     },
     "league/html-to-markdown": {
         "version": "4.10.0"
