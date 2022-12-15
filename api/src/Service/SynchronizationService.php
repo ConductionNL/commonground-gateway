@@ -11,6 +11,7 @@ use App\Entity\Synchronization;
 use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
+use DateInterval;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -809,9 +810,9 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronization object before synchronization
      * @param array           $sourceObject    The object in the source
      *
-     * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError
-     *
      * @return Synchronization The updated synchronization object
+     *
+     * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError|Exception
      */
     public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
     {
@@ -845,7 +846,7 @@ class SynchronizationService
         } else {
             $dontTryBefore = new \DateTime();
         }
-        $synchronization->getDontSyncBefore($dontTryBefore);
+        $synchronization->setDontSyncBefore($dontTryBefore);
 
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
 
