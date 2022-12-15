@@ -581,7 +581,6 @@ class Value
                         continue;
                     } else {
                         $this->addObject($value);
-                        var_dump(count($this->getObjects()));
                     }
                 }
 
