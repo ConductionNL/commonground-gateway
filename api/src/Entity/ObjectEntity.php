@@ -1008,7 +1008,7 @@ class ObjectEntity
 
         // The new metadata
         $array['_self'] = [
-            'id'           => $this->getId()->toString(),
+            'id'           => $this->getId() ? $this->getId()->toString() : null,
             'self'         => $this->getSelf(),
             'owner'        => $this->getOwner(),
             'organization' => $this->getOrganization(),
