@@ -54,7 +54,7 @@ spec:
       containers:
         - name: {{ include "commonground-gateway.fullname" . }}-worker
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            {{- toYaml .Values.securityContextPhp | nindent 12 }}
           image: "{{ .Values.php.repository }}:{{ .Values.php.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.php.pullPolicy }}
           ports:
