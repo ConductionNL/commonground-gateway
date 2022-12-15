@@ -844,7 +844,7 @@ class SynchronizationService
         if ($synchronization->getDontSyncBefore()) {
             $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT'.$addMinutes.'M'));
         } else {
-            $dontTryBefore = new \DateTime();
+            $dontTryBefore = new DateTime();
         }
         $synchronization->setDontSyncBefore($dontTryBefore);
 
