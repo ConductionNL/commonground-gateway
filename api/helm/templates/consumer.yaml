@@ -265,8 +265,8 @@ spec:
             {{- end }}
             {{- end }}
             {{- if .Values.config.httpsProxy }}
-                -   name: HTTPS_PROXY
-                    value: {{ .Values.config.httpsProxy }}
+            -   name: HTTPS_PROXY
+                value: {{ .Values.config.httpsProxy }}
             {{- end }}
 
           resources:
