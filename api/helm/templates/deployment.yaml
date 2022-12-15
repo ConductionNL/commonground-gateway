@@ -85,6 +85,9 @@ spec:
               subPath: dependencies.yaml
               name: dependencies
               readOnly: true
+            - mountPath: /srv/api/var
+              name: vendor
+              readOnly: false
             - mountPath: /var/run/certs
               name: app-certificates
               readOnly: true
