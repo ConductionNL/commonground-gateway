@@ -29,6 +29,7 @@ services:
         
   cron:
     &cron
+    image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}_cron:${APP_ENV}
     build: ./dockerized-cron
     depends_on:
       - api
