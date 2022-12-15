@@ -18,7 +18,7 @@ services:
   #      - "83:80"
   
   oc:
-    &ui
+    &oc
     image: ghcr.io/opencatalogi/web-app:dev
     depends_on:
       - api
