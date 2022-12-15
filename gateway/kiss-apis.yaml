@@ -68,13 +68,14 @@
 #        testDataLocation: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/data/KissPubData.json
 #        loadTestData: true
 #        autoLoad: true
-#    handelsregisterbevragenCollection:
-#        name: HandelsRegisterBevragen collection
-#        sourceType: GitHub
-#        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/Haal-Centraal-HR-bevragen/develop/specificatie/genereervariant/openapi.yaml
-#        testDataLocation: https://raw.githubusercontent.com/CommonGateway/HandelsRegisterBevragen/main/data/data.json
-#        loadTestData: true
-#        autoLoad: true
+##    todo: this collection is broken because the VNG-Realisatie/Haal-Centraal-HR-bevragen repo does no longer exists...
+##    handelsregisterbevragenCollection:
+##        name: HandelsRegisterBevragen collection
+##        sourceType: GitHub
+##        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/Haal-Centraal-HR-bevragen/develop/specificatie/genereervariant/openapi.yaml
+##        testDataLocation: https://raw.githubusercontent.com/CommonGateway/HandelsRegisterBevragen/main/data/data.json
+##        loadTestData: true
+##        autoLoad: true
 #    overigeObjectenCollection:
 #        name: overigeObjecten collection
 #        sourceType: GitHub
