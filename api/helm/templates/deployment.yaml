@@ -311,6 +311,10 @@ spec:
                   name: {{ include "commonground-gateway.fullname" . }}
             {{- end }}
             {{- end }}
+            {{- if .Values.config.httpsProxy }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.config.httpsProxy }}
+            {{- end }}
 
           resources:
             {{- toYaml .Values.php.resources | nindent 12 }}
