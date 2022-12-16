@@ -46,50 +46,50 @@ All functional query parameters always start with an _ to prevent collisions wit
 
 method less queries (e.g. `firstname=john`) are treated as exact methods `firstname[exact]=john`
 
-* [exact] exact match* 
+- **[exact] exact match** 
 Only usable on properties of the type `text`,  `integer` or `datetime`. Seea
 
-* [case_insensitive] case insensitive searching* 
+- **[case_insensitive] case insensitive searching** 
 Only usable on properties of the type `text`
 
-* [like] wildcard search* 
+- **[like] wildcard search**
 Only usable on properties of the type `text`,  `integer` or `datetime`
 
-* [>=] equal or greater than* 
+- **[>=] equal or greater than** 
 Only usable on properties of the type `integer`
 
-* [>] greater than* 
+- **[>] greater than**
 Only usable on properties of the type `integer`
 
-* [<=] equal or smaller than* 
+- **[<=] equal or smaller than**
 Only usable on properties of the type `integer`
 
-* [<] smaller than* 
+- **[<] smaller than**
 Only usable on properties of the type `integer`
 
-* [after] equal or greater than*
+- **[after] equal or greater than**
 Only usable on properties of the type `date` or `datetime` 
 
-* [strictly_after] greater than*
+- **[strictly_after] greater than**
 Only usable on properties of the type `date` or `datetime`
 
-* [before] equal or smaller than* 
+- **[before] equal or smaller than** 
 Only usable on properties of the type `date` or `datetime`
 
-* [strictly_before] smaller than* 
+- **[strictly_before] smaller than**
 Only usable on properties of the type `date` or `datetime`
 
-* [regex] compare the values based on regex* 
+- **[regex] compare the values based on regex**
 Only usable on properties of the type `string`
 
 Moet een now operator bij
 
-* [int_compare] will cast the value of your filter to an integer before we filter with it.
+- **[int_compare]** will cast the value of your filter to an integer before we filter with it.
 Useful when the stored value in the gateway cache is an integer but by default you are searching in your query with a string “1012”.
 Works with the property IN array filter like this: 
 {propertyNema}[int_compare][]={searchValue1}
 
-* [bool_compare] will cast the value of your filter to a boolean before we filter with it.
+- **[bool_compare]** will cast the value of your filter to a boolean before we filter with it.
 Useful when the stored value in the gateway cache is a boolean but by default you are searching in your query with a string “true”.
 Works with the property IN array filter like this: 
 {propertyNema}[bool_compare][]={searchValue1}
