@@ -22,11 +22,15 @@ While it isn’t necessary to alway use all of the above settings it is het pref
 ## Querying the API
 Endpoints containing collection or simply said more then one item may be queried to generate specific sets of results. Query the endpoint is done through query parameters that are included in the url when approaching the endpoint. This is normally done in a {propertyName}={searchValue} combination  e.g. `name=ludo`.  Which for example could be included on an url like `https://www.commongateway.nl/api/pets?name=ludo`. Without any further methods each query is treated as a `WHERE` class, multiple query parameters can be combined but are always considered to be `AND`. With other words `https://www.commongateway.nl/api/pets?name=ludo&availbility=available` can be read as  GET me all PETS WHERE name IS EQUAL ludo AND availbility IS EQUAL TO available.
 
+## Comparing against lists of values
 In a more complex step is als possible to check against list of values (or more technically array’s)
 
 A property is IN array filter:
-{propertyName}[]={searchValue1} e.g. ‘firstname[]=john’
-{propertyName}[]={searchValue2} e.g. ‘firstname[]=harry’
+{propertyName}[]={searchValue1} e.g. ‘name[]=john’
+{propertyName}[]={searchValue2} e.g. ‘name[]=ludo’
+etc
+
+Combine to `https://www.commongateway.nl/api/pets?name=ludo&name=john` and wil get al pets called iether ludo OR john
 
 or 
 
