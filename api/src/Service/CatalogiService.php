@@ -679,11 +679,9 @@ class CatalogiService
         $componentMetaData = $addComponent['_self'];
         $componentSync = $componentMetaData['synchronizations'][0] ?? null; // todo: always key=0?
 
-        $synchronization = new Synchronization();
+        $synchronization = new Synchronization($this->getOrCreateSource($componentSync['gateway']), $data['entity']);
         // If a Catalogi is the source we set this in checkForUnknownComponents() and $addComponent should have this correct Source data.
-        $synchronization->setSource($this->getOrCreateSource($componentSync['gateway']));
         $synchronization->setObject($data['object']);
-        $synchronization->setEntity($data['entity']);
         // Endpoint needs to be set to "" or null if $componentSync['endpoint'] === "" or null. Isset() won't pass this check, so use array_key_exists!
         $synchronization->setEndpoint(array_key_exists('endpoint', $componentSync) ? $componentSync['endpoint'] : $this->configuration['componentsLocation']);
         $synchronization->setSourceId($componentSync['sourceId'] ?? $addComponent['id']);

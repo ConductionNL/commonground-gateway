@@ -692,9 +692,7 @@ class SynchronizationService
             return $synchronization;
         }
 
-        $synchronization = new Synchronization();
-        $synchronization->setSource($source);
-        $synchronization->setEntity($entity);
+        $synchronization = new Synchronization($source, $entity);
         $synchronization->setSourceId($sourceId);
         $this->entityManager->persist($synchronization);
         // We flush later
@@ -726,10 +724,8 @@ class SynchronizationService
             return $synchronization;
         }
 
-        $synchronization = new Synchronization();
+        $synchronization = new Synchronization($source, $entity);
         $synchronization->setObject($objectEntity);
-        $synchronization->setSource($source);
-        $synchronization->setEntity($entity);
         $synchronization->setSourceId($objectEntity->getId());
         $synchronization->setBlocked(false);
         $this->entityManager->persist($synchronization);
