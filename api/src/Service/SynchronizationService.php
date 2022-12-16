@@ -806,9 +806,9 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronization object before synchronization
      * @param array           $sourceObject    The object in the source
      *
-     * @return Synchronization The updated synchronization object
-     *
      * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError|Exception
+     *
+     * @return Synchronization The updated synchronization object
      */
     public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
     {
