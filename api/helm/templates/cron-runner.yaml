@@ -127,6 +127,11 @@ spec:
                               secretKeyRef:
                                   key: database-url
                                   name: {{ include "commonground-gateway.fullname" . }}
+                        - name: CACHE_URL
+                          valueFrom:
+                              secretKeyRef:
+                                  key: mongodb-url
+                                  name: {{ include "commonground-gateway.fullname" . }}
                         - name: APP_URL
                           valueFrom:
                               configMapKeyRef:
