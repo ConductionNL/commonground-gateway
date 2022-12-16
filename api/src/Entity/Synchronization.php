@@ -184,7 +184,7 @@ class Synchronization
      */
     private $dontSyncBefore;
 
-    public function __construct(?Source $source, ?Entity $entity)
+    public function __construct(?Source $source = null, ?Entity $entity = null)
     {
         if (isset($source)) {
             $this->gateway = $source;
