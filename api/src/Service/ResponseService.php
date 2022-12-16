@@ -137,15 +137,16 @@ class ResponseService
                 return true;
             }
             $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
-            if (!$skipAuthCheck && !empty($attribute)) {
-                try {
-                    if (!$this->checkOwner($result)) {
-                        $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $value]);
-                    }
-                } catch (AccessDeniedException $exception) {
-                    return false;
-                }
-            }
+            // todo: this breaks SynchronizationService
+//            if (!$skipAuthCheck && !empty($attribute)) {
+//                try {
+//                    if (!$this->checkOwner($result)) {
+//                        $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $value]);
+//                    }
+//                } catch (AccessDeniedException $exception) {
+//                    return false;
+//                }
+//            }
 
             return true;
         }, ARRAY_FILTER_USE_BOTH);
@@ -549,13 +550,14 @@ class ResponseService
             }
 
             // Check if user is allowed to see this
-            try {
-                if (!$skipAuthCheck && !$this->checkOwner($result)) {
-                    $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'object' => $result]);
-                }
-            } catch (AccessDeniedException $exception) {
-                continue;
-            }
+            // todo: this breaks SynchronizationService
+//            try {
+//                if (!$skipAuthCheck && !$this->checkOwner($result)) {
+//                    $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'object' => $result]);
+//                }
+//            } catch (AccessDeniedException $exception) {
+//                continue;
+//            }
 
             $valueObject = $result->getValueObject($attribute);
             if ($attribute->getType() == 'object') {
@@ -741,10 +743,11 @@ class ResponseService
         // If we have only one Object (because multiple = false)
         if (!$attribute->getMultiple()) {
             try {
-                // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
-                if (!$skipAuthCheck && !$this->checkOwner($result)) {
-                    $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $value->getValue()]);
-                }
+                // todo: this breaks SynchronizationService
+//                // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
+//                if (!$skipAuthCheck && !$this->checkOwner($result)) {
+//                    $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $value->getValue()]);
+//                }
 
                 if ($attribute->getInclude()) {
                     return $this->renderResult($value->getValue(), $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
@@ -768,10 +771,11 @@ class ResponseService
         $objectsArray = [];
         foreach ($objects as $object) {
             try {
-                // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
-                if (!$skipAuthCheck && !$this->checkOwner($result)) {
-                    $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $object]);
-                }
+                // todo: this breaks SynchronizationService
+//                // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
+//                if (!$skipAuthCheck && !$this->checkOwner($result)) {
+//                    $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $object]);
+//                }
                 if ($attribute->getInclude()) {
                     $objectsArray[] = $this->renderResult($object, $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
                     continue;
