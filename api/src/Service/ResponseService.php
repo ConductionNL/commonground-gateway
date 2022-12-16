@@ -132,7 +132,7 @@ class ResponseService
      */
     public function filterResult(array $response, ObjectEntity $result, bool $skipAuthCheck): array
     {
-        return array_filter($response, function ($value, $key) use ($result, $skipAuthCheck) {
+        return array_filter($response, function ($value, $key) use ($result) {
             if (str_starts_with($key, '@') || $key == 'id') {
                 return true;
             }
