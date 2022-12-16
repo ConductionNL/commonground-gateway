@@ -173,11 +173,10 @@ class Endpoint
     /**
      * @var ?string The operation type calls must be that are requested through this Endpoint
      *
-     * @Assert\Choice({"item", "collection"})
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private string $operationType;
+    private ?string $operationType = null;
 
     /**
      * @var ?array (OAS) tags to identify this Endpoint
@@ -568,7 +567,7 @@ class Endpoint
         return $this->operationType;
     }
 
-    public function setOperationType(string $operationType): self
+    public function setOperationType(?string $operationType): self
     {
         $this->operationType = $operationType;
 
