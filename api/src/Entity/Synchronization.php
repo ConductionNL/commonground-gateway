@@ -237,9 +237,19 @@ class Synchronization
         return $this;
     }
 
+    public function getGateway(): ?Source
+    {
+        return $this->getSource();
+    }
+
     public function getSource(): ?Source
     {
         return $this->gateway;
+    }
+
+    public function setGateway(?Source $source): self
+    {
+        return $this->setSource($source);
     }
 
     public function setSource(?Source $source): self
