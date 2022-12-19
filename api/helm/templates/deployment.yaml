@@ -329,7 +329,7 @@ spec:
           imagePullPolicy: {{ .Values.nginx.pullPolicy }}
           volumeMounts:
               - mountPath: /var/cache/nginx/client_temp
-                name: tmpfs
+                name: tmpfsnginx
           env:
             - name: PHP_SERVICE
               value: localhost
