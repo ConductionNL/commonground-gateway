@@ -46,54 +46,59 @@ All functional query parameters always start with an _ to prevent collisions wit
 
 method less queries (e.g. `firstname=john`) are treated as exact methods `firstname[exact]=john`
 
-- **[exact] exact match** 
+* [exact] (default) exact match* 
 Only usable on properties of the type `text`,  `integer` or `datetime`. Seea
 
-- **[case_insensitive] case insensitive searching** 
-Only usable on properties of the type `text`
+* [case_insensitive] (default) case insensitive searching* 
+Only usable on properties of the type `text`, uses the regex function under the hoot in an case insensitive way.
 
-- **[like] wildcard search**
-Only usable on properties of the type `text`,  `integer` or `datetime`
+* [case_sensitive] case sensitive searching* 
+Only usable on properties of the type `text`, uses the regex function under the hoot in an case sensitive way.
 
-- **[>=] equal or greater than** 
-Only usable on properties of the type `integer`
+* [like] wildcard search* 
+Only usable on properties of the type `text`,  `integer` or `datetime`, works the same as a regex search but wraps the value in `/` creating `/$value/` and sets the matchings pattern to case insensitive.
 
-- **[>] greater than**
-Only usable on properties of the type `integer`
+* [>=] equal or greater than* 
+Only usable on properties of the type `integer`, will automatically cast the searched value to integer to make the compereson
 
-- **[<=] equal or smaller than**
-Only usable on properties of the type `integer`
+* [>] greater than* 
+Only usable on properties of the type `integer`, will automatically cast the searched value to integer to make the comparison
 
-- **[<] smaller than**
-Only usable on properties of the type `integer`
+* [<=] equal or smaller than* 
+Only usable on properties of the type `integer`, will automatically cast the searched value to integer to make the comparison
 
-- **[after] equal or greater than**
+* [<] smaller than* 
+Only usable on properties of the type `integer`, will automatically cast the searched value to integer to make the comparison
+
+* [after] equal or greater than*
 Only usable on properties of the type `date` or `datetime` 
 
-- **[strictly_after] greater than**
+* [strictly_after] greater than*
 Only usable on properties of the type `date` or `datetime`
 
-- **[before] equal or smaller than** 
+* [before] equal or smaller than* 
 Only usable on properties of the type `date` or `datetime`
 
-- **[strictly_before] smaller than**
+* [strictly_before] smaller than* 
 Only usable on properties of the type `date` or `datetime`
 
-- **[regex] compare the values based on regex**
+* [regex] compare the values based on regex* 
 Only usable on properties of the type `string`
 
 Moet een now operator bij
 
-- **[int_compare]** will cast the value of your filter to an integer before we filter with it.
+* [int_compare] will cast the value of your filter to an integer before we filter with it.
 Useful when the stored value in the gateway cache is an integer but by default you are searching in your query with a string “1012”.
 Works with the property IN array filter like this: 
 {propertyNema}[int_compare][]={searchValue1}
 
-- **[bool_compare]** will cast the value of your filter to a boolean before we filter with it.
+* [bool_compare] will cast the value of your filter to a boolean before we filter with it.
 Useful when the stored value in the gateway cache is a boolean but by default you are searching in your query with a string “true”.
 Works with the property IN array filter like this: 
 {propertyNema}[bool_compare][]={searchValue1}
 
+> **Note**
+> When comparing dates we use the php [dateTime($value)](https://www.php.net/manual/en/class.datetime.php) function to cast the strings to dates. That means that you can also inputs strings like `now`.`yesterday` see the full list of [relative formats](https://www.php.net/manual/en/datetime.formats.relative.php).
 
 
 ## Ordering the results
@@ -136,7 +141,7 @@ The common gateway automatically creates a search index of all objects bassed on
 
 e.g. `_search=keyword`
 
-By default the search query searches in all fields, if you want to search specific properties you can do so by defining them as methods. You can search properties fields (in an OR configuration) by separating them trough an `,` you can also search in sub properties  e.g.  `_search[property1,property2.subProperty]=keyword`. 
+By default the search query searches in all fields, if you want to search specific properties you can do so by defining them as methods. You can search properties fields (in an OR configuration) by separating them trough an `,` and supplying them in the method you can also search in sub properties  e.g.  `_search[property1,property2.subProperty]=keyword`. 
 
 
 
