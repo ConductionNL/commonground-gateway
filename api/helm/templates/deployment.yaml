@@ -71,6 +71,10 @@ spec:
         - name: vendor
           persistentVolumeClaim:
               claimName: {{ include "commonground-gateway.fullname" . }}-vendor
+        - name: tmpfsnginx
+          emptyDir: {}
+        - name: tmpfsphp
+          emptyDir: {}
                   
       containers:
         - name: {{ include "commonground-gateway.fullname" . }}-php
@@ -86,7 +90,7 @@ spec:
               name: dependencies
               readOnly: true
             - mountPath: /srv/api/var
-              name: vendor
+              name: tmpfsphp
               readOnly: false
             - mountPath: /var/run/certs
               name: app-certificates
@@ -323,6 +327,9 @@ spec:
           {{- toYaml .Values.securityContextNginx | nindent 12 }}
           image: "{{ .Values.nginx.repository }}:{{ .Values.nginx.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.nginx.pullPolicy }}
+          volumeMounts:
+              - mountPath: /var/cache/nginx/client_temp
+                name: tmpfs
           env:
             - name: PHP_SERVICE
               value: localhost

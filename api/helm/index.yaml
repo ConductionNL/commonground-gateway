@@ -3,7 +3,33 @@ entries:
   commonground-gateway:
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2022-12-16T13:13:42.852030153+01:00"
+    created: "2022-12-19T11:48:17.589425017+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    description: A Helm chart for Kubernetes
+    digest: c0bc8f3ec0ee16853ddfcb72fc02cdffc1b8a125b2e6163f909625460d1533fb
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.1.2.tgz
+    version: 1.1.2
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2022-12-19T11:48:17.554750914+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -29,7 +55,7 @@ entries:
     version: 1.1.1
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2022-12-16T13:13:42.816077979+01:00"
+    created: "2022-12-19T11:48:17.507775965+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -55,7 +81,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2022-12-16T13:13:42.77179551+01:00"
+    created: "2022-12-19T11:48:17.473078904+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -81,7 +107,7 @@ entries:
     version: 1.0.7
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2022-12-16T13:13:42.717062327+01:00"
+    created: "2022-12-19T11:48:17.440850146+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -107,7 +133,7 @@ entries:
     version: 1.0.6
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2022-12-16T13:13:42.668486931+01:00"
+    created: "2022-12-19T11:48:17.399267856+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -133,7 +159,7 @@ entries:
     version: 1.0.5
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2022-12-16T13:13:42.627993447+01:00"
+    created: "2022-12-19T11:48:17.363041731+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -159,7 +185,7 @@ entries:
     version: 1.0.4
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2022-12-16T13:13:42.586356041+01:00"
+    created: "2022-12-19T11:48:17.321848774+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -185,7 +211,7 @@ entries:
     version: 1.0.3
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2022-12-16T13:13:42.545211659+01:00"
+    created: "2022-12-19T11:48:17.284540205+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -211,7 +237,7 @@ entries:
     version: 1.0.2
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2022-12-16T13:13:42.503481324+01:00"
+    created: "2022-12-19T11:48:17.244275887+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -237,7 +263,7 @@ entries:
     version: 1.0.1
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2022-12-16T13:13:42.461287753+01:00"
+    created: "2022-12-19T11:48:17.207429466+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -263,7 +289,7 @@ entries:
     version: 1.0.0
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-12-16T13:13:42.194905543+01:00"
+    created: "2022-12-19T11:48:16.937167835+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -285,7 +311,7 @@ entries:
     version: 0.1.12
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-12-16T13:13:42.147256279+01:00"
+    created: "2022-12-19T11:48:16.910292895+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -307,7 +333,7 @@ entries:
     version: 0.1.11
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-12-16T13:13:42.112971226+01:00"
+    created: "2022-12-19T11:48:16.881141452+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -329,7 +355,7 @@ entries:
     version: 0.1.10
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-12-16T13:13:42.416876817+01:00"
+    created: "2022-12-19T11:48:17.170839946+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -351,7 +377,7 @@ entries:
     version: 0.1.9
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-12-16T13:13:42.38658776+01:00"
+    created: "2022-12-19T11:48:17.144869149+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -373,7 +399,7 @@ entries:
     version: 0.1.8
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-12-16T13:13:42.351720547+01:00"
+    created: "2022-12-19T11:48:17.121130455+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -395,7 +421,7 @@ entries:
     version: 0.1.7
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-12-16T13:13:42.315174828+01:00"
+    created: "2022-12-19T11:48:17.087852107+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -414,7 +440,7 @@ entries:
     version: 0.1.6
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-12-16T13:13:42.293315684+01:00"
+    created: "2022-12-19T11:48:17.060810907+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -433,7 +459,7 @@ entries:
     version: 0.1.5
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-12-16T13:13:42.271102988+01:00"
+    created: "2022-12-19T11:48:17.034407147+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -452,7 +478,7 @@ entries:
     version: 0.1.4
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-12-16T13:13:42.245574569+01:00"
+    created: "2022-12-19T11:48:17.005790824+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -471,7 +497,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-12-16T13:13:42.224414611+01:00"
+    created: "2022-12-19T11:48:16.979034332+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -490,7 +516,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-12-16T13:13:42.084715027+01:00"
+    created: "2022-12-19T11:48:16.849197296+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -509,7 +535,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-12-16T13:13:42.059527498+01:00"
+    created: "2022-12-19T11:48:16.812309353+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -531,7 +557,7 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 6.0.3
-    created: "2022-12-16T13:13:42.870034941+01:00"
+    created: "2022-12-19T11:48:17.606882653+01:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -566,7 +592,7 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 15.1.0
-    created: "2022-12-16T13:13:42.884315199+01:00"
+    created: "2022-12-19T11:48:17.622035207+01:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -601,7 +627,7 @@ entries:
       category: Infrastructure
     apiVersion: v2
     appVersion: 3.9.16
-    created: "2022-12-16T13:13:42.898696376+01:00"
+    created: "2022-12-19T11:48:17.636677825+01:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -633,7 +659,7 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 7.0.5
-    created: "2022-12-16T13:13:42.920126153+01:00"
+    created: "2022-12-19T11:48:17.652126023+01:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -659,4 +685,4 @@ entries:
     urls:
     - charts/redis-17.3.11.tgz
     version: 17.3.11
-generated: "2022-12-16T13:13:42.042066231+01:00"
+generated: "2022-12-19T11:48:16.787560118+01:00"
