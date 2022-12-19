@@ -1,10 +1,10 @@
 monolog:
     channels:
         - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
-        - cach
-        - request
-        - endpoint
-        - cronjob
+        - cache_log
+        - request_log
+        - endpoint_log
+        - cronjob_log
 
 when@dev:
     monolog:
