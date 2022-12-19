@@ -73,6 +73,8 @@ spec:
               claimName: {{ include "commonground-gateway.fullname" . }}-vendor
         - name: tmpfsnginx
           emptyDir: {}
+        - name: tmpfsnginx2
+          emptyDir: {}
         - name: tmpfsphp
           emptyDir: {}
                   
@@ -328,8 +330,10 @@ spec:
           image: "{{ .Values.nginx.repository }}:{{ .Values.nginx.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.nginx.pullPolicy }}
           volumeMounts:
-              - mountPath: /var/cache/nginx/client_temp
+              - mountPath: /var/cache/nginx
                 name: tmpfsnginx
+              - mountPath: /var/run
+                name: tmpfsnginx2
           env:
             - name: PHP_SERVICE
               value: localhost
