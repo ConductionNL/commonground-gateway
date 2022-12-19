@@ -714,7 +714,10 @@ class ObjectEntity
      */
     public function setValue($attribute, $value, bool $unsafe = false)
     {
+        //
+
         $valueObject = $this->getValueObject($attribute);
+
         // If we find the Value object we set the value
         if ($valueObject instanceof Value) {
             return $valueObject->setValue($value, $unsafe);
@@ -736,7 +739,10 @@ class ObjectEntity
      */
     public function hydrate(array $array, bool $unsafe = false): ObjectEntity
     {
+        // cleanup any embeded values
         $array = $this->includeEmbeddedArray($array);
+
+        // Make a list of values we have hydrated so that we can remove untuched values on an unsafe (PUT) request
         $hydratedValues = [];
 
         foreach ($array as $key => $value) {
@@ -744,6 +750,7 @@ class ObjectEntity
             $hydratedValues[] = $key;
         }
 
+        // Remove untouched values (PUT requests)
         if ($unsafe) {
             foreach ($this->getObjectValues() as $value) {
                 if (!in_array($value->getAttribute()->getName(), $hydratedValues)) {
