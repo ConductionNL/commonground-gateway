@@ -46,10 +46,10 @@ All functional query parameters always start with an _ to prevent collisions wit
 
 method less queries (e.g. `firstname=john`) are treated as exact methods `firstname[exact]=john`
 
-* [exact] (default) exact match* 
+*[exact] (default) exact match* 
 Only usable on properties of the type `text`,  `integer` or `datetime`. Seea
 
-* [case_insensitive] (default) case insensitive searching* 
+*[case_insensitive] (default) case insensitive searching* 
 Only usable on properties of the type `text`, uses the regex function under the hoot in an case insensitive way.
 
 * [case_sensitive] case sensitive searching* 
