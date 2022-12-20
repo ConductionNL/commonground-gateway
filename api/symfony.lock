@@ -257,6 +257,9 @@
     "laminas/laminas-escaper": {
         "version": "2.9.0"
     },
+    "larping-base/larping-bundle": {
+        "version": "1.0.2"
+    },
     "league/html-to-markdown": {
         "version": "4.10.0"
     },
@@ -311,9 +314,6 @@
     },
     "onelogin/php-saml": {
         "version": "4.0.0"
-    },
-    "open-catalogi/open-catalogi-bundle": {
-        "version": "dev-main"
     },
     "paragonie/random_compat": {
         "version": "v9.99.100"

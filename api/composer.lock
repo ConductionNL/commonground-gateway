@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7c1f68f79c927e53e9b3f51043d27e5d",
+    "content-hash": "81f01b72a057993c562a41a6b9bedbc8",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -4426,6 +4426,54 @@
             "time": "2021-09-02T17:10:53+00:00"
         },
         {
+            "name": "larping-base/larping-bundle",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/LarpingBase/LarpingBundle.git",
+                "reference": "2c7e36128ddf03e18d5eb3ca8660edd5b167a7f6"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/2c7e36128ddf03e18d5eb3ca8660edd5b167a7f6",
+                "reference": "2c7e36128ddf03e18d5eb3ca8660edd5b167a7f6",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": "dev-master",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "LarpingBase\\LarpingBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An Commong Gateay bundle for the larping application",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "larping",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
+                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.2"
+            },
+            "time": "2022-12-03T21:07:14+00:00"
+        },
+        {
             "name": "league/html-to-markdown",
             "version": "4.10.0",
             "source": {
@@ -5275,54 +5323,6 @@
                 "source": "https://github.com/onelogin/php-saml/"
             },
             "time": "2021-03-02T10:19:19+00:00"
-        },
-        {
-            "name": "open-catalogi/open-catalogi-bundle",
-            "version": "0.0.5",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/OpenCatalogi/OpenCatalogiBundle.git",
-                "reference": "b4ef4b804ba220fa8646231a9aa14b3d8d56f05d"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/b4ef4b804ba220fa8646231a9aa14b3d8d56f05d",
-                "reference": "b4ef4b804ba220fa8646231a9aa14b3d8d56f05d",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": "dev-master",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "OpenCatalogi\\OpenCatalogiBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An example package for creating symfony flex bundles as plugins",
-            "homepage": "https://commongatway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "open catalogi",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/OpenCatalogi/OpenCatalogiBundle/issues",
-                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/0.0.5"
-            },
-            "time": "2022-12-13T20:36:04+00:00"
         },
         {
             "name": "paragonie/random_compat",
