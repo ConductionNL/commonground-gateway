@@ -1305,6 +1305,13 @@ class ObjectEntity
     {
         $this->dateModified = $dateModified;
 
+        // Lets update the date created of parent resources
+        foreach ($this->subresourceOf as $mainresource) {
+            if($mainresource->getDateModified < $this->getDateModified()){
+                $mainresource->setDateModified($this->getDateModified());
+            }
+        }
+        
         return $this;
     }
 
@@ -1318,9 +1325,6 @@ class ObjectEntity
      */
     public function prePersist(): void
     {
-//        foreach ($this->subresourceOf as $subresourceOf) {
-//            $this->addSubresourceOf($subresourceOf->setObjectEntity($subresourceOf->getObjectEntity()->setDateModified(new DateTime())));
-//        }
         // Lets see if the name is congigured
         if ($this->entity->getNameProperties()) {
             $name = null;
@@ -1333,6 +1337,7 @@ class ObjectEntity
 
             return;
         }
+
         // Lets check agains common names
         $nameProperties = ['name', 'title', 'naam', 'titel'];
         foreach ($nameProperties as $nameProperty) {
