@@ -712,12 +712,12 @@ class ObjectEntity
      *
      * @return false|Value
      */
-    public function setValue($attribute, $value, bool $unsafe = false)
+    public function setValue($attribute, $value, bool $unsafe = false, ?DateTimeInterface $dateModified = null)
     {
         $valueObject = $this->getValueObject($attribute);
         // If we find the Value object we set the value
         if ($valueObject instanceof Value) {
-            return $valueObject->setValue($value, $unsafe);
+            return $valueObject->setValue($value, $unsafe, $dateModified);
         }
 
         // If not return false
@@ -734,13 +734,19 @@ class ObjectEntity
      *
      * @return ObjectEntity
      */
-    public function hydrate(array $array, bool $unsafe = false): ObjectEntity
+    public function hydrate(array $array, bool $unsafe = false, ?DateTimeInterface $dateModified = null): ObjectEntity
     {
         $array = $this->includeEmbeddedArray($array);
         $hydratedValues = [];
 
+        // Change Cascade
+        if (!$dateModified) {
+            $dateModified = new DateTime();
+            $this->changeCascade($dateModified);
+        }
+
         foreach ($array as $key => $value) {
-            $this->setValue($key, $value, $unsafe);
+            $this->setValue($key, $value, $unsafe, $dateModified);
             $hydratedValues[] = $key;
         }
 
@@ -1309,6 +1315,27 @@ class ObjectEntity
     }
 
     /**
+     * Cascades a 'is changed' upwards, with other words notifies objects that us this object has changed so that they to ara changes.
+     *
+     * @param DateTimeInterface $dateModified
+     *
+     * @return $this
+     */
+    public function changeCascade(DateTimeInterface $dateModified): self
+    {
+        $this->setDateCreated($dateModified);
+
+        // Lets update the date created of parent resources
+        foreach ($this->subresourceOf as $mainresource) {
+            if ($mainresource->getDateModified() < $this->getDateModified()) {
+                $mainresource->changeCascade($dateModified);
+            }
+        }
+
+        return  $this;
+    }
+
+    /**
      * Set name on pre persist.
      *
      * This function makes sure that each and every oject alwys has a name when saved
@@ -1318,9 +1345,6 @@ class ObjectEntity
      */
     public function prePersist(): void
     {
-//        foreach ($this->subresourceOf as $subresourceOf) {
-//            $this->addSubresourceOf($subresourceOf->setObjectEntity($subresourceOf->getObjectEntity()->setDateModified(new DateTime())));
-//        }
         // Lets see if the name is congigured
         if ($this->entity->getNameProperties()) {
             $name = null;
@@ -1333,6 +1357,7 @@ class ObjectEntity
 
             return;
         }
+
         // Lets check agains common names
         $nameProperties = ['name', 'title', 'naam', 'titel'];
         foreach ($nameProperties as $nameProperty) {
