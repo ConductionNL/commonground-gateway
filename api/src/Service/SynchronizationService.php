@@ -882,6 +882,7 @@ class SynchronizationService
         // todo: move this function to ObjectEntityService to prevent duplicate code...
 
         $objectEntity->hydrate($data);
+
         return $objectEntity;
     }
 
