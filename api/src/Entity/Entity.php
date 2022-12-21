@@ -1141,6 +1141,12 @@ class Entity
 
         // Properties
         foreach ($schema['properties'] as $name => $property) {
+
+            // Lets skip general stuf
+            if(in_array($name,['id','_self','_embeded'])){
+                continue;
+            }
+            
             // Let see if the attribute exists
             if (!$attribute = $this->getAttributeByName($name)) {
                 $attribute = new Attribute();
