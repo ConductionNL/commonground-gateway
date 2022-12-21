@@ -740,11 +740,10 @@ class ObjectEntity
         $hydratedValues = [];
 
         // Change Cascade
-        if(!$dateModified){
-            $dateModified  = new DateTime();
+        if (!$dateModified) {
+            $dateModified = new DateTime();
             $this->changeCascade($dateModified);
         }
-
 
         foreach ($array as $key => $value) {
             $this->setValue($key, $value, $unsafe, $dateModified);
@@ -1312,14 +1311,14 @@ class ObjectEntity
     {
         $this->dateModified = $dateModified;
 
-
         return $this;
     }
 
     /**
-     * Cascades a 'is changed' upwards, with other words notifies objects that us this object has changed so that they to ara changes
+     * Cascades a 'is changed' upwards, with other words notifies objects that us this object has changed so that they to ara changes.
      *
      * @param DateTimeInterface $dateModified
+     *
      * @return $this
      */
     public function changeCascade(DateTimeInterface $dateModified): self
@@ -1328,7 +1327,7 @@ class ObjectEntity
 
         // Lets update the date created of parent resources
         foreach ($this->subresourceOf as $mainresource) {
-            if($mainresource->getDateModified() < $this->getDateModified()){
+            if ($mainresource->getDateModified() < $this->getDateModified()) {
                 $mainresource->changeCascade($dateModified);
             }
         }
