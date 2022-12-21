@@ -752,6 +752,10 @@ class ObjectEntity
             }
         }
 
+        // Change Cascade
+        $now  = new DateTime();
+        $this->changeCascade($now);
+
         return $this;
     }
 
@@ -1305,14 +1309,28 @@ class ObjectEntity
     {
         $this->dateModified = $dateModified;
 
+
+        return $this;
+    }
+
+    /**
+     * Cascades a 'is changed' upwards, with other words notifies objects that us this object has changed so that they to ara changes
+     *
+     * @param DateTimeInterface $dateModified
+     * @return $this
+     */
+    public function changeCascade(DateTimeInterface $dateModified): self
+    {
+        $this->setDateCreated($dateModified);
+
         // Lets update the date created of parent resources
         foreach ($this->subresourceOf as $mainresource) {
             if($mainresource->getDateModified < $this->getDateModified()){
-                $mainresource->setDateModified($this->getDateModified());
+                $mainresource->changeCascade($dateModified);
             }
         }
-        
-        return $this;
+
+        return  $this;
     }
 
     /**
