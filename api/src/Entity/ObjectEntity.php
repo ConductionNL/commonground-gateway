@@ -310,14 +310,21 @@ class ObjectEntity
 
     public function getSelf(): ?string
     {
-        return $this->self;
-    }
+        $criteria = Criteria::create()
+            ->andWhere(Criteria::expr()->gt('yearsStudied', 20))
+            ->orderBy(['yearsStudied' => 'DESC'])
+            ->limit(1);
 
-    public function setSelf(?string $self): self
-    {
-        $this->self = $self;
+        $endpoints = $this->getEndpoints()->matching($criteria);
 
-        return $this;
+        if(!empty($endpoints)){
+            $endpoint = $endpoints[0];
+            // Do sometehing to build link
+
+            // return link
+        }
+
+        return null;
     }
 
     public function getExternalId(): ?string
