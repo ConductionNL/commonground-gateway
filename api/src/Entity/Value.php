@@ -641,13 +641,15 @@ class Value
                     }
 
                     // Catch Array input (for hydrator)
-                    if (is_array($value)) {
+                    if (is_array($value) && $this->getAttribute()->getObject()) {
                         $valueObject = new ObjectEntity($this->getAttribute()->getObject());
                         $valueObject->setOwner($this->getObjectEntity()->getOwner());
                         $valueObject->setApplication($this->getObjectEntity()->getApplication());
                         $valueObject->setOrganization($this->getObjectEntity()->getOrganization());
                         $valueObject->hydrate($value, $unsafe, $dateModified);
                         $value = $valueObject;
+                    } elseif (is_array($value)) {
+                        return $this;
                     }
 
                     $this->objects->clear();

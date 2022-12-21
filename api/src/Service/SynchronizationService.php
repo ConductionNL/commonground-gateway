@@ -881,36 +881,7 @@ class SynchronizationService
     {
         // todo: move this function to ObjectEntityService to prevent duplicate code...
 
-        if (isset($this->io)) {
-            $this->io->text("populateObject $method ObjectEntity with id = {$objectEntity->getId()->toString()}");
-        }
-
-        $this->setApplicationAndOrganization($objectEntity);
-
-        $owner = $this->objectEntityService->checkAndUnsetOwner($data);
-        if (array_key_exists('owner', $this->configuration)) {
-            $owner = $this->configuration['owner'];
-        }
-
-        if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), $method)) {
-            if (isset($this->io)) {
-                $this->io->warning("ValidationErrors: [{$this->objectEntityService->implodeMultiArray($validationErrors)}]");
-            }
-            //@TODO: Write errors to logs
-
-            foreach ($validationErrors as $error) {
-                if (!is_array($error) && strpos($error, 'must be present') !== false) {
-                    return $objectEntity;
-                }
-            }
-        }
-
-        $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'jsonld');
-        // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
-        if (!$this->checkActionConditionsEntity($objectEntity->getEntity()->getId()->toString())) {
-            $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()]);
-        }
-
+        $objectEntity->hydrate($data);
         return $objectEntity;
     }
 

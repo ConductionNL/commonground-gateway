@@ -661,6 +661,9 @@ class ObjectEntity
      */
     public function getAttributeObject(string $attributeName)
     {
+        if (!$this->getEntity()) {
+            return false;
+        }
         $attribute = $this->getEntity()->getAttributeByName($attributeName);
 
         // If we have a valid Attribute object
