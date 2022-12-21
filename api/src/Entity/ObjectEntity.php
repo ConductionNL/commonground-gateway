@@ -712,12 +712,12 @@ class ObjectEntity
      *
      * @return false|Value
      */
-    public function setValue($attribute, $value, bool $unsafe = false)
+    public function setValue($attribute, $value, bool $unsafe = false, $dateModified = false)
     {
         $valueObject = $this->getValueObject($attribute);
         // If we find the Value object we set the value
         if ($valueObject instanceof Value) {
-            return $valueObject->setValue($value, $unsafe);
+            return $valueObject->setValue($value, $unsafe, $dateModified);
         }
 
         // If not return false
@@ -734,13 +734,20 @@ class ObjectEntity
      *
      * @return ObjectEntity
      */
-    public function hydrate(array $array, bool $unsafe = false): ObjectEntity
+    public function hydrate(array $array, bool $unsafe = false, $dateModified = false): ObjectEntity
     {
         $array = $this->includeEmbeddedArray($array);
         $hydratedValues = [];
 
+        // Change Cascade
+        if($dateModified){
+            $modifiedDateTime  = new DateTime();
+            $this->changeCascade($dateModified);
+        }
+
+
         foreach ($array as $key => $value) {
-            $this->setValue($key, $value, $unsafe);
+            $this->setValue($key, $value, $unsafe, $dateModified);
             $hydratedValues[] = $key;
         }
 
@@ -751,10 +758,6 @@ class ObjectEntity
                 }
             }
         }
-
-        // Change Cascade
-        $now  = new DateTime();
-        $this->changeCascade($now);
 
         return $this;
     }

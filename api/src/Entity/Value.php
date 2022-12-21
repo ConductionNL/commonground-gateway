@@ -543,7 +543,7 @@ class Value
      *
      * @throws Exception
      */
-    public function setValue($value, bool $unsafe = false): self
+    public function setValue($value, bool $unsafe = false, $dateModified = false): self
     {
         if ($this->getAttribute()) {
 
@@ -571,7 +571,7 @@ class Value
                         $valueObject->setOwner($this->getObjectEntity()->getOwner());
                         $valueObject->setApplication($this->getObjectEntity()->getApplication());
                         $valueObject->setOrganization($this->getObjectEntity()->getOrganization());
-                        $valueObject->hydrate($value, $unsafe);
+                        $valueObject->hydrate($value, $unsafe, $dateModified);
                         $value = $valueObject;
                     }
 
@@ -646,7 +646,7 @@ class Value
                         $valueObject->setOwner($this->getObjectEntity()->getOwner());
                         $valueObject->setApplication($this->getObjectEntity()->getApplication());
                         $valueObject->setOrganization($this->getObjectEntity()->getOrganization());
-                        $valueObject->hydrate($value);
+                        $valueObject->hydrate($value, $unsafe, $dateModified);
                         $value = $valueObject;
                     }
 
