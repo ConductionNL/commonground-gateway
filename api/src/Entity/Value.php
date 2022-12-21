@@ -543,7 +543,7 @@ class Value
      *
      * @throws Exception
      */
-    public function setValue($value, bool $unsafe = false, $dateModified = false): self
+    public function setValue($value, bool $unsafe = false, ?DateTimeInterface $dateModified = null): self
     {
         if ($this->getAttribute()) {
 

@@ -712,7 +712,7 @@ class ObjectEntity
      *
      * @return false|Value
      */
-    public function setValue($attribute, $value, bool $unsafe = false, $dateModified = false)
+    public function setValue($attribute, $value, bool $unsafe = false, ?DateTimeInterface $dateModified = null)
     {
         $valueObject = $this->getValueObject($attribute);
         // If we find the Value object we set the value
@@ -734,14 +734,14 @@ class ObjectEntity
      *
      * @return ObjectEntity
      */
-    public function hydrate(array $array, bool $unsafe = false, $dateModified = false): ObjectEntity
+    public function hydrate(array $array, bool $unsafe = false, ?DateTimeInterface $dateModified = null): ObjectEntity
     {
         $array = $this->includeEmbeddedArray($array);
         $hydratedValues = [];
 
         // Change Cascade
-        if($dateModified){
-            $modifiedDateTime  = new DateTime();
+        if(!$dateModified){
+            $dateModified  = new DateTime();
             $this->changeCascade($dateModified);
         }
 
@@ -1328,7 +1328,7 @@ class ObjectEntity
 
         // Lets update the date created of parent resources
         foreach ($this->subresourceOf as $mainresource) {
-            if($mainresource->getDateModified < $this->getDateModified()){
+            if($mainresource->getDateModified() < $this->getDateModified()){
                 $mainresource->changeCascade($dateModified);
             }
         }
