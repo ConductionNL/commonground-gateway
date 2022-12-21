@@ -1326,7 +1326,8 @@ class ObjectEntity
         $this->setDateCreated($dateModified);
 
         // Lets update the date created of parent resources
-        foreach ($this->subresourceOf as $mainresource) {
+        foreach ($this->subresourceOf as $mainResourceValue) {
+            $mainresource = $mainResourceValue->getObjectEntity();
             if ($mainresource->getDateModified() < $this->getDateModified()) {
                 $mainresource->changeCascade($dateModified);
             }
