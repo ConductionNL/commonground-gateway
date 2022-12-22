@@ -137,7 +137,7 @@ class Attribute
      *
      * @Assert\Choice({"noFunction", "id", "self", "uri", "externalId", "dateCreated", "dateModified", "userName"})
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", options={"default":"noFunction"})
+     * @ORM\Column(type="string", options={"default":"noFunction"}, name="function_column")
      */
     private string $function = 'noFunction';
 
@@ -276,7 +276,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $maxItems;
+    private ?int $maxItems = null;
 
     /**
      * @var ?int *Can only be used in combination with type array* The minimum array length
@@ -1304,7 +1304,7 @@ class Attribute
         return $this->mustBeUnique;
     }
 
-    public function setMustBeUnique(bool $mustBeUnique): self
+    public function setMustBeUnique(?bool $mustBeUnique): self
     {
         $this->mustBeUnique = $mustBeUnique;
 

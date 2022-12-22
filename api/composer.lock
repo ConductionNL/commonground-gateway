@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7c1f68f79c927e53e9b3f51043d27e5d",
+    "content-hash": "921af05322cc295549368be13b0d9d3a",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -702,12 +702,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "1a41c051c4063485be72789409c14beabff23329"
+                "reference": "ead707b902e2cc9f20985cae7e862a18b1b9a0a8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/1a41c051c4063485be72789409c14beabff23329",
-                "reference": "1a41c051c4063485be72789409c14beabff23329",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/ead707b902e2cc9f20985cae7e862a18b1b9a0a8",
+                "reference": "ead707b902e2cc9f20985cae7e862a18b1b9a0a8",
                 "shasum": ""
             },
             "require": {
@@ -766,7 +766,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2022-12-21T09:09:17+00:00"
+            "time": "2022-12-22T12:08:28+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -5278,16 +5278,16 @@
         },
         {
             "name": "open-catalogi/open-catalogi-bundle",
-            "version": "0.0.5",
+            "version": "0.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/OpenCatalogi/OpenCatalogiBundle.git",
-                "reference": "b4ef4b804ba220fa8646231a9aa14b3d8d56f05d"
+                "reference": "0de67f33f533734b684b01d4b3dfa19ba9553115"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/b4ef4b804ba220fa8646231a9aa14b3d8d56f05d",
-                "reference": "b4ef4b804ba220fa8646231a9aa14b3d8d56f05d",
+                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/0de67f33f533734b684b01d4b3dfa19ba9553115",
+                "reference": "0de67f33f533734b684b01d4b3dfa19ba9553115",
                 "shasum": ""
             },
             "require": {
@@ -5320,9 +5320,9 @@
             ],
             "support": {
                 "issues": "https://github.com/OpenCatalogi/OpenCatalogiBundle/issues",
-                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/0.0.5"
+                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/0.0.7"
             },
-            "time": "2022-12-13T20:36:04+00:00"
+            "time": "2022-12-21T10:44:53+00:00"
         },
         {
             "name": "paragonie/random_compat",
