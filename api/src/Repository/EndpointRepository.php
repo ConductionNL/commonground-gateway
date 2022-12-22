@@ -19,6 +19,7 @@ use Doctrine\Persistence\ManagerRegistry;
 class EndpointRepository extends ServiceEntityRepository
 {
     private CacheService $cacheService;
+
     public function __construct(ManagerRegistry $registry, CacheService $cacheService)
     {
         parent::__construct($registry, Endpoint::class);
@@ -37,9 +38,10 @@ class EndpointRepository extends ServiceEntityRepository
      */
     public function findByMethodRegex(string $method, string $path): ?Endpoint
     {
-        if($endpoint = $this->cacheService->getEndpoints(['path' => $path, 'method' => $method])) {
+        if ($endpoint = $this->cacheService->getEndpoints(['path' => $path, 'method' => $method])) {
             return $endpoint;
         }
+
         try {
             $query = $this->createQueryBuilder('e')
                 ->andWhere('LOWER(e.method) = :method')
