@@ -320,7 +320,7 @@ class Endpoint
 
     public function setId(string $id): self
     {
-        $this->id =Uuid::fromString($id);
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
