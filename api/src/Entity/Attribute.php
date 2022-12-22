@@ -287,7 +287,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $minItems;
+    private ?int $minItems = null;
 
     /**
      * @var bool *Can only be used in combination with type array* Define whether or not values in an array should be unique
@@ -298,7 +298,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $uniqueItems;
+    private $uniqueItems = null;
 
     /**
      * @var string *Can only be used in combination with type object* The maximum amount of properties an object should contain
@@ -309,7 +309,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $maxProperties;
+    private $maxProperties = null;
 
     /**
      * @var int *Can only be used in combination with type object* The minimum amount of properties an object should contain
@@ -320,7 +320,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $minProperties;
+    private $minProperties = null;
 
     /**
      * @var Attribute If the attribute targets an object that object might have an inversedBy field allowing a two-way connection
@@ -329,7 +329,7 @@ class Attribute
      * @ORM\OneToOne(targetEntity=Attribute::class)
      * @MaxDepth(1)
      */
-    private $inversedBy;
+    private $inversedBy = null;
 
     /**
      * @var bool Only whether or not this property is required
@@ -340,7 +340,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $required;
+    private $required = null;
 
     /**
      * @var array conditional requiremends for field
@@ -409,7 +409,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $description;
+    private $description = null;
 
     /**
      * @var string An default value for this value that will be used if a user doesn't supply a value
@@ -420,7 +420,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $defaultValue;
+    private $defaultValue = null;
 
     /**
      * @var bool Whether or not this property can be left empty
@@ -442,7 +442,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $mustBeUnique;
+    private $mustBeUnique = null;
 
     /**
      * @var bool Whether or not the mustBeUnique check is case sensitive
@@ -464,7 +464,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $readOnly;
+    private $readOnly = null;
 
     /**
      * @var bool Whether or not this property is write only
@@ -475,7 +475,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $writeOnly;
+    private $writeOnly = null;
 
     /**
      * @var string An example of the value that should be supplied
@@ -486,7 +486,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $example;
+    private $example = null;
 
     /**
      * @var string Pattern which value should suffice to (Ecma-262 Edition 5.1 regular expression dialect)
@@ -496,7 +496,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $pattern;
+    private $pattern = null;
 
     /**
      * @var bool Whether or not this property has been deprecated and wil be removed in the future
@@ -507,7 +507,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $deprecated;
+    private $deprecated = null;
 
     /**
      * @var string The minimal date for value, either a date, datetime or duration (ISO_8601)
@@ -517,7 +517,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $minDate;
+    private $minDate = null;
 
     /**
      * @var string The maximum date for value, either a date, datetime or duration (ISO_8601)
@@ -527,7 +527,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $maxDate;
+    private $maxDate = null;
 
     /**
      * @var string *Can only be used in combination with type file* The maximum allowed file size in bytes
@@ -538,7 +538,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $maxFileSize;
+    private $maxFileSize = null;
 
     /**
      * @var string *Can only be used in combination with type file* The minimum allowed file size in bytes
@@ -549,7 +549,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $minFileSize;
+    private $minFileSize = null;
 
     /**
      * @var array *Can only be used in combination with type file* The type of the file
@@ -560,7 +560,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $fileTypes;
+    private $fileTypes = null;
 
     /**
      * @Groups({"read", "write"})
@@ -676,7 +676,7 @@ class Attribute
      * @Gedmo\Timestampable(on="create")
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private $dateCreated;
+    private $dateCreated = null;
 
     /**
      * @var Datetime The moment this resource was last Modified
@@ -685,7 +685,7 @@ class Attribute
      * @Gedmo\Timestampable(on="update")
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private $dateModified;
+    private $dateModified = null;
 
     /**
      * @todo
@@ -693,7 +693,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $reference;
+    private $reference = null;
 
     public function __construct()
     {
