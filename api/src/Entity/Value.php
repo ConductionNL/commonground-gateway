@@ -26,6 +26,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * A value for a given attribute on an Object Entity.
  *
  * @category Entity
+ * @ORM\HasLifecycleCallbacks()
  *
  * @ApiResource(
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
