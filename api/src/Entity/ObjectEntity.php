@@ -1045,6 +1045,7 @@ class ObjectEntity
                 'ref' => $this->getEntity()->getReference(),
             ],
             'synchronizations' => $this->getReadableSyncDataArray(),
+            'name'             => $this->getName(),
         ];
 
         // If we dont need the actual object data we can exit here
