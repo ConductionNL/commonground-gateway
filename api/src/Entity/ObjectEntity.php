@@ -727,6 +727,19 @@ class ObjectEntity
         return false;
     }
 
+    public function setDefaultValues(bool $unsafe = false, ?DateTimeInterface $dateModified = null): self
+    {
+        foreach($this->getEntity()->getAttributes() as $attribute) {
+            $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('attribute', $attribute))->setMaxResults(1);
+            $values = $this->getObjectValues()->matching($criteria);
+            if($values->isEmpty() && $attribute->getDefaultValue()) {
+                $this->setValue($attribute, $attribute->getDefaultValue(), $unsafe, $dateModified);
+            }
+        }
+
+        return $this;
+    }
+
     /**
      * Populate this object with an array of values, where attributes are diffined by key.
      *
@@ -760,6 +773,8 @@ class ObjectEntity
                 }
             }
         }
+
+        $this->setDefaultValues($unsafe, $dateModified);
 
         return $this;
     }
