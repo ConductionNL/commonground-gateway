@@ -11,6 +11,7 @@ use App\Entity\Synchronization;
 use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
+use DateInterval;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -691,9 +692,7 @@ class SynchronizationService
             return $synchronization;
         }
 
-        $synchronization = new Synchronization();
-        $synchronization->setSource($source);
-        $synchronization->setEntity($entity);
+        $synchronization = new Synchronization($source, $entity);
         $synchronization->setSourceId($sourceId);
         $this->entityManager->persist($synchronization);
         // We flush later
@@ -725,10 +724,8 @@ class SynchronizationService
             return $synchronization;
         }
 
-        $synchronization = new Synchronization();
+        $synchronization = new Synchronization($source, $entity);
         $synchronization->setObject($objectEntity);
-        $synchronization->setSource($source);
-        $synchronization->setEntity($entity);
         $synchronization->setSourceId($objectEntity->getId());
         $synchronization->setBlocked(false);
         $this->entityManager->persist($synchronization);
@@ -787,8 +784,14 @@ class SynchronizationService
         $dot = new Dot($sourceObject);
         if (isset($this->configuration['apiSource']['location']['dateChangedField'])) {
             $lastChanged = $dot->get($this->configuration['apiSource']['location']['dateChangedField']);
-            $synchronization->setSourcelastChanged(new DateTime($lastChanged));
-        } elseif ($synchronization->getHash() != $hash) {
+            if (!empty($lastChanged)) {
+                $synchronization->setSourcelastChanged(new DateTime($lastChanged));
+                $synchronization->setHash($hash);
+
+                return $synchronization;
+            }
+        }
+        if ($synchronization->getHash() != $hash) {
             $lastChanged = new DateTime();
             $synchronization->setSourcelastChanged($lastChanged);
         }
@@ -803,7 +806,7 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronization object before synchronization
      * @param array           $sourceObject    The object in the source
      *
-     * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError
+     * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError|Exception
      *
      * @return Synchronization The updated synchronization object
      */
@@ -824,13 +827,28 @@ class SynchronizationService
             return $synchronization;
         }
 
+        // Let check
         $now = new DateTime();
         $synchronization->setLastChecked($now);
+
+        // Counter
+        $counter = $synchronization->getTryCounter() + 1;
+        $synchronization->setTryCounter($counter);
+
+        // Set dont try before, expensional so in minutes  1,8,27,64,125,216,343,512,729,1000
+        $addMinutes = pow($counter, 3);
+        if ($synchronization->getDontSyncBefore()) {
+            $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT'.$addMinutes.'M'));
+        } else {
+            $dontTryBefore = new DateTime();
+        }
+        $synchronization->setDontSyncBefore($dontTryBefore);
+
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
 
         //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
         // todo: this if, elseif, else needs fixing, conditions aren't correct for if we ever want to syncToSource with this handleSync function
-        if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() > $synchronization->getObject()->getDateModified())) {
+        if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() >= $synchronization->getObject()->getDateModified())) {
             $synchronization = $this->syncToGateway($synchronization, $sourceObject, $method);
         }
         // todo: we currently never use handleSync to do syncToSource, so let's make sure we aren't trying to by accident
@@ -863,35 +881,7 @@ class SynchronizationService
     {
         // todo: move this function to ObjectEntityService to prevent duplicate code...
 
-        if (isset($this->io)) {
-            $this->io->text("populateObject $method ObjectEntity with id = {$objectEntity->getId()->toString()}");
-        }
-
-        $this->setApplicationAndOrganization($objectEntity);
-
-        $owner = $this->objectEntityService->checkAndUnsetOwner($data);
-        if (array_key_exists('owner', $this->configuration)) {
-            $owner = $this->configuration['owner'];
-        }
-
-        if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), $method)) {
-            if (isset($this->io)) {
-                $this->io->warning("ValidationErrors: [{$this->objectEntityService->implodeMultiArray($validationErrors)}]");
-            }
-            //@TODO: Write errors to logs
-
-            foreach ($validationErrors as $error) {
-                if (!is_array($error) && strpos($error, 'must be present') !== false) {
-                    return $objectEntity;
-                }
-            }
-        }
-
-        $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'jsonld');
-        // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
-        if (!$this->checkActionConditionsEntity($objectEntity->getEntity()->getId()->toString())) {
-            $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()]);
-        }
+        $objectEntity->hydrate($data);
 
         return $objectEntity;
     }
@@ -930,7 +920,10 @@ class SynchronizationService
             $objectEntity->setApplication($application);
             $objectEntity->setOrganization($application->getOrganization());
         } elseif (
-            ($application = $this->entityManager->getRepository('App:Application')->findAll()[0]) && $application instanceof Application
+            ($applications = $this->entityManager->getRepository('App:Application')->findAll()
+                && !empty($applications)
+                && $application = $applications[0])
+                && $application instanceof Application
         ) {
             $objectEntity->setApplication($application);
             $objectEntity->setOrganization($application->getOrganization());
@@ -1206,6 +1199,11 @@ class SynchronizationService
      */
     private function mapInput(array $sourceObject): array
     {
+        // What if we do not have a cnnfiguration?
+        if (!isset($this->configuration) || empty($this->configuration)) {
+            return  $sourceObject;
+        }
+
         if (array_key_exists('mappingIn', $this->configuration['apiSource']) && array_key_exists('skeletonIn', $this->configuration['apiSource'])) {
             $sourceObject = $this->translationService->dotHydrator(array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']), $sourceObject, $this->configuration['apiSource']['mappingIn']);
         } elseif (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
@@ -1260,6 +1258,7 @@ class SynchronizationService
 
         $object = $this->populateObject($sourceObject, $object, $method);
         $object->setUri($synchronization->getSource()->getLocation().$this->getCallServiceEndpoint($synchronization->getSourceId()));
+
         if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
             $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
         }

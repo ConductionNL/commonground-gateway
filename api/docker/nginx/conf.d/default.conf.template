@@ -4,6 +4,7 @@ map $NGINX_ENV  $csp {
 }
 
 server {
+    listen 8080;
     root /srv/api/public;
 
     add_header Content-Security-Policy $csp;

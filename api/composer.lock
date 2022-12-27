@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "232e96d5acf4d8dce9e586596f2b6961",
+    "content-hash": "921af05322cc295549368be13b0d9d3a",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -697,167 +697,22 @@
             "time": "2022-11-16T13:35:03+00:00"
         },
         {
-            "name": "common-gateway/waardepapieren-bundle",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CommonGateway/WaardepapierenBundle.git",
-                "reference": "361cf8b2e04912dfbbb0831f0f8acdbe469d2e68"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/WaardepapierenBundle/zipball/361cf8b2e04912dfbbb0831f0f8acdbe469d2e68",
-                "reference": "361cf8b2e04912dfbbb0831f0f8acdbe469d2e68",
-                "shasum": ""
-            },
-            "require": {
-                "endroid/qr-code-bundle": "3.4",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "default-branch": true,
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "CommonGateway\\WaardepapierenBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An example package for creating symfony flex bundles as plugins",
-            "homepage": "https://commongatway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/CommonGateway/WaardepapierenBundle/issues",
-                "source": "https://github.com/CommonGateway/WaardepapierenBundle/tree/main"
-            },
-            "time": "2022-12-09T12:51:17+00:00"
-        },
-        {
-            "name": "common-gateway/xxllnc-zgw-bundle",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CommonGateway/XxllncZGWBundle.git",
-                "reference": "41932be24173793f50e062ead2d3d0c48e8e2fd3"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/XxllncZGWBundle/zipball/41932be24173793f50e062ead2d3d0c48e8e2fd3",
-                "reference": "41932be24173793f50e062ead2d3d0c48e8e2fd3",
-                "shasum": ""
-            },
-            "require": {
-                "common-gateway/zgw-bundle": "^0.0.5",
-                "commongateway/corebundle": "dev-master",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "default-branch": true,
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "CommonGateway\\XxllncZGWBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "A package for a symfony flex bundle containing functionality for mapping ZGW api standard to XXLLNC api",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "symfony",
-                "zgw"
-            ],
-            "support": {
-                "issues": "https://github.com/CommonGateway/XxllncZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/XxllncZGWBundle/tree/main"
-            },
-            "time": "2022-12-13T13:00:49+00:00"
-        },
-        {
-            "name": "common-gateway/zgw-bundle",
-            "version": "0.0.5",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CommonGateway/ZGWBundle.git",
-                "reference": "936c1889fd1bba074cfb526aa00a74bf307b5ed2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/936c1889fd1bba074cfb526aa00a74bf307b5ed2",
-                "reference": "936c1889fd1bba074cfb526aa00a74bf307b5ed2",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": "dev-master",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "CommonGateway\\ZGWBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "Symfony bundle for zgw standard functionality",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "symfony",
-                "zgw"
-            ],
-            "support": {
-                "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.0.5"
-            },
-            "time": "2022-12-09T13:48:26+00:00"
-        },
-        {
             "name": "commongateway/corebundle",
             "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "10174c069d07994ee7d18c6c4e91c9fcdb8bbf51"
+                "reference": "9d2fa00eb562c33b6b43b8023cb9c413a3e2d921"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/10174c069d07994ee7d18c6c4e91c9fcdb8bbf51",
-                "reference": "10174c069d07994ee7d18c6c4e91c9fcdb8bbf51",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/9d2fa00eb562c33b6b43b8023cb9c413a3e2d921",
+                "reference": "9d2fa00eb562c33b6b43b8023cb9c413a3e2d921",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.4.0"
+                "php": "^7.4.0",
+                "symfony/monolog-bundle": "^3.8"
             },
             "conflict": {
                 "doctrine/dbal": "<2.5",
@@ -911,7 +766,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2022-12-12T14:58:17+00:00"
+            "time": "2022-12-23T13:17:51+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -4383,56 +4238,6 @@
             "time": "2022-06-29T09:25:13+00:00"
         },
         {
-            "name": "klantinteractie-servicesysteem/kiss-bundle",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Klantinteractie-Servicesysteem/KissBundle.git",
-                "reference": "5217bfdb54522eed42300de3560ec2634fb35773"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/5217bfdb54522eed42300de3560ec2634fb35773",
-                "reference": "5217bfdb54522eed42300de3560ec2634fb35773",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": "dev-master",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "default-branch": true,
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "Kiss\\KissBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An example package for creating symfony flex bundles as plugins",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "dimpact",
-                "gateway",
-                "kiss",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/issues",
-                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/main"
-            },
-            "time": "2022-12-01T22:26:41+00:00"
-        },
-        {
             "name": "knplabs/knp-markdown-bundle",
             "version": "1.9.0",
             "source": {
@@ -4619,54 +4424,6 @@
                 }
             ],
             "time": "2021-09-02T17:10:53+00:00"
-        },
-        {
-            "name": "larping-base/larping-bundle",
-            "version": "1.0.2",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "2c7e36128ddf03e18d5eb3ca8660edd5b167a7f6"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/2c7e36128ddf03e18d5eb3ca8660edd5b167a7f6",
-                "reference": "2c7e36128ddf03e18d5eb3ca8660edd5b167a7f6",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": "dev-master",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "LarpingBase\\LarpingBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An Commong Gateay bundle for the larping application",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "larping",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.2"
-            },
-            "time": "2022-12-03T21:07:14+00:00"
         },
         {
             "name": "league/html-to-markdown",
@@ -5036,6 +4793,108 @@
                 "source": "https://github.com/mongodb/mongo-php-library/tree/1.15.0"
             },
             "time": "2022-11-23T04:45:35+00:00"
+        },
+        {
+            "name": "monolog/monolog",
+            "version": "2.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Seldaek/monolog.git",
+                "reference": "720488632c590286b88b80e62aa3d3d551ad4a50"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/720488632c590286b88b80e62aa3d3d551ad4a50",
+                "reference": "720488632c590286b88b80e62aa3d3d551ad4a50",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2",
+                "psr/log": "^1.0.1 || ^2.0 || ^3.0"
+            },
+            "provide": {
+                "psr/log-implementation": "1.0.0 || 2.0.0 || 3.0.0"
+            },
+            "require-dev": {
+                "aws/aws-sdk-php": "^2.4.9 || ^3.0",
+                "doctrine/couchdb": "~1.0@dev",
+                "elasticsearch/elasticsearch": "^7 || ^8",
+                "ext-json": "*",
+                "graylog2/gelf-php": "^1.4.2",
+                "guzzlehttp/guzzle": "^7.4",
+                "guzzlehttp/psr7": "^2.2",
+                "mongodb/mongodb": "^1.8",
+                "php-amqplib/php-amqplib": "~2.4 || ^3",
+                "phpspec/prophecy": "^1.15",
+                "phpstan/phpstan": "^0.12.91",
+                "phpunit/phpunit": "^8.5.14",
+                "predis/predis": "^1.1 || ^2.0",
+                "rollbar/rollbar": "^1.3 || ^2 || ^3",
+                "ruflin/elastica": "^7",
+                "swiftmailer/swiftmailer": "^5.3|^6.0",
+                "symfony/mailer": "^5.4 || ^6",
+                "symfony/mime": "^5.4 || ^6"
+            },
+            "suggest": {
+                "aws/aws-sdk-php": "Allow sending log messages to AWS services like DynamoDB",
+                "doctrine/couchdb": "Allow sending log messages to a CouchDB server",
+                "elasticsearch/elasticsearch": "Allow sending log messages to an Elasticsearch server via official client",
+                "ext-amqp": "Allow sending log messages to an AMQP server (1.0+ required)",
+                "ext-curl": "Required to send log messages using the IFTTTHandler, the LogglyHandler, the SendGridHandler, the SlackWebhookHandler or the TelegramBotHandler",
+                "ext-mbstring": "Allow to work properly with unicode symbols",
+                "ext-mongodb": "Allow sending log messages to a MongoDB server (via driver)",
+                "ext-openssl": "Required to send log messages using SSL",
+                "ext-sockets": "Allow sending log messages to a Syslog server (via UDP driver)",
+                "graylog2/gelf-php": "Allow sending log messages to a GrayLog2 server",
+                "mongodb/mongodb": "Allow sending log messages to a MongoDB server (via library)",
+                "php-amqplib/php-amqplib": "Allow sending log messages to an AMQP server using php-amqplib",
+                "rollbar/rollbar": "Allow sending log messages to Rollbar",
+                "ruflin/elastica": "Allow sending log messages to an Elastic Search server"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "2.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Monolog\\": "src/Monolog"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Jordi Boggiano",
+                    "email": "j.boggiano@seld.be",
+                    "homepage": "https://seld.be"
+                }
+            ],
+            "description": "Sends your logs to files, sockets, inboxes, databases and various web services",
+            "homepage": "https://github.com/Seldaek/monolog",
+            "keywords": [
+                "log",
+                "logging",
+                "psr-3"
+            ],
+            "support": {
+                "issues": "https://github.com/Seldaek/monolog/issues",
+                "source": "https://github.com/Seldaek/monolog/tree/2.8.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/Seldaek",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/monolog/monolog",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-07-24T11:55:47+00:00"
         },
         {
             "name": "myclabs/deep-copy",
@@ -5419,16 +5278,16 @@
         },
         {
             "name": "open-catalogi/open-catalogi-bundle",
-            "version": "0.0.2",
+            "version": "0.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/OpenCatalogi/OpenCatalogiBundle.git",
-                "reference": "7c6fddc7008851508c5e83632929af0e08a1ec90"
+                "reference": "0de67f33f533734b684b01d4b3dfa19ba9553115"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/7c6fddc7008851508c5e83632929af0e08a1ec90",
-                "reference": "7c6fddc7008851508c5e83632929af0e08a1ec90",
+                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/0de67f33f533734b684b01d4b3dfa19ba9553115",
+                "reference": "0de67f33f533734b684b01d4b3dfa19ba9553115",
                 "shasum": ""
             },
             "require": {
@@ -5461,9 +5320,9 @@
             ],
             "support": {
                 "issues": "https://github.com/OpenCatalogi/OpenCatalogiBundle/issues",
-                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/0.0.2"
+                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/0.0.7"
             },
-            "time": "2022-12-04T07:48:45+00:00"
+            "time": "2022-12-21T10:44:53+00:00"
         },
         {
             "name": "paragonie/random_compat",
@@ -9534,6 +9393,171 @@
                 }
             ],
             "time": "2022-01-02T09:51:59+00:00"
+        },
+        {
+            "name": "symfony/monolog-bridge",
+            "version": "v5.3.14",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/monolog-bridge.git",
+                "reference": "b3cb93cf917abf826d45d85514fea3b07e629335"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/monolog-bridge/zipball/b3cb93cf917abf826d45d85514fea3b07e629335",
+                "reference": "b3cb93cf917abf826d45d85514fea3b07e629335",
+                "shasum": ""
+            },
+            "require": {
+                "monolog/monolog": "^1.25.1|^2",
+                "php": ">=7.2.5",
+                "symfony/deprecation-contracts": "^2.1",
+                "symfony/http-kernel": "^5.3",
+                "symfony/polyfill-php80": "^1.16",
+                "symfony/service-contracts": "^1.1|^2"
+            },
+            "conflict": {
+                "symfony/console": "<4.4",
+                "symfony/http-foundation": "<5.3"
+            },
+            "require-dev": {
+                "symfony/console": "^4.4|^5.0",
+                "symfony/http-client": "^4.4|^5.0",
+                "symfony/mailer": "^4.4|^5.0",
+                "symfony/messenger": "^4.4|^5.0",
+                "symfony/mime": "^4.4|^5.0",
+                "symfony/security-core": "^4.4|^5.0",
+                "symfony/var-dumper": "^4.4|^5.0"
+            },
+            "suggest": {
+                "symfony/console": "For the possibility to show log messages in console commands depending on verbosity settings.",
+                "symfony/http-kernel": "For using the debugging handlers together with the response life cycle of the HTTP kernel.",
+                "symfony/var-dumper": "For using the debugging handlers like the console handler or the log server handler."
+            },
+            "type": "symfony-bridge",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Bridge\\Monolog\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Provides integration for Monolog with various Symfony components",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/monolog-bridge/tree/v5.3.14"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-01-02T09:51:59+00:00"
+        },
+        {
+            "name": "symfony/monolog-bundle",
+            "version": "v3.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/monolog-bundle.git",
+                "reference": "a41bbcdc1105603b6d73a7d9a43a3788f8e0fb7d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/monolog-bundle/zipball/a41bbcdc1105603b6d73a7d9a43a3788f8e0fb7d",
+                "reference": "a41bbcdc1105603b6d73a7d9a43a3788f8e0fb7d",
+                "shasum": ""
+            },
+            "require": {
+                "monolog/monolog": "^1.22 || ^2.0 || ^3.0",
+                "php": ">=7.1.3",
+                "symfony/config": "~4.4 || ^5.0 || ^6.0",
+                "symfony/dependency-injection": "^4.4 || ^5.0 || ^6.0",
+                "symfony/http-kernel": "~4.4 || ^5.0 || ^6.0",
+                "symfony/monolog-bridge": "~4.4 || ^5.0 || ^6.0"
+            },
+            "require-dev": {
+                "symfony/console": "~4.4 || ^5.0 || ^6.0",
+                "symfony/phpunit-bridge": "^5.2 || ^6.0",
+                "symfony/yaml": "~4.4 || ^5.0 || ^6.0"
+            },
+            "type": "symfony-bundle",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "3.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Bundle\\MonologBundle\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony MonologBundle",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "log",
+                "logging"
+            ],
+            "support": {
+                "issues": "https://github.com/symfony/monolog-bundle/issues",
+                "source": "https://github.com/symfony/monolog-bundle/tree/v3.8.0"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-05-10T14:24:36+00:00"
         },
         {
             "name": "symfony/options-resolver",
@@ -14741,13 +14765,10 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "common-gateway/formio-bundle": 20,
-        "common-gateway/waardepapieren-bundle": 20,
-        "common-gateway/xxllnc-zgw-bundle": 20,
         "commongateway/corebundle": 20,
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,
-        "conduction/samlbundle": 20,
-        "klantinteractie-servicesysteem/kiss-bundle": 20
+        "conduction/samlbundle": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

@@ -3,6 +3,13 @@ FROM php:7.4-fpm-alpine AS api_platform_php
 # Create a user
 RUN addgroup -S -g 101 commonground-gateway && adduser -S -D -u 101 commonground-gateway
 
+RUN curl -O https://download.microsoft.com/download/b/9/f/b9f3cce4-3925-46d4-9f46-da08869c6486/msodbcsql18_18.1.1.1-1_amd64.apk; \
+    curl -O https://download.microsoft.com/download/b/9/f/b9f3cce4-3925-46d4-9f46-da08869c6486/mssql-tools18_18.1.1.1-1_amd64.apk; \
+    apk add --allow-untrusted  \
+    	msodbcsql18_18.1.1.1-1_amd64.apk \
+    	mssql-tools18_18.1.1.1-1_amd64.apk \
+    ;
+
 RUN apk add --no-cache \
 		acl \
 		file \
@@ -28,6 +35,7 @@ RUN set -eux; \
     	python3 \
     	py-meld3 \
     	py-setuptools \
+    	unixodbc-dev \
 	; \
 	\
 	docker-php-ext-install -j$(nproc) \
@@ -44,6 +52,7 @@ RUN set -eux; \
 		apcu-${APCU_VERSION} \
 		redis \
     	amqp \
+    	sqlsrv \
     	mongodb \
 	; \
 	rm -rf /tmp/pear \
@@ -54,6 +63,7 @@ RUN set -eux; \
 		mysqli \
 		redis \
     	amqp \
+    	sqlsrv \
 	; \
 	\
 	runDeps="$( \

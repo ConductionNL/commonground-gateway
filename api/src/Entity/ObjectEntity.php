@@ -661,6 +661,9 @@ class ObjectEntity
      */
     public function getAttributeObject(string $attributeName)
     {
+        if (!$this->getEntity()) {
+            return false;
+        }
         $attribute = $this->getEntity()->getAttributeByName($attributeName);
 
         // If we have a valid Attribute object
@@ -712,16 +715,29 @@ class ObjectEntity
      *
      * @return false|Value
      */
-    public function setValue($attribute, $value, bool $unsafe = false)
+    public function setValue($attribute, $value, bool $unsafe = false, ?DateTimeInterface $dateModified = null)
     {
         $valueObject = $this->getValueObject($attribute);
         // If we find the Value object we set the value
         if ($valueObject instanceof Value) {
-            return $valueObject->setValue($value, $unsafe);
+            return $valueObject->setValue($value, $unsafe, $dateModified);
         }
 
         // If not return false
         return false;
+    }
+
+    public function setDefaultValues(bool $unsafe = false, ?DateTimeInterface $dateModified = null): self
+    {
+        foreach ($this->getEntity()->getAttributes() as $attribute) {
+            $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('attribute', $attribute))->setMaxResults(1);
+            $values = $this->getObjectValues()->matching($criteria);
+            if ($values->isEmpty() && $attribute->getDefaultValue()) {
+                $this->setValue($attribute, $attribute->getDefaultValue(), $unsafe, $dateModified);
+            }
+        }
+
+        return $this;
     }
 
     /**
@@ -734,13 +750,19 @@ class ObjectEntity
      *
      * @return ObjectEntity
      */
-    public function hydrate(array $array, bool $unsafe = false): ObjectEntity
+    public function hydrate(array $array, bool $unsafe = false, ?DateTimeInterface $dateModified = null): ObjectEntity
     {
         $array = $this->includeEmbeddedArray($array);
         $hydratedValues = [];
 
+        // Change Cascade
+        if (!$dateModified) {
+            $dateModified = new DateTime();
+            $this->changeCascade($dateModified);
+        }
+
         foreach ($array as $key => $value) {
-            $this->setValue($key, $value, $unsafe);
+            $this->setValue($key, $value, $unsafe, $dateModified);
             $hydratedValues[] = $key;
         }
 
@@ -751,6 +773,8 @@ class ObjectEntity
                 }
             }
         }
+
+        $this->setDefaultValues($unsafe, $dateModified);
 
         return $this;
     }
@@ -1008,11 +1032,11 @@ class ObjectEntity
 
         // The new metadata
         $array['_self'] = [
-            'id'           => $this->getId()->toString(),
+            'id'           => $this->getId() ? $this->getId()->toString() : null,
             'self'         => $this->getSelf(),
             'owner'        => $this->getOwner(),
             'organization' => $this->getOrganization(),
-            'application'  => $this->getApplication(),
+            'application'  => $this->getApplication() ? $this->getApplication()->getId()->toString() : null,
             'dateCreated'  => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
             'dateModified' => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
             'level'        => $configuration['level'],
@@ -1021,6 +1045,7 @@ class ObjectEntity
                 'ref' => $this->getEntity()->getReference(),
             ],
             'synchronizations' => $this->getReadableSyncDataArray(),
+            'name'             => $this->getName(),
         ];
 
         // If we dont need the actual object data we can exit here
@@ -1039,17 +1064,18 @@ class ObjectEntity
                     $object = $valueObject->getObjects()->first();
                     $currentObjects[] = $object;
                     // Only add an object if it hasn't bean added yet
-                    if (!in_array($object, $configuration['renderedObjects'])) {
+                    if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
                         $config = $configuration;
-                        $config['renderedObjects'][] = $valueObject->getObjects()->first();
+                        $config['renderedObjects'][] = $object;
+                        $config['level'] = $config['level'] + 1;
                         $objectToArray = $object->toArray($config);
 
                         // Check if we want an embedded array
                         if ($configuration['embedded']) {
                             // todo: put this line back later, with the continue below.
-//                            $array[$attribute->getName()] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
+                            $array[$attribute->getName()] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
                             $embedded[$attribute->getName()] = $objectToArray;
-//                            continue; // todo: put this continue back later!
+                            continue;
                         }
                         $array[$attribute->getName()] = $objectToArray; // getValue will return a single ObjectEntity
                     }
@@ -1061,17 +1087,18 @@ class ObjectEntity
                     $currentObjects[] = $valueObject->getObjects()->toArray();
                     foreach ($valueObject->getObjects() as $object) {
                         // Only add an object if it hasn't bean added yet
-                        if (!in_array($object, $configuration['renderedObjects'])) {
+                        if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
                             $config = $configuration;
                             $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
+                            $config['level'] = $config['level'] + 1;
                             $objectToArray = $object->toArray($config);
 
                             // Check if we want an embedded array
                             if ($configuration['embedded']) {
                                 // todo: put this line back later, with the continue below.
-//                                $array[$attribute->getName()][] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
+                                $array[$attribute->getName()][] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
                                 $embedded[$attribute->getName()][] = $objectToArray;
-//                                continue; // todo: put this continue back later!
+                                continue; // todo: put this continue back later!
                             }
                             $array[$attribute->getName()][] = $objectToArray;
                         }
@@ -1114,11 +1141,11 @@ class ObjectEntity
                     ],
                     'endpoint'          => $synchronization->getEndpoint(),
                     'sourceId'          => $synchronization->getSourceId(),
-                    'dateCreated'       => $synchronization->getDateCreated(),
-                    'dateModified'      => $synchronization->getDateModified(),
-                    'lastChecked'       => $synchronization->getLastChecked(),
-                    'lastSynced'        => $synchronization->getLastSynced(),
-                    'sourceLastChanged' => $synchronization->getSourceLastChanged(),
+                    'dateCreated'       => $synchronization->getDateCreated() ? $synchronization->getDateCreated()->format('c') : null,
+                    'dateModified'      => $synchronization->getDateModified() ? $synchronization->getDateModified()->format('c') : null,
+                    'lastChecked'       => $synchronization->getLastChecked() ? $synchronization->getLastChecked()->format('c') : null,
+                    'lastSynced'        => $synchronization->getLastSynced() ? $synchronization->getLastSynced()->format('c') : null,
+                    'sourceLastChanged' => $synchronization->getSourceLastChanged() ? $synchronization->getSourceLastChanged()->format('c') : null,
                 ];
             }
 
@@ -1307,11 +1334,34 @@ class ObjectEntity
     }
 
     /**
+     * Cascades a 'is changed' upwards, with other words notifies objects that us this object has changed so that they to ara changes.
+     *
+     * @param DateTimeInterface $dateModified
+     *
+     * @return $this
+     */
+    public function changeCascade(DateTimeInterface $dateModified): self
+    {
+        $this->setDateCreated($dateModified);
+
+        // Lets update the date created of parent resources
+        foreach ($this->subresourceOf as $mainResourceValue) {
+            $mainresource = $mainResourceValue->getObjectEntity();
+            if ($mainresource->getDateModified() < $this->getDateModified()) {
+                $mainresource->changeCascade($dateModified);
+            }
+        }
+
+        return  $this;
+    }
+
+    /**
      * Set name on pre persist.
      *
      * This function makes sure that each and every oject alwys has a name when saved
      *
      * @ORM\PrePersist
+     * @ORM\PreUpdate
      */
     public function prePersist(): void
     {
@@ -1327,10 +1377,14 @@ class ObjectEntity
 
             return;
         }
+
         // Lets check agains common names
         $nameProperties = ['name', 'title', 'naam', 'titel'];
         foreach ($nameProperties as $nameProperty) {
             if ($name = $this->getValue($nameProperty)) {
+                if (!is_string($name)) {
+                    continue;
+                }
                 $this->setName($name);
 
                 return;

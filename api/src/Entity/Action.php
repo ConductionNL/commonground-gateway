@@ -229,7 +229,34 @@ class Action
             (isset($schema['title']) ? $this->setName($schema['title']) : '');
             (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
             $this->setClass(get_class($actionHandler));
+            $this->setConditions(['==' => [1, 1]]);
+            $this->setConfiguration($this->getDefaultConfigFromSchema($schema));
         }
+    }
+
+    /**
+     * Gets the default config from a json schema definition of an ActionHandler.
+     *
+     * @param array $schema
+     *
+     * @return array
+     */
+    private function getDefaultConfigFromSchema(array $schema): array
+    {
+        $config = [];
+
+        if (!isset($schema['properties'])) {
+            return $config;
+        }
+
+        // Lets grap al the default values
+        foreach ($schema['properties'] as $key => $property) {
+            if (isset($property['default'])) {
+                $config[$key] = $property['default'];
+            }
+        }
+
+        return $config;
     }
 
     public function getId(): ?UuidInterface

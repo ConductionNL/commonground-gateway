@@ -38,6 +38,8 @@ The gateway offers three forms of authentication:
 
 Bearer Token - Bearer Tokens are the predominant type of access token used with OAuth 2.0. A Bearer Token is an opaque string, not intended to have any meaning to clients using it."
 
+databaseType: postgresql
+
 security:
   authEnabled: true
   certificate:
@@ -172,29 +174,30 @@ podAnnotations: {}
 
 podSecurityContext: {}
 
-securityContextPhp: {}
-#    privileged: false
-#    allowPrivilegeEscalation: false
-#    runAsNonRoot: false
-#    capabilities:
-#      drop:
-#          - all
-#    runAsUser: 101
-#    # Warning: enabling the root filesystem for the PHP container disables the possibility of adding code packages for the gateway on runtime
-#    readOnlyRootFilesystem: false
-securityContextNginx: {}
-#    privileged: false
-#    allowPrivilegeEscalation: false
-#    runAsNonRoot: false
-#    capabilities:
-#      drop:
-#        - all
-#      add:
-#        - chown
-#        - dac_override
-#        - setgid
-#        - setuid
-#        - net_bind_service
+securityContextPhp: 
+    privileged: false
+    allowPrivilegeEscalation: false
+    runAsNonRoot: false
+    capabilities:
+      drop:
+          - all
+    runAsUser: 101
+    # Warning: enabling the root filesystem for the PHP container disables the possibility of adding code packages for the gateway on runtime
+    readOnlyRootFilesystem: false
+securityContextNginx: 
+    privileged: false
+    allowPrivilegeEscalation: false
+    runAsNonRoot: false
+    capabilities:
+      drop:
+        - all
+      add:
+        - chown
+        - dac_override
+        - setgid
+        - setuid
+        - net_bind_service
+    runAsUser: 101
 #    # Warning: the Nginx image is at this moment not able to run on a read-only filesystem.
 #    readOnlyRootFilesystem: false
 

@@ -3,7 +3,319 @@ entries:
   commonground-gateway:
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2022-11-30T15:22:31.079839396+01:00"
+    created: "2022-12-20T13:58:46.126016092+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    description: A Helm chart for Kubernetes
+    digest: 983b11a677afc74360faf9b2d0f5c6fdf2d1fc1f9fb685cefc83209e86d0eaa6
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.1.4.tgz
+    version: 1.1.4
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2022-12-20T13:58:46.072681868+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    description: A Helm chart for Kubernetes
+    digest: 913c29d54faec52526b0c6b704324543494c750a97da5172ae037c3986fc362c
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.1.3.tgz
+    version: 1.1.3
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2022-12-20T13:58:46.024158638+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    description: A Helm chart for Kubernetes
+    digest: c088c0ff558e5a7d4c581da96be75a5394ba15f076f3d8f5eb80ab9f597cc568
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.1.2.tgz
+    version: 1.1.2
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2022-12-20T13:58:45.977022611+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    description: A Helm chart for Kubernetes
+    digest: 5401b47863a972a220dcccc437efb20f3e3d1122b4a2720854c915de85f3cd0c
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.1.1.tgz
+    version: 1.1.1
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2022-12-20T13:58:45.937394625+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    description: A Helm chart for Kubernetes
+    digest: fee897eb8ce0dd5cc8ff1cf6b393f7102c0c4c7a77fdd81a839827886326e107
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.1.0.tgz
+    version: 1.1.0
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2022-12-20T13:58:45.899854547+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    description: A Helm chart for Kubernetes
+    digest: 9d4407defa454697f5cbe419740e4b2046132841d1a542365dfcc0f3530651d3
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.0.7.tgz
+    version: 1.0.7
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2022-12-20T13:58:45.865871613+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    description: A Helm chart for Kubernetes
+    digest: 74205a133c093e633e4044eaef9dd047de2c4b187f5527217080c114ea859d4d
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.0.6.tgz
+    version: 1.0.6
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2022-12-20T13:58:45.831831135+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    description: A Helm chart for Kubernetes
+    digest: 2abc125c901d3bf7a782f78d66b5140842103f603afb4724105edba8a0581a3d
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.0.5.tgz
+    version: 1.0.5
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2022-12-20T13:58:45.796806541+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    description: A Helm chart for Kubernetes
+    digest: a655bc96e9e99489d3872466e02d40043f42ddf055c0801d17b2139762273174
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.0.4.tgz
+    version: 1.0.4
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2022-12-20T13:58:45.756477424+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    description: A Helm chart for Kubernetes
+    digest: ed98e14c4665e44a0e0da726ba993f9cfb9453b30a5fbc96498b403672071834
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.0.3.tgz
+    version: 1.0.3
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2022-12-20T13:58:45.688625515+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    description: A Helm chart for Kubernetes
+    digest: 436c0c304f7e4740b1b7ab94e80f9dffb162eab21a015683b288f28b44fb2556
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.0.2.tgz
+    version: 1.0.2
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2022-12-20T13:58:45.6398676+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 9.0.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    description: A Helm chart for Kubernetes
+    digest: ed1e998dbf05353c3d603b6cfc78a65f3271b5f2b3ab9136cf51f95a764a0d13
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.0.1.tgz
+    version: 1.0.1
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2022-12-20T13:58:45.597136338+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -29,7 +341,7 @@ entries:
     version: 1.0.0
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-11-30T15:22:30.845160605+01:00"
+    created: "2022-12-20T13:58:45.289344639+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -51,7 +363,7 @@ entries:
     version: 0.1.12
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-11-30T15:22:30.823406001+01:00"
+    created: "2022-12-20T13:58:45.25937088+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -73,7 +385,7 @@ entries:
     version: 0.1.11
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-11-30T15:22:30.798656614+01:00"
+    created: "2022-12-20T13:58:45.22996985+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -95,7 +407,7 @@ entries:
     version: 0.1.10
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-11-30T15:22:31.04140967+01:00"
+    created: "2022-12-20T13:58:45.55338417+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -117,7 +429,7 @@ entries:
     version: 0.1.9
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-11-30T15:22:31.004467214+01:00"
+    created: "2022-12-20T13:58:45.525674704+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -139,7 +451,7 @@ entries:
     version: 0.1.8
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-11-30T15:22:30.976912898+01:00"
+    created: "2022-12-20T13:58:45.499476703+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -161,7 +473,7 @@ entries:
     version: 0.1.7
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-11-30T15:22:30.945625684+01:00"
+    created: "2022-12-20T13:58:45.462106573+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -180,7 +492,7 @@ entries:
     version: 0.1.6
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-11-30T15:22:30.927231311+01:00"
+    created: "2022-12-20T13:58:45.438911088+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -199,7 +511,7 @@ entries:
     version: 0.1.5
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-11-30T15:22:30.907967663+01:00"
+    created: "2022-12-20T13:58:45.415407805+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -218,7 +530,7 @@ entries:
     version: 0.1.4
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-11-30T15:22:30.891234681+01:00"
+    created: "2022-12-20T13:58:45.387472835+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -237,7 +549,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-11-30T15:22:30.877337986+01:00"
+    created: "2022-12-20T13:58:45.348464406+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -256,7 +568,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-11-30T15:22:30.774746967+01:00"
+    created: "2022-12-20T13:58:45.201231494+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -275,7 +587,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2022-11-30T15:22:30.748985779+01:00"
+    created: "2022-12-20T13:58:45.164688911+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -297,7 +609,7 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 6.0.3
-    created: "2022-11-30T15:22:31.097881841+01:00"
+    created: "2022-12-20T13:58:46.14805785+01:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -332,7 +644,7 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 15.1.0
-    created: "2022-11-30T15:22:31.116121484+01:00"
+    created: "2022-12-20T13:58:46.16746491+01:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -367,7 +679,7 @@ entries:
       category: Infrastructure
     apiVersion: v2
     appVersion: 3.9.16
-    created: "2022-11-30T15:22:31.128668158+01:00"
+    created: "2022-12-20T13:58:46.179004719+01:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -399,7 +711,7 @@ entries:
       category: Database
     apiVersion: v2
     appVersion: 7.0.5
-    created: "2022-11-30T15:22:31.145391351+01:00"
+    created: "2022-12-20T13:58:46.193768725+01:00"
     dependencies:
     - name: common
       repository: https://charts.bitnami.com/bitnami
@@ -425,4 +737,4 @@ entries:
     urls:
     - charts/redis-17.3.11.tgz
     version: 17.3.11
-generated: "2022-11-30T15:22:30.728548267+01:00"
+generated: "2022-12-20T13:58:45.139755773+01:00"

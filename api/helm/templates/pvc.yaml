@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "commonground-gateway.labels" . | nindent 4 }}
 spec:
-    storageClassName: nfs #as enforced by the Haven standard
+    storageClassName: {{ .Values.pvcStorageClass | default "nfs" }}
     accessModes:
         - ReadWriteMany
     resources:

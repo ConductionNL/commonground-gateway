@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Application;
 use App\Entity\Endpoint;
 use App\Entity\Entity;
+use CommonGateway\CoreBundle\Service\CacheService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
@@ -17,9 +18,12 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class EndpointRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private CacheService $cacheService;
+
+    public function __construct(ManagerRegistry $registry, CacheService $cacheService)
     {
         parent::__construct($registry, Endpoint::class);
+        $this->cacheService = $cacheService;
     }
 
     /**
@@ -34,12 +38,41 @@ class EndpointRepository extends ServiceEntityRepository
      */
     public function findByMethodRegex(string $method, string $path): ?Endpoint
     {
-        $query = $this->createQueryBuilder('e')
+        if ($endpoint = $this->cacheService->getEndpoints(['path' => $path, 'method' => $method])) {
+            return $endpoint;
+        }
+
+        try {
+            $query = $this->createQueryBuilder('e')
+                ->andWhere('LOWER(e.method) = :method')
+                ->andWhere('REGEXP_REPLACE(:path, e.pathRegex, :replace) LIKE :compare')
+                ->setParameters(['method' => strtolower($method), 'path' => $path, 'replace' => 'ItsAMatch', 'compare' => 'ItsAMatch']);
+
+            return $query
+                ->getQuery()
+                ->getOneOrNullResult();
+        } catch (Exception $exception) {
+            return $this->findByMethodRegexAlt($method, $path);
+        }
+    }
+
+    /**
+     * Function with an alternative way to find an Endpoint by given $method and $path. Used if findByMethodRegex caught an Exception.
+     *
+     * @param string $method
+     * @param string $path
+     *
+     * @return Endpoint|null
+     */
+    private function findByMethodRegexAlt(string $method, string $path): ?Endpoint
+    {
+        $endpoint = null;
+        $allEndpoints = $this->createQueryBuilder('e')
             ->andWhere('LOWER(e.method) = :method')
             ->andWhere('REGEXP_REPLACE(:path, e.pathRegex, :replace) LIKE :compare')
             ->setParameters(['method' => strtolower($method), 'path' => $path, 'replace' => 'ItsAMatch', 'compare' => 'ItsAMatch']);
 
-        return $query
+        return $allEndpoints
             ->getQuery()
             ->getOneOrNullResult();
     }
