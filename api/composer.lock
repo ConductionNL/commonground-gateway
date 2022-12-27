@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "921af05322cc295549368be13b0d9d3a",
+    "content-hash": "4cd9311b4daac682989dab6f31c6cb05",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -695,6 +695,103 @@
                 "source": "https://github.com/CommonGateway/FormIOBundle/tree/main"
             },
             "time": "2022-11-16T13:35:03+00:00"
+        },
+        {
+            "name": "common-gateway/xxllnc-zgw-bundle",
+            "version": "0.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/XxllncZGWBundle.git",
+                "reference": "1699948631c9504be615fedef6ac52aa6cff1e4e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/XxllncZGWBundle/zipball/1699948631c9504be615fedef6ac52aa6cff1e4e",
+                "reference": "1699948631c9504be615fedef6ac52aa6cff1e4e",
+                "shasum": ""
+            },
+            "require": {
+                "common-gateway/zgw-bundle": "^0.0.5",
+                "commongateway/corebundle": "dev-master",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\XxllncZGWBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "A package for a symfony flex bundle containing functionality for mapping ZGW api standard to XXLLNC api",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "symfony",
+                "zgw"
+            ],
+            "support": {
+                "issues": "https://github.com/CommonGateway/XxllncZGWBundle/issues",
+                "source": "https://github.com/CommonGateway/XxllncZGWBundle/tree/0.0.1"
+            },
+            "time": "2022-12-27T09:08:30+00:00"
+        },
+        {
+            "name": "common-gateway/zgw-bundle",
+            "version": "0.0.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/ZGWBundle.git",
+                "reference": "936c1889fd1bba074cfb526aa00a74bf307b5ed2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/936c1889fd1bba074cfb526aa00a74bf307b5ed2",
+                "reference": "936c1889fd1bba074cfb526aa00a74bf307b5ed2",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": "dev-master",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\ZGWBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "Symfony bundle for zgw standard functionality",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "symfony",
+                "zgw"
+            ],
+            "support": {
+                "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
+                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.0.5"
+            },
+            "time": "2022-12-09T13:48:26+00:00"
         },
         {
             "name": "commongateway/corebundle",
@@ -5275,54 +5372,6 @@
                 "source": "https://github.com/onelogin/php-saml/"
             },
             "time": "2021-03-02T10:19:19+00:00"
-        },
-        {
-            "name": "open-catalogi/open-catalogi-bundle",
-            "version": "0.0.7",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/OpenCatalogi/OpenCatalogiBundle.git",
-                "reference": "0de67f33f533734b684b01d4b3dfa19ba9553115"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/0de67f33f533734b684b01d4b3dfa19ba9553115",
-                "reference": "0de67f33f533734b684b01d4b3dfa19ba9553115",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": "dev-master",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "OpenCatalogi\\OpenCatalogiBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An example package for creating symfony flex bundles as plugins",
-            "homepage": "https://commongatway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "open catalogi",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/OpenCatalogi/OpenCatalogiBundle/issues",
-                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/0.0.7"
-            },
-            "time": "2022-12-21T10:44:53+00:00"
         },
         {
             "name": "paragonie/random_compat",
