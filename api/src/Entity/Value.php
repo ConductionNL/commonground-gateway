@@ -233,6 +233,8 @@ class Value
         //@We no longer use string value?
         if (is_array($stringValue)) {
             return $this;
+        } elseif ($stringValue instanceof ObjectEntity) {
+            $stringValue = $stringValue->getId()->toString();
         }
         $this->stringValue = $stringValue;
 
@@ -656,7 +658,7 @@ class Value
                     $this->objects->clear();
 
                     // Set a string reprecentation of the object
-                    $this->stringValue = $value->getId();
+                    $this->stringValue = $value->getId()->toString();
 
                     return $this->addObject($value);
 
