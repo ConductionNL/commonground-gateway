@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4cd9311b4daac682989dab6f31c6cb05",
+    "content-hash": "c05fac16135d35b10522874704614c0f",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -1253,16 +1253,16 @@
         },
         {
             "name": "conduction/digidbundle",
-            "version": "dev-feature-jwt",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ConductionNL/digid-bundle.git",
-                "reference": "e25d7b5579cc1fbc26dde0d2e7171fe5ee253f10"
+                "reference": "19c921d51e10bf70b32190cccf7c375aa619ddf9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ConductionNL/digid-bundle/zipball/e25d7b5579cc1fbc26dde0d2e7171fe5ee253f10",
-                "reference": "e25d7b5579cc1fbc26dde0d2e7171fe5ee253f10",
+                "url": "https://api.github.com/repos/ConductionNL/digid-bundle/zipball/19c921d51e10bf70b32190cccf7c375aa619ddf9",
+                "reference": "19c921d51e10bf70b32190cccf7c375aa619ddf9",
                 "shasum": ""
             },
             "require": {
@@ -1274,9 +1274,9 @@
                 "ramsey/uuid": "^3.8",
                 "symfony/cache": "^5.0@stable",
                 "symfony/console": "^5.0@stable",
-                "symfony/event-dispatcher": "^5.0",
-                "symfony/security-bundle": "^5.3"
+                "symfony/event-dispatcher": "^5.0"
             },
+            "default-branch": true,
             "type": "symfony-bundle",
             "autoload": {
                 "psr-4": {
@@ -1310,7 +1310,7 @@
                 "issues": "https://github.com/ConductionNL/digid-bundle/issues",
                 "source": "https://github.com/ConductionNL/digid-bundle"
             },
-            "time": "2022-05-19T08:16:46+00:00"
+            "time": "2021-12-14T13:16:02+00:00"
         },
         {
             "name": "conduction/samlbundle",
