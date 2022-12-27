@@ -14,8 +14,11 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	fi
 
 	mkdir -p var/cache var/log
-	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX var
-	setfacl -dR -m u:www-data:rwX -m u:"$(whoami)":rwX var
+
+#	chmod -R +rwx var
+
+#	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX var
+#	setfacl -dR -m u:www-data:rwX -m u:"$(whoami)":rwX var
 
 	if [ "$READ_ONLY" != 'true' ]; then
 		composer install --prefer-dist --no-progress --no-suggest --no-interaction
@@ -54,8 +57,8 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		#fi
 
     # Load PUBLICCODE from .env and create Collections
-		echo "Update commongateway plugins"
-		bin/console commongateway:composer:update
+	#	echo "Update commongateway plugins"
+	#	bin/console commongateway:composer:update
 	fi
 fi
 exec docker-php-entrypoint "$@"

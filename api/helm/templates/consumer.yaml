@@ -54,7 +54,7 @@ spec:
       containers:
         - name: {{ include "commonground-gateway.fullname" . }}-worker
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            {{- toYaml .Values.securityContextPhp | nindent 12 }}
           image: "{{ .Values.php.repository }}:{{ .Values.php.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.php.pullPolicy }}
           ports:
@@ -263,6 +263,10 @@ spec:
                   key: digid-privatekey
                   name: {{ include "commonground-gateway.fullname" . }}
             {{- end }}
+            {{- end }}
+            {{- if .Values.config.httpsProxy }}
+            -   name: HTTPS_PROXY
+                value: {{ .Values.config.httpsProxy }}
             {{- end }}
 
           resources:

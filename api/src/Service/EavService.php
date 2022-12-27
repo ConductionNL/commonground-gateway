@@ -975,7 +975,7 @@ class EavService
         if (strtolower($method) === 'get' && empty($_SERVER['QUERY_STRING'])) {
             return $vars;
         }
-        $pairs = explode('&', strtolower($method) == 'post' ? file_get_contents('php://input') : $_SERVER['QUERY_STRING']);
+        $pairs = explode('&', $_SERVER['QUERY_STRING']);
         foreach ($pairs as $pair) {
             $nv = explode('=', $pair);
             $name = urldecode($nv[0]);
@@ -983,22 +983,44 @@ class EavService
             if (count($nv) == 2) {
                 $value = urldecode($nv[1]);
             }
-            $matchesCount = preg_match('/(\[.*])/', $name, $matches);
-            if ($matchesCount == 1) {
-                $key = $matches[1];
-                $name = str_replace($key, '', $name);
-                $key = trim($key, '[]');
-                if (!empty($key)) {
-                    $vars[$name][$key] = $value;
-                } else {
-                    $vars[$name][] = $value;
-                }
-                continue;
-            }
-            $vars[$name] = $value;
+
+            $this->recursiveRequestQueryKey($vars, $name, explode('[', $name)[0], $value);
         }
 
         return $vars;
+    }
+
+    /**
+     * This function adds a single query param to the given $vars array. ?$name=$value
+     * Will check if request query $name has [...] inside the parameter, like this: ?queryParam[$nameKey]=$value.
+     * Works recursive, so in case we have ?queryParam[$nameKey][$anotherNameKey][etc][etc]=$value.
+     * Also checks for queryParams ending on [] like: ?queryParam[$nameKey][] (or just ?queryParam[]), if this is the case
+     * this function will add given value to an array of [queryParam][$nameKey][] = $value or [queryParam][] = $value.
+     * If none of the above this function will just add [queryParam] = $value to $vars.
+     *
+     * @param array  $vars    The vars array we are going to store the query parameter in
+     * @param string $name    The full $name of the query param, like this: ?$name=$value
+     * @param string $nameKey The full $name of the query param, unless it contains [] like: ?queryParam[$nameKey]=$value
+     * @param string $value   The full $value of the query param, like this: ?$name=$value
+     *
+     * @return void
+     */
+    private function recursiveRequestQueryKey(array &$vars, string $name, string $nameKey, string $value)
+    {
+        $matchesCount = preg_match('/(\[[^[\]]*])/', $name, $matches);
+        if ($matchesCount > 0) {
+            $key = $matches[0];
+            $name = str_replace($key, '', $name);
+            $key = trim($key, '[]');
+            if (!empty($key)) {
+                $vars[$nameKey] = $vars[$nameKey] ?? [];
+                $this->recursiveRequestQueryKey($vars[$nameKey], $name, $key, $value);
+            } else {
+                $vars[$nameKey][] = $value;
+            }
+        } else {
+            $vars[$nameKey] = $value;
+        }
     }
 
     /**

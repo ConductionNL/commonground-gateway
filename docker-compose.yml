@@ -6,6 +6,7 @@ x-cache:
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-nginx
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-ui
+    - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-cron
 
 services:
   #  gateway-frontend:
@@ -16,6 +17,23 @@ services:
   #    ports:
   #      - "83:80"
   
+  oc:
+    &oc
+    image: ghcr.io/opencatalogi/web-app:dev
+    depends_on:
+      - api
+    ports:
+      - "81:80"
+    volumes:
+      - ./ui/oc.js:/usr/share/nginx/html/env.js:rw,cached 
+        
+  cron:
+    &cron
+    image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}_cron:${APP_ENV}
+    build: ./dockerized-cron
+    depends_on:
+      - api
+    
   ui:
     &ui
     image: ghcr.io/conductionnl/gateway-ui:stag
@@ -25,6 +43,7 @@ services:
       - "8000:80"
     volumes:
       - ./ui/env.js:/usr/share/nginx/html/env.js:rw,cached
+
   php:
     &php
     image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php:${APP_ENV}
@@ -45,7 +64,6 @@ services:
 #      - DATABASE_URL=mysql://api-platform:!ChangeMe!@db/api?serverVersion=10.1
       - CACHE_URL=mongodb://api-platform:!ChangeMe!@mongodb
       - APP_ENV=${APP_ENV}
-      - APP_CONTAINER=${APP_CONTAINER}
       - APP_DEBUG=${APP_DEBUG}
       - APP_CACHE=${APP_CACHE}
       - APP_VERSION=${APP_VERSION}
@@ -60,11 +78,9 @@ services:
       - APP_DESCRIPTION=${APP_DESCRIPTION}
       - APP_LOGO=${APP_LOGO}
       - APP_HOME=${APP_HOME}
-      - APP_COMMONGROUND_ID=${APP_COMMONGROUND_ID}
       - APP_APPLICATION_KEY=${APP_APPLICATION_KEY}
       - APP_BUILD_ALL_FIXTURES=${APP_BUILD_ALL_FIXTURES}
       - APP_WEB=${APP_WEB}
-      - BADGES=${BADGES}
       - APP_BUILD=${APP_BUILD}
       - APP_INTERNAL=${APP_INTERNAL}
       - APP_URL=${APP_URL}
@@ -78,7 +94,6 @@ services:
       - LICENCE_NAME=${LICENCE_NAME}
       - TRUSTED_PROXIES=${TRUSTED_PROXIES}
       - TRUSTED_HOSTS=${TRUSTED_HOSTS}
-      - AUTH_ENABLED=${AUTH_ENABLED}
       - AUDITTRAIL_ENABLED=${AUDITTRAIL_ENABLED}
       - NOTIFICATION_ENABLED=${NOTIFICATION_ENABLED}
       - REDIS_HOST=redis
@@ -123,7 +138,7 @@ services:
     volumes:
       - ./api/public:/srv/api/public:ro
     ports:
-      - "80:80"
+      - "80:8080"
     environment:
       - NGINX_HOST=php
       - NGINX_ENV=${APP_ENV}
