@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "525e084a7255af3699136361657b82c3",
+    "content-hash": "754d04c4425ae46fb362b0fd58fb1799",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -698,20 +698,20 @@
         },
         {
             "name": "common-gateway/xxllnc-zgw-bundle",
-            "version": "0.0.3",
+            "version": "0.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/XxllncZGWBundle.git",
-                "reference": "5bdead99247b9c416b9fa1429788b526d2741f43"
+                "reference": "b4575e958fb563881f976a7879dfcc2f4c564b28"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/XxllncZGWBundle/zipball/5bdead99247b9c416b9fa1429788b526d2741f43",
-                "reference": "5bdead99247b9c416b9fa1429788b526d2741f43",
+                "url": "https://api.github.com/repos/CommonGateway/XxllncZGWBundle/zipball/b4575e958fb563881f976a7879dfcc2f4c564b28",
+                "reference": "b4575e958fb563881f976a7879dfcc2f4c564b28",
                 "shasum": ""
             },
             "require": {
-                "common-gateway/zgw-bundle": "^0.0.5",
+                "common-gateway/zgw-bundle": "^0.0.9",
                 "commongateway/corebundle": "dev-master",
                 "php": ">=7.4"
             },
@@ -741,26 +741,26 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/XxllncZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/XxllncZGWBundle/tree/0.0.3"
+                "source": "https://github.com/CommonGateway/XxllncZGWBundle/tree/0.0.7"
             },
-            "time": "2022-12-27T14:28:15+00:00"
+            "time": "2022-12-28T12:21:52+00:00"
         },
         {
             "name": "common-gateway/zgw-bundle",
-            "version": "0.0.5",
+            "version": "0.0.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/ZGWBundle.git",
-                "reference": "936c1889fd1bba074cfb526aa00a74bf307b5ed2"
+                "reference": "4963035a60763bb57913ff5e4fbe288eac9038b8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/936c1889fd1bba074cfb526aa00a74bf307b5ed2",
-                "reference": "936c1889fd1bba074cfb526aa00a74bf307b5ed2",
+                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/4963035a60763bb57913ff5e4fbe288eac9038b8",
+                "reference": "4963035a60763bb57913ff5e4fbe288eac9038b8",
                 "shasum": ""
             },
             "require": {
-                "commongateway/corebundle": "dev-master",
+                "commongateway/corebundle": ">=0.0.1",
                 "php": ">=7.4"
             },
             "require-dev": {
@@ -789,9 +789,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.0.5"
+                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.0.9"
             },
-            "time": "2022-12-09T13:48:26+00:00"
+            "time": "2022-12-28T11:20:48+00:00"
         },
         {
             "name": "commongateway/corebundle",
