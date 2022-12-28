@@ -726,7 +726,9 @@ class Attribute
         if (array_key_exists('$ref', $property)) {
             $this->setSchema($property['$ref']);
         }
-        if (array_key_exists('items', $property)) {
+        if (array_key_exists('items', $property) && array_key_exists('$ref', $property['items'])) {
+            $this->setSchema($property['items']['$ref']);
+            $this->setMultiple(true);
         }
         if (array_key_exists('maxLength', $property)) {
             $this->setMaxLength($property['maxLength']);
@@ -737,6 +739,8 @@ class Attribute
         if (array_key_exists('default', $property)) {
             $this->setDefaultValue($property['default']);
         }
+
+        $this->setDateModified(new DateTime());
 
         return $this;
     }
@@ -952,6 +956,9 @@ class Attribute
 
     public function setObject(?Entity $object): self
     {
+        if(!$object) {
+            return $this;
+        }
         $this->type = 'object';
         $this->object = $object;
 
@@ -1197,7 +1204,7 @@ class Attribute
 
         // If the attribute type is changes away from an object we need to drop the object
         if ($type != 'object' and $this->object) {
-            unset($this->object);
+            $this->object = null;
         }
 
         return $this;

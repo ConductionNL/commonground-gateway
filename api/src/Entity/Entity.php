@@ -1146,7 +1146,6 @@ class Entity
                 $attribute = new Attribute();
                 $attribute->setName($name);
             }
-
             $this->addAttribute($attribute->fromSchema($property));
         }
 

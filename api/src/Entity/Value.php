@@ -234,6 +234,7 @@ class Value
         if (is_array($stringValue)) {
             return $this;
         } elseif ($stringValue instanceof ObjectEntity) {
+            var_dump($this->getAttribute()->getName());
             $stringValue = $stringValue->getId()->toString();
         }
         $this->stringValue = $stringValue;
@@ -665,7 +666,7 @@ class Value
                 case 'array':
                     return $this->setArrayValue($value);
                 default:
-                    throw new \UnexpectedValueException('Could not create a value for the attribute type of: '.$this->getAttribute()->getType());
+                    throw new \UnexpectedValueException($this->getAttribute()->getEntity()->getName().$this->getAttribute()->getName().': Could not create a value for the attribute type of: '.$this->getAttribute()->getType());
             }
         } else {
             //TODO: correct error handling
