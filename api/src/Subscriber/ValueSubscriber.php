@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Ramsey\Uuid\Uuid;
+use Exception;
 
 class ValueSubscriber implements EventSubscriberInterface
 {
@@ -35,6 +36,9 @@ class ValueSubscriber implements EventSubscriberInterface
             if ($value->getArrayValue()) {
                 foreach ($value->getArrayValue() as $uuid) {
                     $subObject = $this->entityManager->find(ObjectEntity::class, $uuid);
+                    if (!$subObject instanceof ObjectEntity) {
+                        throw new Exception('No object found with uuid: ' . $uuid);
+                    }
                     $value->addObject($subObject);
                 }
                 $value->setArrayValue([]);
