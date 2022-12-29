@@ -9,6 +9,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Gateway as Source;
+use App\Entity\Soap;
 use App\Exception\GatewayException;
 use DateTime;
 use DateTimeInterface;
@@ -117,7 +118,7 @@ class Entity
      * @ORM\OneToOne(targetEntity=Soap::class, fetch="EAGER", mappedBy="fromEntity")
      * @MaxDepth(1)
      */
-    private ?soap $toSoap;
+    private ?Soap $toSoap;
 
     /**
      * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="toEntity", orphanRemoval=true)
