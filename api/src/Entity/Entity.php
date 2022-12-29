@@ -118,7 +118,7 @@ class Entity
      * @ORM\OneToOne(targetEntity=Soap::class, fetch="EAGER", mappedBy="fromEntity")
      * @MaxDepth(1)
      */
-    private ?Soap $toSoap;
+    private ?Soap $toSoap = null;
 
     /**
      * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="toEntity", orphanRemoval=true)
