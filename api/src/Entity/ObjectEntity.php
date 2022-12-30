@@ -308,20 +308,24 @@ class ObjectEntity
         return $this;
     }
 
+    /**
+     * Get a relative link to this object
+     *
+     * Returns iether the path to this object or null if no path kan be established bassed on the endpoint
+     *
+     * @return string|null
+     */
     public function getSelf(): ?string
     {
-        $criteria = Criteria::create()
-            ->andWhere(Criteria::expr()->gt('yearsStudied', 20))
-            ->orderBy(['yearsStudied' => 'DESC'])
-            ->limit(1);
+        $endpoints = $this->getEntity()->getEndpoints();
 
-        $endpoints = $this->getEndpoints()->matching($criteria);
-
-        if(!empty($endpoints)){
-            $endpoint = $endpoints[0];
-            // Do sometehing to build link
-
-            // return link
+        // Let pick the first appropriate endpoint
+        foreach ($endpoints as $endpoint){
+            if(in_array('GET', $endpoint->getMethods()) && in_array('[id]', $endpoint->getPathArray())){
+                $path =  $endpoint->getPathArray();
+                $path[array_search('[id]', $path)] = strval($this->getId());
+                return 'api/'.implode('/',$path);
+            }
         }
 
         return null;
