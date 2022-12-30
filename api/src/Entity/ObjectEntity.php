@@ -736,6 +736,7 @@ class ObjectEntity
      *
      * @param array $array  the data to set
      * @param bool  $unsafe unset atributes that are not inlcuded in the hydrator array
+     * @param DateTime $dateModified the modification date of the objects (defaults to now if omitted)
      *
      * @throws Exception
      *

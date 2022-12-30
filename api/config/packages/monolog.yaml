@@ -1,6 +1,7 @@
 monolog:
     channels:
         - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
+        - plugins #Channel for the common gateway plugin installer
 
 when@dev:
     monolog:
@@ -59,3 +60,8 @@ when@prod:
                 type: stream
                 channels: [deprecation]
                 path: php://stderr
+            pluginInstaller:
+                type: stream
+                channels: [plugins]
+                path: "%kernel.logs_dir%/plugins.log"
+                level: debug

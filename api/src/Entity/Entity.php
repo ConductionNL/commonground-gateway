@@ -1146,7 +1146,7 @@ class Entity
             if(in_array($name,['id','_self','_embeded'])){
                 continue;
             }
-            
+
             // Let see if the attribute exists
             if (!$attribute = $this->getAttributeByName($name)) {
                 $attribute = new Attribute();
