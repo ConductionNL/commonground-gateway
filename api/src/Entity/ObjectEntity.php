@@ -672,6 +672,9 @@ class ObjectEntity
      */
     public function getAttributeObject(string $attributeName)
     {
+        if (!$this->getEntity()) {
+            return false;
+        }
         $attribute = $this->getEntity()->getAttributeByName($attributeName);
 
         // If we have a valid Attribute object
@@ -735,6 +738,19 @@ class ObjectEntity
         return false;
     }
 
+    public function setDefaultValues(bool $unsafe = false, ?DateTimeInterface $dateModified = null): self
+    {
+        foreach ($this->getEntity()->getAttributes() as $attribute) {
+            $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('attribute', $attribute))->setMaxResults(1);
+            $values = $this->getObjectValues()->matching($criteria);
+            if ($values->isEmpty() && $attribute->getDefaultValue()) {
+                $this->setValue($attribute, $attribute->getDefaultValue(), $unsafe, $dateModified);
+            }
+        }
+
+        return $this;
+    }
+
     /**
      * Populate this object with an array of values, where attributes are diffined by key.
      *
@@ -769,6 +785,8 @@ class ObjectEntity
                 }
             }
         }
+
+        $this->setDefaultValues($unsafe, $dateModified);
 
         return $this;
     }
@@ -1039,6 +1057,7 @@ class ObjectEntity
                 'ref' => $this->getEntity()->getReference(),
             ],
             'synchronizations' => $this->getReadableSyncDataArray(),
+            'name'             => $this->getName(),
         ];
 
         // If we dont need the actual object data we can exit here
