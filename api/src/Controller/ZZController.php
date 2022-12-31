@@ -81,18 +81,6 @@ class ZZController extends AbstractController
         // Create array for filtering (in progress, should be moved to the correct service)
         $parameters = ['path' => [], 'query' => [], 'post' => []];
 
-        $pathArray = array_values(array_filter(explode('/', $path)));
-        foreach ($endpoint->getPath() as $key => $pathPart) {
-            if ($pathPart == '{route}') {
-                $parameters['path'][$pathPart] = implode('/', array_slice($pathArray, $key));
-                break;
-            }
-            // Let move path parts that are defined as variables to the filter array
-            if (array_key_exists($key, $pathArray)) {
-                $parameters['path'][$pathPart] = $pathArray[$key];
-            }
-        }
-
         // Lets add the query parameters to the variables
         //todo use eavService->realRequestQueryAll(), maybe replace this function to another service than eavService?
 
@@ -114,6 +102,27 @@ class ZZController extends AbstractController
 
         // Lets get all the post variables
         $parameters['post'] = $request->request->all();
+
+
+
+        // Let handle te path
+        $pathArray = array_values(array_filter(explode('/', $path)));
+        foreach ($endpoint->getPath() as $key => $pathPart) {
+            if ($pathPart == '{route}') {
+                $parameters['path'][$pathPart] = implode('/', array_slice($pathArray, $key));
+                break;
+            }
+            // Let move path parts that are defined as variables to the filter array
+            if (array_key_exists($key, $pathArray)) {
+                $parameters['path'][$pathPart] = $pathArray[$key];
+                //@todo make this hotfix configurable
+                if(!in_array($pathPart,['id'])){
+                    // Add non id data to the query
+                    $parameters['query'][$pathPart] = $pathArray[$key];
+                    $parameters['body'][$pathPart] = $pathArray[$key];
+                }
+            }
+        }
 
         if ($endpoint->getProxy()) {
             return $requestService->proxyHandler($parameters, []);
