@@ -192,9 +192,9 @@ class Gateway
      *     }
      * )
      * @Groups({"read","read_secure","write"})
-     * @ORM\Column(type="text",nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
-    private string $description = '';
+    private ?string $description = '';
 
     /**
      * @var string The location where the Gateway needs to be accessed
@@ -729,7 +729,7 @@ class Gateway
         return $this->description;
     }
 
-    public function setDescription(string $description): self
+    public function setDescription(?string $description): self
     {
         $this->description = $description;
 

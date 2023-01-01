@@ -18,7 +18,7 @@ services:
   #      - "83:80"
   
   oc:
-    &ui
+    &oc
     image: ghcr.io/opencatalogi/web-app:dev
     depends_on:
       - api
@@ -29,6 +29,7 @@ services:
         
   cron:
     &cron
+    image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}_cron:${APP_ENV}
     build: ./dockerized-cron
     depends_on:
       - api
@@ -137,7 +138,7 @@ services:
     volumes:
       - ./api/public:/srv/api/public:ro
     ports:
-      - "80:80"
+      - "80:8080"
     environment:
       - NGINX_HOST=php
       - NGINX_ENV=${APP_ENV}

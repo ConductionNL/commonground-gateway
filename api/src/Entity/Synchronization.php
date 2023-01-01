@@ -184,7 +184,7 @@ class Synchronization
      */
     private $dontSyncBefore;
 
-    public function __construct(?Source $source, ?Entity $entity)
+    public function __construct(?Source $source = null, ?Entity $entity = null)
     {
         if (isset($source)) {
             $this->gateway = $source;
@@ -237,9 +237,19 @@ class Synchronization
         return $this;
     }
 
+    public function getGateway(): ?Source
+    {
+        return $this->getSource();
+    }
+
     public function getSource(): ?Source
     {
         return $this->gateway;
+    }
+
+    public function setGateway(?Source $source): self
+    {
+        return $this->setSource($source);
     }
 
     public function setSource(?Source $source): self

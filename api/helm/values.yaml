@@ -197,7 +197,7 @@ securityContextNginx:
         - setgid
         - setuid
         - net_bind_service
-    runAsUser: 1001
+    runAsUser: 101
 #    # Warning: the Nginx image is at this moment not able to run on a read-only filesystem.
 #    readOnlyRootFilesystem: false
 

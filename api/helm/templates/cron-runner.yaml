@@ -56,6 +56,8 @@ spec:
         
               containers:
                   - name: {{ include "commonground-gateway.fullname" . }}-php
+                    securityContext:
+                      {{- toYaml .Values.securityContextPhp | nindent 22 }}
                     image: "{{ .Values.php.repository }}:{{ .Values.php.tag | default .Chart.AppVersion }}"
                     imagePullPolicy: {{ .Values.php.pullPolicy }}
                     ports:
@@ -125,6 +127,11 @@ spec:
                               secretKeyRef:
                                   key: database-url
                                   name: {{ include "commonground-gateway.fullname" . }}
+                        - name: CACHE_URL
+                          valueFrom:
+                              secretKeyRef:
+                                  key: mongodb-url
+                                  name: {{ include "commonground-gateway.fullname" . }}
                         - name: APP_URL
                           valueFrom:
                               configMapKeyRef:
@@ -156,7 +163,7 @@ spec:
                               configMapKeyRef:
                                   key: cron-runner-appAuth
                                   name: {{ include "commonground-gateway.fullname" . }}
-                        {{- end}}
+                        {{- end }}
         
                         #RabbitMQ
                         - name: RABBITMQ_HOST
@@ -266,7 +273,11 @@ spec:
                                   key: digid-privatekey
                                   name: {{ include "commonground-gateway.fullname" . }}
                         {{- end }}
-                      {{- end }}
+                        {{- end }}
+                        {{- if .Values.config.httpsProxy }}
+                        -   name: HTTPS_PROXY
+                            value: {{ .Values.config.httpsProxy }}
+                        {{- end }}
                 {{- with .Values.nodeSelector }}
               nodeSelector:
                 {{- toYaml . | nindent 16 }}

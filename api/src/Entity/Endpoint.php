@@ -14,6 +14,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
@@ -159,7 +160,7 @@ class Endpoint
      * @ORM\OneToOne(targetEntity=Subscriber::class, mappedBy="endpoint", cascade={"persist", "remove"})
      * @MaxDepth(1)
      */
-    private ?Subscriber $subscriber;
+    private ?Subscriber $subscriber = null;
 
     /**
      * @var ?Collection The collections of this Endpoint
@@ -173,11 +174,10 @@ class Endpoint
     /**
      * @var ?string The operation type calls must be that are requested through this Endpoint
      *
-     * @Assert\Choice({"item", "collection"})
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private string $operationType;
+    private ?string $operationType = null;
 
     /**
      * @var ?array (OAS) tags to identify this Endpoint
@@ -296,8 +296,9 @@ class Endpoint
             $this->setEntity($entity);
             $this->setName($entity->getName());
             $this->setDescription($entity->getDescription());
+            $this->setMethod('GET');
             $this->setMethods(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
-            $this->setPath([1=>'id']);
+            $this->setPath([strtolower($entity->getName())]);
 
             // Lets make a path
             $path = mb_strtolower(str_replace(' ', '_', $entity->getName()));
@@ -317,9 +318,9 @@ class Endpoint
         return $this->id;
     }
 
-    public function setId(UuidInterface $id): self
+    public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
@@ -567,7 +568,7 @@ class Endpoint
         return $this->operationType;
     }
 
-    public function setOperationType(string $operationType): self
+    public function setOperationType(?string $operationType): self
     {
         $this->operationType = $operationType;
 

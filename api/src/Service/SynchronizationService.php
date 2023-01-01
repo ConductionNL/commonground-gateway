@@ -11,6 +11,7 @@ use App\Entity\Synchronization;
 use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
+use DateInterval;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -691,9 +692,7 @@ class SynchronizationService
             return $synchronization;
         }
 
-        $synchronization = new Synchronization();
-        $synchronization->setSource($source);
-        $synchronization->setEntity($entity);
+        $synchronization = new Synchronization($source, $entity);
         $synchronization->setSourceId($sourceId);
         $this->entityManager->persist($synchronization);
         // We flush later
@@ -725,10 +724,8 @@ class SynchronizationService
             return $synchronization;
         }
 
-        $synchronization = new Synchronization();
+        $synchronization = new Synchronization($source, $entity);
         $synchronization->setObject($objectEntity);
-        $synchronization->setSource($source);
-        $synchronization->setEntity($entity);
         $synchronization->setSourceId($objectEntity->getId());
         $synchronization->setBlocked(false);
         $this->entityManager->persist($synchronization);
@@ -809,7 +806,7 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronization object before synchronization
      * @param array           $sourceObject    The object in the source
      *
-     * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError
+     * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError|Exception
      *
      * @return Synchronization The updated synchronization object
      */
@@ -843,9 +840,9 @@ class SynchronizationService
         if ($synchronization->getDontSyncBefore()) {
             $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT'.$addMinutes.'M'));
         } else {
-            $dontTryBefore = new \DateTime();
+            $dontTryBefore = new DateTime();
         }
-        $synchronization->getDontSyncBefore($dontTryBefore);
+        $synchronization->setDontSyncBefore($dontTryBefore);
 
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
 
@@ -884,35 +881,7 @@ class SynchronizationService
     {
         // todo: move this function to ObjectEntityService to prevent duplicate code...
 
-        if (isset($this->io)) {
-            $this->io->text("populateObject $method ObjectEntity with id = {$objectEntity->getId()->toString()}");
-        }
-
-        $this->setApplicationAndOrganization($objectEntity);
-
-        $owner = $this->objectEntityService->checkAndUnsetOwner($data);
-        if (array_key_exists('owner', $this->configuration)) {
-            $owner = $this->configuration['owner'];
-        }
-
-        if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), $method)) {
-            if (isset($this->io)) {
-                $this->io->warning("ValidationErrors: [{$this->objectEntityService->implodeMultiArray($validationErrors)}]");
-            }
-            //@TODO: Write errors to logs
-
-            foreach ($validationErrors as $error) {
-                if (!is_array($error) && strpos($error, 'must be present') !== false) {
-                    return $objectEntity;
-                }
-            }
-        }
-
-        $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'jsonld');
-        // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
-        if (!$this->checkActionConditionsEntity($objectEntity->getEntity()->getId()->toString())) {
-            $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()]);
-        }
+        $objectEntity->hydrate($data);
 
         return $objectEntity;
     }

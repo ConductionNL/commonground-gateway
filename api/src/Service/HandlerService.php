@@ -157,7 +157,7 @@ class HandlerService
         if ($endpoint->getThrows() !== null) {
             // Will use the first throw in array
             foreach ($endpoint->getThrows() as $throw) {
-                $event = new ActionEvent('commongateway.action.event', ['request' => $this->getDataFromRequest(), 'response' => []], $throw);
+                $event = new ActionEvent('commongateway.action.event', ['request' => $this->getDataFromRequest(), 'response' => [], 'parameters' => $this->request], $throw);
                 $this->eventDispatcher->dispatch($event, 'commongateway.action.event');
 
                 return $this->createResponse($event->getData()['response'], $endpoint);

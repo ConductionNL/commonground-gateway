@@ -110,7 +110,7 @@ class Entity
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $endpoint;
+    private $endpoint = '';
 
     /**
      * @Groups({"read","write"})
@@ -153,7 +153,7 @@ class Entity
      *
      * @Assert\Choice({"noFunction","organization", "person", "user", "userGroup", "processingLog"})
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", options={"default":"noFunction"})
+     * @ORM\Column(type="string", options={"default":"noFunction"}, name="function_column")
      */
     private string $function = 'noFunction';
 
@@ -226,7 +226,7 @@ class Entity
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private ?array $availableProperties;
+    private ?array $availableProperties = [];
 
     /**
      * @var array|null The properties used for this entity (for all CRUD calls) if null all properties will be used. This affects which properties will be written / shown.
@@ -325,7 +325,7 @@ class Entity
      * @var ?string The uri to a schema.org object
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null}, name="schema_column")
      */
     private ?string $schema = null;
 
@@ -474,7 +474,7 @@ class Entity
         return $this->endpoint;
     }
 
-    public function setEndpoint(string $endpoint): self
+    public function setEndpoint(?string $endpoint): self
     {
         $this->endpoint = $endpoint;
 

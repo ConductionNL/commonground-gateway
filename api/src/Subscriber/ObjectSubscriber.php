@@ -118,6 +118,15 @@ class ObjectSubscriber implements EventSubscriberInterface
         }
 
         $schema = $this->findSchema($requestIds, $request->getUri());
+        if ($this->route == 'api_object_entities_get_objects_schema_collection') {
+            $objectEntities = $schema->getObjectEntities();
+            $renderedObjectEntities = [];
+            foreach ($objectEntities as &$objectEntity) {
+                $renderedObjectEntities[] = $acceptType === 'json' ? $objectEntity->toArray() : $this->responseService->renderResult($objectEntity, null, null, $acceptType);
+            }
+
+            return $renderedObjectEntities;
+        }
 
         switch ($request->getMethod()) {
             case 'POST':

@@ -71,6 +71,12 @@ spec:
         - name: vendor
           persistentVolumeClaim:
               claimName: {{ include "commonground-gateway.fullname" . }}-vendor
+        - name: tmpfsnginx
+          emptyDir: {}
+        - name: tmpfsnginx2
+          emptyDir: {}
+        - name: tmpfsphp
+          emptyDir: {}
                   
       containers:
         - name: {{ include "commonground-gateway.fullname" . }}-php
@@ -85,6 +91,9 @@ spec:
               subPath: dependencies.yaml
               name: dependencies
               readOnly: true
+            - mountPath: /srv/api/var
+              name: tmpfsphp
+              readOnly: false
             - mountPath: /var/run/certs
               name: app-certificates
               readOnly: true
@@ -308,6 +317,10 @@ spec:
                   name: {{ include "commonground-gateway.fullname" . }}
             {{- end }}
             {{- end }}
+            {{- if .Values.config.httpsProxy }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.config.httpsProxy }}
+            {{- end }}
 
           resources:
             {{- toYaml .Values.php.resources | nindent 12 }}
@@ -316,6 +329,11 @@ spec:
           {{- toYaml .Values.securityContextNginx | nindent 12 }}
           image: "{{ .Values.nginx.repository }}:{{ .Values.nginx.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.nginx.pullPolicy }}
+          volumeMounts:
+              - mountPath: /var/cache/nginx
+                name: tmpfsnginx
+              - mountPath: /var/run
+                name: tmpfsnginx2
           env:
             - name: PHP_SERVICE
               value: localhost
@@ -327,7 +345,7 @@ spec:
               value: {{ .Values.config.env }}
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
               protocol: TCP
           livenessProbe:
             httpGet:
