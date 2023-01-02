@@ -658,7 +658,7 @@ class Value
                     $this->objects->clear();
 
                     // Set a string reprecentation of the object
-                    $this->stringValue = $value->getId()->toString();
+                    // var_dump('schema: '.$this->getObjectEntity()->getEntity()->getName());
                     $value->getId() && $this->stringValue = $value->getId()->toString();
 
                     return $this->addObject($value);
