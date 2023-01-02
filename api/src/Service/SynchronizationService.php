@@ -609,7 +609,7 @@ class SynchronizationService
                     'headers' => $callServiceConfig['headers'],
                 ]
             );
-        } catch (Exception | GuzzleException $exception) {
+        } catch (Exception|GuzzleException $exception) {
             // If no next page with this $page exists...
             if ($errorsInARowCount == 3) {
                 $this->ioCatchException($exception, ['line', 'file', 'message' => [
@@ -621,9 +621,8 @@ class SynchronizationService
 
             //todo: error, log this
 
-
             $this->ioCatchException($exception, ['line', 'file', 'message' => [
-                'preMessage' => 'Failed fetching page ' . $page,
+                'preMessage' => 'Failed fetching page '.$page,
             ]]);
 
             return $this->fetchObjectsFromSource($callServiceConfig, $page + 1, $errorsInARowCount++);
