@@ -27,7 +27,6 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
-use Symfony\Contracts\EventDispatcher\Event;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\SyntaxError;
@@ -766,10 +765,12 @@ class SynchronizationService
                 $this->io->text("Created new ObjectEntity for Synchronization with id = {$synchronization->getId()->toString()}");
             }
             $this->event = new ActionEvent('commongateway.object.create', []);
+
             return 'POST';
         }
 
         $this->event = new ActionEvent('commongateway.object.update', []);
+
         return 'PUT';
     }
 
