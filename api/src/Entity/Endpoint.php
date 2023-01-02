@@ -305,12 +305,12 @@ class Endpoint
             $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
 
             $criteria = Criteria::create()
-                ->orderBy(["date_created" => Criteria::DESC]);
+                ->orderBy(['date_created' => Criteria::DESC]);
             if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
                 $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path;
             }
             $explodedPath = explode('/', $path);
-            if($explodedPath[0] == ''){
+            if ($explodedPath[0] == '') {
                 array_shift($explodedPath);
             }
             $explodedPath[] = 'id';
