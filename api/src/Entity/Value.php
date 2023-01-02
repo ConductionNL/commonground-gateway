@@ -234,7 +234,6 @@ class Value
         if (is_array($stringValue)) {
             return $this;
         } elseif ($stringValue instanceof ObjectEntity) {
-            var_dump($this->getAttribute()->getName());
             $stringValue = $stringValue->getId()->toString();
         }
         $this->stringValue = $stringValue;
