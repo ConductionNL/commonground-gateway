@@ -580,12 +580,13 @@ class SynchronizationService
      *
      * @param array $callServiceConfig The configuration for the source
      * @param int   $page              The current page to be requested
+     * @param ?int  $errorsInARowCount The amount of failed fetches in a row
      *
      * @throws GuzzleException
      *
      * @return array
      */
-    private function fetchObjectsFromSource(array $callServiceConfig, int $page = 1): array
+    private function fetchObjectsFromSource(array $callServiceConfig, int $page = 1, ?int $errorsInARowCount = 0): array
     {
         // Get a single page
         if (is_array($callServiceConfig['query'])) {
@@ -608,15 +609,26 @@ class SynchronizationService
                     'headers' => $callServiceConfig['headers'],
                 ]
             );
-        } catch (Exception|GuzzleException $exception) {
+        } catch (Exception | GuzzleException $exception) {
             // If no next page with this $page exists...
-            $this->ioCatchException($exception, ['line', 'file', 'message' => [
-                'preMessage' => '(This might just be the final page!) - Error while doing fetchObjectsFromSource: ',
-            ]]);
+            if ($errorsInARowCount == 3) {
+                $this->ioCatchException($exception, ['line', 'file', 'message' => [
+                    'preMessage' => '(This might just be the final page!) -  Error while doing fetchObjectsFromSource, tried to fetch page 3 times: ',
+                ]]);
+
+                return [];
+            }
 
             //todo: error, log this
-            return [];
+
+
+            $this->ioCatchException($exception, ['line', 'file', 'message' => [
+                'preMessage' => 'Failed fetching page ' . $page,
+            ]]);
+
+            return $this->fetchObjectsFromSource($callServiceConfig, $page + 1, $errorsInARowCount++);
         }
+
         $pageResult = $this->callService->decodeResponse($callServiceConfig['source'], $response);
 
         $dot = new Dot($pageResult);
@@ -820,8 +832,10 @@ class SynchronizationService
      *
      * @return Synchronization The updated synchronization object
      */
-    public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
+    public function handleSync(Synchronization $synchronization, array $sourceObject = [], ?array $customConfig = null): Synchronization
     {
+        isset($customConfig) && $this->configuration = $customConfig;
+
         if (isset($this->io)) {
             $this->io->text("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
         }
