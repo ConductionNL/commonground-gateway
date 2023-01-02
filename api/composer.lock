@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "919e2dae8db6f2f9ee0c06ef9b79ae5c",
+    "content-hash": "709b7e046b57a19d7c2bcc7fb89aadd4",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -698,16 +698,16 @@
         },
         {
             "name": "common-gateway/xxllnc-zgw-bundle",
-            "version": "0.0.11",
+            "version": "0.0.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/XxllncZGWBundle.git",
-                "reference": "698dcda0f6b38a489698450e3178c559b31bece4"
+                "reference": "2d84b30a26569e36f5c55d317326e0dfe5cf4807"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/XxllncZGWBundle/zipball/698dcda0f6b38a489698450e3178c559b31bece4",
-                "reference": "698dcda0f6b38a489698450e3178c559b31bece4",
+                "url": "https://api.github.com/repos/CommonGateway/XxllncZGWBundle/zipball/2d84b30a26569e36f5c55d317326e0dfe5cf4807",
+                "reference": "2d84b30a26569e36f5c55d317326e0dfe5cf4807",
                 "shasum": ""
             },
             "require": {
@@ -741,9 +741,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/XxllncZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/XxllncZGWBundle/tree/0.0.11"
+                "source": "https://github.com/CommonGateway/XxllncZGWBundle/tree/0.0.12"
             },
-            "time": "2023-01-02T09:08:13+00:00"
+            "time": "2023-01-02T15:16:21+00:00"
         },
         {
             "name": "common-gateway/zgw-bundle",

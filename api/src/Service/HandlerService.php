@@ -154,7 +154,7 @@ class HandlerService
 
         // If no handlers are found check if endpoint throws events
         // Throw event if set
-        if ($endpoint->getThrows() !== null) {
+        if ($endpoint->getThrows() !== null || !empty($endpoint->getThrows())) {
             // Will use the first throw in array
             foreach ($endpoint->getThrows() as $throw) {
                 $event = new ActionEvent('commongateway.action.event', ['request' => $this->getDataFromRequest(), 'response' => [], 'parameters' => $this->request], $throw);

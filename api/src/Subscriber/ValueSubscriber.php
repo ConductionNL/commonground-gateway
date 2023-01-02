@@ -44,6 +44,9 @@ class ValueSubscriber implements EventSubscriberInterface
                 $value->setArrayValue([]);
             } elseif (($uuid = $value->getStringValue()) && Uuid::isValid($value->getStringValue())) {
                 $subObject = $this->entityManager->find(ObjectEntity::class, $uuid);
+                if (!$subObject instanceof ObjectEntity) {
+                    throw new Exception('No object found with uuid: '.$uuid);
+                }
                 $value->addObject($subObject);
             }
         }

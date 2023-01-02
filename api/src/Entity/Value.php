@@ -659,6 +659,7 @@ class Value
 
                     // Set a string reprecentation of the object
                     $this->stringValue = $value->getId()->toString();
+                    $value->getId() && $this->stringValue = $value->getId()->toString();
 
                     return $this->addObject($value);
 
