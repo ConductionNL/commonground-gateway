@@ -848,15 +848,15 @@ App\Entity\Authentication:
             - groups
             - profile
 
-App\Entity\Cronjob:
-    sync:
-        name: synchronizations
-        description: a cronjob that sets off the synchronizations for the various sources
-        crontab: '*/1 * * * *'
-        throws: 
-            - 'commongateway.cronjob.trigger'
-        data: []
-        isEnabled: true
+# App\Entity\Cronjob:
+#     sync:
+#         name: synchronizations
+#         description: a cronjob that sets off the synchronizations for the various sources
+#         crontab: '*/1 * * * *'
+#         throws: 
+#             - 'commongateway.cronjob.trigger'
+#         data: []
+#         isEnabled: true
 
 #App\Entity\Action:
 #    NotificationAction:
