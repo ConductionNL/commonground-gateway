@@ -747,16 +747,16 @@
         },
         {
             "name": "common-gateway/zgw-bundle",
-            "version": "0.1.1",
+            "version": "0.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/ZGWBundle.git",
-                "reference": "876dc366a34d5be6aa340f109f9045c75b01ace7"
+                "reference": "68e135f9caef36612bdb15352ccf3e005afbc506"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/876dc366a34d5be6aa340f109f9045c75b01ace7",
-                "reference": "876dc366a34d5be6aa340f109f9045c75b01ace7",
+                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/68e135f9caef36612bdb15352ccf3e005afbc506",
+                "reference": "68e135f9caef36612bdb15352ccf3e005afbc506",
                 "shasum": ""
             },
             "require": {
@@ -789,9 +789,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.1"
+                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.5"
             },
-            "time": "2022-12-29T13:30:59+00:00"
+            "time": "2023-01-02T09:53:36+00:00"
         },
         {
             "name": "commongateway/corebundle",
@@ -799,12 +799,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "c9b1ee9d19b7e022514c0bc8ca0b192adfde9ca7"
+                "reference": "6b93d58615034052ba7607f05748aa9da73160ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/c9b1ee9d19b7e022514c0bc8ca0b192adfde9ca7",
-                "reference": "c9b1ee9d19b7e022514c0bc8ca0b192adfde9ca7",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/6b93d58615034052ba7607f05748aa9da73160ff",
+                "reference": "6b93d58615034052ba7607f05748aa9da73160ff",
                 "shasum": ""
             },
             "require": {
@@ -863,7 +863,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2022-12-29T12:07:10+00:00"
+            "time": "2023-01-02T14:53:47+00:00"
         },
         {
             "name": "composer/ca-bundle",
