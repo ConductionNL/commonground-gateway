@@ -8,6 +8,7 @@ use App\Entity\Entity;
 use App\Entity\Gateway as Source;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
+use App\Event\ActionEvent;
 use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
@@ -22,6 +23,7 @@ use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -47,6 +49,9 @@ class SynchronizationService
     private SymfonyStyle $io;
     private Environment $twig;
 
+    private ActionEvent $event;
+    private EventDispatcherInterface $eventDispatcher;
+
     private bool $asyncError = false;
 
     /**
@@ -63,7 +68,7 @@ class SynchronizationService
      * @param EavService             $eavService
      * @param Environment            $twig
      */
-    public function __construct(CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig)
+    public function __construct(CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig, EventDispatcherInterface $eventDispatcher)
     {
         $this->callService = $callService;
         $this->entityManager = $entityManager;
@@ -80,6 +85,8 @@ class SynchronizationService
         $this->configuration = [];
         $this->data = [];
         $this->twig = $twig;
+        $this->event = new ActionEvent('', []);
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -757,9 +764,12 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->text("Created new ObjectEntity for Synchronization with id = {$synchronization->getId()->toString()}");
             }
+            $this->event = new ActionEvent('commongateway.object.create', []);
 
             return 'POST';
         }
+
+        $this->event = new ActionEvent('commongateway.object.update', []);
 
         return 'PUT';
     }
@@ -882,6 +892,9 @@ class SynchronizationService
         // todo: move this function to ObjectEntityService to prevent duplicate code...
 
         $objectEntity->hydrate($data);
+
+        $this->event->setData(['response' => $objectEntity->toArray(), 'entity' => $objectEntity->getEntity()->getId()->toString()]);
+        $this->eventDispatcher->dispatch($this->event, $this->event->getType());
 
         return $objectEntity;
     }

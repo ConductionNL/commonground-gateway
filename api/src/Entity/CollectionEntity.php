@@ -237,8 +237,17 @@ class CollectionEntity
      */
     private $plugin;
 
-    public function __construct()
+    public function __construct(?string $name = null, ?string $prefix = null, ?string $plugin = null)
     {
+        if ($name) {
+            $this->setName($name);
+        }
+        if ($prefix) {
+            $this->setPrefix($prefix);
+        }
+        if ($plugin) {
+            $this->setPlugin($plugin);
+        }
         $this->applications = new ArrayCollection();
         $this->endpoints = new ArrayCollection();
         $this->entities = new ArrayCollection();

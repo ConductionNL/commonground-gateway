@@ -22,6 +22,7 @@ return [
     CommonGateway\CoreBundle\CoreBundle::class                                 => ['all' => true],
     Endroid\QrCodeBundle\EndroidQrCodeBundle::class                            => ['all' => true],
     CommonGateway\FormIOBundle\FormIOBundle::class                             => ['all' => true],
-    OpenCatalogi\OpenCatalogiBundle\OpenCatalogiBundle::class                  => ['all' => true],
+    CommonGateway\XxllncZGWBundle\XxllncZGWBundle::class                       => ['all' => true],
+    CommonGateway\ZGWBundle\ZGWBundle::class                                   => ['all' => true],
     Symfony\Bundle\MonologBundle\MonologBundle::class                          => ['all' => true],
 ];
