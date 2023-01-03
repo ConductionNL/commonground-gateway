@@ -161,13 +161,8 @@ class HandlerService
 
             // Will use the first throw in array
             foreach ($endpoint->getThrows() as $throw) {
-                if ($this->request->getMethod() == 'DELETE') {
-                    return $this->createResponse($event->getData()['response'], $endpoint);
-                }
-                
-                $response = json_decode($this->requestService->requestHandler($parameters, [])->getContent(), true);
-
                 if ($this->request->getMethod() == 'POST' || $this->request->getMethod() == 'PUT') {
+                    $response = json_decode($this->requestService->requestHandler($parameters, [])->getContent(), true);
                     $event = new ActionEvent('commongateway.action.event', ['request' => $this->getDataFromRequest(), 'response' => $response, 'parameters' => $this->request], $throw);
                     $this->eventDispatcher->dispatch($event, 'commongateway.action.event');
                 } else {
