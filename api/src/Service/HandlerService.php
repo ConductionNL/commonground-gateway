@@ -161,6 +161,10 @@ class HandlerService
 
             // Will use the first throw in array
             foreach ($endpoint->getThrows() as $throw) {
+                if ($this->request->getMethod() == 'DELETE') {
+                    return $this->createResponse($event->getData()['response'], $endpoint);
+                }
+
                 $response = json_decode($this->requestService->requestHandler($parameters, [])->getContent(), true);
 
                 if ($this->request->getMethod() == 'POST' || $this->request->getMethod() == 'PUT') {
