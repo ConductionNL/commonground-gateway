@@ -163,15 +163,17 @@ class HandlerService
             foreach ($endpoint->getThrows() as $throw) {
                 $response = json_decode($this->requestService->requestHandler($parameters, [])->getContent(), true);
 
-                if ($this->request->getMethod() == 'POST' || $this->request->getMethod() == 'PUT'){
+                if ($this->request->getMethod() == 'POST' || $this->request->getMethod() == 'PUT') {
                     $event = new ActionEvent('commongateway.action.event', ['request' => $this->getDataFromRequest(), 'response' => $response, 'parameters' => $this->request], $throw);
                     $this->eventDispatcher->dispatch($event, 'commongateway.action.event');
                 } else {
                     $event = new ActionEvent('commongateway.action.event', ['request' => $this->getDataFromRequest(), 'response' => [], 'parameters' => $this->request], $throw);
                     $this->eventDispatcher->dispatch($event, 'commongateway.action.event');
+
                     return $this->requestService->requestHandler($parameters, []);
                 }
             }
+
             return $this->createResponse($event->getData()['response'], $endpoint);
         }
 
