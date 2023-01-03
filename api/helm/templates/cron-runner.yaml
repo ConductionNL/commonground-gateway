@@ -53,6 +53,10 @@ spec:
                         name: {{ include "commonground-gateway.fullname" . }}-fixtures
                         defaultMode: 420
                 {{- end }}
+                  - name: vendor
+                    persistentVolumeClaim:
+                        claimName: {{ include "commonground-gateway.fullname" . }}-vendor
+                  
         
               containers:
                   - name: {{ include "commonground-gateway.fullname" . }}-php
@@ -80,6 +84,22 @@ spec:
                           name: fixtures
                           readOnly: true
                       {{- end }}
+                        - mountPath: /srv/api/vendor
+                          subPath: vendor
+                          name: vendor
+                          readOnly: false
+                        - mountPath: /srv/api/composer.json
+                          subPath: composer.json
+                          name: vendor
+                          readOnly: false
+                        - mountPath: /srv/api/composer.lock
+                          subPath: composer.lock
+                          name: vendor
+                          readOnly: false
+                        - mountPath: /srv/api/symfony.lock
+                          subPath: symfony.lock
+                          name: vendor
+                          readOnly: false
                     args:
                         - bin/console
                         - cronjob:command
