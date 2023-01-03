@@ -7,6 +7,9 @@ fi
 if [ ! -f "/tmp/vendor/composer.lock" ]; then
 	cp /srv/api/composer.lock /tmp/vendor/composer.lock
 fi
+if [ ! -f "/tmp/vendor/symfony.lock" ]; then
+	cp /srv/api/symfony.lock /tmp/vendor/symfony.lock
+fi
 if [ ! -d "/tmp/vendor/vendor" ]; then
 	cp /srv/api/vendor /tmp/vendor/vendor -R
 fi
