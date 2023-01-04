@@ -38,6 +38,9 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		echo "Updating the database"
 		bin/console doctrine:schema:update --force --no-interaction
 
+		 echo "Update commongateway plugins"
+		bin/console commongateway:composer:update
+
 		# If you want to retain data in your dev enviroment comment this command out
 		#echo "Loading fixtures"
 		#bin/console hautelook:fixtures:load -n --no-bundles
