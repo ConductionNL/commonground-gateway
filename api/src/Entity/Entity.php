@@ -117,7 +117,7 @@ class Entity
      * @ORM\OneToOne(targetEntity=Soap::class, fetch="EAGER", mappedBy="fromEntity")
      * @MaxDepth(1)
      */
-    private ?soap $toSoap;
+    private ?Soap $toSoap = null;
 
     /**
      * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="toEntity", orphanRemoval=true)
@@ -315,9 +315,10 @@ class Entity
     /**
      * @var ?Collection The collections of this Entity
      *
-     * @Groups({"write"})
+     * @Groups({"write", "read"})
      * @MaxDepth(1)
-     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="entities", fetch="EXTRA_LAZY")
+     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="entities")
+     * @ORM\OrderBy({"dateCreated" = "DESC"})
      */
     private ?Collection $collections;
 
@@ -1146,7 +1147,6 @@ class Entity
                 $attribute = new Attribute();
                 $attribute->setName($name);
             }
-
             $this->addAttribute($attribute->fromSchema($property));
         }
 

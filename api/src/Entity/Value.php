@@ -233,6 +233,8 @@ class Value
         //@We no longer use string value?
         if (is_array($stringValue)) {
             return $this;
+        } elseif ($stringValue instanceof ObjectEntity) {
+            $stringValue = $stringValue->getId()->toString();
         }
         $this->stringValue = $stringValue;
 
@@ -656,14 +658,15 @@ class Value
                     $this->objects->clear();
 
                     // Set a string reprecentation of the object
-                    $this->stringValue = $value->getId();
+                    // var_dump('schema: '.$this->getObjectEntity()->getEntity()->getName());
+                    $value->getId() && $this->stringValue = $value->getId()->toString();
 
                     return $this->addObject($value);
 
                 case 'array':
                     return $this->setArrayValue($value);
                 default:
-                    throw new \UnexpectedValueException('Could not create a value for the attribute type of: '.$this->getAttribute()->getType());
+                    throw new \UnexpectedValueException($this->getAttribute()->getEntity()->getName().$this->getAttribute()->getName().': Could not create a value for the attribute type of: '.$this->getAttribute()->getType());
             }
         } else {
             //TODO: correct error handling

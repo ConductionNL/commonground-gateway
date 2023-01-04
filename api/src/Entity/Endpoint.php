@@ -12,6 +12,7 @@ use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
@@ -168,6 +169,7 @@ class Endpoint
      * @Groups({"read", "write"})
      * @MaxDepth(1)
      * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="endpoints")
+     * @ORM\OrderBy({"dateCreated" = "DESC"})
      */
     private ?Collection $collections;
 
@@ -282,7 +284,7 @@ class Endpoint
      */
     private $proxy;
 
-    public function __construct(?Entity $entity = null)
+    public function __construct(?Entity $entity = null, ?array $customPaths = null, array $methods = [])
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
@@ -297,16 +299,58 @@ class Endpoint
             $this->setName($entity->getName());
             $this->setDescription($entity->getDescription());
             $this->setMethod('GET');
-            $this->setMethods(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
-            $this->setPath([strtolower($entity->getName())]);
+            $this->setMethods($methods !== [] ? $methods : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
-            // Lets make a path
-            $path = mb_strtolower(str_replace(' ', '_', $entity->getName()));
-            if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->first()->getPrefix()) {
-                $path = $entity->getCollections()->first()->getPrefix().$path;
+            $paths = [];
+            foreach ($customPaths as $customPath) {
+                // Lets make a path
+                $paths[] = $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
             }
-            $pathRegEx = '^'.$path.'/?([a-z0-9-]+)?$';
-            $this->setPathRegex($pathRegEx);
+
+            $criteria = Criteria::create()
+                ->orderBy(['date_created' => Criteria::DESC]);
+            if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
+                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path[0];
+            }
+            $exploded = explode('/', $path);
+            $explodedPathArray = [];
+            $explodedPathArray[] = $exploded[0];
+            foreach ($paths as $pathAsString) {
+                $explodedPath = explode('/', $pathAsString);
+                if ($explodedPath[0] == '') {
+                    array_shift($explodedPath);
+                }
+                $explodedPathArray[] = $explodedPath[0];
+            }
+
+            $explodedPrefixPath = explode('/', $path);
+            if ($explodedPrefixPath[0] == '') {
+                array_shift($explodedPrefixPath);
+            }
+
+            $explodedPathArray[] = 'id';
+            $this->setPath($explodedPathArray);
+
+            $countPaths = count($paths);
+            $counter = 1;
+            $pathRegEx = [];
+            if ($countPaths > 0) {
+                foreach ($paths as $pathArray) {
+                    if ($counter == 1) {
+                        $pathRegEx[] = '^'.$explodedPrefixPath[0];
+                    }
+
+                    if ($counter == $countPaths) {
+                        $pathRegEx[] = $pathArray.'/?([a-z0-9-]+)?$';
+                    } else {
+                        $pathRegEx[] = $pathArray.'/?([a-z0-9-]+)?';
+                    }
+                    $counter++;
+                }
+            }
+
+            $implodePathRegEx = implode($pathRegEx);
+            $this->setPathRegex($implodePathRegEx);
 
             /*@depricated kept here for lagacy */
             $this->setOperationType('GET');
