@@ -92,7 +92,7 @@ ENV COMPOSER_ALLOW_SUPERUSER=1
 
 # install Symfony Flex globally to speed up download of Composer packages (parallelized prefetching)
 RUN set -eux; \
-    composer global config allow-plugins.symfony/flex true; \
+    composer global config allow-plugins.symfony/flex true allow-plugins.endroid/installer true; \
 	composer global require "symfony/flex" --prefer-dist --no-progress --no-suggest --classmap-authoritative --no-scripts; \
 	composer clear-cache
 ENV PATH="${PATH}:/root/.composer/vendor/bin"
