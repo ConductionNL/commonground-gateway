@@ -93,7 +93,10 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
             throw new AuthenticationException('The provided token is not valid');
         }
         $now = new \DateTime();
-        if ($payload['exp'] < $now->getTimestamp()) {
+        $iat = new \DateTime();
+        $iat->setTimestamp($payload['iat']);
+        $exp = $iat->modify('+1 Hour');
+        if ((!isset($payload['exp']) && $exp->getTimestamp() < $now->getTimestamp()) || (isset($payload['exp']) && $payload['exp'] < $now->getTimestamp())) {
             throw new AuthenticationException('The provided token has expired');
         }
 
