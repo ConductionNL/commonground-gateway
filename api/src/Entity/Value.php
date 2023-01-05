@@ -583,7 +583,7 @@ class Value
                     } elseif (!$value) {
                         continue;
                     } elseif ($value instanceof ObjectEntity) {
-                            $this->addObject($value);
+                        $this->addObject($value);
                     }
                 }
 
@@ -627,8 +627,10 @@ class Value
                     if (is_array($value)) {
                         if (key_exists('datum', $value)) {
                             var_dump($value['datum']);
+
                             return $this->setDateTimeValue(new DateTime($value['datum']));
                         }
+
                         return $this->setDateTimeValue(null);
                     }
 
