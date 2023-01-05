@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "709b7e046b57a19d7c2bcc7fb89aadd4",
+    "content-hash": "96319ba124985a4f783e67c74bb5b70b",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -659,6 +659,54 @@
             "time": "2020-10-24T20:01:03+00:00"
         },
         {
+            "name": "common-gateway/brp-bundle",
+            "version": "0.0.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/BRPBundle.git",
+                "reference": "6b45fb128c5dc623e9497a68b04f50536a4882d3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/BRPBundle/zipball/6b45fb128c5dc623e9497a68b04f50536a4882d3",
+                "reference": "6b45fb128c5dc623e9497a68b04f50536a4882d3",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": ">=0.0.1",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\BRPBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An example package for creating symfony flex bundles as plugins",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "pet store",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/CommonGateway/BRPBundle/issues",
+                "source": "https://github.com/CommonGateway/BRPBundle/tree/0.0.6"
+            },
+            "time": "2023-01-04T13:28:06+00:00"
+        },
+        {
             "name": "common-gateway/formio-bundle",
             "version": "dev-main",
             "source": {
@@ -697,22 +745,21 @@
             "time": "2022-11-16T13:35:03+00:00"
         },
         {
-            "name": "common-gateway/xxllnc-zgw-bundle",
-            "version": "0.0.12",
+            "name": "common-gateway/klanten-bundle",
+            "version": "0.0.9",
             "source": {
                 "type": "git",
-                "url": "https://github.com/CommonGateway/XxllncZGWBundle.git",
-                "reference": "2d84b30a26569e36f5c55d317326e0dfe5cf4807"
+                "url": "https://github.com/CommonGateway/KlantenBundle.git",
+                "reference": "92219f038ad2e3e8055bb7bd068361b4d6205561"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/XxllncZGWBundle/zipball/2d84b30a26569e36f5c55d317326e0dfe5cf4807",
-                "reference": "2d84b30a26569e36f5c55d317326e0dfe5cf4807",
+                "url": "https://api.github.com/repos/CommonGateway/KlantenBundle/zipball/92219f038ad2e3e8055bb7bd068361b4d6205561",
+                "reference": "92219f038ad2e3e8055bb7bd068361b4d6205561",
                 "shasum": ""
             },
             "require": {
-                "common-gateway/zgw-bundle": "^0.1.0",
-                "commongateway/corebundle": "dev-master",
+                "commongateway/corebundle": ">=0.0.1",
                 "php": ">=7.4"
             },
             "require-dev": {
@@ -721,14 +768,14 @@
             "type": "symfony-bundle",
             "autoload": {
                 "psr-4": {
-                    "CommonGateway\\XxllncZGWBundle\\": ""
+                    "CommonGateway\\KlantenBundle\\": ""
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "EUPL-1.2"
             ],
-            "description": "A package for a symfony flex bundle containing functionality for mapping ZGW api standard to XXLLNC api",
+            "description": "An example package for creating symfony flex bundles as plugins",
             "homepage": "https://commongateway.nl",
             "keywords": [
                 "common",
@@ -736,27 +783,27 @@
                 "commongateway",
                 "conduction",
                 "gateway",
-                "symfony",
-                "zgw"
+                "pet store",
+                "symfony"
             ],
             "support": {
-                "issues": "https://github.com/CommonGateway/XxllncZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/XxllncZGWBundle/tree/0.0.12"
+                "issues": "https://github.com/CommonGateway/KlantenBundle/issues",
+                "source": "https://github.com/CommonGateway/KlantenBundle/tree/0.0.9"
             },
-            "time": "2023-01-02T15:16:21+00:00"
+            "time": "2023-01-04T13:28:00+00:00"
         },
         {
             "name": "common-gateway/zgw-bundle",
-            "version": "0.1.7",
+            "version": "0.1.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/ZGWBundle.git",
-                "reference": "517be086aa8fbdc35226c3cedf40dcfa18d14474"
+                "reference": "2e1a58c253e28b9d0badeb8e34dcecaf70a2020e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/517be086aa8fbdc35226c3cedf40dcfa18d14474",
-                "reference": "517be086aa8fbdc35226c3cedf40dcfa18d14474",
+                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/2e1a58c253e28b9d0badeb8e34dcecaf70a2020e",
+                "reference": "2e1a58c253e28b9d0badeb8e34dcecaf70a2020e",
                 "shasum": ""
             },
             "require": {
@@ -789,9 +836,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.7"
+                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.8"
             },
-            "time": "2023-01-03T17:04:11+00:00"
+            "time": "2023-01-05T06:31:00+00:00"
         },
         {
             "name": "commongateway/corebundle",
@@ -4333,6 +4380,58 @@
                 "source": "https://github.com/khanamiryan/php-qrcode-detector-decoder/tree/1.0.6"
             },
             "time": "2022-06-29T09:25:13+00:00"
+        },
+        {
+            "name": "klantinteractie-servicesysteem/kiss-bundle",
+            "version": "0.0.12",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Klantinteractie-Servicesysteem/KissBundle.git",
+                "reference": "ab11578ae2d88ad719433bc09eb443d7a6fafa91"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/ab11578ae2d88ad719433bc09eb443d7a6fafa91",
+                "reference": "ab11578ae2d88ad719433bc09eb443d7a6fafa91",
+                "shasum": ""
+            },
+            "require": {
+                "common-gateway/brp-bundle": ">=0.0.1",
+                "common-gateway/klanten-bundle": ">=0.0.1",
+                "common-gateway/zgw-bundle": ">=0.0.1",
+                "commongateway/corebundle": ">=0.0.1",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "Kiss\\KissBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An example package for creating symfony flex bundles as plugins",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "dimpact",
+                "gateway",
+                "kiss",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/issues",
+                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/0.0.12"
+            },
+            "time": "2023-01-05T10:36:01+00:00"
         },
         {
             "name": "knplabs/knp-markdown-bundle",

@@ -17,23 +17,21 @@ services:
   #    ports:
   #      - "83:80"
   
-  oc:
-    &oc
-    image: ghcr.io/opencatalogi/web-app:dev
+  kiss:
+    &ui
+    image: ghcr.io/klantinteractie-servicesysteem/kiss-frontend:dev
     depends_on:
       - api
     ports:
       - "81:80"
-    volumes:
-      - ./ui/oc.js:/usr/share/nginx/html/env.js:rw,cached 
-        
+
   cron:
     &cron
     image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}_cron:${APP_ENV}
     build: ./dockerized-cron
     depends_on:
       - api
-    
+
   ui:
     &ui
     image: ghcr.io/conductionnl/gateway-ui:stag
