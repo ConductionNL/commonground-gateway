@@ -68,28 +68,28 @@ spec:
             name: {{ include "commonground-gateway.fullname" . }}-doctrineconfig
             defaultMode: 420
         {{- end }}
-        - name: vendor
-          persistentVolumeClaim:
-              claimName: {{ include "commonground-gateway.fullname" . }}-vendor
+{{/*        - name: vendor*/}}
+{{/*          persistentVolumeClaim:*/}}
+{{/*              claimName: {{ include "commonground-gateway.fullname" . }}-vendor*/}}
         - name: tmpfsnginx
           emptyDir: {}
         - name: tmpfsnginx2
           emptyDir: {}
         - name: tmpfsphp
           emptyDir: {}
-      initContainers:
-          - name: {{ include "commonground-gateway.fullname" . }}-init          
-            securityContext:
-              {{- toYaml .Values.securityContextPhp | nindent 14 }}
-            image: "{{ .Values.php.repository }}:{{ .Values.php.tag | default .Chart.AppVersion }}"
-            imagePullPolicy: {{ .Values.php.pullPolicy }}
-            volumeMounts:
-              - mountPath: /tmp/vendor
-                name: vendor
-                readOnly: false
-            command:
-              - bash
-              - /srv/api/docker/php/online-copy-vendor.sh
+{{/*      initContainers:*/}}
+{{/*          - name: {{ include "commonground-gateway.fullname" . }}-init          */}}
+{{/*            securityContext:*/}}
+{{/*              {{- toYaml .Values.securityContextPhp | nindent 14 }}*/}}
+{{/*            image: "{{ .Values.php.repository }}:{{ .Values.php.tag | default .Chart.AppVersion }}"*/}}
+{{/*            imagePullPolicy: {{ .Values.php.pullPolicy }}*/}}
+{{/*            volumeMounts:*/}}
+{{/*              - mountPath: /tmp/vendor*/}}
+{{/*                name: vendor*/}}
+{{/*                readOnly: false*/}}
+{{/*            command:*/}}
+{{/*              - bash*/}}
+{{/*              - /srv/api/docker/php/online-copy-vendor.sh*/}}
       containers:
         - name: {{ include "commonground-gateway.fullname" . }}-php
           securityContext:
@@ -131,22 +131,22 @@ spec:
               name: doctrine
               readOnly: true
             {{- end }}
-            - mountPath: /srv/api/vendor
-              subPath: vendor
-              name: vendor
-              readOnly: false
-            - mountPath: /srv/api/composer.json
-              subPath: composer.json
-              name: vendor
-              readOnly: false
-            - mountPath: /srv/api/composer.lock
-              subPath: composer.lock
-              name: vendor
-              readOnly: false
-            - mountPath: /srv/api/symfony.lock
-              subPath: symfony.lock
-              name: vendor
-              readOnly: false
+{{/*            - mountPath: /srv/api/vendor*/}}
+{{/*              subPath: vendor*/}}
+{{/*              name: vendor*/}}
+{{/*              readOnly: false*/}}
+{{/*            - mountPath: /srv/api/composer.json*/}}
+{{/*              subPath: composer.json*/}}
+{{/*              name: vendor*/}}
+{{/*              readOnly: false*/}}
+{{/*            - mountPath: /srv/api/composer.lock*/}}
+{{/*              subPath: composer.lock*/}}
+{{/*              name: vendor*/}}
+{{/*              readOnly: false*/}}
+{{/*            - mountPath: /srv/api/symfony.lock*/}}
+{{/*              subPath: symfony.lock*/}}
+{{/*              name: vendor*/}}
+{{/*              readOnly: false*/}}
           env:
             - name: APP_ENV
               value: {{ .Values.config.env }}
