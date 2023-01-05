@@ -150,9 +150,9 @@ postgresql:
     tag: 11
     pullPolicy: IfNotPresent
   auth:
-    postgresqlUsername: 'commonground-gateway'
-    postgresqlPassword: '!ChangeMe!'
-    postgresqlDatabase: 'commonground-gateway'
+    postgresUsername: 'commonground-gateway'
+    postgresPassword: '!ChangeMe!'
+    postgresDatabase: 'commonground-gateway'
   # Persistent Volume Storage configuration.
   # ref: https://kubernetes.io/docs/user-guide/persistent-volumes
   persistence:
