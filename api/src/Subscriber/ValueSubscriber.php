@@ -29,7 +29,7 @@ class ValueSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function getSubObject(string $uuid): ObjectEntity
+    public function getSubObject(string $uuid): ?ObjectEntity
     {
         if ($subObject = $this->entityManager->find(ObjectEntity::class, $uuid)) {
             if (!$subObject instanceof ObjectEntity) {
@@ -46,16 +46,18 @@ class ValueSubscriber implements EventSubscriberInterface
 
     public function preUpdate(LifecycleEventArgs $value): void
     {
-        if ($value instanceof Value && $value->getAttribute()->getType() == 'object') {
-            if ($value->getArrayValue()) {
-                foreach ($value->getArrayValue() as $uuid) {
+        $valueObject = $value->getObject();
+
+        if ($valueObject instanceof Value && $valueObject->getAttribute()->getType() == 'object') {
+            if ($valueObject->getArrayValue()) {
+                foreach ($valueObject->getArrayValue() as $uuid) {
                     $subObject = $this->getSubObject($uuid);
-                    $value->addObject($subObject);
+                    $subObject && $valueObject->addObject($subObject);
                 }
-                $value->setArrayValue([]);
-            } elseif (($uuid = $value->getStringValue()) && Uuid::isValid($value->getStringValue())) {
+                $valueObject->setArrayValue([]);
+            } elseif (($uuid = $valueObject->getStringValue()) && Uuid::isValid($valueObject->getStringValue())) {
                 $subObject = $this->getSubObject($uuid);
-                $value->addObject($subObject);
+                $subObject && $valueObject->addObject($subObject);
             }
         }
     }
