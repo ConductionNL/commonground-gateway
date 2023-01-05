@@ -310,6 +310,27 @@ class ObjectEntity
 
     public function getSelf(): ?string
     {
+        if (!isset($this->self)) {
+            // Multiple endpoints on a entity is problematic but we can work with it
+            if ($this->getEntity() !== null && $this->getEntity()->getEndpoints() !== null && !empty($this->getEntity()->getEndpoints()) && $this->getEntity()->getEndpoints()->first() !== false) {
+                $pathArray = $this->getEntity()->getEndpoints()->first()->getPath();
+                $pathString = '/api';
+                $idSet = false;
+                foreach ($pathArray as $pathItem) {
+                    if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
+                        $idSet = true;
+                        $pathString .= '/' . $this->getId()->toString();
+                    } else {
+                        $pathString .= '/' . $pathItem;
+                    }
+                }
+                $idSet == false && $pathString .= '/' . $this->getId()->toString();;
+            } else {
+                $pathString = '/api' . ($this->getEntity()->getRoute() ?? '/' . strtolower($this->getEntity()->getName()) . '/' . $this->getId());
+            }
+            $this->self = $pathString;
+        }
+
         return $this->self;
     }
 
@@ -1073,7 +1094,8 @@ class ObjectEntity
                         // Check if we want an embedded array
                         if ($configuration['embedded']) {
                             // todo: put this line back later, with the continue below.
-                            $array[$attribute->getName()] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
+                            // $array[$attribute->getName()] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
+                            $array[$attribute->getName()] = $object->getSelf();
                             $embedded[$attribute->getName()] = $objectToArray;
                             continue;
                         }
@@ -1081,7 +1103,8 @@ class ObjectEntity
                     }
                     // If we don't set the full object then we want to set self
                     else {
-                        $array[$attribute->getName()] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
+                        // $array[$attribute->getName()] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
+                        $array[$attribute->getName()] = $object->getSelf();
                     }
                 } elseif ($configuration['level'] < $configuration['maxdepth']) {
                     $currentObjects[] = $valueObject->getObjects()->toArray();
@@ -1096,7 +1119,8 @@ class ObjectEntity
                             // Check if we want an embedded array
                             if ($configuration['embedded']) {
                                 // todo: put this line back later, with the continue below.
-                                $array[$attribute->getName()][] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
+                                // $array[$attribute->getName()][] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
+                                $array[$attribute->getName()][] = $object->getSelf();
                                 $embedded[$attribute->getName()][] = $objectToArray;
                                 continue; // todo: put this continue back later!
                             }
@@ -1104,7 +1128,8 @@ class ObjectEntity
                         }
                         // If we don't set the full object then we want to set self
                         else {
-                            $array[$attribute->getName()][] = $object->getSelf() ?? ('/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId());
+                            // $array[$attribute->getName()][] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
+                            $array[$attribute->getName()][] = $object->getSelf();
                         }
                     }
                 }
