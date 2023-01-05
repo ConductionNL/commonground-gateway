@@ -320,14 +320,14 @@ class ObjectEntity
                 foreach ($pathArray as $pathItem) {
                     if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
                         $idSet = true;
-                        $pathString .= '/' . $this->getId()->toString();
+                        $pathString .= '/'.$this->getId()->toString();
                     } else {
-                        $pathString .= '/' . $pathItem;
+                        $pathString .= '/'.$pathItem;
                     }
                 }
-                $idSet == false && $pathString .= '/' . $this->getId()->toString();;
+                $idSet == false && $pathString .= '/'.$this->getId()->toString();
             } else {
-                $pathString = '/api' . ($this->getEntity()->getRoute() ?? '/' . strtolower($this->getEntity()->getName()) . '/' . $this->getId());
+                $pathString = '/api'.($this->getEntity()->getRoute() ?? '/'.strtolower($this->getEntity()->getName()).'/'.$this->getId());
             }
             $this->self = $pathString;
         }
