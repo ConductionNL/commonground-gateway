@@ -2,7 +2,6 @@
 
 namespace App\Subscriber;
 
-use App\Entity\Attribute;
 use App\Entity\ObjectEntity;
 use App\Entity\Value;
 use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
@@ -41,7 +40,6 @@ class ValueSubscriber implements EventSubscriberInterface
                 throw new Exception('No object found with uuid: '.$uuid);
             }
         }
-
 
         return $subObject;
     }
