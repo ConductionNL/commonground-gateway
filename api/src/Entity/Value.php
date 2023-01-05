@@ -580,10 +580,10 @@ class Value
 
                     if (is_string($value)) {
                         $idArray[] = $value;
-                    } elseif ($value == null) {
+                    } elseif (!$value) {
                         continue;
-                    } else {
-                        $this->addObject($value);
+                    } elseif ($value instanceof ObjectEntity) {
+                            $this->addObject($value);
                     }
                 }
 
@@ -621,6 +621,14 @@ class Value
                             return $this->setArrayValue(null);
                         }
 
+                        return $this->setDateTimeValue(null);
+                    }
+
+                    if (is_array($value)) {
+                        if (key_exists('datum', $value)) {
+                            var_dump($value['datum']);
+                            return $this->setDateTimeValue(new DateTime($value['datum']));
+                        }
                         return $this->setDateTimeValue(null);
                     }
 
