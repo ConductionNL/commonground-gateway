@@ -37,17 +37,15 @@ class ValueSubscriber implements EventSubscriberInterface
             }
         } elseif ($subObject = $this->entityManager->getRepository(ObjectEntity::class)->findByAnyId($uuid)) {
             if (!$subObject instanceof ObjectEntity) {
-                throw new Exception('No object found with uuid: ' . $uuid);
+                throw new Exception('No object found with uuid: '.$uuid);
             }
         }
 
         return $subObject;
     }
 
-
     public function preUpdate(LifecycleEventArgs $value): void
     {
-
         if ($value instanceof Value && $value->getAttribute()->getType() == 'object') {
             if ($value->getArrayValue()) {
                 foreach ($value->getArrayValue() as $uuid) {
