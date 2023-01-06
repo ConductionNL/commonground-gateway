@@ -570,7 +570,6 @@ class Value
 
                     // Catch Array input (for hydrator)
                     if (is_array($value)) {
-
                         $valueObject = new ObjectEntity($this->getAttribute()->getObject());
                         if (key_exists('_id', $value)) {
                             $valueObject->setExternalId($value['_id']);
