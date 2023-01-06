@@ -311,23 +311,36 @@ class ObjectEntity
 
     public function getSelf(): ?string
     {
+        // If self not set we generate a uri with linked endpoints
         if (!isset($this->self)) {
-            // Multiple endpoints on a entity is problematic but we can work with it
-            if ($this->getEntity() !== null && $this->getEntity()->getEndpoints() !== null && !empty($this->getEntity()->getEndpoints()) && $this->getEntity()->getEndpoints()->first() !== false) {
-                $pathArray = $this->getEntity()->getEndpoints()->first()->getPath();
-                $pathString = '/api';
-                $idSet = false;
-                foreach ($pathArray as $pathItem) {
-                    if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
-                        $idSet = true;
-                        $pathString .= '/'.$this->getId()->toString();
-                    } else {
-                        $pathString .= '/'.$pathItem;
+            if ($this->getEntity() !== null) {
+                $endpoints = $this->getEntity()->getEndpoints();
+                foreach ($endpoints as $endpoint) {
+                    // We need a GET endpoint
+                    if (!in_array('get', $endpoint->getMethods()) && !in_array('GET', $endpoint->getMethods())) {
+                        continue;
                     }
+                    $pathArray = $endpoint->getPath() ?? [];
+                    $pathString = '/api';
+                    $idSet = false;
+                    // Add path item to self uri
+                    foreach ($pathArray as $pathItem) {
+                        if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
+                            $idSet = true;
+                            $pathString .= '/' . $this->getId()->toString();
+                        } else {
+                            $pathString .= '/' . $pathItem;
+                        }
+                    }
+                    // If id is set we found a correct endpoint and we can stop the foreach
+                    if ($idSet == true) {
+                        break;
+                    };
                 }
-                $idSet == false && $pathString .= '/'.$this->getId()->toString();
-            } else {
-                $pathString = '/api'.($this->getEntity()->getRoute() ?? '/'.strtolower($this->getEntity()->getName()).'/'.$this->getId());
+            }
+            // If setting uri failed with endpoints do it the old way
+            if (!isset($idSet) || $idSet == false) {
+                $pathString = $this->getId()->toString();
             }
             $this->self = $pathString;
         }
@@ -522,13 +535,13 @@ class ObjectEntity
                 if (!$maxDepth->contains($subResource)) {
                     if ($value->getAttribute()->getMultiple()) {
                         $key = $subResource->getSubresourceIndex() ?? $key;
-                        $key = '['.$key.']';
+                        $key = '[' . $key . ']';
                     } else {
                         $key = '';
                     }
                     $subErrors = $subResource->getAllErrors($maxDepth);
                     if (!empty($subErrors)) {
-                        $allErrors[$value->getAttribute()->getName().$key] = $subErrors;
+                        $allErrors[$value->getAttribute()->getName() . $key] = $subErrors;
                     }
                 }
             }
@@ -707,7 +720,7 @@ class ObjectEntity
     private function getValueByAttribute(Attribute $attribute): Value
     {
         if (!$this->getEntity()->getAttributes()->contains($attribute)) {
-            $this->addError($attribute->getName(), 'The entity: '.$this->getEntity()->getName().' does not have this attribute. (intern getValueByAttribute error)');
+            $this->addError($attribute->getName(), 'The entity: ' . $this->getEntity()->getName() . ' does not have this attribute. (intern getValueByAttribute error)');
         }
 
         // Check if value with this attribute exists for this ObjectEntity
@@ -854,10 +867,8 @@ class ObjectEntity
     private function getEmbeddedKey(array $array)
     {
         return
-            isset($array['embedded']) ? 'embedded' : (
-                isset($array['@embedded']) ? '@embedded' : (
-                    isset($array['_embedded']) ? '_embedded' : false
-                )
+            isset($array['embedded']) ? 'embedded' : (isset($array['@embedded']) ? '@embedded' : (isset($array['_embedded']) ? '_embedded' : false
+            )
             );
     }
 
@@ -998,9 +1009,9 @@ class ObjectEntity
                         //if($convar == 'false'  ) {$convar = false;}
                         $checkAgainst = $this->getValue($conditionProperty);
                         if (!is_array($checkAgainst) && $checkAgainst == $convar) {
-                            $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$convar);
+                            $this->addError($value->getAttribute()->getName(), 'Is required because property ' . $conditionProperty . ' has the value: ' . $convar);
                         } elseif (is_array($checkAgainst) && in_array($convar, $checkAgainst)) {
-                            $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$convar);
+                            $this->addError($value->getAttribute()->getName(), 'Is required because property ' . $conditionProperty . ' has the value: ' . $convar);
                         }
                     }
                 } else {
@@ -1009,9 +1020,9 @@ class ObjectEntity
                     //if($conditionValue == 'false'  ) {$conditionValue = false;}
                     $checkAgainst = $this->getValue($conditionProperty);
                     if (!is_array($checkAgainst) && $checkAgainst == $conditionValue) {
-                        $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$conditionValue);
+                        $this->addError($value->getAttribute()->getName(), 'Is required because property ' . $conditionProperty . ' has the value: ' . $conditionValue);
                     } elseif (is_array($checkAgainst) && in_array($conditionValue, $checkAgainst)) {
-                        $this->addError($value->getAttribute()->getName(), 'Is required because property '.$conditionProperty.' has the value: '.$conditionValue);
+                        $this->addError($value->getAttribute()->getName(), 'Is required because property ' . $conditionProperty . ' has the value: ' . $conditionValue);
                     }
                 }
             }
