@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Yaml\Yaml;
 
@@ -17,6 +18,7 @@ class ParseDataService
     private Client $client;
     private EavService $eavService;
     private ValidationService $validationService;
+    private FunctionService $functionService;
 
     /**
      * @const File types supported by the parser
@@ -27,13 +29,15 @@ class ParseDataService
      * @param EntityManagerInterface $entityManager
      * @param ValidationService      $validationService
      * @param EavService             $eavService
+     * @param FunctionService        $functionService
      */
-    public function __construct(EntityManagerInterface $entityManager, ValidationService $validationService, EavService $eavService)
+    public function __construct(EntityManagerInterface $entityManager, ValidationService $validationService, EavService $eavService, FunctionService $functionService)
     {
         $this->entityManager = $entityManager;
         $this->client = new Client();
         $this->eavService = $eavService;
         $this->validationService = $validationService;
+        $this->functionService = $functionService;
     }
 
     /**
@@ -198,9 +202,10 @@ class ParseDataService
         if (empty($dataFile)) {
             return false;
         }
+
         $data = $this->findData($dataFile);
         if ($data['collection'] !== $oas) {
-            throw new Exception('OAS locations don\'t match');
+            throw new Exception('OAS location '.$data['collection'].' doesn\'t match '.$oas);
         }
         $collection = $this->entityManager->getRepository('App:CollectionEntity')->findOneBy(['locationOAS' => $oas]);
         if (!$collection instanceof CollectionEntity) {
@@ -210,5 +215,44 @@ class ParseDataService
         $this->entityManager->flush();
 
         return true;
+    }
+
+    /**
+     * Wipes data for collection.
+     *
+     * @param CollectionEntity $collection The collection which objectEntities will be purged
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return void
+     */
+    public function wipeDataForCollection(CollectionEntity $collection): array
+    {
+        $objectCount = 0;
+        $errors = [];
+        $this->functionService->removeResultFromCache = [];
+        foreach ($collection->getEntities() as $entity) {
+            foreach ($entity->getObjectEntities() as $object) {
+                try {
+                    $objectCount++;
+                    $this->eavService->handleDelete($object);
+                } catch (Exception $exception) {
+                    $errors[] = [
+                        'Object.Id'     => $object->getId()->toString() ?? null,
+                        'Object.Entity' => $object->getEntity() ? [
+                            'Id'   => $object->getEntity()->getId() ?? null,
+                            'Name' => $object->getEntity()->getName() ?? null,
+                        ] : null,
+                        'Message' => $exception->getMessage(),
+                        'Trace'   => $exception->getTrace(),
+                    ];
+                }
+            }
+        }
+
+        return [
+            'objectCount' => $objectCount,
+            'errors'      => $errors,
+        ];
     }
 }

@@ -35,12 +35,12 @@ class LogRepository extends ServiceEntityRepository
             ->where('l.objectId = :objectId AND l.responseStatusCode = :responseStatusCode AND l.userId = :userId')
             ->andWhere('LOWER(e.method) = :method AND e.operationType = :operationType')
             ->setParameters([
-                    'objectId' => $objectId,
-                    'responseStatusCode' => 200,
-                    'userId' => $userId,
-                    'method' => 'get',
-                    'operationType' => 'item'
-                ])
+                'objectId'           => $objectId,
+                'responseStatusCode' => 200,
+                'userId'             => $userId,
+                'method'             => 'get',
+                'operationType'      => 'item',
+            ])
             ->orderBy('l.dateCreated', 'DESC')
             ->distinct();
 

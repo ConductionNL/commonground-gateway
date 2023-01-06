@@ -72,7 +72,7 @@
 #                - method: GET
 #                  operationType: collection
 #                  condition: SOAP-ENV:Body.ns2:zakLv01.ns2:gelijk.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:identificatie
-#                  forceSynchronisation: true
+#                  forceSynchronization: true
 #                  queryParameters:
 #                      '@bsn': SOAP-ENV:Body.ns2:zakLv01.ns2:gelijk.ns2:heeftAlsInitiator.ns2:gerelateerde.ns2:identificatie
 #        prefix: "ZKN:"

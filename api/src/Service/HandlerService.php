@@ -5,9 +5,12 @@ namespace App\Service;
 use App\Entity\Document;
 use App\Entity\Endpoint;
 use App\Entity\Handler;
-use App\Event\EndpointTriggeredEvent;
+use App\Event\ActionEvent;
 use App\Exception\GatewayException;
+use CommonGateway\CoreBundle\Service\RequestService;
+use CommonGateway\FormIOBundle\Service\FormIOService;
 use Doctrine\ORM\EntityManagerInterface;
+use JWadhams\JsonLogic;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -18,7 +21,9 @@ use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
+// Hack van de maand award
 use Symfony\Component\Stopwatch\Stopwatch;
+// Hack van de maand award
 use Twig\Environment;
 
 class HandlerService
@@ -35,6 +40,7 @@ class HandlerService
     private GatewayService $gatewayService;
     private Stopwatch $stopwatch;
     private EventDispatcherInterface $eventDispatcher;
+    private RequestService $requestService;
 
     // This list is used to map content-types to extentions, these are then used for serializations and downloads
     // based on https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types
@@ -61,7 +67,6 @@ class HandlerService
         RequestStack $requestStack,
         ValidationService $validationService,
         TranslationService $translationService,
-        SOAPService $soapService,
         EavService $eavService,
         SerializerInterface $serializer,
         LogService $logService,
@@ -74,26 +79,27 @@ class HandlerService
         CacheInterface $cache,
         GatewayService $gatewayService,
         Stopwatch $stopwatch,
-        EventDispatcherInterface $eventDispatcher
+        EventDispatcherInterface $eventDispatcher,
+        RequestService $requestService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
         $this->validationService = $validationService;
         $this->translationService = $translationService;
-        $this->soapService = $soapService;
         $this->eavService = $eavService;
         $this->serializer = $serializer;
         $this->logService = $logService;
         $this->processingLogService = $processingLogService;
         $this->templating = $twig;
         $this->templateService = $templateService;
-        $this->objectEntityService = $objectEntityService->addServices($validationService, $eavService); // todo: temp fix untill we no longer need these services here
+        $this->objectEntityService = $objectEntityService->addServices($eavService); // todo: temp fix untill we no longer need these services here
         $this->formIOService = $formIOService;
         $this->subscriberService = $subscriberService;
         $this->cache = $cache;
         $this->gatewayService = $gatewayService;
         $this->stopwatch = $stopwatch;
         $this->eventDispatcher = $eventDispatcher;
+        $this->requestService = $requestService;
     }
 
     /**
@@ -105,7 +111,7 @@ class HandlerService
         $this->cache->invalidateTags(['grantedScopes']);
         $this->stopwatch->stop('invalidateTags-grantedScopes');
 
-        $event = new EndpointTriggeredEvent($endpoint, $this->request, ['DEFAULT', 'PRE_HANDLER']);
+        $event = new ActionEvent('commongateway.handler.pre', ['request' => $this->getDataFromRequest(), 'response' => []]);
         $this->stopwatch->start('newSession', 'handleEndpoint');
         $session = new Session();
         $this->stopwatch->stop('newSession');
@@ -115,7 +121,7 @@ class HandlerService
         $this->stopwatch->start('saveParametersInSession', 'handleEndpoint');
         $session->set('parameters', $parameters);
         $this->stopwatch->stop('saveParametersInSession');
-        $this->eventDispatcher->dispatch($event, EndpointTriggeredEvent::NAME);
+        $this->eventDispatcher->dispatch($event, 'commongateway.handler.pre');
 
         // @todo creat logicdata, generalvaribales uit de translationservice
 
@@ -123,37 +129,58 @@ class HandlerService
         foreach ($endpoint->getHandlers() as $handler) {
             // Check if handler should be used for this method
             if ($handler->getMethods() !== null) {
-                $methods = [];
-                foreach ($handler->getMethods() as $method) {
-                    $methods[] = strtoupper($method);
-                }
+                $methods = array_map('strtoupper', $handler->getMethods());
             }
             if (!in_array('*', $methods) && !in_array($this->request->getMethod(), $methods)) {
                 $this->stopwatch->lap('handleHandlers');
                 continue;
             }
-
-            // Check the JSON logic (voorbeeld van json logic in de validatie service)
-            /* @todo acctualy check for json logic */
-
-            if (true) {
+            if ($handler->getConditions() === '{}' || JsonLogic::apply(json_decode($handler->getConditions(), true), $this->getDataFromRequest())) {
                 $this->stopwatch->start('saveHandlerInSession', 'handleEndpoint');
                 $session->set('handler', $handler->getId());
                 $this->stopwatch->stop('saveHandlerInSession');
 
                 $this->stopwatch->start('handleHandler', 'handleEndpoint');
-                $result = $this->handleHandler($handler, $endpoint);
+                $result = $this->handleHandler($handler, $endpoint, $event->getData()['request'] ?: []);
                 $this->stopwatch->stop('handleHandler');
                 $this->stopwatch->stop('handleHandlers');
 
-                $event = new EndpointTriggeredEvent($endpoint, $this->request, ['DEFAULT', 'POST_HANDLER']);
-                $this->eventDispatcher->dispatch($event, EndpointTriggeredEvent::NAME);
+                $event = new ActionEvent('commongateway.handler.post', array_merge($event->getData(), ['result' => $result]));
+                $this->eventDispatcher->dispatch($event, 'commongateway.handler.post');
 
                 return $result;
             }
         }
 
-        throw new GatewayException('No handler found for endpoint: '.$endpoint->getName().' and method: '.$this->request->getMethod(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
+        // If no handlers are found check if endpoint throws events
+        // Throw event if set
+        if ($endpoint->getThrows() !== null || !empty($endpoint->getThrows())) {
+            if (count($endpoint->getThrows()) == 0) {
+                return $this->requestService->requestHandler($parameters, []);
+            }
+
+            // Will use the first throw in array
+            foreach ($endpoint->getThrows() as $throw) {
+                if ($this->request->getMethod() == 'POST' || $this->request->getMethod() == 'PUT') {
+                    $response = json_decode($this->requestService->requestHandler($parameters, [])->getContent(), true);
+                    $event = new ActionEvent('commongateway.action.event', ['request' => $this->getDataFromRequest(), 'response' => $response, 'parameters' => $this->request], $throw);
+                    $this->eventDispatcher->dispatch($event, 'commongateway.action.event');
+                } else {
+                    $event = new ActionEvent('commongateway.action.event', ['request' => $this->getDataFromRequest(), 'response' => [], 'parameters' => $this->request], $throw);
+                    $this->eventDispatcher->dispatch($event, 'commongateway.action.event');
+
+                    return $this->requestService->requestHandler($parameters, []);
+                }
+            }
+
+            return $this->createResponse($event->getData()['response'], $endpoint);
+        }
+
+        // Let default
+        return $this->requestService->requestHandler($parameters, []);
+
+        //
+        //throw new GatewayException('No handler found for endpoint: '.$endpoint->getName().' and method: '.$this->request->getMethod(), null, null, ['data' => ['id' => $endpoint->getId()], 'path' => null, 'responseType' => Response::HTTP_NOT_FOUND]);
     }
 
     public function cutPath(array $pathParams): string
@@ -167,7 +194,7 @@ class HandlerService
     {
         $path = $this->cutPath($endpoint->getPath());
 
-        return $this->gatewayService->processGateway($handler->getProxyGateway(), $path, $method, $this->request->getContent(), $this->request->query->all(), $this->request->headers->all());
+        return $this->gatewayService->processSource($handler->getProxyGateway(), $path, $method, $this->request->getContent(), $this->request->query->all(), $this->request->headers->all());
     }
 
     public function getMethodOverrides(string &$method, ?string &$operationType, Handler $handler)
@@ -190,7 +217,7 @@ class HandlerService
                 }
                 if (isset($override['queryParameters'])) {
                     foreach ($override['queryParameters'] as $key => $value) {
-                        if ($key == 'fields') {
+                        if ($key == 'fields' || $key == '_fields') {
                             $this->request->query->set('fields', $value);
                         } else {
                             $this->request->query->set($key, $content->get($value));
@@ -217,8 +244,9 @@ class HandlerService
      * @todo remove old eav code if new way is finished and working
      * @todo better check if $data is a document/template line 199
      */
-    public function handleHandler(Handler $handler = null, Endpoint $endpoint): Response
+    public function handleHandler(Handler $handler = null, Endpoint $endpoint, array $data = []): Response
     {
+        $originalData = $data;
         $method = $this->request->getMethod();
         $operationType = $endpoint->getOperationType();
 
@@ -238,30 +266,20 @@ class HandlerService
         // }
 
         // To start it al off we need the data from the incomming request
-        if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
-            $data = $this->getDataFromRequest($this->request);
-
-            if ($data == null || empty($data)) {
-                throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
-            }
+        if (in_array($method, ['POST', 'PUT', 'PATCH']) && ($data == null || empty($data))) {
+            throw new GatewayException('Faulty body or no body given', null, null, ['data' => null, 'path' => 'Request body', 'responseType' => Response::HTTP_NOT_FOUND]);
         }
 
         // Update current Log
-        $this->stopwatch->start('saveLog0', 'handleHandler');
         isset($data) ? $this->logService->saveLog($this->request, null, 0, json_encode($data)) : $this->logService->saveLog($this->request, null, 0, null);
-        $this->stopwatch->stop('saveLog0');
 
         // Only do mapping and translation -in for calls with body
-        $this->stopwatch->start('handleDataBeforeEAV', 'handleHandler');
         in_array($method, ['POST', 'PUT', 'PATCH']) && $handler && $data = $this->handleDataBeforeEAV($data, $handler);
-        $this->stopwatch->stop('handleDataBeforeEAV');
 
         // eav new way
         // dont get collection if accept type is formio
         if (($this->getRequestType('accept') === 'form.io' && ($method === 'GET' && $operationType === 'item')) || $this->getRequestType('accept') !== 'form.io') {
-            $this->stopwatch->start('handleObject', 'handleHandler');
-            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $endpoint, $data ?? null, $method, $operationType, $this->getRequestType('accept'));
-            $this->stopwatch->stop('handleObject');
+            $handler->getEntity() !== null && $data = $this->objectEntityService->handleObject($handler, $endpoint, $data ?? null, $method, $this->getRequestType('accept'));
         }
 
         // Form.io components array
@@ -282,38 +300,28 @@ class HandlerService
         if (!(isset($data['type']) && isset($data['message']))) {
 
             // Check if we need to trigger subscribers for this entity
-            $this->stopwatch->start('handleSubscribers', 'handleHandler');
             $this->subscriberService->handleSubscribers($handler->getEntity(), $data, $method);
-            $this->stopwatch->stop('handleSubscribers');
 
             // Update current Log
-            $this->stopwatch->start('saveLog2', 'handleHandler');
-            $this->logService->saveLog($this->request, null, 2, json_encode($data));
-            $this->stopwatch->stop('saveLog2');
+            $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 2, json_encode($data));
 
-            $this->stopwatch->start('handleDataAfterEAV', 'handleHandler');
+            $event = new ActionEvent('commongateway.response.pre', ['entity' => $handler->getEntity()->getId()->toString(), 'httpRequest' => $this->request, 'request' => $originalData, 'response' => $data, 'queryParameters' => $this->request->query->all()]);
+            $this->eventDispatcher->dispatch($event, 'commongateway.response.pre');
+            $data = $event->getData()['response'];
+
             $handler && $data = $this->handleDataAfterEAV($data, $handler);
-            $this->stopwatch->stop('handleDataAfterEAV');
         }
 
         // Update current Log
-        $this->stopwatch->start('saveLog3', 'handleHandler');
-        $this->logService->saveLog($this->request, null, 3, json_encode($data));
-        $this->stopwatch->stop('saveLog3');
+        $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 3, json_encode($data));
 
         // An lastly we want to create a response
-        $this->stopwatch->start('createResponse', 'handleHandler');
         $response = $this->createResponse($data, $endpoint);
-        $this->stopwatch->stop('createResponse');
 
         // Final update Log
-        $this->stopwatch->start('saveLog4', 'handleHandler');
-        $this->logService->saveLog($this->request, $response, 4, null, true);
-        $this->stopwatch->stop('saveLog4');
+        $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, $response, 4, null, true);
 
-        $this->stopwatch->start('saveProcessingLog', 'handleHandler');
         $this->processingLogService->saveProcessingLog();
-        $this->stopwatch->stop('saveProcessingLog');
 
         return $response;
     }
@@ -365,8 +373,7 @@ class HandlerService
      */
     public function createResponse(array $data, ?Endpoint $endpoint = null): Response
     {
-
-    // We only end up here if there are no errors, so we only suply best case senario's
+        // We only end up here if there are no errors, so we only suply best case senario's
         switch ($this->request->getMethod()) {
       case 'GET':
         $status = Response::HTTP_OK;
@@ -419,6 +426,7 @@ class HandlerService
             break;
             case 'xml':
                 $options['xml_root_node_name'] = array_keys($data)[0];
+                $options['xml_encoding'] = 'utf-8';
                 $data = $data[array_keys($data)[0]];
                 break;
 
@@ -544,34 +552,23 @@ class HandlerService
             $skeleton = $data;
         }
 
-        $this->stopwatch->start('dotHydrator', 'handleDataBeforeEAV');
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingIn());
-        $this->stopwatch->stop('dotHydrator');
 
         // Update current Log
-        $this->stopwatch->start('saveLog5', 'handleDataBeforeEAV');
-        $this->logService->saveLog($this->request, null, 5, json_encode($data));
-        $this->stopwatch->stop('saveLog5');
+        $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 5, json_encode($data));
 
         if (!empty($handler->getTranslationsIn())) {
             // Then we want to do translations on the incomming request
             $transRepo = $this->entityManager->getRepository('App:Translation');
 
-            $this->stopwatch->start('getTranslations', 'handleDataBeforeEAV');
             $translations = $transRepo->getTranslations($handler->getTranslationsIn());
-            $this->stopwatch->stop('getTranslations');
 
             if (!empty($translations)) {
-                $this->stopwatch->start('parse', 'handleDataBeforeEAV');
                 $data = $this->translationService->parse($data, true, $translations);
-                $this->stopwatch->stop('parse');
             }
         }
-
         // Update current Log
-        $this->stopwatch->start('saveLog6', 'handleDataBeforeEAV');
-        $this->logService->saveLog($this->request, null, 6, json_encode($data));
-        $this->stopwatch->stop('saveLog6');
+        $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 6, json_encode($data));
 
         return $data;
     }
@@ -587,11 +584,12 @@ class HandlerService
         }
         $this->stopwatch->start('dotHydrator2', 'handleDataAfterEAV');
         $data = $this->translationService->dotHydrator($skeleton, $data, $handler->getMappingOut());
+
         $this->stopwatch->stop('dotHydrator2');
 
         // Update current Log
         $this->stopwatch->start('saveLog7', 'handleDataAfterEAV');
-        $this->logService->saveLog($this->request, null, 7, json_encode($data));
+        $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 7, json_encode($data));
         $this->stopwatch->stop('saveLog7');
 
         if (!empty($handler->getTranslationsOut())) {
@@ -611,7 +609,7 @@ class HandlerService
 
         // Update current Log
         $this->stopwatch->start('saveLog8', 'handleDataAfterEAV');
-        $this->logService->saveLog($this->request, null, 8, json_encode($data));
+        $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 8, json_encode($data));
         $this->stopwatch->stop('saveLog8');
 
         // Lets see if we need te use a template
@@ -622,5 +620,29 @@ class HandlerService
         }
 
         return $data;
+    }
+
+    /**
+     * Gets a handler for an endpoint method combination.
+     *
+     * @param Endpoint $endpoint
+     * @param string   $method
+     *
+     * @return Handler|bool
+     */
+    public function getHandler(Endpoint $endpoint, string $method)
+    {
+        foreach ($endpoint->getHandlers() as $handler) {
+            if (in_array('*', $handler->getMethods())) {
+                return $handler;
+            }
+
+            // Check if handler should be used for this method
+            if (in_array($method, $handler->getMethods())) {
+                return $handler;
+            }
+        }
+
+        return false;
     }
 }

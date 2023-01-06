@@ -24,5 +24,5 @@ $ cd /product-page
 $ npm run deploy
 ```
 
-## Updat
+## Update
       

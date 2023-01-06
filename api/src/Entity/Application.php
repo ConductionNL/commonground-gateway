@@ -94,7 +94,7 @@ class Application
      * @var string A public uuid of this Application.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true, name="public_column")
      */
     private ?string $public = null;
 
@@ -192,6 +192,14 @@ class Application
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
+
+    /**
+     * @var string|null A public key for authentication, or a secret for HS256 keys
+     *
+     * @Groups({"write"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $publicKey = null;
 
     public function __construct()
     {
@@ -459,6 +467,18 @@ class Application
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    public function getPublicKey(): ?string
+    {
+        return $this->publicKey;
+    }
+
+    public function setPublicKey(string $publicKey): self
+    {
+        $this->publicKey = $publicKey;
 
         return $this;
     }

@@ -59,6 +59,7 @@ class LogService
         $callLog->setType($type);
         $callLog->setRequestMethod($request->getMethod());
         $callLog->setRequestHeaders($request->headers->all());
+        //todo use eavService->realRequestQueryAll(), maybe replace this function to another service than eavService?
         $callLog->setRequestQuery($request->query->all() ?? null);
         $callLog->setRequestPathInfo($request->getPathInfo());
         $callLog->setRequestLanguages($request->getLanguages() ?? null);
@@ -108,7 +109,7 @@ class LogService
             }
             $this->stopwatch->start('setEntitySource'.$stopWatchNumber, "saveLog$stopWatchNumber");
             $callLog->setEntity(!empty($entity) ? $entity : null);
-            $callLog->setGateway(!empty($source) ? $source : null);
+            $callLog->setSource(!empty($source) ? $source : null);
             $this->stopwatch->stop('setEntitySource'.$stopWatchNumber);
 
             $this->stopwatch->start('setHandler(getHandlerFromSession)'.$stopWatchNumber, "saveLog$stopWatchNumber");

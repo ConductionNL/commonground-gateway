@@ -274,7 +274,7 @@ App\Entity\Attribute:
         cascade: true
         cascadeDelete: true
     person_organization:
-        name: addresses
+        name: organization
         description: organization of this person
         type: object
         entity: "@person"
@@ -847,3 +847,37 @@ App\Entity\Authentication:
             - email
             - groups
             - profile
+
+App\Entity\Cronjob:
+    sync:
+        name: synchronizations
+        description: a cronjob that sets off the synchronizations for the various sources
+        crontab: '*/1 * * * *'
+        throws: 
+            - 'commongateway.cronjob.trigger'
+        data: []
+        isEnabled: true
+
+#App\Entity\Action:
+#    NotificationAction:
+#        name: Send a notification
+#        description: This action sends a notification every time a object is made
+#        listens:
+#            - 'commongateway.object.create'
+#        throws: [ ]
+#        conditions:
+#            '==': [ 1, 1 ]
+#        class: App\ActionHandler\NotificationHandler
+#        priority: 0
+#        async: false
+#        configuration:
+#            sourceId: uuid
+#            endpoint: /webhook
+#            query: [ ]
+#            headers: [ ]
+#            includeObject: true
+#            specversion: 1.0
+#            type: nl.overheid.zaken.zaakstatus-gewijzigd
+#            source: urn:nld:oin:00000001823288444000:systeem:BRP-component
+#            datacontenttype: application/json
+#            dataref: https://gemeenteX/api/persoon/

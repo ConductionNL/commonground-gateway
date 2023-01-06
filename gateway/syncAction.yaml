@@ -1,0 +1,30 @@
+# Todo: this is an example Action
+#App\Entity\Action:
+#    syncAction:
+#        name: SyncAction
+#        description: This is a synchronization action
+#        listens:
+#            - 'commongateway.handler.pre'
+#        throws: []
+#        conditions: 
+#            '==': [1, 1]
+#        class: App\ActionHandler\SynchronizationCollectionHandler
+#        priority: 0
+#        async: false
+#        configuration:
+#            entity: 04b8f5ec-65f0-4fed-aff4-57228e373614
+#            source: /admin/gateways/{uuid}
+#            location: /zaken
+#            apiSource:
+#                location:
+#                    objects: '#'
+#                    object: '#'
+#                    idField: id
+#                    dateChangedField: dateModified
+#                queryMethod: page
+#                syncFromList: true
+#                sourceLeading: true
+#                mappingIn: {}
+#                mappingOut: {}
+#                translationIn: {}
+#                translationOut: {}

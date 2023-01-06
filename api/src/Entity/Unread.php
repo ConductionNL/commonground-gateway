@@ -85,7 +85,7 @@ class Unread
         return $this->userId;
     }
 
-    public function setUserId(string $userId): self
+    public function setUserId(?string $userId): self
     {
         $this->userId = $userId;
 

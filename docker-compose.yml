@@ -5,6 +5,8 @@ x-cache:
   cache_from:
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-nginx
+    - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-ui
+    - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-cron
 
 services:
   #  gateway-frontend:
@@ -14,6 +16,32 @@ services:
   #      - php
   #    ports:
   #      - "83:80"
+  
+  kiss:
+    &ui
+    image: ghcr.io/klantinteractie-servicesysteem/kiss-frontend:dev
+    depends_on:
+      - api
+    ports:
+      - "81:80"
+
+  cron:
+    &cron
+    image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}_cron:${APP_ENV}
+    build: ./dockerized-cron
+    depends_on:
+      - api
+
+  ui:
+    &ui
+    image: ghcr.io/conductionnl/gateway-ui:stag
+    depends_on:
+      - api
+    ports:
+      - "8000:80"
+    volumes:
+      - ./ui/env.js:/usr/share/nginx/html/env.js:rw,cached
+
   php:
     &php
     image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php:${APP_ENV}
@@ -32,8 +60,8 @@ services:
       - CONTAINER_PROJECT_NAME=${CONTAINER_PROJECT_NAME}
       - DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1
 #      - DATABASE_URL=mysql://api-platform:!ChangeMe!@db/api?serverVersion=10.1
+      - CACHE_URL=mongodb://api-platform:!ChangeMe!@mongodb
       - APP_ENV=${APP_ENV}
-      - APP_CONTAINER=${APP_CONTAINER}
       - APP_DEBUG=${APP_DEBUG}
       - APP_CACHE=${APP_CACHE}
       - APP_VERSION=${APP_VERSION}
@@ -48,11 +76,9 @@ services:
       - APP_DESCRIPTION=${APP_DESCRIPTION}
       - APP_LOGO=${APP_LOGO}
       - APP_HOME=${APP_HOME}
-      - APP_COMMONGROUND_ID=${APP_COMMONGROUND_ID}
       - APP_APPLICATION_KEY=${APP_APPLICATION_KEY}
       - APP_BUILD_ALL_FIXTURES=${APP_BUILD_ALL_FIXTURES}
       - APP_WEB=${APP_WEB}
-      - BADGES=${BADGES}
       - APP_BUILD=${APP_BUILD}
       - APP_INTERNAL=${APP_INTERNAL}
       - APP_URL=${APP_URL}
@@ -66,7 +92,6 @@ services:
       - LICENCE_NAME=${LICENCE_NAME}
       - TRUSTED_PROXIES=${TRUSTED_PROXIES}
       - TRUSTED_HOSTS=${TRUSTED_HOSTS}
-      - AUTH_ENABLED=${AUTH_ENABLED}
       - AUDITTRAIL_ENABLED=${AUDITTRAIL_ENABLED}
       - NOTIFICATION_ENABLED=${NOTIFICATION_ENABLED}
       - REDIS_HOST=redis
@@ -79,7 +104,18 @@ services:
       - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
       - READ_ONLY=false
-      - MAILGUN=${MAILGUN}
+      - DOCUMENTATION_TITLE=${DOCUMENTATION_TITLE}
+      - DOCUMENTATION_DESCRIPTION=${DOCUMENTATION_DESCRIPTION}
+      - DOCUMENTATION_TERMS_OF_SERVICE=${DOCUMENTATION_TERMS_OF_SERVICE}
+      - DOCUMENTATION_CONTACT_NAME=${DOCUMENTATION_CONTACT_NAME}
+      - DOCUMENTATION_CONTACT_URL=${DOCUMENTATION_CONTACT_URL}
+      - DOCUMENTATION_CONTACT_EMAIL=${DOCUMENTATION_CONTACT_EMAIL}
+      - DOCUMENTATION_LICENCE_NAME=${DOCUMENTATION_LICENCE_NAME}
+      - DOCUMENTATION_LICENCE_URL=${DOCUMENTATION_LICENCE_URL}
+      - DOCUMENTATION_VERSION=${DOCUMENTATION_VERSION}
+      - CRON_RUNNER_ENABLED=${CRON_RUNNER_ENABLED}
+      - CRON_RUNNER_CRONTAB=${CRON_RUNNER_CRONTAB}
+      - CRON_RUNNER_CONCURRENCY_POLICY=${CRON_RUNNER_CONCURRENCY_POLICY}
     ports:
       - "82:80"
     cap_drop:
@@ -100,7 +136,7 @@ services:
     volumes:
       - ./api/public:/srv/api/public:ro
     ports:
-      - "80:80"
+      - "80:8080"
     environment:
       - NGINX_HOST=php
       - NGINX_ENV=${APP_ENV}
@@ -156,6 +192,15 @@ services:
       - db-data:/var/lib/postgresql/data:rw
     ports:
       - "5432:5432"
+
+  mongodb:
+    image: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: api-platform
+      MONGO_INITDB_ROOT_PASSWORD: '!ChangeMe!'
+    ports:
+      - "27017:27017"
         
   user-component:
     image: ghcr.io/conductionnl/user-component-nginx:latest

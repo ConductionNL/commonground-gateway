@@ -2,7 +2,9 @@
 
 namespace App\EventListener;
 
+use App\Entity\Attribute;
 use App\Entity\CollectionEntity;
+use App\Entity\Entity;
 use App\Service\OasParserService;
 use App\Service\ParseDataService;
 use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
@@ -71,7 +73,58 @@ class CollectionPersistSubscriber implements EventSubscriberInterface
             return;
         }
 
-        $collection = $this->oasParser->parseOas($collection);
+        $this->loadCollection($collection, $object);
+    }
+
+    private function bindAttributeToEntity(Attribute $attribute, Entity $entity): void
+    {
+        if ($attribute->getType() !== 'object') {
+            $attribute->setFormat(null);
+            $attribute->setType('object');
+            $attribute->setObject($entity);
+            $attribute->setCascade(true);
+
+            $this->entityManager->persist($attribute);
+        }
+    }
+
+    private function bindAttributesToEntities(array $schemaRefs): void
+    {
+        $entityRepo = $this->entityManager->getRepository(Entity::class);
+        $attributeRepo = $this->entityManager->getRepository(Attribute::class);
+
+        // Bind objects/properties that are needed from other collections
+        foreach ($schemaRefs as $ref) {
+            $entity = null;
+            $attributes = null;
+
+            // Bind Attribute to the correct Entity by schema
+            if ($ref['type'] == 'attribute') {
+                $entity = $entityRepo->findOneBy(['schema' => $ref['schema']]);
+                $attribute = $attributeRepo->find($ref['id']);
+                $entity && $attribute && $this->bindAttributeToEntity($attribute, $entity);
+            } elseif ($ref['type'] == 'entity') {
+                // Bind all Attributes that refer to this Entity by schema
+                $attributes = $attributeRepo->findBy(['schema' => $ref['schema']]);
+                $entity = $entityRepo->find($ref['id']);
+
+                if ($entity && $attributes) {
+                    foreach ($attributes as $attribute) {
+                        $this->bindAttributeToEntity($attribute, $entity);
+                    }
+                }
+            }
+        }
+        $this->entityManager->flush();
+    }
+
+    private function loadCollection(CollectionEntity $collection, object $object): void
+    {
+        $schemaRefs = null;
+        $collection = $this->oasParser->parseOas($collection, $schemaRefs);
+
+        $this->bindAttributesToEntities($schemaRefs);
+
         $collection->getLoadTestData() ? $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS(), true) : null;
 
         $collection = $this->entityManager->getRepository(CollectionEntity::class)->find($object->getId());

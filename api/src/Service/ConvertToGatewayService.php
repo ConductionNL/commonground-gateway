@@ -52,16 +52,16 @@ class ConvertToGatewayService
     public function convertEntityObjects(Entity $entity, $query)
     {
         // Make sure we have a gateway and endpoint on this Entity.
-        if (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint()) {
+        if (!$entity->getSource() || !$entity->getSource()->getLocation() || !$entity->getEndpoint() || !$entity->getSource()->getIsEnabled()) {
             return null; //Or false or error?
         }
 
         // Get the first page of objects for this entity that exist outside the gateway
         $collectionConfigPaginationPages = explode('.', $entity->getCollectionConfig()['paginationPages']);
-        $component = $this->gatewayService->gatewayToArray($entity->getGateway());
-        $url = $entity->getGateway()->getLocation().'/'.$entity->getEndpoint();
+        $component = $this->gatewayService->sourceToArray($entity->getSource());
+        $url = $entity->getSource()->getLocation().'/'.$entity->getEndpoint();
         $query = $this->stripAt(array_filter($query, fn ($key) => (strpos($key, '@') === 0), ARRAY_FILTER_USE_KEY));
-        $response = $this->commonGroundService->callService($component, $url, '', $query, $entity->getGateway()->getHeaders(), false, 'GET');
+        $response = $this->commonGroundService->callService($component, $url, '', $query, $entity->getSource()->getHeaders(), false, 'GET');
         // Now get the total amount of pages from the correct place in the response
         $amountOfPages = json_decode($response->getBody()->getContents(), true);
         foreach ($collectionConfigPaginationPages as $item) {
@@ -91,7 +91,7 @@ class ConvertToGatewayService
                     'component' => $component,
                     'url'       => $url,
                     'query'     => $query,
-                    'headers'   => $entity->getGateway()->getHeaders(),
+                    'headers'   => $entity->getSource()->getHeaders(),
                 ],
                 $page,
                 $entity->getId(),
@@ -151,7 +151,7 @@ class ConvertToGatewayService
     public function convertToGatewayObject(Entity $entity, ?array $body, string $id = null, Value $subresourceOf = null, ?ObjectEntity $objectEntity = null, string $url = null, array $sessionData = []): ?ObjectEntity
     {
         // Always make sure we have a gateway and endpoint on this Entity.
-        if (!$url && (!$entity->getGateway() || !$entity->getGateway()->getLocation() || !$entity->getEndpoint())) {
+        if (!$url && (!$entity->getSource() || !$entity->getSource()->getLocation() || !$entity->getEndpoint() || !$entity->getSource()->getIsEnabled())) {
 //            var_dump('No url or gateway+endpoint');
             return null; //Or false or error? //todo?
         }
@@ -162,9 +162,9 @@ class ConvertToGatewayService
 //                var_dump('No id');
                 return null; //Or false or error? //todo?
             } else {
-                $component = $this->gatewayService->gatewayToArray($entity->getGateway());
-                $url = !empty($url) ? $url : $entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id;
-                $response = $this->commonGroundService->callService($component, $url, '', [], $entity->getGateway()->getHeaders(), false, 'GET');
+                $component = $this->gatewayService->sourceToArray($entity->getSource());
+                $url = !empty($url) ? $url : $entity->getSource()->getLocation().'/'.$entity->getEndpoint().'/'.$id;
+                $response = $this->commonGroundService->callService($component, $url, '', [], $entity->getSource()->getHeaders(), false, 'GET');
                 // if no resource with this $id exists... (callservice returns array on error)
                 if (is_array($response)) {
 //                    var_dump($response); //Throw error? //todo?
@@ -174,7 +174,7 @@ class ConvertToGatewayService
                 // create log
                 $content = $response->getBody()->getContents();
                 $status = $response->getStatusCode();
-                $responseLog = new Response($content, $status, $entity->getGateway()->getHeaders());
+                $responseLog = new Response($content, $status, $entity->getSource()->getHeaders());
                 $this->logService->saveLog($this->logService->makeRequest(), $responseLog, 9, $content, null, 'out');
 
                 $body = json_decode($content, true);
@@ -220,7 +220,7 @@ class ConvertToGatewayService
             // Set the externalId & uri if we have an externalId.
             if ($id !== 'ThisObjectHasNoExternalId') {
                 $object->setExternalId($id);
-                $object->setUri($entity->getGateway()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
+                $object->setUri($entity->getSource()->getLocation().'/'.$entity->getEndpoint().'/'.$id);
             }
         }
         if (!is_null($subresourceOf)) {
@@ -283,6 +283,7 @@ class ConvertToGatewayService
                 $object->setUri($uri.'/admin/object_entities/'.$object->getId());
             }
             $this->em->flush(); // Needed here! read comment above if statement!
+            $this->functionService->removeResultFromCache = [];
             $this->functionService->removeResultFromCache($object);
             $this->notify($object, 'Create'); // TODO: use promises instead of this function?
         }
@@ -333,6 +334,7 @@ class ConvertToGatewayService
                 $action = 'Create';
                 break;
             case 'PUT':
+            case 'PATCH':
                 $action = 'Update';
                 break;
             case 'DELETE':
@@ -387,7 +389,7 @@ class ConvertToGatewayService
                 // If multiple, this should be an array
                 if (!is_array($value)) {
                     // 'Expects array, '.gettype($value).' given. (Multiple is set for this attribute)'
-                    $newObject->getValueByAttribute($attribute)->setValue(null);
+                    $newObject->setValue($attribute, null);
                     continue;
                 }
                 // Check for array of unique items TODO: is setting it to null the correct solution here?
@@ -402,7 +404,7 @@ class ConvertToGatewayService
                     }
                     if (!$containsStringKey && count($value) !== count(array_unique($value))) {
 //                        'Must be an array of unique items'
-                        $newObject->getValueByAttribute($attribute)->setValue(null);
+                        $newObject->setValue($attribute, null);
                         continue;
                     }
                 }
@@ -410,14 +412,14 @@ class ConvertToGatewayService
                 // Then validate all items in this array
                 if ($attribute->getType() == 'object') {
                     // This is an array of objects
-                    $valueObject = $newObject->getValueByAttribute($attribute);
+                    $valueObject = $newObject->getValueObject($attribute);
                     foreach ($value as $key => $object) {
                         // $key could be used for addError with attributeName = $attribute->getName().'['.$key.']'
                         $this->addObjectToValue($attribute, $object, $valueObject, $objectEntity);
                     }
                 } elseif ($attribute->getType() == 'file') {
                     // TODO? or is null ok?
-                    $newObject->getValueByAttribute($attribute)->setValue(null);
+                    $newObject->setValue($attribute, null);
                     continue;
                 } else {
                     foreach ($value as &$item) {
@@ -435,7 +437,7 @@ class ConvertToGatewayService
             // if no errors we can set the value (for type object this is already done in validateAttributeType, other types we do it here,
             // because when we use validateAttributeType to validate items in an array, we dont want to set values for that)
             if (!$newObject->getHasErrors() && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
-                $newObject->getValueByAttribute($attribute)->setValue($value);
+                $newObject->setValue($attribute, $value);
             }
         }
 
@@ -471,17 +473,17 @@ class ConvertToGatewayService
         switch ($attribute->getType()) {
             case 'object':
                 // First get the valueObject for this attribute
-                $valueObject = $newObject->getValueByAttribute($attribute);
+                $valueObject = $newObject->getValueObject($attribute);
 
                 $value = $this->addObjectToValue($attribute, $value, $valueObject, $objectEntity);
                 if ($value === null) {
-                    $newObject->getValueByAttribute($attribute)->setValue(null);
+                    $newObject->setValue($attribute, null);
                 }
 
                 break;
             case 'file':
                 // TODO? or is null ok?
-                $newObject->getValueByAttribute($attribute)->setValue(null);
+                $newObject->setValue($attribute, null);
                 break;
             case 'date':
             case 'datetime':
@@ -541,14 +543,14 @@ class ConvertToGatewayService
         // If this object is given as a uuid (string) it should be valid
         if (is_string($value) && Uuid::isValid($value) == false) {
             // TODO: support /$attribute->getObject()->getEndpoint()/uuid?
-            if ($value == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
+            if ($value == $attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
                 $value = $this->commonGroundService->getUuidFromUrl($value);
             } else {
                 // We should also allow commonground Uri's like: https://opentest.izaaksuite.nl/api/v1/statussen/8578f55b-1df7-4620-af55-daafd0dc5bf3 OR https://taalhuizen-bisc.commonground.nu/api/v1/wrc/organizations/008750e5-0424-440e-aea0-443f7875fbfe
                 $subObject = $this->convertToGatewayObject($attribute->getObject(), null, $value, $valueObject, $objectEntity, $value);
 
                 if (!$subObject) {
-//                var_dump('The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
+//                var_dump('The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
                     return null; // set $value to null
                 }
 
@@ -576,7 +578,7 @@ class ConvertToGatewayService
             }
             // TODO: what if we have no existing id key?
         } else {
-//            var_dump('The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
+//            var_dump('The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
             return null; // set $value to null
         }
 

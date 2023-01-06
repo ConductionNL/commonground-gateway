@@ -5,6 +5,7 @@ namespace App\Security;
 use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -51,23 +52,6 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
     {
         return $request->headers->has('Authorization') &&
             strpos($request->headers->get('Authorization'), 'Bearer') === false;
-    }
-
-    public function validateToken(string $token): array
-    {
-        $publicKey = $this->parameterBag->get('app_x509_cert');
-
-        try {
-            $payload = $this->authenticationService->verifyJWTToken($token, $publicKey);
-        } catch (\Exception $exception) {
-            throw new AuthenticationException('The provided token is not valid');
-        }
-        $now = new \DateTime();
-        if ($payload['exp'] < $now->getTimestamp()) {
-            throw new AuthenticationException('The provided token has expired');
-        }
-
-        return $payload;
     }
 
     /**
@@ -123,21 +107,6 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
         }
 
         return $organizations;
-    }
-
-    private function setOrganizations(array $user): void
-    {
-        $organizations = $user['organizations'] ?? [];
-        $parentOrganizations = [];
-        foreach ($organizations as $organization) {
-            $organizations = $this->getSubOrganizations($organizations, $organization, $this->commonGroundService, $this->functionService);
-            $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $this->commonGroundService, $this->functionService);
-        }
-        $organizations[] = 'localhostOrganization';
-        $parentOrganizations[] = 'localhostOrganization';
-        $this->session->set('organizations', $organizations);
-        $this->session->set('parentOrganizations', $parentOrganizations);
-        $this->session->set('ActiveOrganization', $user['organization']);
     }
 
     private function prefixRoles(array $roles): array

@@ -33,6 +33,11 @@ class ResponseService
     private SessionInterface $session;
     private Security $security;
     private CacheInterface $cache;
+    // todo: maybe start using one or more array properties to save data in, so we don't have to pass down all this...
+    // todo: ...data in RenderResult (and other function after that, untill we come back to RenderResult again, because of 'recursion')
+    // todo: other examples we could use this for when we cleanup this service: $fields, $extend, $acceptType, $skipAuthCheck
+    // todo: use this as example (checking for $level when setting this data only once is very important):
+    public array $xCommongatewayMetadata;
 
     public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, AuthorizationService $authorizationService, SessionInterface $session, Security $security, CacheInterface $cache)
     {
@@ -42,6 +47,34 @@ class ResponseService
         $this->session = $session;
         $this->security = $security;
         $this->cache = $cache;
+    }
+
+    // todo remove responseService from the ObjectEntityService, so we can use the ObjectEntityService->createSelf() function here
+    /**
+     * Returns the string used for {at sign}id or self->href for the given objectEntity. This function will use the ObjectEntity->Entity
+     * to first look for the get item endpoint and else use the Entity route or name to generate the correct string.
+     *
+     * @param ObjectEntity $objectEntity
+     *
+     * @return string
+     */
+    public function createSelf(ObjectEntity $objectEntity): string
+    {
+        // We need to persist if this is a new ObjectEntity in order to set and getId to generate the self...
+        $this->em->persist($objectEntity);
+        $endpoints = $this->em->getRepository('App:Endpoint')->findGetItemByEntity($objectEntity->getEntity());
+        if (count($endpoints) > 0 && $endpoints[0] instanceof Endpoint) {
+            $pathArray = $endpoints[0]->getPath();
+            $foundId = in_array('{id}', $pathArray) ? $pathArray[array_search('{id}', $pathArray)] = $objectEntity->getId() :
+                (in_array('{uuid}', $pathArray) ? $pathArray[array_search('{uuid}', $pathArray)] = $objectEntity->getId() : false);
+            if ($foundId !== false) {
+                $path = implode('/', $pathArray);
+
+                return '/api/'.$path;
+            }
+        }
+
+        return '/api'.($objectEntity->getEntity()->getRoute() ?? $objectEntity->getEntity()->getName()).'/'.$objectEntity->getId();
     }
 
     // todo remove responseService from the ObjectEntityService, so we can use the ObjectEntityService->checkOwner() function here
@@ -99,20 +132,21 @@ class ResponseService
      */
     public function filterResult(array $response, ObjectEntity $result, bool $skipAuthCheck): array
     {
-        return array_filter($response, function ($value, $key) use ($result, $skipAuthCheck) {
+        return array_filter($response, function ($value, $key) use ($result) {
             if (str_starts_with($key, '@') || $key == 'id') {
                 return true;
             }
             $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
-            if (!$skipAuthCheck && !empty($attribute)) {
-                try {
-                    if (!$this->checkOwner($result)) {
-                        $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $value]);
-                    }
-                } catch (AccessDeniedException $exception) {
-                    return false;
-                }
-            }
+            // todo: this breaks SynchronizationService
+//            if (!$skipAuthCheck && !empty($attribute)) {
+//                try {
+//                    if (!$this->checkOwner($result)) {
+//                        $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $value]);
+//                    }
+//                } catch (AccessDeniedException $exception) {
+//                    return false;
+//                }
+//            }
 
             return true;
         }, ARRAY_FILTER_USE_BOTH);
@@ -133,57 +167,65 @@ class ResponseService
      *
      * @return array|string[]|string Only returns a string if $level is higher than 3 and acceptType is not jsonld.
      */
-    public function renderResult(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType = 'jsonld', bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
+    public function renderResult(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType = 'json', bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
     {
         $response = [];
-        $dateRead = false;
-        if (is_array($fields) && array_key_exists('_dateRead', $fields)) {
-            $dateRead = $fields['_dateRead']; // Can be string = 'getItem' in case of a get item call.
-            unset($fields['_dateRead']);
-            if (empty($fields)) {
-                $fields = null;
+        if ($level === 0) {
+            $this->xCommongatewayMetadata = [];
+            if (is_array($extend) && array_key_exists('x-commongateway-metadata', $extend)) {
+                $this->xCommongatewayMetadata = $extend['x-commongateway-metadata'];
+                unset($extend['x-commongateway-metadata']);
+                if (empty($extend)) {
+                    $extend = null;
+                }
             }
         }
 
         if (
-            $result->getEntity()->getGateway() !== null &&
-            ($result->getEntity()->getGateway()->getType() == 'soap' ||
-                $result->getEntity()->getGateway()->getType() == 'xml' ||
-                $result->getEntity()->getGateway()->getAuth() == 'vrijbrp-jwt')
+            $result->getEntity()->getSource() !== null &&
+            ($result->getEntity()->getSource()->getType() == 'soap' ||
+                $result->getEntity()->getSource()->getType() == 'xml' ||
+                $result->getEntity()->getSource()->getAuth() == 'vrijbrp-jwt')
         ) {
             return $response;
         }
 
+        $user = $this->security->getUser();
+        $userId = $user !== null ? $user->getUserIdentifier() : 'anonymous';
         $item = $this->cache->getItem(
             'object_'
             .base64_encode(
                 $result->getId()
-                .$acceptType
-                .$level
-                .http_build_query($fields ?? [], '', ',')
-                .http_build_query($extend ?? [], '', ',')
+                .'userId_'.$userId
+                .'acceptType_'.$acceptType
+                .'level_'.$level
+                .'fields_'.http_build_query($fields ?? [], '', ',')
+                .'extend_'.http_build_query($extend ?? [], '', ',')
+                .'xCommongatewayMetadata_'.http_build_query($this->xCommongatewayMetadata ?? [], '', ',')
             )
         );
-        if ($item->isHit() && !$dateRead) {
-//            var_dump('FromCache: '.$result->getId().http_build_query($fields ?? [],'',','));
+        // Todo: what to do with dateRead and caching... this works for now:
+        if ($item->isHit() && !isset($this->xCommongatewayMetadata['dateRead']) && !isset($this->xCommongatewayMetadata['all'])) {
+//            var_dump('FromCache: '.$result->getId().'userId_'.$userId.'acceptType_'.$acceptType.'level_'.$level.'fields_'.http_build_query($fields ?? [], '', ',').'extend_'.http_build_query($extend ?? [], '', ',').'xCommongatewayMetadata_'.http_build_query($this->xCommongatewayMetadata ?? [], '', ','));
             return $this->filterResult($item->get(), $result, $skipAuthCheck);
         }
         $item->tag('object_'.base64_encode($result->getId()->toString()));
+        $item->tag('object_userId_'.base64_encode($userId));
 
         // Make sure to break infinite render loops! ('New' MaxDepth)
         if ($level > 3) {
             if ($acceptType === 'jsonld') {
                 return [
-                    '@id' => $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId(),
+                    '@id' => $result->getSelf() ?? '/api'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId(),
                 ];
             }
 
-            return $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
+            return $result->getSelf() ?? '/api'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
         }
 
         // todo: do we still want to do this if we have BL for syncing objects?
         // Lets start with the external result
-        if ($result->getEntity()->getGateway() && $result->getEntity()->getEndpoint()) {
+        if ($result->getEntity()->getSource() && $result->getEntity()->getEndpoint()) {
             if (!empty($result->getExternalResult())) {
                 $response = array_merge($response, $result->getExternalResult());
             } elseif (!$result->getExternalResult() === [] && $this->commonGroundService->isResource($result->getExternalResult())) {
@@ -196,7 +238,7 @@ class ResponseService
             if (!is_null($result->getEntity()->getAvailableProperties() || !empty($fields))) {
                 $response = array_filter($response, function ($propertyName) use ($result, $fields) {
                     $attTypeObject = false;
-                    if ($attribute = $result->getEntity()->getAttributeByName($propertyName)) {
+                    if ($attribute = $result->getAttributeObject($propertyName)) {
                         $attTypeObject = $attribute->getType() === 'object';
                     }
 
@@ -227,9 +269,10 @@ class ResponseService
             return $response;
         }
 
-        $response = $this->handleAcceptType($result, $fields, $extend, $dateRead, $acceptType, $level, $response, $renderValues['renderValuesEmbedded']);
+        $response = $this->handleAcceptType($result, $fields, $extend, $acceptType, $level, $response, $renderValues['renderValuesEmbedded']);
 
-        if (!$dateRead) {
+        // Todo: what to do with dateRead and caching... this works for now:
+        if (!isset($this->xCommongatewayMetadata['dateRead']) && !isset($this->xCommongatewayMetadata['all'])) {
             $item->set($response);
             $this->cache->save($item);
         }
@@ -243,7 +286,6 @@ class ResponseService
      * @param ObjectEntity $result
      * @param array|null   $fields
      * @param array|null   $extend
-     * @param bool|string  $dateRead   can be true, false or 'getItem' in case of a get item call.
      * @param string       $acceptType
      * @param int          $level
      * @param array        $response
@@ -251,24 +293,28 @@ class ResponseService
      *
      * @return array
      */
-    private function handleAcceptType(ObjectEntity $result, ?array $fields, ?array $extend, $dateRead, string $acceptType, int $level, array $response, array $embedded): array
+    private function handleAcceptType(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType, int $level, array $response, array $embedded): array
     {
         $gatewayContext = [];
         switch ($acceptType) {
             case 'jsonld':
-                $jsonLd = $this->handleJsonLd($result, $fields, $extend, $dateRead, $level, $response, $embedded);
+                $jsonLd = $this->handleJsonLd($result, $fields, $extend, $level, $response, $embedded);
                 $gatewayContext = $jsonLd['gatewayContext'];
                 $embedded = $jsonLd['embedded'];
                 break;
             case 'jsonhal':
-                $jsonHal = $this->handleJsonHal($result, $fields, $extend, $dateRead, $level, $response, $embedded);
+                $jsonHal = $this->handleJsonHal($result, $fields, $extend, $level, $response, $embedded);
                 $gatewayContext = $jsonHal['gatewayContext'];
                 $embedded = $jsonHal['embedded'];
                 break;
             case 'json':
             default:
-                // todo: do we want to use embedded here? or just always show all objects instead? see include on attribute...
-                $embedded['embedded'] = $embedded;
+                if ($this->xCommongatewayMetadata !== []) {
+                    $gatewayContext['x-commongateway-metadata'] = $this->handleXCommongatewayMetadata($result, $fields, $extend, $level, $response);
+                }
+                if (!empty($embedded)) {
+                    $embedded['embedded'] = $embedded;
+                }
                 break;
         }
 
@@ -283,22 +329,21 @@ class ResponseService
      * @param ObjectEntity $result
      * @param array|null   $fields
      * @param array|null   $extend
-     * @param bool|string  $dateRead can be true, false or 'getItem' in case of a get item call.
      * @param int          $level
      * @param array        $response
      * @param array        $embedded
      *
      * @return array
      */
-    private function handleJsonLd(ObjectEntity $result, ?array $fields, ?array $extend, $dateRead, int $level, array $response, array $embedded): array
+    private function handleJsonLd(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response, array $embedded): array
     {
-        $gatewayContext['@id'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
+        $gatewayContext['@id'] = $result->getSelf() ?? '/api'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
         $gatewayContext['@type'] = ucfirst($result->getEntity()->getName());
         $gatewayContext['@context'] = '/contexts/'.ucfirst($result->getEntity()->getName());
         $gatewayContext['@dateCreated'] = $result->getDateCreated();
         $gatewayContext['@dateModified'] = $result->getDateModified();
-        if ($dateRead) {
-            $gatewayContext['@dateRead'] = $dateRead === 'getItem' ? new DateTime() : $this->getDateRead($result);
+        if ($level === 0) {
+            $this->addToMetadata($gatewayContext, 'dateRead', $result, '@dateRead');
         }
         $gatewayContext['@owner'] = $result->getOwner();
         $gatewayContext['@organization'] = $result->getOrganization();
@@ -311,6 +356,7 @@ class ResponseService
         if (array_key_exists('@context', $response)) {
             $gatewayContext['@gateway/context'] = $response['@context'];
         }
+        $gatewayContext['@synchronizations'] = $result->getReadableSyncDataArray();
         if (is_array($extend)) {
             $gatewayContext['@extend'] = $extend;
         }
@@ -334,24 +380,23 @@ class ResponseService
      * @param ObjectEntity $result
      * @param array|null   $fields
      * @param array|null   $extend
-     * @param bool|string  $dateRead can be true, false or 'getItem' in case of a get item call.
      * @param int          $level
      * @param array        $response
      * @param array        $embedded
      *
      * @return array
      */
-    private function handleJsonHal(ObjectEntity $result, ?array $fields, ?array $extend, $dateRead, int $level, array $response, array $embedded): array
+    private function handleJsonHal(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response, array $embedded): array
     {
-        $gatewayContext['_links']['self']['href'] = $result->getSelf() ?? '/api/'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
+        $gatewayContext['_links']['self']['href'] = $result->getSelf() ?? '/api'.($result->getEntity()->getRoute() ?? $result->getEntity()->getName()).'/'.$result->getId();
         $gatewayContext['_metadata'] = [
             '_type'         => ucfirst($result->getEntity()->getName()),
             '_context'      => '/contexts/'.ucfirst($result->getEntity()->getName()),
             '_dateCreated'  => $result->getDateCreated(),
             '_dateModified' => $result->getDateModified(),
         ];
-        if ($dateRead) {
-            $gatewayContext['_metadata']['_dateRead'] = $dateRead === 'getItem' ? new DateTime() : $this->getDateRead($result);
+        if ($level === 0) {
+            $this->addToMetadata($gatewayContext['_metadata'], 'dateRead', $result, '_dateRead');
         }
         $gatewayContext['_metadata'] = array_merge($gatewayContext['_metadata'], [
             '_owner'        => $result->getOwner(),
@@ -366,6 +411,7 @@ class ResponseService
         if (array_key_exists('@context', $response)) {
             $gatewayContext['_metadata']['_gateway/context'] = $response['@context'];
         }
+        $gatewayContext['_metadata']['_synchronizations'] = $result->getReadableSyncDataArray();
         if (is_array($extend)) {
             $gatewayContext['_metadata']['_extend'] = $extend;
         }
@@ -381,6 +427,89 @@ class ResponseService
             'gatewayContext' => $gatewayContext,
             'embedded'       => $embedded,
         ];
+    }
+
+    /**
+     * Returns a response array for renderResult function.
+     * This function is called and used to show metadata for AcceptTypes json or 'default' when the extend query param contains x-commongateway-metadata.
+     *
+     * @param ObjectEntity $result
+     * @param array|null   $fields
+     * @param array|null   $extend
+     * @param int          $level
+     * @param array        $response
+     *
+     * @return array
+     */
+    private function handleXCommongatewayMetadata(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response): array
+    {
+        $metadata = [];
+        $this->addToMetadata(
+            $metadata,
+            'self',
+            $result->getSelf() ?? $result->setSelf($this->createSelf($result))->getSelf()
+        );
+        $this->addToMetadata($metadata, 'type', ucfirst($result->getEntity()->getName()));
+        $this->addToMetadata($metadata, 'context', '/contexts/'.ucfirst($result->getEntity()->getName()));
+        $this->addToMetadata($metadata, 'dateCreated', $result->getDateCreated());
+        $this->addToMetadata($metadata, 'dateModified', $result->getDateModified());
+        if ($level === 0) {
+            $this->addToMetadata($metadata, 'dateRead', $result);
+        }
+        $this->addToMetadata($metadata, 'owner', $result->getOwner());
+        $this->addToMetadata($metadata, 'organization', $result->getOrganization());
+        $this->addToMetadata(
+            $metadata,
+            'application',
+            $result->getApplication() !== null ? $result->getApplication()->getId() : null
+        );
+        $this->addToMetadata($metadata, 'uri', $result->getUri());
+        $this->addToMetadata(
+            $metadata,
+            'gateway/id',
+            $result->getExternalId() ?? (array_key_exists('id', $response) ? $response['id'] : null)
+        );
+        if (array_key_exists('@type', $response)) {
+            $this->addToMetadata($metadata, 'gateway/type', $response['@type']);
+        }
+        if (array_key_exists('@context', $response)) {
+            $this->addToMetadata($metadata, 'gateway/context', $response['@context']);
+        }
+        $this->addToMetadata($metadata, 'synchronizations', $result->getReadableSyncDataArray());
+        if (is_array($extend)) {
+            $this->addToMetadata($metadata, 'extend', $extend);
+        }
+        if (is_array($fields)) {
+            $this->addToMetadata($metadata, 'fields', $fields);
+        }
+        $this->addToMetadata($metadata, 'level', $level);
+
+        return $metadata;
+    }
+
+    /**
+     * Adds a key and value to the given $metadata array. But only if all or the $key is present in $this->xCommongatewayMetadata.
+     * If $key contains dateRead this will also trigger some specific BL we only want to do if specifically asked for.
+     *
+     * @param array  $metadata
+     * @param string $key
+     * @param $value
+     * @param string|null $overwriteKey Default = null, if a string is given this will be used instead of $key, for the key to add to the $metadata array.
+     *
+     * @return void
+     */
+    public function addToMetadata(array &$metadata, string $key, $value, ?string $overwriteKey = null)
+    {
+        if (array_key_exists('all', $this->xCommongatewayMetadata) || array_key_exists($key, $this->xCommongatewayMetadata)) {
+            // Make sure we only do getDateRead function when it is present in $this->xCommongatewayMetadata
+            if ($key === 'dateRead') {
+                // If the api-call is an getItem call show NOW instead!
+                $value = isset($this->xCommongatewayMetadata['dateRead']) && $this->xCommongatewayMetadata['dateRead'] === 'getItem'
+                    ? new DateTime() : $this->getDateRead($value);
+                $value = $value == null ? $value : $value->format('c');
+            }
+            $metadata[$overwriteKey ?? $key] = $value;
+        }
     }
 
     /**
@@ -421,45 +550,19 @@ class ResponseService
             }
 
             // Check if user is allowed to see this
-            try {
-                if (!$skipAuthCheck && !$this->checkOwner($result)) {
-                    $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'object' => $result]);
-                }
-            } catch (AccessDeniedException $exception) {
-                continue;
-            }
+            // todo: this breaks SynchronizationService
+//            try {
+//                if (!$skipAuthCheck && !$this->checkOwner($result)) {
+//                    $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'object' => $result]);
+//                }
+//            } catch (AccessDeniedException $exception) {
+//                continue;
+//            }
 
-            $valueObject = $result->getValueByAttribute($attribute);
+            $valueObject = $result->getValueObject($attribute);
             if ($attribute->getType() == 'object') {
                 // Lets deal with extending
-                // todo: move this to a function, or re-use $this->renderObjects for this somehow:
-                if ($attribute->getExtend() !== true && (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))) {
-                    if (!$attribute->getMultiple()) {
-                        $object = $valueObject->getValue();
-                        if (!$object instanceof ObjectEntity) {
-                            continue;
-                        }
-                        if ($acceptType === 'jsonld') {
-                            $response[$attribute->getName()] = [
-                                '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
-                            ];
-                        }
-                        $response[$attribute->getName()] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
-                        continue;
-                    }
-                    $objects = $valueObject->getValue();
-                    if (!is_array($objects)) {
-                        continue;
-                    }
-                    foreach ($objects as $object) {
-                        if ($acceptType === 'jsonld') {
-                            $response[$attribute->getName()][] = [
-                                '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
-                            ];
-                        } else {
-                            $response[$attribute->getName()][] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
-                        }
-                    }
+                if (!$this->checkExtendAttribute($response, $attribute, $valueObject, $extend, $acceptType)) {
                     continue;
                 }
 
@@ -474,18 +577,7 @@ class ResponseService
                 }
 
                 // Let's deal with subExtend extending
-                $subExtend = null;
-                if (is_array($extend)) {
-                    if (array_key_exists('all', $extend)) {
-                        $subExtend = $extend;
-                    } elseif (array_key_exists($attribute->getName(), $extend)) {
-                        if (is_array($extend[$attribute->getName()])) {
-                            $subExtend = $extend[$attribute->getName()];
-                        } elseif ($extend[$attribute->getName()] == false) {
-                            continue;
-                        }
-                    }
-                }
+                $subExtend = is_array($extend) ? $this->attributeSubExtend($extend, $attribute) : null;
 
                 $renderObjects = $this->renderObjects($result, $embedded, $valueObject, $subFields, $subExtend, $acceptType, $skipAuthCheck, $flat, $level);
                 $response[$attribute->getName()] = is_array($renderObjects) && array_key_exists('renderObjectsObjectsArray', $renderObjects) ? $renderObjects['renderObjectsObjectsArray'] : $renderObjects;
@@ -508,7 +600,119 @@ class ResponseService
     }
 
     /**
-     * Renders the objects of a value with attribute type 'object' for the renderValues function.
+     * Checks if a given attribute should be extended. Will return true if it should be extended and false if not.
+     * Will also add a reference to an object to the response if the attribute should not be extended. Or null if there is no value.
+     *
+     * @param array      $response    The response array we will be adding object references to, if needed.
+     * @param Attribute  $attribute   The attribute we are checking if it needs extending.
+     * @param Value      $valueObject The value(Object) of the objectEntity for the attribute we are rendering.
+     * @param array|null $extend      The extend array used in the api-call.
+     * @param string     $acceptType  The acceptType used in the api-call.
+     *
+     * @return bool Will return true if the attribute should be extended and false if not.
+     */
+    private function checkExtendAttribute(array &$response, Attribute $attribute, Value $valueObject, ?array $extend, string $acceptType): bool
+    {
+        if ($attribute->getExtend() !== true &&
+            (!is_array($extend) || (!array_key_exists('all', $extend) && !array_key_exists($attribute->getName(), $extend)))
+        ) {
+            $attribute->getMultiple() ?
+                $this->renderObjectReferences($response, $attribute, $valueObject, $acceptType) :
+                $this->renderObjectReference($response, $attribute, $valueObject, $acceptType);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * For a multiple=false attribute, add a reference to a single object to the response if that attribute should not be extended.
+     * Or adds null instead if there is no value at all.
+     *
+     * @param array     $response    The response array we will be adding an object references (or null) to.
+     * @param Attribute $attribute   The attribute that does not need to be extended for the current result we are rendering.
+     * @param Value     $valueObject The value(Object) of the objectEntity for the attribute we are rendering.
+     * @param string    $acceptType  The acceptType used in the api-call.
+     *
+     * @return void
+     */
+    private function renderObjectReference(array &$response, Attribute $attribute, Value $valueObject, string $acceptType)
+    {
+        $object = $valueObject->getValue();
+        if (!$object instanceof ObjectEntity) {
+            $response[$attribute->getName()] = null;
+
+            return;
+        }
+        $response[$attribute->getName()] = $this->renderObjectSelf($object, $acceptType);
+    }
+
+    /**
+     * For a multiple=true attribute, add one or more references to one or more objects to the response if that attribute should not be extended.
+     * Or adds null instead if there is no value at all.
+     *
+     * @param array     $response    The response array we will be adding one or more object references (or null) to.
+     * @param Attribute $attribute   The attribute that does not need to be extended for the current result we are rendering.
+     * @param Value     $valueObject The value(Object) of the objectEntity for the attribute we are rendering.
+     * @param string    $acceptType  The acceptType used in the api-call.
+     *
+     * @return void
+     */
+    private function renderObjectReferences(array &$response, Attribute $attribute, Value $valueObject, string $acceptType)
+    {
+        $objects = $valueObject->getValue();
+        if (!is_countable($objects)) {
+            $response[$attribute->getName()] = [];
+
+            return;
+        }
+        foreach ($objects as $object) {
+            $response[$attribute->getName()][] = $this->renderObjectSelf($object, $acceptType);
+        }
+    }
+
+    /**
+     * Renders the 'self' of a given object, result will differ depending on the acceptType.
+     *
+     * @param ObjectEntity $object     The object to render 'self' for.
+     * @param string       $acceptType The acceptType that will influence the way this 'self' is rendered.
+     *
+     * @return string|string[] The 'self' string or array with this string in it, depending on acceptType.
+     */
+    private function renderObjectSelf(ObjectEntity $object, string $acceptType)
+    {
+        $objectSelf = $object->getSelf() ?? '/api'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
+        // todo: if we add more different acceptTypes to this list, use a switch:
+        if ($acceptType === 'jsonld') {
+            return ['@id' => $objectSelf];
+        }
+
+        return $objectSelf;
+    }
+
+    /**
+     * Checks if a given attribute is present in the extend array and the value/object for this attribute should be extended.
+     * This function will decide how the subExtend array for this attribute should look like.
+     *
+     * @param array     $extend    The extend array used in the api-call.
+     * @param Attribute $attribute The attribute we are checking if it needs extending.
+     *
+     * @return array|null Will return the subExtend array for rendering the subresources if they should be extended. Will return empty array if attribute should not be extended.
+     */
+    private function attributeSubExtend(array $extend, Attribute $attribute): ?array
+    {
+        if (array_key_exists('all', $extend)) {
+            return $extend;
+        } elseif (array_key_exists($attribute->getName(), $extend) && is_array($extend[$attribute->getName()])) {
+            return $extend[$attribute->getName()];
+        }
+
+        return null;
+    }
+
+    /**
+     * Renders the objects of a value with attribute type 'object' for the renderValues function. If attribute is extended.
      *
      * @param ObjectEntity $result
      * @param array        $embedded
@@ -530,16 +734,20 @@ class ResponseService
         $attribute = $value->getAttribute();
 
         if ($value->getValue() == null) {
-            return null;
+            return [
+                'renderObjectsObjectsArray' => $attribute->getMultiple() ? [] : null,
+                'renderObjectsEmbedded'     => $embedded,
+            ];
         }
 
         // If we have only one Object (because multiple = false)
         if (!$attribute->getMultiple()) {
             try {
-                // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
-                if (!$skipAuthCheck && !$this->checkOwner($result)) {
-                    $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $value->getValue()]);
-                }
+                // todo: this breaks SynchronizationService
+//                // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
+//                if (!$skipAuthCheck && !$this->checkOwner($result)) {
+//                    $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $value->getValue()]);
+//                }
 
                 if ($attribute->getInclude()) {
                     return $this->renderResult($value->getValue(), $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
@@ -548,17 +756,9 @@ class ResponseService
                 }
 
                 $object = $value->getValue();
-                if ($acceptType === 'jsonld') {
-                    return [
-                        'renderObjectsObjectsArray' => [
-                            '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
-                        ],
-                        'renderObjectsEmbedded' => $embedded,
-                    ];
-                }
 
                 return [
-                    'renderObjectsObjectsArray' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
+                    'renderObjectsObjectsArray' => $this->renderObjectSelf($object, $acceptType),
                     'renderObjectsEmbedded'     => $embedded,
                 ];
             } catch (AccessDeniedException $exception) {
@@ -571,10 +771,11 @@ class ResponseService
         $objectsArray = [];
         foreach ($objects as $object) {
             try {
-                // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
-                if (!$skipAuthCheck && !$this->checkOwner($result)) {
-                    $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $object]);
-                }
+                // todo: this breaks SynchronizationService
+//                // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
+//                if (!$skipAuthCheck && !$this->checkOwner($result)) {
+//                    $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $object]);
+//                }
                 if ($attribute->getInclude()) {
                     $objectsArray[] = $this->renderResult($object, $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
                     continue;
@@ -582,13 +783,7 @@ class ResponseService
                     $embedded[$attribute->getName()][] = $this->renderResult($object, $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
                 }
 
-                if ($acceptType === 'jsonld') {
-                    $objectsArray[] = [
-                        '@id' => $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId(),
-                    ];
-                } else {
-                    $objectsArray[] = $object->getSelf() ?? '/api/'.($object->getEntity()->getRoute() ?? $object->getEntity()->getName()).'/'.$object->getId();
-                }
+                $objectsArray[] = $this->renderObjectSelf($object, $acceptType);
             } catch (AccessDeniedException $exception) {
                 continue;
             }
@@ -706,7 +901,7 @@ class ResponseService
         $requestLog->setEntity($entity ?? null);
         $requestLog->setDocument(null); // todo
         $requestLog->setFile(null); // todo
-        $requestLog->setGateway($requestLog->getEntity() ? $requestLog->getEntity()->getGateway() : null);
+        $requestLog->setSource($requestLog->getEntity() ? $requestLog->getEntity()->getSource() : null);
 
         if ($this->session->has('application') && Uuid::isValid($this->session->get('application'))) {
             $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
@@ -724,6 +919,7 @@ class ResponseService
 
         $requestLog->setMethod($request->getMethod());
         $requestLog->setHeaders($this->filterRequestLogHeaders($requestLog->getEndpoint(), $request->headers->all()));
+        //todo use eavService->realRequestQueryAll(), maybe replace this function to another service than eavService?
         $requestLog->setQueryParams($request->query->all());
 
         $this->em->persist($requestLog);

@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "commonground-gateway.fullname" . }}-vendor
+  labels:
+    {{- include "commonground-gateway.labels" . | nindent 4 }}
+spec:
+    storageClassName: {{ .Values.pvcStorageClass | default "nfs" }}
+    accessModes:
+        - ReadWriteMany
+    resources:
+        requests:
+            storage: 1Gi
+    

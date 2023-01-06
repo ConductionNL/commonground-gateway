@@ -1,4 +1,4 @@
-# # Collections
+##  Collections
 #App\Entity\CollectionEntity:
 #    brcCollection:
 #        autoLoad: true
@@ -17,10 +17,10 @@
 #    contactmomentenCollection:
 #        autoLoad: true
 #        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/ConductionNL/contactmomenten_publiccode/main/OAS.yaml
+#        locationOAS: https://raw.githubusercontent.com/CommonGateway/ContactmomentenAPI/main/OAS.yaml
 #        name: contactmomenten collection
 #        sourceType: GitHub
-#        testDataLocation: https://github.com/ConductionNL/contactmomenten_publiccode/raw/main/data/contactmomenten.json
+#        testDataLocation: https://raw.githubusercontent.com/CommonGateway/ContactmomentenAPI/main/data/data.json
 #    drcCollection:
 #        autoLoad: true
 #        loadTestData: true
@@ -31,59 +31,29 @@
 #    klantenCollection:
 #        autoLoad: true
 #        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/klanten-api/master/src/openapi.yaml
+#        locationOAS: https://raw.githubusercontent.com/CommonGateway/KlantenAPI/main/OAS.yaml
 #        name: Klanten collection
 #        sourceType: GitHub
-#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/klanten_publiccode/main/data/klanten.json
-#    loggingReadCollection:
-#        autoLoad: true
-#        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/gemma-verwerkingenlogging/master/docs/api-read/oas-specification/logging-verwerkingen-api/openapi.yaml
-#        name: Logging read collection
-#        sourceType: GitHub
-#        testDataLocation: https://github.com/ConductionNL/logging-verwerking-read_publiccode/raw/main/data/logging-verwerking-read.yml
-#    loggingWriteCollection:
-#        autoLoad: true
-#        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/gemma-verwerkingenlogging/master/docs/api-write/oas-specification/logging-verwerkingen-api/openapi.yaml
-#        name: Logging write collection
-#        sourceType: GitHub
-#        testDataLocation: https://github.com/ConductionNL/logging-verwerking-write_publiccode/raw/main/data/logging-verwerking-write.yml
-#    pdcCollection:
-#        autoLoad: true
-#        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/ConductionNL/PDC_publiccode/main/PDC_OAS.json
-#        name: producten en diensten collection
-#        sourceType: GitHub
-#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/PDC_publiccode/main/data/PDC.json
+#        testDataLocation: https://raw.githubusercontent.com/CommonGateway/KlantenAPI/main/data/klanten.json
 #    pubCollection:
 #        autoLoad: true
-#        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/ConductionNL/PUB_publiccode/main/PUB_OAS.json
+#        locationOAS: https://raw.githubusercontent.com/ConductionNL/PUB_publiccode/main/PublicationsOAS.yaml
 #        name: Pub collection
 #        sourceType: GitHub
-#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/PUB_publiccode/main/data/PUB.json
-#    verzoekenCollection:
-#        autoLoad: true
-#        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/verzoeken-api/master/src/openapi.yaml
-#        name: verzoeken collection
-#        sourceType: GitHub
-#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/verzoeken_publiccode/main/data/verzoeken.json
 #    zrcCollection:
 #        autoLoad: true
 #        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/gemma-zaken/master/api-specificatie/zrc/1.2.x/openapi.yaml
+#        locationOAS: https://raw.githubusercontent.com/CommonGateway/ZaakRegistratieComponentAPI/main/OAS.yaml
 #        name: zrc collection
 #        sourceType: GitHub
-#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/zrc_publiccode/main/data/zrc.json
+#        testDataLocation: https://raw.githubusercontent.com/CommonGateway/ZaakRegistratieComponentAPI/main/data/zrc.json
 #    ztcCollection:
 #        autoLoad: true
 #        loadTestData: true
-#        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/gemma-zaken/master/api-specificatie/ztc/1.1.x/openapi.yaml
+#        locationOAS: https://raw.githubusercontent.com/CommonGateway/ZaakTypeCatalogusAPI/main/OAS.yaml
 #        name: ZTC collection
 #        sourceType: GitHub
-#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/ztc_publiccode/main/data/ztc.json
+#        testDataLocation: https://raw.githubusercontent.com/CommonGateway/ZaakTypeCatalogusAPI/main/data/ztc.json
 #    referentielijstenCollection:
 #        name: Referentielijsten collection
 #        sourceType: GitHub
@@ -91,590 +61,359 @@
 #        testDataLocation: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/data/referentielijsten.json
 #        loadTestData: true
 #        autoLoad: true
-#    agendaserviceCollection:
-#        name: AgendaService collection
+#    pubReferentielijstenCollection:
+#        name: pubReferentielijsten collection
 #        sourceType: GitHub
-#        locationOAS: https://raw.githubusercontent.com/Huwelijksplanner/AgendaService/main/OAS.yaml
-#       #  testDataLocation: https://raw.githubusercontent.com/Huwelijksplanner/AgendaService/main/data/testdata.json
-#       #  loadTestData: true
-#        autoLoad: true
-#    
-#    handelsregisterbevragenCollection:
-#        name: HandelsRegisterBevragen collection
-#        sourceType: GitHub
-#        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/Haal-Centraal-HR-bevragen/develop/specificatie/genereervariant/openapi.yaml
-#        testDataLocation: https://raw.githubusercontent.com/CommonGateway/HandelsRegisterBevragen/main/data/data.json
+#        locationOAS: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/KissPubOas.yaml
+#        testDataLocation: https://raw.githubusercontent.com/ConductionNL/referentielijsten_publiccode/main/data/KissPubData.json
 #        loadTestData: true
 #        autoLoad: true
-#    
+##    todo: this collection is broken because the VNG-Realisatie/Haal-Centraal-HR-bevragen repo does no longer exists...
+##    handelsregisterbevragenCollection:
+##        name: HandelsRegisterBevragen collection
+##        sourceType: GitHub
+##        locationOAS: https://raw.githubusercontent.com/VNG-Realisatie/Haal-Centraal-HR-bevragen/develop/specificatie/genereervariant/openapi.yaml
+##        testDataLocation: https://raw.githubusercontent.com/CommonGateway/HandelsRegisterBevragen/main/data/data.json
+##        loadTestData: true
+##        autoLoad: true
+#    overigeObjectenCollection:
+#        name: overigeObjecten collection
+#        sourceType: GitHub
+#        locationOAS: https://raw.githubusercontent.com/Huwelijksplanner/OverigeObjecten/main/OAS.yaml
+#        testDataLocation: https://raw.githubusercontent.com/Huwelijksplanner/OverigeObjecten/main/data/data.json
+#        loadTestData: true
+#        autoLoad: true
+##    todo: ^ bevat ook alle info uit deze collectie:
+##    overigeObjectenSDGCollection:
+##        name: overigeObjectenSDG collection
+##        sourceType: GitHub
+##        locationOAS: https://raw.githubusercontent.com/Huwelijksplanner/OverigeObjecten/main/OAS-SDG.yaml
+##        testDataLocation: https://raw.githubusercontent.com/Huwelijksplanner/OverigeObjecten/main/data/data-SDG.json
+##        loadTestData: true
+##        autoLoad: true
+#
 ## Entities
 #App\Entity\Entity:
-#    # Review Entity
-#    review:
-#        name: Review
-#        description: Biedt de generieke mogelijkheid om gebruikers reviews te geven over objecten
-#        route: "/reviews"
-#        endpoint: "reviews"
-#    
-#    # Note Entity
-#    note:
-#        name: Note
-#        description: Biedt de generieke mogelijkheid om gebruikers notities te laten aanmaken of resources (bijvoorbeeld Common Ground resources). Deze functionaliteit is bewust abstract opgezet.
-#        route: "/notes"
-#        endpoint: "notes"
-#    
-#    # Search Entity
-#    search:
-#        name: Search
-#        description: The search object is based on https://schema.org/SearchAction and is meant to hold search actions perfermoed by users, with other words it preserfec a search history.
-#        route: "/searches"
-#        endpoint: "searches"
-#    
-#    # Taxanomy Entity
-#    taxanomy:
-#        name: Taxanomy
-#        description: The taxanomy object is lously based on wordpress taxanomies
-#        route: "/taxanomies"
-#        endpoint: "taxanomies"
-#    
-#    # Medewerker Entity
-#    medewerker:
-#        name: Medewerker
-#        description: Dit ORC medewerker object vang kiss specifieke wensen af.
-#        route: "/medewerkers"
-#        endpoint: "medewerkers"
-#    
+#    # HandelsRegisterSearch Entity
+#    HandelsRegisterSearch:
+#        name: HandelsRegisterSearch
+#        description: Bedoelt om een search te doen op HandelsRegister.
+#        route: "/kvk/zoeken"
+#        endpoint: "zoeken"
+#
 ## Attributes
 #App\Entity\Attribute:
-#    # Review Attributes
-#    review_author:
-#        name: author
-#        description: The user that made this review.
+#    # HandelsRegisterSearch Attributes (here so we can do filter query params on the search endpoint)
+#    handelsRegisterSearch_kvkNummer:
+#        name: kvkNummer
 #        type: string
-#        format: uuid
-#        entity: "@review"
+#        entity: "@HandelsRegisterSearch"
 #        searchable: true
-#    
-#    review_topic:
-#        name: topic
-#        description: The object that this review is about.
+#
+#    handelsRegisterSearch_handelsnaam:
+#        name: handelsnaam
 #        type: string
-#        format: url
-#        entity: "@review"
+#        entity: "@HandelsRegisterSearch"
 #        searchable: true
-#    
-#    review_name:
-#        name: name
-#        description: The name of this review.
+#
+#    handelsRegisterSearch_postcode:
+#        name: postcode
 #        type: string
-#        entity: "@review"
+#        entity: "@HandelsRegisterSearch"
 #        searchable: true
-#    
-#    review_description:
-#        name: description
-#        description: The description of this review.
+#
+#    handelsRegisterSearch_huisnummer:
+#        name: huisnummer
 #        type: string
-#        required: true
-#        entity: "@review"
-#    
-#    review_rating:
-#        name: rating
-#        description: The rating of this review.
-#        type: integer
-#        entity: "@review"
-#    
-#    # Note Attributes
-#    note_author:
-#        name: author
-#        description: The user that made this note.
-#        type: string
-#        format: uuid
-#        required: true
-#        entity: "@note"
+#        entity: "@HandelsRegisterSearch"
 #        searchable: true
-#    
-#    note_topic:
-#        name: topic
-#        description: The object that this note is about.
+#
+#    handelsRegisterSearch_huisnummerToevoeging:
+#        name: huisnummerToevoeging
 #        type: string
-#        format: url
-#        required: true
-#        entity: "@note"
+#        entity: "@HandelsRegisterSearch"
 #        searchable: true
-#    
-#    note_name:
-#        name: name
-#        description: The name of this note.
-#        type: string
-#        required: true
-#        entity: "@note"
-#        searchable: true
-#    
-#    note_description:
-#        name: description
-#        description: The description of this note.
-#        type: string
-#        required: true
-#        entity: "@note"
-#    
-#    note_contact:
-#        name: contact
-#        description: The contact that needs to be notified.
-#        type: string
-#        format: uuid
-#        entity: "@note"
-#    
-#    # Search Attributes
-#    search_agent:
-#        name: agent
-#        description: The direct performer or driver of the action (animate or inanimate). e.g. John wrote a book.
-#        type: string
-#        format: url
-#        required: true
-#        entity: "@search"
-#        searchable: true
-#    
-#    search_object:
-#        name: object
-#        description: The object upon which the action is carried out, whose state is kept intact or changed. Also known as the semantic roles patient, affected or undergoer (which change their state) or theme (which doesn't). e.g. John read a book.
-#        type: string
-#        format: url
-#        required: true
-#        entity: "@search"
-#        searchable: true
-#    
-#    search_actionStatus:
-#        name: actionStatus
-#        description: Indicates the current disposition of the Action. Based on ActionStatusType (https://schema.org/ActionStatusType)
-#        type: string
-#        enum: ["Active", "Completed", "Failed", "Potential"]
-#        entity: "@search"
-#        searchable: true
-#    
-#    search_instrument:
-#        name: instrument
-#        description: The object that helped the agent perform the action. e.g. John searched with the generic search feature.
-#        type: string
-#        entity: "@search"
-#    
-#    search_location:
-#        name: location
-#        description: The location of, for example, where an event is happening, where an organization is located, or where an action takes place.
-#        type: string
-#        entity: "@search"
-#    
-#    search_participants:
-#        name: participants
-#        description: Other co-agents that participated in the action indirectly. e.g. John wrote a book with Steve.
-#        type: string
-#        multiple: true
-#        entity: "@search"
-#    
-#    search_provider:
-#        name: provider
-#        description: The service provider, service operator, or service performer; e.g ElasticSearch
-#        example: ElasticSearch
-#        type: string
-#        entity: "@search"
-#    
-#    search_result:
-#        name: result
-#        description: The result produced in the action. e.g. John wrote a book.
-#        type: array
-#        entity: "@search"
-#    
-#    search_error:
-#        name: error
-#        description: For failed actions, more information on the cause of the failure.
-#        type: string
-#        entity: "@search"
-#    
-#    search_endTime:
-#        name: endTime
-#        description: The endTime of something. For a reserved event or service (e.g. FoodEstablishmentReservation), the time that it is expected to end. For actions that span a period of time, when the action was performed. e.g. John wrote a book from January to December. For media, including audio and video, it's the time offset of the end of a clip within a larger file.
-#        type: datetime
-#        entity: "@search"
-#    
-#    search_startTime:
-#        name: startTime
-#        description: The startTime of something. For a reserved event or service (e.g. FoodEstablishmentReservation), the time that it is expected to start. For actions that span a period of time, when the action was performed. e.g. John wrote a book from January to December. For media, including audio and video, it's the time offset of the start of a clip within a larger file.
-#        type: datetime
-#        entity: "@search"
-#    
-#    search_target:
-#        name: target
-#        description: Indicates a target EntryPoint for an Action. Based on EntryPoint (https://schema.org/EntryPoint)
-#        type: string
-#        format: url
-#        entity: "@search"
-#    
-#    taxanomy_name:
-#        name: name
-#        description: Name of this taxanomy
-#        type: string
-#        required: true
-#        searchable: true
-#        entity: "@taxanomy"
-#    
-#    taxanomy_description:
-#        name: description
-#        description: The textual description of this taxanomy
-#        type: string
-#        required: true
-#        searchable: true
-#        entity: "@taxanomy"
-#    
-#    taxanomy_parent:
-#        name: parent
-#        description: The parent taxanomy of this taxanomy
-#        type: object
-#        cascade: true
-#        object: "@taxanomy"
-#        entity: "@taxanomy"
-#    
-#    medewerker_user:
-#        name: user
-#        description: The user uri of this medewerker
-#        type: string
-#        format: email
-#        required: true
-#        entity: "@medewerker"
-#    
-#    # todo: connect to Entity Klant (type should be object)
-#    medewerker_contact:
-#        name: contact
-#        description: The contact uri to the klanten api 
-#        type: string
-#        entity: "@medewerker"
-#    
-#    medewerker_description:
-#        name: description
-#        description: The description of this medewerker 
-#        type: string
-#        entity: "@medewerker"
-#    
-#    medewerker_department:
-#        name: department
-#        description: The department of this medewerker
-#        type: string
-#        entity: "@medewerker"
-#    
-#    medewerker_function:
-#        name: function
-#        description: The function of this medewerker
-#        type: string
-#        entity: "@medewerker"
-#    
-#    # todo: connect to Entity Calendar (type should be object)
-#    medewerker_calendar:
-#        name: calendar
-#        description: The calendar uri to the agenda api 
-#        type: string
-#        entity: "@medewerker"
-#    
-#    medewerker_replacement:
-#        name: replacement
-#        description: The replacement uri to another medewerker 
-#        type: string
-#        entity: "@medewerker"
-#    
-#    medewerker_skills:
-#        name: skills
-#        description: The skills of this medewerker 
-#        type: string
-#        multiple: true
-#        entity: "@medewerker"
-#    
+#
 ## Parameters for endpoint regex
 #parameters:
-#    reviewItemRegex: "^reviews/[a-z0-9-]{36}$"
-#    noteItemRegex: "^notes/[a-z0-9-]{36}$"
-#    searchItemRegex: "^searches/[a-z0-9-]{36}$"
-#    taxanomyItemRegex: "^taxanomies/[a-z0-9-]{36}$"
-#    medewerkerItemRegex: "^medewerkers/[a-z0-9-]{36}$"
-#    
+#    openpubProxyRegex: "^(openpub/[^.*]*)$"
+#    elasticRegex: "^(elastic/[^.*]*)$"
+#
 ## Endpoints        
 #App\Entity\Endpoint:
-#    # Review Endpoints
-#    reviewEndpointGet:
-#        name: Review endpoint get collection
-#        description: endpoint for reviews
-#        path: [ 'reviews' ]
-#        pathRegex: "^(reviews)$"
+#    # HandelsRegisterSearch Endpoint
+#    HandelsRegisterSearchGet:
+#        name: HandelsRegisterSearch endpoint
+#        description: HandelsRegisterSearch endpoint
+#        path: [ 'kvk', 'zoeken' ]
+#        pathRegex: "^kvk/zoeken$"
 #        method: GET
 #        operationType: collection
-#    
-#    reviewEndpointPost:
-#        name: Review endpoint post
-#        description: endpoint for reviews
-#        path: [ 'reviews' ]
-#        pathRegex: "^(reviews)$"
+#
+#    # Openpub proxy endpoint
+#    openpubProxyEndpoint:
+#        name: openpub proxy endpoint
+#        description: endpoint for openpub proxy
+#        path: [ 'openpub/', '{route}' ]
+#        pathRegex: <{openpubProxyRegex}>
+#        method: GET
+#        operationType: collection
+#
+#    # Elastic search endpoint
+#    elasticSearchEndpoint:
+#        name: elastic search endpoint
+#        description: endpoint for elastic search
+#        path: [ 'elastic/', '{route}' ]
+#        pathRegex: <{elasticRegex}>
 #        method: POST
 #        operationType: collection
-#    
-#    reviewEndpointGetItem:
-#        name: Review endpoint get item
-#        description: endpoint for reviews
-#        path: [ 'reviews', '{id}' ]
-#        pathRegex: <{reviewItemRegex}>
-#        method: GET
-#        operationType: item
-#    
-#    reviewEndpointPut:
-#        name: Review endpoint put
-#        description: endpoint for reviews
-#        path: [ 'reviews', '{id}' ]
-#        pathRegex: <{reviewItemRegex}>
-#        method: PUT
-#        operationType: item
-#    
-#    reviewEndpointDelete:
-#        name: Review endpoint delete
-#        description: endpoint for reviews
-#        path: [ 'reviews', '{id}' ]
-#        pathRegex: <{reviewItemRegex}>
-#        method: DELETE
-#        operationType: item
-#    
-#    # Note Endpoints
-#    noteEndpointGet:
-#        name: Note endpoint get collection
-#        description: endpoint for notes
-#        path: [ 'notes' ]
-#        pathRegex: "^(notes)$"
-#        method: GET
-#        operationType: collection
-#    
-#    noteEndpointPost:
-#        name: Note endpoint post
-#        description: endpoint for notes
-#        path: [ 'notes' ]
-#        pathRegex: "^(notes)$"
-#        method: POST
-#        operationType: collection
-#    
-#    noteEndpointGetItem:
-#        name: Note endpoint get item
-#        description: endpoint for notes
-#        path: [ 'notes', '{id}' ]
-#        pathRegex: <{noteItemRegex}>
-#        method: GET
-#        operationType: item
-#    
-#    noteEndpointPut:
-#        name: Note endpoint put
-#        description: endpoint for notes
-#        path: [ 'notes', '{id}' ]
-#        pathRegex: <{noteItemRegex}>
-#        method: PUT
-#        operationType: item
-#    
-#    noteEndpointDelete:
-#        name: Note endpoint delete
-#        description: endpoint for notes
-#        path: [ 'notes', '{id}' ]
-#        pathRegex: <{noteItemRegex}>
-#        method: DELETE
-#        operationType: item
-#    
-#    # Search Endpoints
-#    searchEndpointGet:
-#        name: Search endpoint get collection
-#        description: endpoint for searches
-#        path: [ 'searches' ]
-#        pathRegex: "^(searches)$"
-#        method: GET
-#        operationType: collection
-#    
-#    searchEndpointPost:
-#        name: Search endpoint post
-#        description: endpoint for searches
-#        path: [ 'searches' ]
-#        pathRegex: "^(searches)$"
-#        method: POST
-#        operationType: collection
-#    
-#    searchEndpointGetItem:
-#        name: Search endpoint get item
-#        description: endpoint for searches
-#        path: [ 'searches', '{id}' ]
-#        pathRegex: <{searchItemRegex}>
-#        method: GET
-#        operationType: item
-#    
-#    searchEndpointPut:
-#        name: Search endpoint put
-#        description: endpoint for searches
-#        path: [ 'searches', '{id}' ]
-#        pathRegex: <{searchItemRegex}>
-#        method: PUT
-#        operationType: item
-#    
-#    searchEndpointDelete:
-#        name: Search endpoint delete
-#        description: endpoint for searches
-#        path: [ 'searches', '{id}' ]
-#        pathRegex: <{searchItemRegex}>
-#        method: DELETE
-#        operationType: item
-#    
-#    # Taxanomy Endpoints
-#    taxanomyEndpointGet:
-#        name: Taxanomy endpoint get collection
-#        description: endpoint for taxanomies
-#        path: [ 'taxanomies' ]
-#        pathRegex: "^(taxanomies)$"
-#        method: GET
-#        operationType: collection
-#    
-#    taxanomyEndpointPost:
-#        name: Taxanomy endpoint post
-#        description: endpoint for taxanomies
-#        path: [ 'taxanomies' ]
-#        pathRegex: "^(taxanomies)$"
-#        method: POST
-#        operationType: collection
-#    
-#    taxanomyEndpointGetItem:
-#        name: Taxanomy endpoint get item
-#        description: endpoint for taxanomies
-#        path: [ 'taxanomies', '{id}' ]
-#        pathRegex: <{taxanomyItemRegex}>
-#        method: GET
-#        operationType: item
-#    
-#    taxanomyEndpointPut:
-#        name: Taxanomy endpoint put
-#        description: endpoint for taxanomies
-#        path: [ 'taxanomies', '{id}' ]
-#        pathRegex: <{taxanomyItemRegex}>
-#        method: PUT
-#        operationType: item
-#    
-#    taxanomyEndpointDelete:
-#        name: Taxanomy endpoint delete
-#        description: endpoint for taxanomies
-#        path: [ 'taxanomies', '{id}' ]
-#        pathRegex: <{taxanomyItemRegex}>
-#        method: DELETE
-#        operationType: item
-#    
-#    # Medewerker Endpoints
-#    medewerkerEndpointGet:
-#        name: Medewerker endpoint get collection
-#        description: endpoint for medewerkers
-#        path: [ 'medewerkers' ]
-#        pathRegex: "^(medewerkers)$"
-#        method: GET
-#        operationType: collection
-#    
-#    medewerkerEndpointPost:
-#        name: Medewerker endpoint post
-#        description: endpoint for medewerkers
-#        path: [ 'medewerkers' ]
-#        pathRegex: "^(medewerkers)$"
-#        method: POST
-#        operationType: collection
-#    
-#    medewerkerEndpointGetItem:
-#        name: Medewerker endpoint get item
-#        description: endpoint for medewerkers
-#        path: [ 'medewerkers', '{id}' ]
-#        pathRegex: <{medewerkerItemRegex}>
-#        method: GET
-#        operationType: item
-#    
-#    medewerkerEndpointPut:
-#        name: Medewerker endpoint put
-#        description: endpoint for medewerkers
-#        path: [ 'medewerkers', '{id}' ]
-#        pathRegex: <{medewerkerItemRegex}>
-#        method: PUT
-#        operationType: item
-#    
-#    medewerkerEndpointDelete:
-#        name: Medewerker endpoint delete
-#        description: endpoint for medewerkers
-#        path: [ 'medewerkers', '{id}' ]
-#        pathRegex: <{medewerkerItemRegex}>
-#        method: DELETE
-#        operationType: item
-#    
+#
 ## Handlers
 #App\Entity\Handler:
-#    # Review Handler
-#    reviewHandler:
-#        name: Review handler
-#        methods: ["*"]
+#    # HandelsRegisterSearch Handler
+#    HandelsRegisterSearchHandler:
+#        name: HandelsRegisterSearch handler
+#        methods: ["GET"]
 #        sequence: 0
 #        conditions: "{}"
-#        endpoints: ["@reviewEndpointGet", "@reviewEndpointPost", "@reviewEndpointGetItem", "@reviewEndpointPut", "@reviewEndpointDelete"]
-#        entity: "@review"
-#    
-#    # Note Handler
-#    noteHandler:
-#        name: Note handler
-#        methods: [ "*" ]
-#        sequence: 0
-#        conditions: "{}"
-#        endpoints: [ "@noteEndpointGet", "@noteEndpointPost", "@noteEndpointGetItem", "@noteEndpointPut", "@noteEndpointDelete" ]
-#        entity: "@note"
-#    
-#    # Search Handler
-#    searchHandler:
-#        name: Search handler
-#        methods: [ "*" ]
-#        sequence: 0
-#        conditions: "{}"
-#        endpoints: [ "@searchEndpointGet", "@searchEndpointPost", "@searchEndpointGetItem", "@searchEndpointPut", "@searchEndpointDelete" ]
-#        entity: "@search"
-#    
-#    # Taxanomy Handler
-#    taxanomyHandler:
-#        name: Search handler
-#        methods: [ "*" ]
-#        sequence: 0
-#        conditions: "{}"
-#        endpoints: [ "@taxanomyEndpointGet", "@taxanomyEndpointPost", "@taxanomyEndpointGetItem", "@taxanomyEndpointPut", "@taxanomyEndpointDelete" ]
-#        entity: "@taxanomy"
-#    
-#    
-#    # Medewerker Handler
-#    medewerkerHandler:
-#        name: Medewerker handler
-#        methods: [ "*" ]
-#        sequence: 0
-#        conditions: "{}"
-#        endpoints: [ "@medewerkerEndpointGet", "@medewerkerEndpointPost", "@medewerkerEndpointGetItem", "@medewerkerEndpointPut", "@medewerkerEndpointDelete" ]
-#        entity: "@medewerker"
+#        endpoints: ["@HandelsRegisterSearchGet"]
+#        entity: "@HandelsRegisterSearch"
 #
+#    # Openpub Proxy Handler
+#    openpubProxyHandler:
+#        name: Openpub Proxy Handler
+#        methods: [ "*" ]
+#        sequence: 0
+#        conditions: "{}"
+#        endpoints: [ "@openpubProxyEndpoint" ]
+#        proxyGateway: openPub API
 #
-## EmailTemplates
-#App\Entity\EmailTemplate:
-#    newReviewTemplate:
-#        name: newReviewTemplate
-#        description: "email template for the new review email."
-#        # todo for content find another way to configure email templates, so we don't need to add files inside the gateway
-#        content: "emails/kiss/new-review-e-mail.html.twig"
-#        variables:
-#            subject: name
-#            author: author
-#            topic: topic
-#            rating: rating
-#            description: description
-#        subject: "test {name}"
-#        sender: kiss@commonground.nu
-#        receiver: kiss@commonground.nu
+#    # Elastic search Handler
+#    elasticSearchHandler:
+#        name: Elastic Search Handler
+#        methods: [ "*" ]
+#        sequence: 0
+#        conditions: "{}"
+#        endpoints: [ "@elasticSearchEndpoint" ]
+#        proxyGateway: EnterpriseSearch API Search
 #
-## EmailTriggers
-#App\Entity\EmailTrigger:
-#    newReviewTrigger:
-#        name: newReviewTrigger
-#        description: "trigger for the new review email."
-#        # todo: request is an example, not required
-##        request:
-##            query:
-##                test: test123
-#        hooks: ['POST_HANDLER']
-#        endpoints: ["@reviewEndpointPost"]
-#        templates: ["@newReviewTemplate"]
+#App\Entity\Gateway:
+#    # Openpub proxy
+#    pubSource:
+#        name: openPub API
+#        location: https://openweb.kiss.commonground.nu/wp-json/wp/v2 # TODO: for now is this the dev url, will change later
+#        headers:
+#            accept: 'application/json'
+#        auth: none
+#    # ElasticSearch private
+#    elasticPrivate:
+#        name: EnterpriseSearch API Private
+#        location: 'https://enterprise-search-ent-http.elasticsearch:3002'
+#        headers:
+#            accept: 'application/json'
+#        auth: apikey
+#        apikey: 'Bearer private-IWillNotTellYouMySecret'
+#        configuration:
+#            verify: false
+#    # ElasticSearch search
+#    elasticSearch:
+#        name: EnterpriseSearch API Search
+#        location: 'https://enterprise-search-ent-http.elasticsearch:3002'
+#        headers:
+#            accept: 'application/json'
+#        auth: apikey
+#        apikey: 'Bearer search-IWillNotTellYouMySecret'
+#        configuration:
+#            verify: false
+#
+#App\Entity\Action:
+#    EmailAction:
+#        name: Send review mail
+#        description: This action sends an email every time a review is made
+#        listens:
+#            - 'commongateway.object.create'
+#        throws: [ ]
+#        conditions:
+#            '==':
+#                -   var: entity
+#                - 97b05576-af9b-43df-bab7-dbf0f057258e # review entity uuid
+#        class: App\ActionHandler\EmailHandler
+#        priority: 0
+#        async: false
+#        isEnabled: true
+#        configuration:
+#            serviceDNS: mailgun+api://code:domain@api.eu.mailgun.net
+#            template: eyMgdG9kbzogbW92ZSB0aGlzIHRvIGFuIGVtYWlsIHBsdWdpbiAoc2VlIEVtYWlsU2VydmljZS5waHApICN9CjwhRE9DVFlQRSBodG1sIFBVQkxJQyAiLS8vVzNDLy9EVEQgWEhUTUwgMS4wIFRyYW5zaXRpb25hbC8vRU4iICJodHRwOi8vd3d3LnczLm9yZy9UUi94aHRtbDEvRFREL3hodG1sMS10cmFuc2l0aW9uYWwuZHRkIj4KPGh0bWwgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGh0bWwiPgo8aGVhZD4KICA8bWV0YSBuYW1lPSJ2aWV3cG9ydCIgY29udGVudD0id2lkdGg9ZGV2aWNlLXdpZHRoLCBpbml0aWFsLXNjYWxlPTEuMCIgLz4KICA8bWV0YSBodHRwLWVxdWl2PSJDb250ZW50LVR5cGUiIGNvbnRlbnQ9InRleHQvaHRtbDsgY2hhcnNldD1VVEYtOCIgLz4KICA8dGl0bGU+e3sgc3ViamVjdCB9fTwvdGl0bGU+CgogIDxsaW5rIHJlbD0icHJlY29ubmVjdCIgaHJlZj0iaHR0cHM6Ly9mb250cy5nc3RhdGljLmNvbSIgLz4KICA8bGluawogICAgICAgICAgaHJlZj0iaHR0cHM6Ly9mb250cy5nb29nbGVhcGlzLmNvbS9jc3MyP2ZhbWlseT1GYXVzdGluYTp3Z2h0QDYwMCZkaXNwbGF5PXN3YXAiCiAgICAgICAgICByZWw9InN0eWxlc2hlZXQiCiAgLz4KICA8bGluawogICAgICAgICAgaHJlZj0iaHR0cHM6Ly9mb250cy5nb29nbGVhcGlzLmNvbS9jc3MyP2ZhbWlseT1Tb3VyY2UrU2FucytQcm8mZGlzcGxheT1zd2FwIgogICAgICAgICAgcmVsPSJzdHlsZXNoZWV0IgogIC8+CgogIDxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyIgcmVsPSJzdHlsZXNoZWV0IiBtZWRpYT0iYWxsIj4KICAgIC8qIEJhc2UgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tICovCgogICAgYm9keSB7CiAgICAgIHdpZHRoOiAxMDAlICFpbXBvcnRhbnQ7CiAgICAgIGhlaWdodDogMTAwJTsKICAgICAgbWFyZ2luOiAwOwogICAgICBtc28tbGluZS1oZWlnaHQtcnVsZTogZXhhY3RseTsKICAgICAgbGluZS1oZWlnaHQ6IDEuNDsKICAgICAgYmFja2dyb3VuZC1jb2xvcjogI2ZmZmZmZjsKICAgICAgY29sb3I6ICM3NDc4N2U7CiAgICAgIC13ZWJraXQtdGV4dC1zaXplLWFkanVzdDogbm9uZTsKICAgIH0KCiAgICBwLAogICAgdWwsCiAgICBvbCwKICAgIGJsb2NrcXVvdGUgewogICAgICBtc28tbGluZS1oZWlnaHQtcnVsZTogZXhhY3RseTsKICAgICAgbGluZS1oZWlnaHQ6IDEuNDsKICAgICAgdGV4dC1hbGlnbjogbGVmdDsKICAgIH0KCiAgICBhIHsKICAgICAgY29sb3I6ICMxZDU1ZmY7CiAgICAgIHRleHQtZGVjb3JhdGlvbjogbm9uZTsKICAgIH0KCiAgICBhOmhvdmVyIHsKICAgICAgdGV4dC1kZWNvcmF0aW9uOiB1bmRlcmxpbmU7CiAgICB9CgogICAgcCBhIHsKICAgICAgdGV4dC1kZWNvcmF0aW9uOiB1bmRlcmxpbmU7CiAgICB9CgogICAgYSBpbWcgewogICAgICBib3JkZXI6IG5vbmU7CiAgICB9CgogICAgdGQgewogICAgICB3b3JkLWJyZWFrOiBicmVhay13b3JkOwogICAgfQogICAgLyogTGF5b3V0IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSAqLwoKICAgIC5oZWFkZXIgewogICAgICBiYWNrZ3JvdW5kOiAjMWQ1NWZmOwogICAgICB3aWR0aDogMTAwJTsKICAgICAgaGVpZ2h0OiAyMzZweDsKICAgICAgYmFja2dyb3VuZC1yZXBlYXQ6IG5vLXJlcGVhdDsKICAgICAgYmFja2dyb3VuZC1wb3NpdGlvbjogY2VudGVyOwogICAgfQoKICAgIC5oZWFkZXItY2VsbCB7CiAgICAgIHBhZGRpbmc6IDE2cHggMjRweDsKICAgIH0KCiAgICAuZW1haWwtd3JhcHBlciB7CiAgICAgIHdpZHRoOiAxMDAlOwogICAgICBtYXJnaW46IDA7CiAgICAgIHBhZGRpbmc6IDA7CiAgICAgIC1wcmVtYWlsZXItd2lkdGg6IDEwMCU7CiAgICAgIC1wcmVtYWlsZXItY2VsbHBhZGRpbmc6IDA7CiAgICAgIC1wcmVtYWlsZXItY2VsbHNwYWNpbmc6IDA7CiAgICAgIGJhY2tncm91bmQtY29sb3I6ICNmZmZmZmY7CiAgICB9CgogICAgLmVtYWlsLWNvbnRlbnQgewogICAgICB3aWR0aDogMTAwJTsKICAgICAgbWFyZ2luOiAwOwogICAgICBwYWRkaW5nOiAwOwogICAgICAtcHJlbWFpbGVyLXdpZHRoOiAxMDAlOwogICAgICAtcHJlbWFpbGVyLWNlbGxwYWRkaW5nOiAwOwogICAgICAtcHJlbWFpbGVyLWNlbGxzcGFjaW5nOiAwOwogICAgfQogICAgLyogTWFzdGhlYWQgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0gKi8KCiAgICAuZW1haWwtbWFzdGhlYWQgewogICAgICBwYWRkaW5nOiAyNXB4IDA7CiAgICAgIHRleHQtYWxpZ246IGNlbnRlcjsKICAgIH0KCiAgICAuZW1haWwtbWFzdGhlYWRfbG9nbyB7CiAgICAgIHdpZHRoOiA5NHB4OwogICAgfQoKICAgIC5lbWFpbC1tYXN0aGVhZF9uYW1lIHsKICAgICAgZm9udC1zaXplOiAxNnB4OwogICAgICBmb250LXdlaWdodDogNjAwOwogICAgICBjb2xvcjogI2JiYmZjMzsKICAgICAgdGV4dC1kZWNvcmF0aW9uOiBub25lOwogICAgICB0ZXh0LXNoYWRvdzogMCAxcHggMCB3aGl0ZTsKICAgIH0KICAgIC8qIEJvZHkgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tICovCgogICAgLmVtYWlsLWJvZHkgewogICAgICB3aWR0aDogMTAwJTsKICAgICAgbWFyZ2luOiAwOwogICAgICBwYWRkaW5nOiAwOwogICAgICAtcHJlbWFpbGVyLXdpZHRoOiAxMDAlOwogICAgICAtcHJlbWFpbGVyLWNlbGxwYWRkaW5nOiAwOwogICAgICAtcHJlbWFpbGVyLWNlbGxzcGFjaW5nOiAwOwogICAgICBiYWNrZ3JvdW5kOiBub25lOwogICAgfQoKICAgIC5lbWFpbC1ib2R5X2lubmVyIHsKICAgICAgd2lkdGg6IDY0MHB4OwogICAgICBtYXJnaW46IDAgYXV0bzsKICAgICAgcGFkZGluZzogMDsKICAgICAgLXByZW1haWxlci13aWR0aDogNTcwcHg7CiAgICAgIC1wcmVtYWlsZXItY2VsbHBhZGRpbmc6IDA7CiAgICAgIC1wcmVtYWlsZXItY2VsbHNwYWNpbmc6IDA7CiAgICAgIGJhY2tncm91bmQtY29sb3I6ICNmZmZmZmY7CiAgICB9CgogICAgLmVtYWlsLWZvb3RlciB7CiAgICAgIHdpZHRoOiA2NDBweDsKICAgICAgbWFyZ2luOiAwIGF1dG87CiAgICAgIHBhZGRpbmc6IDA7CiAgICAgIC1wcmVtYWlsZXItd2lkdGg6IDU3MHB4OwogICAgICAtcHJlbWFpbGVyLWNlbGxwYWRkaW5nOiAwOwogICAgICAtcHJlbWFpbGVyLWNlbGxzcGFjaW5nOiAwOwogICAgICB0ZXh0LWFsaWduOiBjZW50ZXI7CiAgICB9CgogICAgLmVtYWlsLWZvb3RlciBwIHsKICAgICAgY29sb3I6ICNhZWFlYWU7CiAgICB9CgogICAgLmJvZHktYWN0aW9uIHsKICAgICAgd2lkdGg6IDEwMCU7CiAgICAgIG1hcmdpbjogNDBweCBhdXRvOwogICAgICBwYWRkaW5nOiAwOwogICAgICAtcHJlbWFpbGVyLXdpZHRoOiAxMDAlOwogICAgICAtcHJlbWFpbGVyLWNlbGxwYWRkaW5nOiAwOwogICAgICAtcHJlbWFpbGVyLWNlbGxzcGFjaW5nOiAwOwogICAgICB0ZXh0LWFsaWduOiBjZW50ZXI7CiAgICB9CgogICAgLmJvZHktc3ViIHsKICAgICAgbWFyZ2luLXRvcDogMjVweDsKICAgICAgcGFkZGluZy10b3A6IDI1cHg7CiAgICAgIGJvcmRlci10b3A6IDFweCBzb2xpZCAjZWRlZmYyOwogICAgfQoKICAgIC5jb250ZW50LWNlbGwgewogICAgICBwYWRkaW5nOiAzNnB4IDE2cHg7CiAgICB9CgogICAgLnByZWhlYWRlciB7CiAgICAgIGRpc3BsYXk6IG5vbmUgIWltcG9ydGFudDsKICAgICAgdmlzaWJpbGl0eTogaGlkZGVuOwogICAgICBtc28taGlkZTogYWxsOwogICAgICBmb250LXNpemU6IDFweDsKICAgICAgbXNvLWxpbmUtaGVpZ2h0LXJ1bGU6IGV4YWN0bHk7CiAgICAgIGxpbmUtaGVpZ2h0OiAxcHg7CiAgICAgIG1heC1oZWlnaHQ6IDA7CiAgICAgIG1heC13aWR0aDogMDsKICAgICAgb3BhY2l0eTogMDsKICAgICAgb3ZlcmZsb3c6IGhpZGRlbjsKICAgIH0KICAgIC8qIEF0dHJpYnV0ZSBsaXN0IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSAqLwoKICAgIC5hdHRyaWJ1dGVzIHsKICAgICAgbWFyZ2luOiAwIDAgMjFweDsKICAgIH0KCiAgICAuYXR0cmlidXRlc19jb250ZW50IHsKICAgICAgYmFja2dyb3VuZC1jb2xvcjogI2VkZWZmMjsKICAgICAgcGFkZGluZzogMTZweDsKICAgIH0KCiAgICAuYXR0cmlidXRlc19pdGVtIHsKICAgICAgcGFkZGluZzogMDsKICAgIH0KICAgIC8qIFJlbGF0ZWQgSXRlbXMgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tICovCgogICAgLnJlbGF0ZWQgewogICAgICB3aWR0aDogMTAwJTsKICAgICAgbWFyZ2luOiAwOwogICAgICBwYWRkaW5nOiAyNXB4IDAgMCAwOwogICAgICAtcHJlbWFpbGVyLXdpZHRoOiAxMDAlOwogICAgICAtcHJlbWFpbGVyLWNlbGxwYWRkaW5nOiAwOwogICAgICAtcHJlbWFpbGVyLWNlbGxzcGFjaW5nOiAwOwogICAgfQoKICAgIC5yZWxhdGVkX2l0ZW0gewogICAgICBwYWRkaW5nOiAxMHB4IDA7CiAgICAgIGNvbG9yOiAjNzQ3ODdlOwogICAgICBmb250LXNpemU6IDE1cHg7CiAgICAgIG1zby1saW5lLWhlaWdodC1ydWxlOiBleGFjdGx5OwogICAgICBsaW5lLWhlaWdodDogMThweDsKICAgIH0KCiAgICAucmVsYXRlZF9pdGVtLXRpdGxlIHsKICAgICAgZGlzcGxheTogYmxvY2s7CiAgICAgIG1hcmdpbjogMC41ZW0gMCAwOwogICAgfQoKICAgIC5yZWxhdGVkX2l0ZW0tdGh1bWIgewogICAgICBkaXNwbGF5OiBibG9jazsKICAgICAgcGFkZGluZy1ib3R0b206IDEwcHg7CiAgICB9CgogICAgLnJlbGF0ZWRfaGVhZGluZyB7CiAgICAgIGJvcmRlci10b3A6IDFweCBzb2xpZCAjZWRlZmYyOwogICAgICB0ZXh0LWFsaWduOiBjZW50ZXI7CiAgICAgIHBhZGRpbmc6IDI1cHggMCAxMHB4OwogICAgfQoKICAgIC8qIFV0aWxpdGllcyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0gKi8KCiAgICAubm8tbWFyZ2luIHsKICAgICAgbWFyZ2luOiAwOwogICAgfQoKICAgIC5tYXJnaW4tdG9wIHsKICAgICAgbWFyZ2luLXRvcDogOHB4OwogICAgfQoKICAgIC5hbGlnbi1yaWdodCB7CiAgICAgIHRleHQtYWxpZ246IHJpZ2h0OwogICAgfQoKICAgIC5hbGlnbi1sZWZ0IHsKICAgICAgdGV4dC1hbGlnbjogbGVmdDsKICAgIH0KCiAgICAuYWxpZ24tY2VudGVyIHsKICAgICAgdGV4dC1hbGlnbjogY2VudGVyOwogICAgfQogICAgLypNZWRpYSBRdWVyaWVzIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSAqLwoKICAgIEBtZWRpYSBvbmx5IHNjcmVlbiBhbmQgKG1heC13aWR0aDogNjAwcHgpIHsKICAgICAgLmVtYWlsLWJvZHlfaW5uZXIsCiAgICAgIC5lbWFpbC1mb290ZXIgewogICAgICAgIHdpZHRoOiAxMDAlICFpbXBvcnRhbnQ7CiAgICAgIH0KICAgIH0KCiAgICBAbWVkaWEgb25seSBzY3JlZW4gYW5kIChtYXgtd2lkdGg6IDUwMHB4KSB7CiAgICAgIC5idXR0b24gewogICAgICAgIHdpZHRoOiAxMDAlICFpbXBvcnRhbnQ7CiAgICAgIH0KICAgIH0KCiAgICAvKiBDYXJkcyAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0gKi8KICAgIC5jYXJkIHsKICAgICAgYmFja2dyb3VuZC1jb2xvcjogI2ZmZjsKICAgICAgYm9yZGVyLXRvcDogMXB4IHNvbGlkICNlMGUxZTU7CiAgICAgIGJvcmRlci1yaWdodDogMXB4IHNvbGlkICNlMGUxZTU7CiAgICAgIGJvcmRlci1ib3R0b206IDFweCBzb2xpZCAjZTBlMWU1OwogICAgICBib3JkZXItbGVmdDogMXB4IHNvbGlkICNlMGUxZTU7CiAgICAgIHBhZGRpbmc6IDI0cHg7CiAgICAgIGRpc3BsYXk6IGlubGluZS1ibG9jazsKICAgICAgY29sb3I6ICMzOTM5M2E7CiAgICAgIHRleHQtZGVjb3JhdGlvbjogbm9uZTsKICAgICAgd2lkdGg6IDEwMCU7CiAgICAgIGJvcmRlci1yYWRpdXM6IDNweDsKICAgICAgYm94LXNoYWRvdzogMCA0cHggM3B4IC0zcHggcmdiYSgwLCAwLCAwLCAwLjA4KTsKICAgICAgLXdlYmtpdC10ZXh0LXNpemUtYWRqdXN0OiBub25lOwogICAgICBtc28tbGluZS1oZWlnaHQtcnVsZTogZXhhY3RseTsKICAgICAgbGluZS1oZWlnaHQ6IDEuNzU7CiAgICAgIGxldHRlci1zcGFjaW5nOiAwLjhweDsKICAgIH0KCiAgICAvKiBCdXR0b25zIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLSAqLwoKICAgIC5idXR0b24gewogICAgICBiYWNrZ3JvdW5kLWNvbG9yOiAjMWRiNGVkOwogICAgICBib3JkZXItdG9wOiAxMHB4IHNvbGlkICMxZGI0ZWQ7CiAgICAgIGJvcmRlci1yaWdodDogMThweCBzb2xpZCAjMWRiNGVkOwogICAgICBib3JkZXItYm90dG9tOiAxMHB4IHNvbGlkICMxZGI0ZWQ7CiAgICAgIGJvcmRlci1sZWZ0OiAxOHB4IHNvbGlkICMxZGI0ZWQ7CiAgICAgIGRpc3BsYXk6IGlubGluZS1ibG9jazsKICAgICAgY29sb3I6ICNmZmY7CiAgICAgIHRleHQtZGVjb3JhdGlvbjogbm9uZTsKICAgICAgYm9yZGVyLXJhZGl1czogNHB4OwogICAgICBib3gtc2hhZG93OiAwIDJweCAzcHggcmdiYSgwLCAwLCAwLCAwLjE2KTsKICAgICAgLXdlYmtpdC10ZXh0LXNpemUtYWRqdXN0OiBub25lOwogICAgICBtc28tbGluZS1oZWlnaHQtcnVsZTogZXhhY3RseTsKICAgICAgd2lkdGg6IDEwMCU7CiAgICAgIHRleHQtYWxpZ246IGNlbnRlcjsKICAgICAgZm9udC1zaXplOiAxNHB4OwogICAgICBmb250LXdlaWdodDogNjAwOwogICAgfQoKICAgIC5zbWFsbC1sb2dvIHsKICAgICAgd2lkdGg6IDI0cHg7CiAgICAgIGhlaWdodDogMjRweDsKICAgIH0KCiAgICAuaW5saW5lIHsKICAgICAgZGlzcGxheTogaW5saW5lOwogICAgfQogICAgLyogVHlwZSAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0gKi8KCiAgICBwIHsKICAgICAgbWFyZ2luOiAwOwogICAgICBjb2xvcjogIzM5MzkzYTsKICAgICAgZm9udC1zaXplOiAxNXB4OwogICAgICBtc28tbGluZS1oZWlnaHQtcnVsZTogZXhhY3RseTsKICAgICAgbGV0dGVyLXNwYWNpbmc6IG5vcm1hbDsKICAgICAgdGV4dC1hbGlnbjogbGVmdDsKICAgICAgbGluZS1oZWlnaHQ6IDIwcHg7CiAgICB9CgogICAgcCArIHAgewogICAgICBtYXJnaW4tdG9wOiAyMHB4OwogICAgfQoKICAgIHAuc3VmZml4IHsKICAgICAgZm9udC1zaXplOiAxNHB4OwogICAgfQoKICAgIHAuc3ViIHsKICAgICAgZm9udC1zaXplOiAxMnB4OwogICAgfQoKICAgIHAuY2VudGVyIHsKICAgICAgdGV4dC1hbGlnbjogY2VudGVyOwogICAgfQoKICAgIC5zdWJ0bGUgewogICAgICBjb2xvcjogI2IxYjFiMTsKICAgIH0KCiAgICAvKiBGb290ZXIgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tICovCgogICAgLmxvZ28tbGFiZWwgewogICAgICB2ZXJ0aWNhbC1hbGlnbjogdG9wOwogICAgICBmb250LXNpemU6IDE0cHg7CiAgICAgIG1hcmdpbi1sZWZ0OiA0cHg7CiAgICB9CgogICAgLmZvb3Rlci1jZWxsIHsKICAgICAgcGFkZGluZzogOHB4IDI0cHg7CiAgICB9CgogICAgLmZvb3Rlci1uYXYgewogICAgICBtYXJnaW4tbGVmdDogOHB4OwogICAgICBmb250LXNpemU6IDE0cHg7CiAgICAgIGNvbG9yOiAjMzkzOTNhOwogICAgICB0ZXh0LWRlY29yYXRpb246IG5vbmU7CiAgICB9CgogICAgLmhlYWRlci1saW5rIHsKICAgICAgdGV4dC1kZWNvcmF0aW9uOiBub25lOwogICAgICBmb250LXNpemU6IDE0cHg7CiAgICAgIGNvbG9yOiAjMWQ1NWZmOwogICAgICBmb250LXdlaWdodDogNTAwOwogICAgfQoKICAgIC5tYXJnaW4tdG9wIHsKICAgICAgbWFyZ2luLXRvcDogMTZweDsKICAgIH0KCiAgICAubG9nby1jb250YWluZXIgewogICAgICB3aWR0aDogMTAwJTsKICAgICAgbWFyZ2luLWJvdHRvbTogNTZweDsKICAgIH0KCiAgICAubG9nbyB7CiAgICAgIGRpc3BsYXk6IGJsb2NrOwogICAgfQoKICAgIC8qIEN1c3RvbSBzdHlsZXMgLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tICovCiAgICBociB7CiAgICAgIGJvcmRlci10b3A6IDFweCBzb2xpZCAjZDlkOWRlOwogICAgICBjb2xvcjogI2Q5ZDlkZTsKICAgICAgYmFja2dyb3VuZC1jb2xvcjogI2Q5ZDlkZTsKICAgICAgbWFyZ2luLXRvcDogMzJweDsKICAgICAgbWFyZ2luLWJvdHRvbTogNDBweDsKICAgIH0KCiAgICBoMSB7CiAgICAgIGZvbnQtZmFtaWx5OiAiRmF1c3RpbmEiLCBzZXJpZjsKICAgICAgZm9udC1zaXplOiAzMnB4OwogICAgICBmb250LXdlaWdodDogNjAwOwogICAgICBjb2xvcjogIzIzMjMyNjsKICAgICAgbWFyZ2luLWJvdHRvbTogMjJweDsKICAgIH0KCiAgICBwIHsKICAgICAgZm9udC1mYW1pbHk6ICJTb3VyY2UgU2FucyBQcm8iLCBzYW5zLXNlcmlmOwogICAgICBmb250LXNpemU6IDE4cHg7CiAgICAgIGxpbmUtaGVpZ2h0OiAxLjY7CiAgICAgIGNvbG9yOiAjMjMyMzI2OwogICAgfQoKICAgIC5idXR0b24gewogICAgICBmb250LWZhbWlseTogIlNvdXJjZSBTYW5zIFBybyIsIHNhbnMtc2VyaWY7CiAgICB9CgogICAgLmNvbnRlbnQtY2VsbCB7CiAgICAgIHBhZGRpbmc6IDQwcHggNDBweDsKICAgIH0KCiAgICAuYnV0dG9uIHsKICAgICAgYmFja2dyb3VuZC1jb2xvcjogI2ZmNWEyNjsKICAgICAgYm9yZGVyLXRvcDogMTBweCBzb2xpZCAjZmY1YTI2OwogICAgICBib3JkZXItcmlnaHQ6IDE4cHggc29saWQgI2ZmNWEyNjsKICAgICAgYm9yZGVyLWJvdHRvbTogMTBweCBzb2xpZCAjZmY1YTI2OwogICAgICBib3JkZXItbGVmdDogMThweCBzb2xpZCAjZmY1YTI2OwogICAgICBkaXNwbGF5OiBpbmxpbmUtYmxvY2s7CiAgICAgIGNvbG9yOiAjZmZmOwogICAgICB3aWR0aDogYXV0bzsKICAgICAgYm94LXNoYWRvdzogbm9uZTsKICAgICAgdGV4dC1kZWNvcmF0aW9uOiBub25lOwogICAgICBib3JkZXItcmFkaXVzOiA4cHg7CiAgICAgIC13ZWJraXQtdGV4dC1zaXplLWFkanVzdDogbm9uZTsKICAgICAgbXNvLWxpbmUtaGVpZ2h0LXJ1bGU6IGV4YWN0bHk7CiAgICAgIHRleHQtYWxpZ246IGNlbnRlcjsKICAgICAgZm9udC1zaXplOiAxNHB4OwogICAgICBmb250LXdlaWdodDogNjAwOwogICAgfQogIDwvc3R5bGU+CjwvaGVhZD4KPGJvZHk+Cjx0YWJsZSBjbGFzcz0iZW1haWwtd3JhcHBlciIgd2lkdGg9IjEwMCUiIGNlbGxwYWRkaW5nPSIwIiBjZWxsc3BhY2luZz0iMCI+CiAgPHRyPgogICAgPHRkIGFsaWduPSJjZW50ZXIiPgogICAgICA8dGFibGUKICAgICAgICAgICAgICBjbGFzcz0iZW1haWwtY29udGVudCIKICAgICAgICAgICAgICB3aWR0aD0iMTAwJSIKICAgICAgICAgICAgICBjZWxscGFkZGluZz0iMCIKICAgICAgICAgICAgICBjZWxsc3BhY2luZz0iMCIKICAgICAgPgogICAgICAgIDx0cj4KICAgICAgICAgIDx0ZCBjbGFzcz0iZW1haWwtbWFzdGhlYWQiPjwvdGQ+CiAgICAgICAgPC90cj4KICAgICAgICA8IS0tIEVtYWlsIEJvZHkgLS0+CiAgICAgICAgPHRyPgogICAgICAgICAgPHRkCiAgICAgICAgICAgICAgICAgIGNsYXNzPSJlbWFpbC1ib2R5IgogICAgICAgICAgICAgICAgICB3aWR0aD0iMTAwJSIKICAgICAgICAgICAgICAgICAgY2VsbHBhZGRpbmc9IjAiCiAgICAgICAgICAgICAgICAgIGNlbGxzcGFjaW5nPSIwIgogICAgICAgICAgPgogICAgICAgICAgICA8dGFibGUKICAgICAgICAgICAgICAgICAgICBjbGFzcz0iZW1haWwtYm9keV9pbm5lciIKICAgICAgICAgICAgICAgICAgICBhbGlnbj0iY2VudGVyIgogICAgICAgICAgICAgICAgICAgIHdpZHRoPSIxMDAlIgogICAgICAgICAgICAgICAgICAgIGJhY2tncm91bmQtY29sb3I9IiNlZGVmZjIiCiAgICAgICAgICAgICAgICAgICAgY2VsbHBhZGRpbmc9IjAiCiAgICAgICAgICAgICAgICAgICAgY2VsbHNwYWNpbmc9IjAiCiAgICAgICAgICAgID4KICAgICAgICAgICAgICA8IS0tIEJvZHkgY29udGVudCAtLT4KICAgICAgICAgICAgICA8dHI+PC90cj4KICAgICAgICAgICAgICA8dHI+CiAgICAgICAgICAgICAgICA8dGQgY2xhc3M9ImNvbnRlbnQtY2VsbCIgd2lkdGg9IjEwMCUiPgogICAgICAgICAgICAgICAgICA8cD4KICAgICAgICAgICAgICAgICAgICAgIHt7IGF1dGhvciB9fSBoZWVmdCBmZWVkYmFjayBnZWdldmVuIG9wOiB7eyBzdWJqZWN0IH19CiAgICAgICAgICAgICAgICAgIDwvcD4KICAgICAgICAgICAgICAgICAgPGJyLz4KICAgICAgICAgICAgICAgICAgPHA+CiAgICAgICAgICAgICAgICAgICAgICB7eyBkZXNjcmlwdGlvbiB8IG5sMmJyIH19CiAgICAgICAgICAgICAgICAgIDwvcD4KICAgICAgICAgICAgICAgICAgPGhyIC8+CiAgICAgICAgICAgICAgICAgIDxwPk1ldCB2cmllbmRlbGlqa2UgZ3JvZXQsPC9wPgogICAgICAgICAgICAgICAgICA8cD5LSVNTPC9wPgogICAgICAgICAgICAgICAgPC90ZD4KICAgICAgICAgICAgICA8L3RyPgogICAgICAgICAgICAgIDx0cj48L3RyPgogICAgICAgICAgICA8L3RhYmxlPgogICAgICAgICAgPC90ZD4KICAgICAgICA8L3RyPgogICAgICA8L3RhYmxlPgogICAgPC90ZD4KICA8L3RyPgo8L3RhYmxlPgo8L2JvZHk+CjwvaHRtbD4K
+#            variables:
+#                subject: name
+#                author: author
+#                topic: topic
+#                description: description
+#            sender: kiss@commonground.nu
+#            receiver: icatttest+kiss@gmail.com
+#            subject: "KISS feedback: {{subject}}"
+#
+#    SyncPubAction:
+#        name: SyncPubAction
+#        description: This is a synchronization action for the pub collection
+#        listens:
+#            - 'commongateway.cronjob.trigger'
+#        throws: []
+#        conditions:
+#            '==': [1, 1]
+#        class: App\ActionHandler\SynchronizationCollectionHandler
+#        priority: 0
+#        async: false
+#        isEnabled: true
+#        configuration:
+#            entity: 97b05576-af9b-43df-bab7-dbf0f057258e # kiss_openpub_pub entity
+#            source: uuid # openPub source
+#            location: /kiss_openpub_pub
+#            apiSource:
+#                location:
+#                    objects: '#'
+#                    object: '#'
+#                    idField: id
+#                    dateChangedField: modified
+#                sourcePaginated: true
+#                syncFromList: true
+#                sourceLeading: true
+#                mappingIn: {}
+#                mappingOut: {}
+#                translationsIn: {}
+#                translationsOut: {}
+#                skeletonIn: {}
+#
+#    SyncEmployeeElasticSearch:
+#        name: SyncEmployeeElasticAction
+#        description: This is a synchronization for the medewerkerscollection to Elastic
+#        listens:
+#            - 'commongateway.object.create'
+#            - 'commongateway.object.update'
+#        throws: []
+#        conditions:
+#            '==':
+#                - var: entity
+#                - 97b05576-af9b-43df-bab7-dbf0f057258e # medewerker entity uuid
+#        class: App\ActionHandler\SynchronizationPushHandler
+#        priority: 0
+#        async: false
+#        isEnabled: true
+#        configuration:
+#            entity: '' # medewerker entity uuid
+#            source: '' # EnterpriseSearch API Private
+#            location: /api/as/v1/engines/kiss-engine/documents
+#            callService:
+#                method: post
+#            apiSource:
+#                location:
+#                    objects: '#'
+#                    idField: '0.id'
+#                    dateChangedField: ''
+#                queryMethod: page
+#                syncFromList: true
+#                sourceLeading: false
+#                mappingIn: {}
+#                mappingOut: 
+##                    body_content: "object | array"
+##                    todo:
+##                    title: "user.firstName+user.prefixLastname+user.lastName | concatenation &nbsp;"
+#                    title: "contact.voornaam+contact.voorvoegselAchternaam+contact.achternaam | concatenation &nbsp;"
+#                    object: "object | array"
+#                    object_meta: "function+department+skills | concatenation <identity('<br/>')>"
+#                    "self": "'/api/medewerkers/'+id | concatenation &nbsp;"
+#                translationsIn: {}
+#                translationsOut: {}
+#                skeletonIn: {}
+#                skeletonOut: 
+#                     object_bron: Smoelenboek
+#                     title: medewerker
+#                unavailablePropertiesOut:
+#                    - availabilities
+#                    - contact
+#                    - department
+#                    - description
+#                    - function
+#                    - replacement
+#                    - skills
+#                prefixFieldsOut:
+#                    id: smoelenboek_
+#
+#    SyncKennisArtikelElasticSearch:
+#        name: SyncKennisArtikelElasticAction
+#        description: This is a synchronization for SDG kenninsartikel to Elastic
+#        listens:
+#            - 'commongateway.object.create'
+#            - 'commongateway.object.update'
+#        throws: [ ]
+#        conditions:
+#            '==':
+#                -   var: entity
+#                - 97b05576-af9b-43df-bab7-dbf0f057258e # SDG kennisartikel entity uuid
+#        class: App\ActionHandler\SynchronizationPushHandler
+#        priority: 0
+#        async: false
+#        isEnabled: true
+#        configuration:
+#            entity: '' # SDG kennisartikel entity uuid
+#            source: '' # EnterpriseSearch API Private
+#            location: /api/as/v1/engines/kiss-engine/documents
+#            callService:
+#                method: post
+#            apiSource:
+#                location:
+#                    objects: '#'
+#                    idField: '0.id'
+#                    dateChangedField: ''
+#                queryMethod: page
+#                syncFromList: true
+#                sourceLeading: false
+#                mappingIn: { }
+#                mappingOut:
+##                    body_content: "object | array"
+#                    title: "vertalingen.0.productTitelDecentraal | concatenation &nbsp;"
+#                    object: "object | array"
+#                    object_meta: "vertalingen.0.specifiekeTekst | concatenation <identity('<br/>')>"
+#                    "self": "'/api/sdg/kennisartikel/'+id | concatenation &nbsp;"
+#                translationsIn: { }
+#                translationsOut: { }
+#                skeletonIn: { }
+#                skeletonOut:
+#                    object_bron: Kennisartikel
+#                    title: kennisartikel
+#                unavailablePropertiesOut:
+#                    - url
+#                    - uuid
+#                    - upnLabel
+#                    - upnUri
+#                    - versie
+#                    - publicatieDatum
+#                    - productAanwezig
+#                    - productValtOnder
+#                    - verantwoordelijkeOrganisatie
+#                    - bevoegdeOrganisatie
+#                    - catalogus
+#                    - locaties
+#                    - doelgroep
+#                    - vertalingen
+#                    - gerelateerdeProducten
+#                prefixFieldsOut:
+#                    id: kennisartikel_
+#
+#    HandelsRegisterSearchAction:
+#        name: HandelsRegisterSearchAction
+#        description: This is an action for searching KVK vestigingen.
+#        listens:
+#            - 'commongateway.response.pre'
+#        throws: [ ]
+#        conditions:
+#            '==':
+#                -   var: entity
+#                - 97b05576-af9b-43df-bab7-dbf0f057258e # HandelsRegisterSearch entity uuid
+#        class: App\ActionHandler\HandelsRegisterSearchHandler
+#        priority: 0
+#        async: false
+#        isEnabled: true
+#        configuration:
+#            entities: 
+#                vestiging: '97b05576-af9b-43df-bab7-dbf0f057258e' # HandelsRegister Vestiging entity uuid

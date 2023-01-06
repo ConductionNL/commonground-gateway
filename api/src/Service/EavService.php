@@ -84,6 +84,11 @@ class EavService
         $this->stopwatch = $stopwatch;
     }
 
+    public function getValidationService(): ValidationService
+    {
+        return $this->validationService;
+    }
+
     /**
      * Looks for an Entity object using a entityName.
      *
@@ -195,9 +200,6 @@ class EavService
             $this->session->get('activeOrganization') ? $object->setOrganization($this->session->get('activeOrganization')) : $object->setOrganization('http://testdata-organization');
             $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
             $object->setApplication(!empty($application) ? $application : null);
-
-            // @TODO Persist might not be needed here. Added now for the ObjectEntityService line 216 that sets this object into session with ID
-            $this->em->persist($object);
 
             return $object;
         }
@@ -688,7 +690,7 @@ class EavService
      */
     public function getRequestFields(Request $request): ?array
     {
-        $fields = $request->query->get('fields');
+        $fields = $request->query->has('fields') ? $request->query->get('fields') : $request->query->get('_fields');
 
         if ($fields) {
             // Lets deal with a comma seperated list
@@ -717,7 +719,7 @@ class EavService
      */
     public function getRequestExtend(Request $request): ?array
     {
-        $extend = $request->query->get('extend');
+        $extend = $request->query->has('extend') ? $request->query->get('extend') : $request->query->get('_extend');
 
         if ($extend) {
             // Lets deal with a comma seperated list
@@ -954,9 +956,71 @@ class EavService
      *
      * @return array
      */
-    public function handleGet(ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType = 'jsonld'): array
+    public function handleGet(ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType = 'json'): array
     {
         return $this->responseService->renderResult($object, $fields, $extend, $acceptType);
+    }
+
+    /**
+     * A function to replace Request->query->all() because Request->query->all() will replace some characters with an underscore.
+     * This function will not.
+     *
+     * @param string $method The method of the Request
+     *
+     * @return array An array with all query parameters.
+     */
+    public function realRequestQueryAll(string $method = 'get'): array
+    {
+        $vars = [];
+        if (strtolower($method) === 'get' && empty($_SERVER['QUERY_STRING'])) {
+            return $vars;
+        }
+        $pairs = explode('&', $_SERVER['QUERY_STRING']);
+        foreach ($pairs as $pair) {
+            $nv = explode('=', $pair);
+            $name = urldecode($nv[0]);
+            $value = '';
+            if (count($nv) == 2) {
+                $value = urldecode($nv[1]);
+            }
+
+            $this->recursiveRequestQueryKey($vars, $name, explode('[', $name)[0], $value);
+        }
+
+        return $vars;
+    }
+
+    /**
+     * This function adds a single query param to the given $vars array. ?$name=$value
+     * Will check if request query $name has [...] inside the parameter, like this: ?queryParam[$nameKey]=$value.
+     * Works recursive, so in case we have ?queryParam[$nameKey][$anotherNameKey][etc][etc]=$value.
+     * Also checks for queryParams ending on [] like: ?queryParam[$nameKey][] (or just ?queryParam[]), if this is the case
+     * this function will add given value to an array of [queryParam][$nameKey][] = $value or [queryParam][] = $value.
+     * If none of the above this function will just add [queryParam] = $value to $vars.
+     *
+     * @param array  $vars    The vars array we are going to store the query parameter in
+     * @param string $name    The full $name of the query param, like this: ?$name=$value
+     * @param string $nameKey The full $name of the query param, unless it contains [] like: ?queryParam[$nameKey]=$value
+     * @param string $value   The full $value of the query param, like this: ?$name=$value
+     *
+     * @return void
+     */
+    private function recursiveRequestQueryKey(array &$vars, string $name, string $nameKey, string $value)
+    {
+        $matchesCount = preg_match('/(\[[^[\]]*])/', $name, $matches);
+        if ($matchesCount > 0) {
+            $key = $matches[0];
+            $name = str_replace($key, '', $name);
+            $key = trim($key, '[]');
+            if (!empty($key)) {
+                $vars[$nameKey] = $vars[$nameKey] ?? [];
+                $this->recursiveRequestQueryKey($vars[$nameKey], $name, $key, $value);
+            } else {
+                $vars[$nameKey][] = $value;
+            }
+        } else {
+            $vars[$nameKey] = $value;
+        }
     }
 
     /**
@@ -965,6 +1029,7 @@ class EavService
      * @param Entity     $entity
      * @param Request    $request
      * @param array|null $fields
+     * @param array|null $extend
      * @param $extension
      * @param null   $filters
      * @param string $acceptType
@@ -974,9 +1039,9 @@ class EavService
      *
      * @return array|array[]
      */
-    public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'jsonld'): array
+    public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'json', ?array $query = null): array
     {
-        $query = $request->query->all();
+        $query = $query ?? $this->realRequestQueryAll($request->getMethod());
         unset($query['limit']);
         unset($query['page']);
         unset($query['start']);
@@ -1000,13 +1065,17 @@ class EavService
         if (array_key_exists('order', $query)) {
             $order = $query['order'];
             unset($query['order']);
-            if (count($order) > 1) {
+            if (!is_array($order)) {
+                $orderCheckStr = implode(', ', $orderCheck);
+                $message = 'Please give an attribute to order on. Like this: ?order[attributeName]=desc/asc. Supported order query parameters: '.$orderCheckStr;
+            }
+            if (is_array($order) && count($order) > 1) {
                 $message = 'Only one order query param at the time is allowed.';
             }
-            if (!in_array(array_values($order)[0], ['desc', 'asc'])) {
+            if (is_array($order) && !in_array(strtoupper(array_values($order)[0]), ['DESC', 'ASC'])) {
                 $message = 'Please use desc or asc as value for your order query param, not: '.array_values($order)[0];
             }
-            if (!in_array(array_keys($order)[0], $orderCheck)) {
+            if (is_array($order) && !in_array(array_keys($order)[0], $orderCheck)) {
                 $orderCheckStr = implode(', ', $orderCheck);
                 $message = 'Unsupported order query parameters ('.array_keys($order)[0].'). Supported order query parameters: '.$orderCheckStr;
             }
@@ -1014,7 +1083,7 @@ class EavService
                 return [
                     'message' => $message,
                     'type'    => 'error',
-                    'path'    => $entity->getName().'?order['.array_keys($order)[0].']='.array_values($order)[0],
+                    'path'    => is_array($order) ? $entity->getName().'?order['.array_keys($order)[0].']='.array_values($order)[0] : $entity->getName().'?order='.$order,
                     'data'    => ['order' => $order],
                 ];
             }
@@ -1026,23 +1095,12 @@ class EavService
         $filterCheck = $this->em->getRepository('App:ObjectEntity')->getFilterParameters($entity);
 
         // Lets add generic filters
-        $filterCheck[] = 'fields';
-        $filterCheck[] = 'extend';
-        $filterCheck[] = 'search';
-        $filterCheck[] = '_dateRead';
+        $filterCheck = array_merge($filterCheck, ['fields', '_fields', 'extend', '_extend']);
+        if (!empty($entity->getSearchPartial())) {
+            $filterCheck = array_merge($filterCheck, ['search', '_search']);
+        }
 
         foreach ($query as $param => $value) {
-            if (str_contains($param, '__')) {
-                unset($query[$param]);
-                $param = str_replace(['__'], ['.'], $param);
-                $query[$param] = $value;
-            }
-            $param = str_replace(['_'], ['.'], $param);
-            $param = str_replace(['..'], ['._'], $param);
-
-            if (substr($param, 0, 1) == '.') {
-                $param = '_'.ltrim($param, $param[0]);
-            }
             if (!in_array($param, $filterCheck)) {
                 $filterCheckStr = implode(', ', $filterCheck);
 
@@ -1082,7 +1140,20 @@ class EavService
         $results = [];
         $this->stopwatch->start('renderResults', 'handleSearch');
         foreach ($repositoryResult['objects'] as $object) {
-            $results[] = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
+            // If orderBy is used on an attribute we needed to add the value of that attribute to the select of the query...
+            // In this^ case $object will be an array containing the object and this specific value we are ordering on.
+            if (is_array($object)) {
+                $object = $object[0];
+                // $object['stringValue'] contains the value we are ordering on.
+            }
+            // todo: remove the following function
+            // This is a quick fix for a problem where filtering would return to many result if we are filtering on a value...
+            // ...that is also present in a subobject of the main $object we are filtering on.
+            if (!$this->checkIfFilteredCorrectly($query, $object)) {
+                continue;
+            }
+            $result = $this->responseService->renderResult($object, $fields, $extend, $acceptType, false, $flat);
+            $results[] = $result;
             $this->stopwatch->lap('renderResults');
         }
         $this->stopwatch->stop('renderResults');
@@ -1093,8 +1164,41 @@ class EavService
             return $results;
         }
 
-        // If not lets make it pritty
+        // If not lets make it pretty
         return $this->handlePagination($acceptType, $entity, $results, $repositoryResult['total'], $limit, $offset);
+    }
+
+    /**
+     * This is a quick fix for a problem where filtering would return to many result if we are filtering on a value
+     * that is also present in a subobject of the main $object we are filtering on.
+     * todo: remove this function.
+     *
+     * @param array        $query  The query/filters we need to check.
+     * @param ObjectEntity $object The object to check.
+     *
+     * @return bool true by default, false if filtering wasn't done correctly and this object should not be shown in the results.
+     */
+    private function checkIfFilteredCorrectly(array $query, ObjectEntity $object): bool
+    {
+        unset(
+            $query['search'], $query['_search'],
+            $query['fields'], $query['_fields'],
+            $query['extend'], $query['_extend']
+        );
+        if (!empty($query)) {
+            $resultDot = new Dot($object->toArray());
+            foreach ($query as $filter => $value) {
+                $filter = str_replace('|valueScopeFilter', '', $filter);
+                $resultFilter = $resultDot->get($filter);
+                $resultFilter = $resultFilter === true ? 'true' : ($resultFilter === false ? 'false' : $resultDot->get($filter));
+                if (!is_array($value) && $resultDot->get($filter) !== null && $resultFilter != $value &&
+                    (is_string($value) && !str_contains($value, 'NULL')) && !str_contains($value, '%')) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -1188,7 +1292,7 @@ class EavService
         // Check mayBeOrphaned
         // Get all attributes with mayBeOrphaned == false and one or more objects
         $cantBeOrphaned = $object->getEntity()->getAttributes()->filter(function (Attribute $attribute) use ($object) {
-            if (!$attribute->getMayBeOrphaned() && count($object->getValueByAttribute($attribute)->getObjects()) > 0) {
+            if (!$attribute->getMayBeOrphaned() && count($object->getSubresources($attribute)) > 0) {
                 return true;
             }
 
@@ -1198,7 +1302,7 @@ class EavService
             $data = [];
             foreach ($cantBeOrphaned as $attribute) {
                 $data[] = $attribute->getName();
-                //                $data[$attribute->getName()] = $object->getValueByAttribute($attribute)->getId();
+                //                $data[$attribute->getName()] = $object->getValueObject($attribute)->getId();
             }
 
             return [
@@ -1218,26 +1322,32 @@ class EavService
         foreach ($object->getEntity()->getAttributes() as $attribute) {
             // If this object has subresources and cascade delete is set to true, delete the subresources as well.
             // TODO: use switch for type? ...also delete type file?
-            if ($attribute->getType() == 'object' && $attribute->getCascadeDelete() && !is_null($object->getValueByAttribute($attribute)->getValue())) {
+            if ($attribute->getType() == 'object' && $attribute->getCascadeDelete() && !is_null($object->getValue($attribute))) {
                 if ($attribute->getMultiple()) {
                     // !is_null check above makes sure we do not try to loop through null
-                    foreach ($object->getValueByAttribute($attribute)->getValue() as $subObject) {
+                    foreach ($object->getValue($attribute) as $subObject) {
                         if ($subObject && !$maxDepth->contains($subObject)) {
                             $this->handleDelete($subObject, $maxDepth);
                         }
                     }
-                } else {
-                    $subObject = $object->getValueByAttribute($attribute)->getValue();
-                    if ($subObject && !$maxDepth->contains($subObject)) {
-                        $this->handleDelete($subObject, $maxDepth);
-                    }
+                }
+            } else {
+                $subObject = $object->getValue($attribute);
+                if ($subObject instanceof ObjectEntity && !$maxDepth->contains($subObject)) {
+                    $this->handleDelete($subObject, $maxDepth);
                 }
             }
         }
-        if ($object->getEntity()->getGateway() && $object->getEntity()->getGateway()->getLocation() && $object->getEntity()->getEndpoint() && $object->getExternalId()) {
+        if ($object->getEntity()->getSource() && $object->getEntity()->getSource()->getLocation() && $object->getEntity()->getEndpoint() && $object->getExternalId()) {
             if ($resource = $this->commonGroundService->isResource($object->getUri())) {
                 $this->commonGroundService->deleteResource(null, $object->getUri()); // could use $resource instead?
             }
+        }
+
+        // Lets remove unread objects before we delete this object
+        $unreads = $this->em->getRepository('App:Unread')->findBy(['object' => $object]);
+        foreach ($unreads as $unread) {
+            $this->em->remove($unread);
         }
 
         // Remove this object from cache
@@ -1275,7 +1385,7 @@ class EavService
         $this->em->clear();
         //TODO: test and make sure extern objects are not created after an error, and if they are, maybe add this;
         //        var_dump($createdObject->getUri());
-        //        if ($createdObject->getEntity()->getGateway() && $createdObject->getEntity()->getGateway()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
+        //        if ($createdObject->getEntity()->getSource() && $createdObject->getEntity()->getSource()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
         //            try {
         //                $resource = $this->commonGroundService->getResource($createdObject->getUri(), [], false);
         //                var_dump('Delete extern object for: '.$createdObject->getEntity()->getName());

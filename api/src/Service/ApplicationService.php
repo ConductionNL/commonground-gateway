@@ -23,7 +23,9 @@ class ApplicationService
     }
 
     /**
-     * A function that finds a application or creates one.
+     * A function that finds an application or creates one.
+     *
+     * @throws GatewayException
      */
     public function getApplication()
     {
@@ -69,16 +71,9 @@ class ApplicationService
                 $public && $data = ['public' => $public];
                 $host && $data = ['host' => $host];
 
-                $result = [
-                    'message' => $message,
-                    'type'    => 'Forbidden',
-                    'path'    => $public ?? $host ?? 'Header',
-                    'data'    => $data ?? null,
-                ];
-                // todo: maybe just throw a gatewayException?
-//            throw new GatewayException('No application found with domain '.$host, null, null, ['data' => ['host' => $host], 'path' => $host, 'responseType' => Response::HTTP_FORBIDDEN]);
-
-                return $result;
+                throw new GatewayException($message ?? null, null, null, [
+                    'data' => $data ?? null, 'path' => $public ?? $host ?? 'Header', 'responseType' => Response::HTTP_FORBIDDEN,
+                ]);
             }
         }
 

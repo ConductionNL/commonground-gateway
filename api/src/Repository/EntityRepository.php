@@ -59,4 +59,15 @@ class EntityRepository extends ServiceEntityRepository
 
         return $entity;
     }
+
+    public function findByReferencePrefix(string $referencePrefix): array
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->where('e.reference LIKE :reference')
+            ->setParameter('reference', "$referencePrefix%");
+
+        $query = $qb->getQuery();
+
+        return $query->getResult();
+    }
 }

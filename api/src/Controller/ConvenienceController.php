@@ -3,11 +3,17 @@
 namespace App\Controller;
 
 use App\Entity\CollectionEntity;
+use App\Exception\GatewayException;
+use App\Service\HandlerService;
 use App\Service\OasParserService;
+use App\Service\ObjectEntityService;
 use App\Service\PackagesService;
 use App\Service\ParseDataService;
+use App\Service\PubliccodeOldService;
 use App\Service\PubliccodeService;
+use App\Subscriber\ActionSubscriber;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -18,25 +24,37 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class ConvenienceController extends AbstractController
 {
+    private PubliccodeOldService $publiccodeOldService;
     private PubliccodeService $publiccodeService;
     private EntityManagerInterface $entityManager;
     private OasParserService $oasParser;
     private SerializerInterface $serializer;
     private ParseDataService $dataService;
     private PackagesService $packagesService;
+    private HandlerService $handlerService;
+    private ActionSubscriber $actionSubscriber;
+    private ObjectEntityService $objectEntityService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         ParameterBagInterface $params,
         SerializerInterface $serializer,
-        ParseDataService $dataService
+        ParseDataService $dataService,
+        HandlerService $handlerService,
+        ActionSubscriber $actionSubscriber,
+        ObjectEntityService $objectEntityService,
+        PubliccodeService $publiccodeService
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
         $this->oasParser = new OasParserService($entityManager);
-        $this->publiccodeService = new PubliccodeService($entityManager, $params, $serializer);
+        $this->publiccodeOldService = new PubliccodeOldService($entityManager, $params, $serializer);
         $this->packagesService = new PackagesService();
         $this->dataService = $dataService;
+        $this->handlerService = $handlerService;
+        $this->actionSubscriber = $actionSubscriber;
+        $this->objectEntityService = $objectEntityService;
+        $this->publiccodeService = $publiccodeService;
     }
 
     /**
@@ -62,6 +80,64 @@ class ConvenienceController extends AbstractController
 
         return new Response(
             $this->serializer->serialize(['message' => 'Configuration succesfully loaded from: '.$collection->getLocationOAS()], 'json'),
+            Response::HTTP_OK,
+            ['content-type' => 'json']
+        );
+    }
+
+    /**
+     * @Route("/admin/load-testdata/{collectionId}")
+     */
+    public function loadTestDataAction(Request $request, string $collectionId): Response
+    {
+        // Get CollectionEntity to retrieve OAS from
+        $collection = $this->entityManager->getRepository('App:CollectionEntity')->find($collectionId);
+
+        // Check if collection is egligible to update
+        if (!isset($collection) || !$collection instanceof CollectionEntity) {
+            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: '.$collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+        } elseif ($collection->getSyncedAt() === null) {
+            return new Response($this->serializer->serialize(['message' => 'This collection has not been loaded yet'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+        } elseif (!$collection->getTestDataLocation()) {
+            return new Response($this->serializer->serialize(['message' => 'No testdata location found for this collection'], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+        }
+
+        // Load testdata
+        $dataLoaded = $this->dataService->loadData($collection->getTestDataLocation(), $collection->getLocationOAS());
+
+        return new Response(
+            $this->serializer->serialize(['message' => 'Testdata succesfully loaded from: '.$collection->getTestDataLocation()], 'json'),
+            Response::HTTP_OK,
+            ['content-type' => 'json']
+        );
+    }
+
+    /**
+     * @Route("/admin/wipe-testdata/{collectionId}")
+     */
+    public function wipeData(Request $request, string $collectionId): Response
+    {
+        // Get CollectionEntity to retrieve OAS from
+        $collection = $this->entityManager->getRepository('App:CollectionEntity')->find($collectionId);
+
+        // Check if collection is egligible to update
+        if (!isset($collection) || !$collection instanceof CollectionEntity) {
+            return new Response($this->serializer->serialize(['message' => 'No collection found with given id: '.$collectionId], 'json'), Response::HTTP_BAD_REQUEST, ['content-type' => 'json']);
+        }
+
+        // Wipe current data for this collection
+        $errors = $this->dataService->wipeDataForCollection($collection);
+
+        return new Response(
+            $this->serializer->serialize([
+                'message' => 'Testdata wiped for '.$collection->getName(),
+                'info'    => [
+                    'Found '.count($collection->getEntities()).' Entities for this collection',
+                    'Found '.$errors['objectCount'].' Objects for this collection',
+                    count($errors['errors']).' errors'.(!count($errors['errors']) ? '!' : ' (failed to delete these objects)'),
+                ],
+                'errors' => $errors['errors'],
+            ], 'json'),
             Response::HTTP_OK,
             ['content-type' => 'json']
         );
@@ -135,13 +211,60 @@ class ConvenienceController extends AbstractController
     }
 
     /**
+     * This function runs an action.
+     *
+     * @Route("/admin/run_action/{actionId}")
+     *
+     * @throws GatewayException
+     * @throws Exception
+     */
+    public function runAction(string $actionId): Response
+    {
+        $action = $this->entityManager->getRepository('App:Action')->find($actionId);
+
+        $contentType = $this->handlerService->getRequestType('content-type');
+        $data = $this->handlerService->getDataFromRequest();
+
+        $data = $this->actionSubscriber->runFunction($action, $data, $action->getListens()[0]);
+
+        // throw events
+        foreach ($action->getThrows() as $throw) {
+            $this->objectEntityService->dispatchEvent('commongateway.action.event', $data, $throw);
+        }
+
+        return new Response(
+            $this->serializer->serialize(['message' => 'Action '.$action->getName()], $contentType),
+            Response::HTTP_OK,
+            ['content-type' => $contentType]
+        );
+    }
+
+    /**
+     * This function gets the event from github if something has changed in a repository.
+     *
+     * @Route("/github_events")
+     *
+     * @throws Exception|GuzzleException
+     */
+    public function githubEvents(Request $request): Response
+    {
+        if (!$content = json_decode($request->request->get('payload'), true)) {
+//            var_dump($content = $this->handlerService->getDataFromRequest());
+
+            return $this->publiccodeService->updateRepositoryWithEventResponse($this->handlerService->getDataFromRequest());
+        }
+
+        return $this->publiccodeService->updateRepositoryWithEventResponse($content);
+    }
+
+    /**
      * @Route("/admin/publiccode")
      *
      * @throws GuzzleException
      */
     public function getRepositories(): Response
     {
-        return $this->publiccodeService->discoverGithub();
+        return $this->publiccodeOldService->discoverGithub();
     }
 
     /**
@@ -151,7 +274,7 @@ class ConvenienceController extends AbstractController
      */
     public function getGithubRepository(string $id): Response
     {
-        return $this->publiccodeService->getGithubRepositoryContent($id);
+        return $this->publiccodeOldService->getGithubRepositoryContent($id);
     }
 
     /**
@@ -161,7 +284,7 @@ class ConvenienceController extends AbstractController
      */
     public function installRepository(string $id): Response
     {
-        return $this->publiccodeService->createCollection($id);
+        return $this->publiccodeOldService->createCollection($id);
     }
 
     /**

@@ -4,6 +4,9 @@ namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use DateTime;
 use DateTimeInterface;
@@ -15,7 +18,6 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Validator\Constraints\Json;
 
 /**
  * An handler.
@@ -34,6 +36,9 @@ use Symfony\Component\Validator\Constraints\Json;
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\HandlerRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ * @ApiFilter(BooleanFilter::class)
+ * @ApiFilter(OrderFilter::class)
+ * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class, properties={
  *     "name": "exact",
  *     "endpoints.id": "exact",
@@ -237,9 +242,16 @@ class Handler
      */
     private $prefix;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Log::class, mappedBy="handler", fetch="EXTRA_LAZY", cascade={"remove"}, orphanRemoval=true)
+     * @MaxDepth(1)
+     */
+    private Collection $logs;
+
     public function __construct()
     {
         $this->endpoints = new ArrayCollection();
+        $this->logs = new ArrayCollection();
     }
 
     public function getId()
@@ -435,6 +447,30 @@ class Handler
     public function removeEndpoint(Endpoint $endpoint): self
     {
         $this->endpoints->removeElement($endpoint);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Log[]
+     */
+    public function getLogs(): Collection
+    {
+        return $this->logs;
+    }
+
+    public function addLog(Log $log): self
+    {
+        if (!$this->logs->contains($log)) {
+            $this->logs[] = $log;
+        }
+
+        return $this;
+    }
+
+    public function removeLog(Log $log): self
+    {
+        $this->logs->removeElement($log);
 
         return $this;
     }

@@ -2,10 +2,15 @@
 
 namespace App\Security;
 
+use App\Entity\Application;
+use App\Exception\GatewayException;
 use App\Security\User\AuthenticationUser;
+use App\Service\ApplicationService;
 use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use Psr\Cache\CacheException;
+use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,19 +31,22 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
     private AuthenticationService $authenticationService;
     private SessionInterface $session;
     private FunctionService $functionService;
+    private ApplicationService $applicationService;
 
     public function __construct(
         CommonGroundService $commonGroundService,
         AuthenticationService $authenticationService,
         ParameterBagInterface $parameterBag,
         SessionInterface $session,
-        FunctionService $functionService
+        FunctionService $functionService,
+        ApplicationService $applicationService
     ) {
         $this->commonGroundService = $commonGroundService;
         $this->parameterBag = $parameterBag;
         $this->authenticationService = $authenticationService;
         $this->session = $session;
         $this->functionService = $functionService;
+        $this->applicationService = $applicationService;
     }
 
     /**
@@ -50,9 +58,34 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
             strpos($request->headers->get('Authorization'), 'Bearer') === 0;
     }
 
+    /**
+     * Gets the public key for the application connected to the request, defaults to a general public key.
+     *
+     * @throws GatewayException
+     *
+     * @return string Public key for the application or the general public key
+     */
+    public function getPublicKey(): string
+    {
+        $application = $this->applicationService->getApplication();
+        $publicKey = $application->getPublicKey();
+        if (!$publicKey) {
+            $publicKey = $this->parameterBag->get('app_x509_cert');
+        }
+
+        return $publicKey;
+    }
+
+    /**
+     * Validates the JWT token and throws an error if it is not valid, or has expired.
+     *
+     * @param string $token The token provided by the user
+     *
+     * @return array The payload of the token
+     */
     public function validateToken(string $token): array
     {
-        $publicKey = $this->parameterBag->get('app_x509_cert');
+        $publicKey = $this->getPublicKey();
 
         try {
             $payload = $this->authenticationService->verifyJWTToken($token, $publicKey);
@@ -60,7 +93,15 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
             throw new AuthenticationException('The provided token is not valid');
         }
         $now = new \DateTime();
-        if ($payload['exp'] < $now->getTimestamp()) {
+        if (isset($payload['iat']) && !isset($payload['exp'])) {
+            $iat = new \DateTime();
+            $iat->setTimestamp($payload['iat']);
+            $exp = $iat->modify('+1 Hour');
+            if (!isset($payload['exp']) && isset($exp) && $exp->getTimestamp() < $now->getTimestamp()) {
+                throw new AuthenticationException('The provided token has expired');
+            }
+        }
+        if (isset($payload['exp']) && $payload['exp'] < $now->getTimestamp()) {
             throw new AuthenticationException('The provided token has expired');
         }
 
@@ -75,8 +116,8 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
      * @param CommonGroundService $commonGroundService
      * @param FunctionService     $functionService
      *
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws CacheException
+     * @throws InvalidArgumentException
      *
      * @return array
      */
@@ -104,8 +145,8 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
      * @param CommonGroundService $commonGroundService
      * @param FunctionService     $functionService
      *
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
+     * @throws CacheException
+     * @throws InvalidArgumentException
      *
      * @return array
      */
@@ -122,6 +163,11 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
         return $organizations;
     }
 
+    /**
+     * @throws GatewayException
+     * @throws InvalidArgumentException
+     * @throws CacheException
+     */
     private function setOrganizations(array $user): void
     {
         $organizations = $user['organizations'] ?? [];
@@ -137,7 +183,7 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
         $parentOrganizations[] = 'localhostOrganization';
         $this->session->set('organizations', $organizations);
         $this->session->set('parentOrganizations', $parentOrganizations);
-        $this->session->set('ActiveOrganization', $user['organization']);
+        $this->session->set('ActiveOrganization', $user['organization'] ?? $this->applicationService->getApplication()->getOrganization());
     }
 
     private function prefixRoles(array $roles): array
@@ -151,15 +197,30 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
 
     /**
      * @inheritDoc
+     *
+     * @param Request $request
+     *
+     * @throws CacheException
+     * @throws GatewayException
+     * @throws InvalidArgumentException
+     *
+     * @return PassportInterface
      */
     public function authenticate(Request $request): PassportInterface
     {
         $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
-        $user = $this->validateToken($token);
-        $this->setOrganizations($user);
+        $payload = $this->validateToken($token);
+        $this->setOrganizations($payload);
+
+        $application = $this->applicationService->getApplication();
+        if (!isset($payload['client_id'])) {
+            $user = $payload;
+        } else {
+            $user = $this->commonGroundService->getResource($application->getResource(), [], false);
+        }
 
         return new Passport(
-            new UserBadge($user['user']['id'] ?? $user['userId'], function ($userIdentifier) use ($user) {
+            new UserBadge($user['user']['id'] ?? $user['userId'] ?? $user['id'], function ($userIdentifier) use ($user) {
                 return new AuthenticationUser(
                     $userIdentifier,
                     $user['user']['id'] ?? $user['username'],
@@ -177,7 +238,7 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
             }),
             new CustomCredentials(
                 function (array $credentials, UserInterface $user) {
-                    return $user->getUserIdentifier() == $credentials['userId'];
+                    return isset($credentials['userId']) ? $user->getUserIdentifier() == $credentials['userId'] : $user->getUserIdentifier() == $credentials['id'];
                 },
                 $user
             )

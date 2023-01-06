@@ -110,6 +110,7 @@ class TemplateService
     public function getVariables(): array
     {
         $request = new Request();
+        //todo use eavService->realRequestQueryAll(), maybe replace this function to another service than eavService?
         $query = $request->query->all();
 
         // @todo we want to support both json and xml here */

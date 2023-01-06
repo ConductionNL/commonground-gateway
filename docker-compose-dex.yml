@@ -30,8 +30,8 @@ services:
     environment:
       - CONTAINER_REGISTRY_BASE=${CONTAINER_REGISTRY_BASE}
       - CONTAINER_PROJECT_NAME=${CONTAINER_PROJECT_NAME}
-      #- DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1
-      - DATABASE_URL=mysql://api-platform:!ChangeMe!@db/api?serverVersion=10.1
+      - DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1
+#      - DATABASE_URL=mysql://api-platform:!ChangeMe!@db/api?serverVersion=10.1
       - APP_ENV=${APP_ENV}
       - APP_CONTAINER=${APP_CONTAINER}
       - APP_DEBUG=${APP_DEBUG}
@@ -77,9 +77,14 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
       - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
-      - MAILGUN=${MAILGUN}
+      - CRON_RUNNER_ENABLED=${CRON_RUNNER_ENABLED}
+      - CRON_RUNNER_CRONTAB=${CRON_RUNNER_CRONTAB}
     ports:
       - "82:80"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges
 
   api:
     &nginx
@@ -98,6 +103,16 @@ services:
     environment:
       - NGINX_HOST=php
       - NGINX_ENV=${APP_ENV}
+    cap_drop:
+      - ALL
+    cap_add:
+      - chown
+      - dac_override
+      - setgid
+      - setuid
+      - net_bind_service
+    security_opt:
+      - no-new-privileges
 
   # helmPackage:
   #   image: alpine/helm:3.2.1
@@ -115,18 +130,31 @@ services:
 
   redis:
     image: redis:4-alpine
+    
+# MySQL database:
+#  db:
+#    image: mysql:5.7
+#    environment:
+#      - MYSQL_ROOT_PASSWORD=example
+#      - MYSQL_DATABASE=api
+#      - MYSQL_USER=api-platform
+#      - MYSQL_PASSWORD=!ChangeMe!
+#    volumes:
+#      - db-mysql:/var/lib/mysql:rw
+#    ports:
+#      - "3366:3306"
 
+#  Postgres db:
   db:
-    image: mysql:5.7
+    image: postgres:10
     environment:
-      - MYSQL_ROOT_PASSWORD=example
-      - MYSQL_DATABASE=api
-      - MYSQL_USER=api-platform
-      - MYSQL_PASSWORD=!ChangeMe!
+      - POSTGRES_DB=api
+      - POSTGRES_USER=api-platform
+      - POSTGRES_PASSWORD=!ChangeMe!
     volumes:
-      - db-mysql:/var/lib/mysql:rw
+      - db-data:/var/lib/postgresql/data:rw
     ports:
-      - "3366:3306"
+      - "5432:5432"
         
   user-component:
     image: ghcr.io/conductionnl/user-component-nginx:latest
@@ -171,32 +199,32 @@ services:
     volumes:
         -  ./dex:/etc/dex:rw,cached
   ldap:
-      image: osixia/openldap:1.4.0
-      # Copying is required because the entrypoint modifies the *.ldif files.
-      # For verbose output, use:  command: ["--copy-service", "--loglevel", "debug"]
-      command: ["--copy-service"]
-      environment:
-          # Required if using LDAPS:
-          # Since Dex doesn't use a client TLS certificate, downgrade from "demand" to "try".
-          LDAP_TLS_VERIFY_CLIENT: try
-      # The hostname is required if using LDAPS with certificate validation.
-      # In Dex, use the same hostname (with port) for `connectors[].config.host`.
-      #hostname: YOUR-HOSTNAME
-      #
-      # https://github.com/osixia/docker-openldap#seed-ldap-database-with-ldif
-      # Option 1: Add custom seed file -> mount to         /container/service/slapd/assets/config/bootstrap/ldif/custom/
-      # Option 2: Overwrite default seed file -> mount to  /container/service/slapd/assets/config/bootstrap/ldif/
-      volumes:
-          - ./dex/config-ldap.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/config-ldap.ldif
-      ports:
-          - 389:389
-          - 636:636
+    image: osixia/openldap:1.4.0
+    # Copying is required because the entrypoint modifies the *.ldif files.
+    # For verbose output, use:  command: ["--copy-service", "--loglevel", "debug"]
+    command: ["--copy-service"]
+    environment:
+      # Required if using LDAPS:
+      # Since Dex doesn't use a client TLS certificate, downgrade from "demand" to "try".
+      LDAP_TLS_VERIFY_CLIENT: try
+    # The hostname is required if using LDAPS with certificate validation.
+    # In Dex, use the same hostname (with port) for `connectors[].config.host`.
+    #hostname: YOUR-HOSTNAME
+    #
+    # https://github.com/osixia/docker-openldap#seed-ldap-database-with-ldif
+    # Option 1: Add custom seed file -> mount to         /container/service/slapd/assets/config/bootstrap/ldif/custom/
+    # Option 2: Overwrite default seed file -> mount to  /container/service/slapd/assets/config/bootstrap/ldif/
+    volumes:
+      - ./dex/config-ldap.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/config-ldap.ldif
+    ports:
+      - 389:389
+      - 636:636
 
   rabbitmq:
-      image: rabbitmq:latest
-      environment:
-          - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
-          - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+    image: rabbitmq:latest
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
     
 
 networks:

@@ -13,7 +13,8 @@ ou: People
 dn: cn=jane,ou=People,dc=example,dc=org
 objectClass: person
 objectClass: inetOrgPerson
-cn: test01
+sn: doe
+cn: jane
 mail: janedoe@example.com
 userpassword: foo
 

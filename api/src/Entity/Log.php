@@ -9,8 +9,11 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Entity\Gateway as Source;
 use DateTime;
 use DateTimeInterface;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
@@ -48,6 +51,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "callId": "exact",
  *     "session": "exact",
  *     "type": "exact",
+ *     "objectId": "exact",
  * })
  */
 class Log
@@ -288,14 +292,15 @@ class Log
      * @ORM\ManyToOne(targetEntity=Gateway::class)
      * @MaxDepth(1)
      */
-    private $gateway;
+    private ?Source $gateway;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\ManyToOne(targetEntity=Handler::class)
+     * @ORM\ManyToOne(targetEntity=Handler::class, inversedBy="logs")
+     * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
      */
-    private $handler;
+    private ?Handler $handler;
 
     // todo: It would be nice if we could use a relation here instead of $objectId...
     // todo: ...but this will have the side-effect that we have to delete all logs of an Object if we delete the Object.
@@ -334,6 +339,16 @@ class Log
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
+
+    /**
+     * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="log", orphanRemoval=true)
+     */
+    private $actionLogs;
+
+    public function __construct()
+    {
+        $this->actionLogs = new ArrayCollection();
+    }
 
     public function getId()
     {
@@ -592,14 +607,14 @@ class Log
         return $this;
     }
 
-    public function getGateway(): ?Gateway
+    public function getSource(): ?Source
     {
         return $this->gateway;
     }
 
-    public function setGateway(?Gateway $gateway): self
+    public function setSource(?Source $source): self
     {
-        $this->gateway = $gateway;
+        $this->gateway = $source;
 
         return $this;
     }
@@ -648,6 +663,36 @@ class Log
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|ActionLog[]
+     */
+    public function getActionLogs(): Collection
+    {
+        return $this->actionLogs;
+    }
+
+    public function addActionLog(ActionLog $actionLog): self
+    {
+        if (!$this->actionLogs->contains($actionLog)) {
+            $this->actionLogs[] = $actionLog;
+            $actionLog->setLog($this);
+        }
+
+        return $this;
+    }
+
+    public function removeActionLog(ActionLog $actionLog): self
+    {
+        if ($this->actionLogs->removeElement($actionLog)) {
+            // set the owning side to null (unless already changed)
+            if ($actionLog->getLog() === $this) {
+                $actionLog->setLog(null);
+            }
+        }
 
         return $this;
     }

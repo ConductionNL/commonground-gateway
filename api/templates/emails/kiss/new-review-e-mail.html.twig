@@ -1,4 +1,4 @@
-{# todo: move this to an email plugin (see EmailSubscriber.php) #}
+{# todo: move this to an email plugin (see EmailService.php) #}
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
@@ -468,8 +468,9 @@
               <tr>
                 <td class="content-cell" width="100%">
                   <p>
-                      {{ author }} heeft een review geplaatst op {{ topic }} met een beoordeling van {{ rating }}:
+                      {{ author }} heeft feedback gegeven op: {{ subject }}
                   </p>
+                  <br/>
                   <p>
                       {{ description | nl2br }}
                   </p>

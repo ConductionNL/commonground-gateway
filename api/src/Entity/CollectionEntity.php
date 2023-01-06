@@ -178,6 +178,14 @@ class CollectionEntity
     private bool $autoLoad = false;
 
     /**
+     * @var ?string The prefix for all endpoints on this Collection
+     *
+     * @Groups({"read","write"})
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $prefix = null;
+
+    /**
      * @var ?Collection The applications of this Collection
      *
      * @Groups({"write"})
@@ -222,8 +230,24 @@ class CollectionEntity
      */
     private $dateModified;
 
-    public function __construct()
+    /**
+     * @todo
+     *
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $plugin;
+
+    public function __construct(?string $name = null, ?string $prefix = null, ?string $plugin = null)
     {
+        if ($name) {
+            $this->setName($name);
+        }
+        if ($prefix) {
+            $this->setPrefix($prefix);
+        }
+        if ($plugin) {
+            $this->setPlugin($plugin);
+        }
         $this->applications = new ArrayCollection();
         $this->endpoints = new ArrayCollection();
         $this->entities = new ArrayCollection();
@@ -385,6 +409,18 @@ class CollectionEntity
         return $this;
     }
 
+    public function getPrefix(): ?string
+    {
+        return $this->prefix;
+    }
+
+    public function setPrefix(?string $prefix): self
+    {
+        $this->prefix = $prefix;
+
+        return $this;
+    }
+
     public function getSyncedAt(): ?\DateTimeInterface
     {
         return $this->syncedAt;
@@ -489,6 +525,18 @@ class CollectionEntity
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    public function getPlugin(): ?string
+    {
+        return $this->plugin;
+    }
+
+    public function setPlugin(?string $plugin): self
+    {
+        $this->plugin = $plugin;
 
         return $this;
     }

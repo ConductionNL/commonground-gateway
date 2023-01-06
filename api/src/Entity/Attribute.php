@@ -46,6 +46,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class, properties={
  *     "entity.id": "exact",
+ *     "object.id": "exact",
  *     "name": "exact"
  * })
  */
@@ -136,7 +137,7 @@ class Attribute
      *
      * @Assert\Choice({"noFunction", "id", "self", "uri", "externalId", "dateCreated", "dateModified", "userName"})
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", options={"default":"noFunction"})
+     * @ORM\Column(type="string", options={"default":"noFunction"}, name="function_column")
      */
     private string $function = 'noFunction';
 
@@ -275,7 +276,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $maxItems;
+    private ?int $maxItems = null;
 
     /**
      * @var ?int *Can only be used in combination with type array* The minimum array length
@@ -286,7 +287,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $minItems;
+    private ?int $minItems = null;
 
     /**
      * @var bool *Can only be used in combination with type array* Define whether or not values in an array should be unique
@@ -297,7 +298,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $uniqueItems;
+    private $uniqueItems = null;
 
     /**
      * @var string *Can only be used in combination with type object* The maximum amount of properties an object should contain
@@ -308,7 +309,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $maxProperties;
+    private $maxProperties = null;
 
     /**
      * @var int *Can only be used in combination with type object* The minimum amount of properties an object should contain
@@ -319,7 +320,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $minProperties;
+    private $minProperties = null;
 
     /**
      * @var Attribute If the attribute targets an object that object might have an inversedBy field allowing a two-way connection
@@ -328,7 +329,7 @@ class Attribute
      * @ORM\OneToOne(targetEntity=Attribute::class)
      * @MaxDepth(1)
      */
-    private $inversedBy;
+    private $inversedBy = null;
 
     /**
      * @var bool Only whether or not this property is required
@@ -339,7 +340,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $required;
+    private $required = null;
 
     /**
      * @var array conditional requiremends for field
@@ -408,7 +409,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $description;
+    private $description = null;
 
     /**
      * @var string An default value for this value that will be used if a user doesn't supply a value
@@ -419,7 +420,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $defaultValue;
+    private $defaultValue = null;
 
     /**
      * @var bool Whether or not this property can be left empty
@@ -441,7 +442,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $mustBeUnique;
+    private $mustBeUnique = null;
 
     /**
      * @var bool Whether or not the mustBeUnique check is case sensitive
@@ -463,7 +464,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $readOnly;
+    private $readOnly = null;
 
     /**
      * @var bool Whether or not this property is write only
@@ -474,7 +475,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $writeOnly;
+    private $writeOnly = null;
 
     /**
      * @var string An example of the value that should be supplied
@@ -483,9 +484,9 @@ class Attribute
      *
      * @Assert\Length(max = 255)
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
-    private $example;
+    private $example = null;
 
     /**
      * @var string Pattern which value should suffice to (Ecma-262 Edition 5.1 regular expression dialect)
@@ -495,7 +496,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $pattern;
+    private $pattern = null;
 
     /**
      * @var bool Whether or not this property has been deprecated and wil be removed in the future
@@ -506,7 +507,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $deprecated;
+    private $deprecated = null;
 
     /**
      * @var string The minimal date for value, either a date, datetime or duration (ISO_8601)
@@ -516,7 +517,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $minDate;
+    private $minDate = null;
 
     /**
      * @var string The maximum date for value, either a date, datetime or duration (ISO_8601)
@@ -526,7 +527,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $maxDate;
+    private $maxDate = null;
 
     /**
      * @var string *Can only be used in combination with type file* The maximum allowed file size in bytes
@@ -537,7 +538,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $maxFileSize;
+    private $maxFileSize = null;
 
     /**
      * @var string *Can only be used in combination with type file* The minimum allowed file size in bytes
@@ -548,7 +549,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $minFileSize;
+    private $minFileSize = null;
 
     /**
      * @var array *Can only be used in combination with type file* The type of the file
@@ -559,7 +560,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $fileTypes;
+    private $fileTypes = null;
 
     /**
      * @Groups({"read", "write"})
@@ -584,12 +585,30 @@ class Attribute
      *
      * @Assert\Type("bool")
      * @Groups({"read", "write"})
-     * @ORM\Column(type="boolean", nullable=true)
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
      */
     private $searchable = false;
 
     /**
-     * Whether or not the object of this property will be deleted if the parent object is deleted.
+     * Whether or not this property is sortable. (orderBy).
+     *
+     * @Assert\Type("bool")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
+     */
+    private $sortable = false;
+
+    /**
+     * Only works if this attribute has type 'object'. When set to true, updating the object of this property will also trigger an Update event for the parent object.
+     *
+     * @Assert\Type("bool")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
+     */
+    private bool $triggerParentEvents = false;
+
+    /**
+     * Only works if this attribute has type 'object'. Whether or not the object of this property will be deleted if the parent object is deleted.
      *
      * @Assert\Type("bool")
      * @Groups({"read", "write"})
@@ -598,7 +617,7 @@ class Attribute
     private bool $cascadeDelete = false;
 
     /**
-     * Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
+     * Only works if this attribute has type 'object'. Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
      *
      * @Assert\Type("bool")
      * @Groups({"read", "write"})
@@ -643,13 +662,21 @@ class Attribute
     private bool $mayBeOrphaned = true;
 
     /**
+     * @var ?string The uri to a schema.org property
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null}, name="schema_column")
+     */
+    private ?string $schema = null;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
      * @Gedmo\Timestampable(on="create")
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private $dateCreated;
+    private $dateCreated = null;
 
     /**
      * @var Datetime The moment this resource was last Modified
@@ -658,11 +685,64 @@ class Attribute
      * @Gedmo\Timestampable(on="update")
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private $dateModified;
+    private $dateModified = null;
+
+    /**
+     * @todo
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $reference = null;
 
     public function __construct()
     {
         $this->attributeValues = new ArrayCollection();
+    }
+
+    /**
+     * JSON schema to attribute.
+     *
+     * @throws GatewayException
+     */
+    public function fromSchema(array $property): Attribute
+    {
+        // Handle the property setup
+        if (array_key_exists('type', $property)) {
+            $this->setType($property['type']);
+        }
+        if (array_key_exists('format', $property)) {
+            $this->setFormat($property['format']);
+        }
+        if (array_key_exists('example', $property)) {
+            $this->setExample($property['example']);
+        }
+        if (array_key_exists('readOnly', $property)) {
+            $this->setReadOnly($property['readOnly']);
+        }
+        if (array_key_exists('description', $property)) {
+            $this->setDescription($property['description']);
+        }
+        if (array_key_exists('$ref', $property)) {
+            $this->setSchema($property['$ref']);
+        }
+        if (array_key_exists('items', $property) && array_key_exists('$ref', $property['items'])) {
+            $this->setSchema($property['items']['$ref']);
+            $this->setMultiple(true);
+        }
+        if (array_key_exists('maxLength', $property)) {
+            $this->setMaxLength($property['maxLength']);
+        }
+        if (array_key_exists('enum', $property)) {
+            $this->setEnum($property['enum']);
+        }
+        if (array_key_exists('default', $property)) {
+            $this->setDefaultValue($property['default']);
+        }
+
+        $this->setDateModified(new DateTime());
+
+        return $this;
     }
 
     public function export()
@@ -742,7 +822,7 @@ class Attribute
 
     public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
@@ -876,6 +956,9 @@ class Attribute
 
     public function setObject(?Entity $object): self
     {
+        if (!$object) {
+            return $this;
+        }
         $this->type = 'object';
         $this->object = $object;
 
@@ -1121,7 +1204,7 @@ class Attribute
 
         // If the attribute type is changes away from an object we need to drop the object
         if ($type != 'object' and $this->object) {
-            unset($this->object);
+            $this->object = null;
         }
 
         return $this;
@@ -1228,7 +1311,7 @@ class Attribute
         return $this->mustBeUnique;
     }
 
-    public function setMustBeUnique(bool $mustBeUnique): self
+    public function setMustBeUnique(?bool $mustBeUnique): self
     {
         $this->mustBeUnique = $mustBeUnique;
 
@@ -1359,39 +1442,39 @@ class Attribute
     {
         //TODO: this list of validations is not complete!
         $validations = [];
-        $validations['multipleOf'] = $this->getMultipleOf();
-        $validations['pattern'] = $this->getPattern();
-        $validations['maximum'] = $this->getMaximum();
-        $validations['exclusiveMaximum'] = $this->getExclusiveMaximum();
-        $validations['minimum'] = $this->getMinimum();
-        $validations['exclusiveMinimum'] = $this->getExclusiveMinimum();
-        $validations['maxLength'] = $this->getMaxLength();
-        $validations['minLength'] = $this->getMinLength();
-        $validations['maxItems'] = $this->getMaxItems();
-        $validations['minItems'] = $this->getMinItems();
-        $validations['uniqueItems'] = $this->getUniqueItems();
-        $validations['maxProperties'] = $this->getMaxProperties();
-        $validations['minProperties'] = $this->getMinProperties();
-        $validations['required'] = $this->getRequired();
-        $validations['requiredIf'] = $this->getRequiredIf();
-        $validations['forbiddenIf'] = $this->getForbiddenIf();
-        $validations['enum'] = $this->getEnum();
-        $validations['allOf'] = $this->getAllOf(); //todo: validation/BL toevoegen
-        $validations['anyOf'] = $this->getAnyOf(); //todo: validation/BL toevoegen
-        $validations['oneOf'] = $this->getOneOf(); //todo: validation/BL toevoegen
-        $validations['defaultValue'] = $this->getDefaultValue(); //todo: validation/BL toevoegen
-        $validations['nullable'] = $this->getNullable();
-        $validations['mustBeUnique'] = $this->getMustBeUnique(); //todo: validation/BL toevoegen
-        $validations['maxDate'] = $this->getMaxDate();
-        $validations['minDate'] = $this->getMinDate();
-        $validations['multiple'] = $this->getMultiple();
-        $validations['maxFileSize'] = $this->getMaxFileSize();
-        $validations['minFileSize'] = $this->getMinFileSize();
-        $validations['fileTypes'] = $this->getFileTypes();
-        $validations['cascade'] = $this->getCascade();
-        $validations['immutable'] = $this->getImmutable();
-        $validations['unsetable'] = $this->getUnsetable();
-        $validations['readOnly'] = $this->getReadOnly();
+        (isset($this->multipleOf) ? $validations['multipleOf'] = $this->getMultipleOf() : '');
+        (isset($this->pattern) ? $validations['pattern'] = $this->getPattern() : '');
+        (isset($this->maximum) ? $validations['maximum'] = $this->getMaximum() : '');
+        (isset($this->exclusiveMaximum) ? $validations['exclusiveMaximum'] = $this->getExclusiveMaximum() : '');
+        (isset($this->minimum) ? $validations['minimum'] = $this->getMinimum() : '');
+        (isset($this->exclusiveMinimum) ? $validations['exclusiveMinimum'] = $this->getExclusiveMinimum() : '');
+        (isset($this->maxLength) ? $validations['maxLength'] = $this->getMaxLength() : '');
+        (isset($this->minLength) ? $validations['minLength'] = $this->getMinLength() : '');
+        (isset($this->maxItems) ? $validations['maxItems'] = $this->getMaxItems() : '');
+        (isset($this->minItems) ? $validations['minItems'] = $this->getMinItems() : '');
+        (isset($this->uniqueItems) ? $validations['uniqueItems'] = $this->getUniqueItems() : '');
+        (isset($this->maxProperties) ? $validations['maxProperties'] = $this->getMaxProperties() : '');
+        (isset($this->minProperties) ? $validations['minProperties'] = $this->getMinProperties() : '');
+        (isset($this->required) ? $validations['required'] = $this->getRequired() : '');
+        (isset($this->requiredIf) ? $validations['requiredIf'] = $this->getRequiredIf() : '');
+        (isset($this->forbiddenIf) ? $validations['forbiddenIf'] = $this->getForbiddenIf() : '');
+        (isset($this->enum) ? $validations['enum'] = $this->getEnum() : '');
+        (isset($this->allOf) ? $validations['allOf'] = $this->getAllOf() : ''); //todo: validation/BL toevoegen
+        (isset($this->anyOf) ? $validations['anyOf'] = $this->getAnyOf() : ''); //todo: validation/BL toevoegen
+        (isset($this->oneOf) ? $validations['oneOf'] = $this->getOneOf() : ''); //todo: validation/BL toevoegen
+        (isset($this->defaultValue) ? $validations['defaultValue'] = $this->getDefaultValue() : ''); //todo: validation/BL toevoegen
+        (isset($this->nullable) ? $validations['nullable'] = $this->getNullable() : '');
+        (isset($this->mustBeUnique) ? $validations['mustBeUnique'] = $this->getMustBeUnique() : ''); //todo: validation/BL toevoegen
+        (isset($this->maxDate) ? $validations['maxDate'] = $this->getMaxDate() : '');
+        (isset($this->minDate) ? $validations['minDate'] = $this->getMinDate() : '');
+        (isset($this->multiple) ? $validations['multiple'] = $this->getMultiple() : '');
+        (isset($this->maxFileSize) ? $validations['maxFileSize'] = $this->getMaxFileSize() : '');
+        (isset($this->minFileSize) ? $validations['minFileSize'] = $this->getMinFileSize() : '');
+        (isset($this->fileTypes) ? $validations['fileTypes'] = $this->getFileTypes() : '');
+        (isset($this->cascade) ? $validations['cascade'] = $this->getCascade() : '');
+        (isset($this->imutable) ? $validations['immutable'] = $this->getImmutable() : '');
+        (isset($this->unsetable) ? $validations['unsetable'] = $this->getUnsetable() : '');
+        (isset($this->readOnly) ? $validations['readOnly'] = $this->getReadOnly() : '');
 
         return $validations;
     }
@@ -1514,6 +1597,18 @@ class Attribute
         return $this;
     }
 
+    public function getSortable(): ?bool
+    {
+        return $this->sortable;
+    }
+
+    public function setSortable(?bool $sortable): self
+    {
+        $this->sortable = $sortable;
+
+        return $this;
+    }
+
     public function getCascade(): ?bool
     {
         return $this->cascade;
@@ -1546,6 +1641,18 @@ class Attribute
     public function setObjectConfig(?array $objectConfig): self
     {
         $this->objectConfig = $objectConfig;
+
+        return $this;
+    }
+
+    public function getTriggerParentEvents(): ?bool
+    {
+        return $this->triggerParentEvents;
+    }
+
+    public function setTriggerParentEvents(?bool $triggerParentEvents): self
+    {
+        $this->triggerParentEvents = $triggerParentEvents;
 
         return $this;
     }
@@ -1618,6 +1725,30 @@ class Attribute
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    public function getSchema(): ?string
+    {
+        return $this->schema;
+    }
+
+    public function setSchema(?string $schema): self
+    {
+        $this->schema = $schema;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
 
         return $this;
     }

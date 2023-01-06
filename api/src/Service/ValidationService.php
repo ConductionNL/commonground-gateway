@@ -157,12 +157,12 @@ class ValidationService
             }
             // Check if a defaultValue is set (TODO: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string)
             elseif ($attribute->getDefaultValue()) {
-                //                $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
+                //                $objectEntity->getValueObject($attribute)->setValue($attribute->getDefaultValue());
                 $objectEntity = $this->validateAttribute($objectEntity, $attribute, $attribute->getDefaultValue(), $dontCheckAuth);
             }
             // Check if this field is nullable
             elseif ($attribute->getNullable() === true) {
-                $objectEntity->getValueByAttribute($attribute)->setValue(null);
+                $objectEntity->setValue($attribute, null);
             }
             // Check if this field is required
             elseif ($attribute->getRequired()) {
@@ -196,7 +196,7 @@ class ValidationService
                 $objectEntity->addError($attribute->getName(), 'This attribute is required');
             } elseif ($attribute->getNullable() === false) {
                 if ($this->request->getMethod() == 'PUT') {
-                    $value = $objectEntity->getValueByAttribute($attribute)->getValue();
+                    $value = $objectEntity->getValue($attribute);
                     if (is_null($value) || ($attribute->getType() != 'boolean') && (!$value || empty($value))) {
                         $objectEntity->addError($attribute->getName(), 'This attribute can not be null');
                     }
@@ -205,7 +205,7 @@ class ValidationService
                 }
             } elseif ($this->request->getMethod() == 'POST') {
                 // handling the setting to null of exisiting variables
-                $objectEntity->getValueByAttribute($attribute)->setValue(null);
+                $objectEntity->setValue($attribute, null);
             }
         }
         // Check post for not allowed properties
@@ -217,7 +217,7 @@ class ValidationService
 
         // Dit is de plek waarop we weten of er een api call moet worden gemaakt
         if (!$objectEntity->getHasErrors()) {
-            if ($objectEntity->getEntity()->getGateway()) {
+            if ($objectEntity->getEntity()->getSource()) {
                 // We notify the notification component here in the createPromise function:
                 $promise = $this->createPromise($objectEntity, $post);
                 $this->promises[] = $promise; //TODO: use ObjectEntity->promises instead!
@@ -271,31 +271,33 @@ class ValidationService
     {
         switch ($attribute->getFunction()) {
             case 'id':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getId()->toString());
+                $objectEntity->setValue($attribute, $objectEntity->getId()->toString());
                 // Note: attributes with function = id should also be readOnly and type=string
                 break;
             case 'self':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getSelf() ?? $this->createSelf($objectEntity));
+                $self = $objectEntity->getSelf() ?? $objectEntity->setSelf($this->createSelf($objectEntity))->getSelf();
+                $objectEntity->setValue($attribute, $self);
                 // Note: attributes with function = self should also be readOnly and type=string
                 break;
             case 'uri':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getUri() ?? $this->createUri($objectEntity));
+                $uri = $objectEntity->getUri() ?? $objectEntity->setUri($this->createUri($objectEntity))->getUri();
+                $objectEntity->setValue($attribute, $uri);
                 // Note: attributes with function = uri should also be readOnly and type=string
                 break;
             case 'externalId':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getExternalId());
+                $objectEntity->setValue($attribute, $objectEntity->getExternalId());
                 // Note: attributes with function = externalId should also be readOnly and type=string
                 break;
             case 'dateCreated':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getDateCreated()->format("Y-m-d\TH:i:sP"));
+                $objectEntity->setValue($attribute, $objectEntity->getDateCreated()->format("Y-m-d\TH:i:sP"));
                 // Note: attributes with function = dateCreated should also be readOnly and type=string||date||datetime
                 break;
             case 'dateModified':
-                $objectEntity->getValueByAttribute($attribute)->setValue($objectEntity->getDateModified()->format("Y-m-d\TH:i:sP"));
+                $objectEntity->setValue($attribute, $objectEntity->getDateModified()->format("Y-m-d\TH:i:sP"));
                 // Note: attributes with function = dateModified should also be readOnly and type=string||date||datetime
                 break;
             case 'userName':
-                $objectEntity->getValueByAttribute($attribute)->getValue() ?? $objectEntity->getValueByAttribute($attribute)->setValue($this->getUserName());
+                $objectEntity->getValue($attribute) ?? $objectEntity->setValue($attribute, $this->getUserName());
                 break;
         }
 
@@ -337,7 +339,7 @@ class ValidationService
             if ($attribute->getNullable() === false) {
                 $objectEntity->addError($attribute->getName(), 'Expects '.$attribute->getType().', NULL given. (This attribute is not nullable)');
             } elseif ($attribute->getMultiple() && $value === []) {
-                $valueObject = $objectEntity->getValueByAttribute($attribute);
+                $valueObject = $objectEntity->getValueObject($attribute);
                 if ($attribute->getType() == 'object') {
                     foreach ($valueObject->getObjects() as $object) {
                         // If we are not re-adding this object...
@@ -351,7 +353,7 @@ class ValidationService
                     $valueObject->setValue([]);
                 }
             } else {
-                $objectEntity->getValueByAttribute($attribute)->setValue(null);
+                $objectEntity->setValue($attribute, null);
             }
             // We should not continue other validations after this!
             return $objectEntity;
@@ -380,11 +382,11 @@ class ValidationService
             }
         }
 
-        //        $this->validateLogic($objectEntity->getValueByAttribute($attribute)); // TODO maybe remove or place somewhere else than here?
+        //        $this->validateLogic($objectEntity->getValueObject($attribute)); // TODO maybe remove or place somewhere else than here?
         // if no errors we can set the value (for type object this is already done in validateAttributeType, other types we do it here,
         // because when we use validateAttributeType to validate items in an array, we dont want to set values for that)
         if ((!$objectEntity->getHasErrors() || $this->ignoreErrors) && $attribute->getType() != 'object' && $attribute->getType() != 'file') {
-            $objectEntity->getValueByAttribute($attribute)->setValue($value);
+            $objectEntity->setValue($attribute, $value);
         }
 
         return $objectEntity;
@@ -427,7 +429,7 @@ class ValidationService
             }
         });
 
-        if (count($values) > 0 && !(count($values) == 1 && $objectEntity->getValueByAttribute($attribute)->getValue() == $value)) {
+        if (count($values) > 0 && !(count($values) == 1 && $objectEntity->getValue($attribute) == $value)) {
             if ($attribute->getType() == 'boolean') {
                 $value = $value ? 'true' : 'false';
             }
@@ -482,7 +484,7 @@ class ValidationService
         if ($attribute->getType() == 'object') {
             // TODO: maybe move and merge all this code to the validateAttributeType function under type 'object'. NOTE: this code works very different, so be carefull!!!
             // This is an array of objects
-            $valueObject = $objectEntity->getValueByAttribute($attribute);
+            $valueObject = $objectEntity->getValueObject($attribute);
             $saveSubObjects = new ArrayCollection(); // collection to store all new subobjects in before we actually connect them to the value
             foreach ($value as $key => $object) {
                 if (!is_array($object)) {
@@ -491,15 +493,15 @@ class ValidationService
                         if (Uuid::isValid($object) == false) {
                             // We should also allow commonground Uri's like: https://taalhuizen-bisc.commonground.nu/api/v1/wrc/organizations/008750e5-0424-440e-aea0-443f7875fbfe
                             // TODO: support /$attribute->getObject()->getEndpoint()/uuid?
-                            if ($object == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($object)) {
-                                $object = $this->commonGroundService->getUuidFromUrl($object);
-                            } else {
-                                if (!array_key_exists($attribute->getName(), $objectEntity->getErrors())) {
-                                    $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects (array, uuid or uri).');
-                                }
-                                $objectEntity->addError($attribute->getName().'['.$key.']', 'The given value ('.$object.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
-                                continue;
-                            }
+                            // if ($object == $attribute->getObject()->getSource()->getLocation() . '/' . $attribute->getObject()->getEndpoint() . '/' . $this->commonGroundService->getUuidFromUrl($object)) {
+                            $object = $this->commonGroundService->getUuidFromUrl($object);
+                            // } else {
+                            //     if (!array_key_exists($attribute->getName(), $objectEntity->getErrors())) {
+                            //         $objectEntity->addError($attribute->getName(), 'Multiple is set for this attribute. Expecting an array of objects (array, uuid or uri).');
+                            //     }
+                            //     $objectEntity->addError($attribute->getName() . '[' . $key . ']', 'The given value (' . $object . ') is not a valid object, a valid uuid or a valid uri (' . $attribute->getObject()->getSource()->getLocation() . '/' . $attribute->getObject()->getEndpoint() . '/uuid).');
+                            //     continue;
+                            // }
                         }
                         // Look for an existing ObjectEntity with its id or externalId set to this string, else look in external component with this uuid.
                         // Always create a new ObjectEntity if we find an exernal object but it has no ObjectEntity yet. (see convertToGatewayObject)
@@ -615,7 +617,7 @@ class ValidationService
             foreach ($saveSubObjects as $saveSubObject) {
                 // If we have inversedBy on this attribute
                 if ($attribute->getInversedBy()) {
-                    $inversedByValue = $saveSubObject->getValueByAttribute($attribute->getInversedBy());
+                    $inversedByValue = $saveSubObject->getValueObject($attribute->getInversedBy());
                     if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
                         // If inversedBy attribute is not multiple it should only have one object connected to it
                         if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
@@ -635,7 +637,7 @@ class ValidationService
         } elseif ($attribute->getType() == 'file') {
             // TODO: maybe move and merge all this code to the validateAttributeType function under type 'file'. NOTE: this code works very different, so be carefull!!!
             // This is an array of files
-            $valueObject = $objectEntity->getValueByAttribute($attribute);
+            $valueObject = $objectEntity->getValueObject($attribute);
             foreach ($value as $key => $file) {
                 // Validations
                 if (!is_array($file)) {
@@ -677,16 +679,16 @@ class ValidationService
         foreach ($entity->getAttributes() as $attribute) {
             // Check if we have a value to validate ( a value is given in the post body for this attribute, can be null )
             if (key_exists($attribute->getName(), $post)) {
-                $objectEntity = $objectEntity->getValueByAttribute($attribute)->setValue($post[$attribute->getName()]);
+                $objectEntity = $objectEntity->setValue($attribute, $post[$attribute->getName()]);
             }
             // Check if a defaultValue is set (TODO: defaultValue should maybe be a Value object, so that defaultValue can be something else than a string)
             elseif ($attribute->getDefaultValue()) {
-                $objectEntity = $objectEntity->getValueByAttribute($attribute)->setValue($attribute->getDefaultValue());
+                $objectEntity = $objectEntity->setValue($attribute, $attribute->getDefaultValue());
             }
             /* @todo this feels wierd, should we PUT "value":null if we want to delete? */
             //else {
             //    // handling the setting to null of exisiting variables
-            //    $objectEntity->getValueByAttribute($attribute)->setValue(null);
+            //    $objectEntity->setValue($attribute, null);
             //}
         }
 
@@ -998,7 +1000,7 @@ class ValidationService
         switch ($attribute->getType()) {
             case 'object':
                 // lets see if we already have a sub object
-                $valueObject = $objectEntity->getValueByAttribute($attribute);
+                $valueObject = $objectEntity->getValueObject($attribute);
 
                 // If this object is given as a uuid (string) it should be valid, if not throw error
                 if (is_string($value) && Uuid::isValid($value) == false) {
@@ -1007,17 +1009,17 @@ class ValidationService
                     if (!$attribute->getObject()) {
                         $objectEntity->addError($attribute->getName(), 'The attribute has no entity (object)');
                         break;
-                    } elseif (!$attribute->getObject()->getGateway()) {
+                    } elseif (!$attribute->getObject()->getSource()) {
                         $objectEntity->addError($attribute->getName(), 'The attribute->object has no gateway');
                         break;
-                    } elseif (!$attribute->getObject()->getGateway()->getLocation()) {
+                    } elseif (!$attribute->getObject()->getSource()->getLocation()) {
                         $objectEntity->addError($attribute->getName(), 'The attribute->object->gateway has no location');
                         break;
                     } else {
-                        if ($value == $attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
+                        if ($value == $attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
                             $value = $this->commonGroundService->getUuidFromUrl($value);
                         } else {
-                            $objectEntity->addError($attribute->getName(), 'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getGateway()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
+                            $objectEntity->addError($attribute->getName(), 'The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
                             break;
                         }
                     }
@@ -1050,7 +1052,7 @@ class ValidationService
                     // Object toevoegen
                     // If we have inversedBy on this attribute
                     if ($attribute->getInversedBy()) {
-                        $inversedByValue = $subObject->getValueByAttribute($attribute->getInversedBy());
+                        $inversedByValue = $subObject->getValueObject($attribute->getInversedBy());
                         if (!$inversedByValue->getObjects()->contains($objectEntity)) { // $valueObject->getObjectEntity() = $objectEntity
                             // If inversedBy attribute is not multiple it should only have one object connected to it
                             if (!$attribute->getInversedBy()->getMultiple() and count($inversedByValue->getObjects()) > 0) {
@@ -1076,7 +1078,7 @@ class ValidationService
                     $subObject->addSubresourceOf($valueObject);
                     $this->createdObjects[] = $subObject;
                     if ($attribute->getObject()->getFunction() === 'organization') {
-                        $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject), array_key_exists('type', $value) ? $value['type'] : $subObject->getValueByAttribute($subObject->getEntity()->getAttributeByName('type'))->getValue());
+                        $subObject = $this->functionService->createOrganization($subObject, $this->createUri($subObject), array_key_exists('type', $value) ? $value['type'] : $subObject->getValue('type'));
                     } else {
                         $subObject->setOrganization($this->session->get('activeOrganization'));
                     }
@@ -1092,7 +1094,7 @@ class ValidationService
                 // If no errors we can push it into our object
                 if (!$objectEntity->getHasErrors()) {
                     // TODO: clear objects, add to removeObjectsNotMultiple if needed and use add object ipv setValue
-                    $objectEntity->getValueByAttribute($attribute)->setValue($subObject);
+                    $objectEntity->setValue($attribute, $subObject);
                 }
                 break;
             case 'string':
@@ -1182,7 +1184,7 @@ class ValidationService
      */
     public function validateFile(ObjectEntity $objectEntity, Attribute $attribute, array $fileArray): ObjectEntity
     {
-        $value = $objectEntity->getValueByAttribute($attribute);
+        $value = $objectEntity->getValueObject($attribute);
         $key = $fileArray['key'] ? '['.$fileArray['key'].']' : '';
         $shortBase64String = strlen($fileArray['base64']) > 75 ? substr($fileArray['base64'], 0, 75).'...' : $fileArray['base64'];
 
@@ -1597,7 +1599,7 @@ class ValidationService
     {
         // We willen de post wel opschonnen, met andere woorden alleen die dingen posten die niet als in een attrubte zijn gevangen
 
-        $component = $this->gatewayService->gatewayToArray($objectEntity->getEntity()->getGateway());
+        $component = $this->gatewayService->sourceToArray($objectEntity->getEntity()->getSource());
         $query = [];
         $headers = [];
 
@@ -1606,10 +1608,10 @@ class ValidationService
             $url = $objectEntity->getUri();
         } elseif ($objectEntity->getExternalId()) {
             $method = 'PUT';
-            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
+            $url = $objectEntity->getEntity()->getSource()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
         } else {
             $method = 'POST';
-            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint();
+            $url = $objectEntity->getEntity()->getSource()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint();
         }
 
         // do transformation
@@ -1646,7 +1648,7 @@ class ValidationService
                 foreach ($value->getObjects() as $objectToUri) {
                     /* @todo the hacky hack hack */
                     // If it is a an internal url we want to us an internal id
-                    if ($objectToUri->getEntity()->getGateway() == $objectEntity->getEntity()->getGateway()) {
+                    if ($objectToUri->getEntity()->getSource() == $objectEntity->getEntity()->getSource()) {
                         $ubjectUri = '/'.$objectToUri->getEntity()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($objectToUri->getUri());
                     } else {
                         $ubjectUri = $objectToUri->getUri();
@@ -1656,8 +1658,8 @@ class ValidationService
             } elseif ($value->getObjects()->first()) {
                 // If this object is from the same gateway as the main/parent object use: /entityName/uuid instead of the entire uri
                 if (
-                    $value->getAttribute()->getEntity()->getGateway() && $value->getObjects()->first()->getEntity()->getGateway()
-                    && $value->getAttribute()->getEntity()->getGateway() === $value->getObjects()->first()->getEntity()->getGateway()
+                    $value->getAttribute()->getEntity()->getSource() && $value->getObjects()->first()->getEntity()->getSource()
+                    && $value->getAttribute()->getEntity()->getSource() === $value->getObjects()->first()->getEntity()->getSource()
                 ) {
                     $post[$value->getAttribute()->getName()] = '/'.$value->getObjects()->first()->getEntity()->getEndpoint().'/'.$value->getObjects()->first()->getExternalId();
                 } else {
@@ -1693,7 +1695,7 @@ class ValidationService
         }
 
         // Lets use the correct post type
-        switch ($objectEntity->getEntity()->getGateway()->getType()) {
+        switch ($objectEntity->getEntity()->getSource()->getType()) {
             case 'json':
                 $post = json_encode($post);
                 break;
@@ -1729,7 +1731,7 @@ class ValidationService
                             $query = array_merge($query, $translationConfig['POST']['query']);
                         }
                         if (array_key_exists('endpoint', $translationConfig['POST'])) {
-                            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$translationConfig['POST']['endpoint'];
+                            $url = $objectEntity->getEntity()->getSource()->getLocation().'/'.$translationConfig['POST']['endpoint'];
                         }
                     }
                     break;
@@ -1747,7 +1749,7 @@ class ValidationService
                         }
                         if (array_key_exists('endpoint', $translationConfig['PUT'])) {
                             $newEndpoint = str_replace('{id}', $objectEntity->getExternalId(), $translationConfig['PUT']['endpoint']);
-                            $url = $objectEntity->getEntity()->getGateway()->getLocation().'/'.$newEndpoint;
+                            $url = $objectEntity->getEntity()->getSource()->getLocation().'/'.$newEndpoint;
                         }
                     }
                     break;
@@ -1760,10 +1762,10 @@ class ValidationService
         $promise = $this->commonGroundService->callService($component, $url, $post, $query, $headers, true, $method)->then(
             // $onFulfilled
             function ($response) use ($objectEntity, $url, $method) {
-                if ($objectEntity->getEntity()->getGateway()->getLogging()) {
+                if ($objectEntity->getEntity()->getSource()->getLogging()) {
                 }
                 // Lets use the correct response type
-                switch ($objectEntity->getEntity()->getGateway()->getType()) {
+                switch ($objectEntity->getEntity()->getSource()->getType()) {
                     case 'json':
                         $result = json_decode($response->getBody()->getContents(), true);
                         break;
@@ -1884,6 +1886,7 @@ class ValidationService
                 $action = 'Create';
                 break;
             case 'PUT':
+            case 'PATCH':
                 $action = 'Update';
                 break;
             case 'DELETE':
@@ -1920,8 +1923,8 @@ class ValidationService
     {
         // We need to persist if this is a new ObjectEntity in order to set and getId to generate the uri...
         $this->em->persist($objectEntity);
-        if ($objectEntity->getEntity()->getGateway() && $objectEntity->getEntity()->getGateway()->getLocation() && $objectEntity->getEntity()->getGateway() && $objectEntity->getExternalId()) {
-            return $objectEntity->getEntity()->getGateway()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
+        if ($objectEntity->getEntity()->getSource() && $objectEntity->getEntity()->getSource()->getLocation() && $objectEntity->getEntity()->getSource() && $objectEntity->getExternalId()) {
+            return $objectEntity->getEntity()->getSource()->getLocation().'/'.$objectEntity->getEntity()->getEndpoint().'/'.$objectEntity->getExternalId();
         }
 
         $uri = isset($_SERVER['HTTP_HOST']) && $_SERVER['HTTP_HOST'] !== 'localhost' ? 'https://'.$_SERVER['HTTP_HOST'] : 'http://localhost';
@@ -1945,10 +1948,11 @@ class ValidationService
     {
         // We need to persist if this is a new ObjectEntity in order to set and getId to generate the self...
         $this->em->persist($objectEntity);
-        $endpoint = $this->em->getRepository('App:Endpoint')->findGetItemByEntity($objectEntity->getEntity());
-        if ($endpoint instanceof Endpoint) {
-            $pathArray = $endpoint->getPath();
-            $foundId = in_array('{id}', $pathArray) ? $pathArray[array_search('{id}', $pathArray)] = $objectEntity->getId() : (in_array('{uuid}', $pathArray) ? $pathArray[array_search('{uuid}', $pathArray)] = $objectEntity->getId() : false);
+        $endpoints = $this->em->getRepository('App:Endpoint')->findGetItemByEntity($objectEntity->getEntity());
+        if (count($endpoints) > 0 && $endpoints[0] instanceof Endpoint) {
+            $pathArray = $endpoints[0]->getPath();
+            $foundId = in_array('{id}', $pathArray) ? $pathArray[array_search('{id}', $pathArray)] = $objectEntity->getId() :
+                (in_array('{uuid}', $pathArray) ? $pathArray[array_search('{uuid}', $pathArray)] = $objectEntity->getId() : false);
             if ($foundId !== false) {
                 $path = implode('/', $pathArray);
 
@@ -1956,7 +1960,7 @@ class ValidationService
             }
         }
 
-        return '/api/'.($objectEntity->getEntity()->getRoute() ?? $objectEntity->getEntity()->getName()).'/'.$objectEntity->getId();
+        return '/api'.($objectEntity->getEntity()->getRoute() ?? $objectEntity->getEntity()->getName()).'/'.$objectEntity->getId();
     }
 
     /**

@@ -18,6 +18,27 @@ config:
   cache: true
   githubKey: ''
   samesiteCookie: lax
+  # todo move cronRunner to its own 'tab' so it isn't a subtab under config?
+  cronRunner: 
+    enabled: false
+    activeDeadlineSeconds: 600 # activeDeadlineSeconds Specifies the duration in seconds relative to the startTime that the job may be active before the system tries to terminate it; value must be positive integer
+    concurrencyPolicy: Forbid # The cron job does not allow concurrent runs; if it is time for a new job run and the previous job run hasn’t finished yet, the cron job skips the new job run
+    crontab: '*/5 * * * *'
+    appAuth: false
+  defaultRedirectUrl: http://localhost/login/oidc/dex
+  defaultBackUrl: http://localhost
+  documentation_description: "This documentation contains the endpoints on your commonground gateway.
+
+# Authentication
+
+The gateway offers three forms of authentication:
+- API Key
+- Cookies
+- Bearer Token
+
+Bearer Token - Bearer Tokens are the predominant type of access token used with OAuth 2.0. A Bearer Token is an opaque string, not intended to have any meaning to clients using it."
+
+databaseType: postgresql
 
 security:
   authEnabled: true
@@ -107,9 +128,6 @@ rabbitmq:
       password: '!changeMe!'
   service:
       port: 5672
-      
-# todo: move this to an email plugin (see EmailSubscriber.php)
-mailgun: 'mailgun+api://code:domain@api.eu.mailgun.net'
 
 imagePullSecrets: []
 nameOverride: ""
@@ -131,42 +149,56 @@ postgresql:
   image:
     tag: 11
     pullPolicy: IfNotPresent
-  postgresqlUsername: 'commonground-gateway'
-  postgresqlPassword: '!ChangeMe!'
-  postgresqlDatabase: 'commonground-gateway'
+  auth:
+    username: 'commonground-gateway'
+    password: '!ChangeMe!'
+    database: 'commonground-gateway'
   # Persistent Volume Storage configuration.
   # ref: https://kubernetes.io/docs/user-guide/persistent-volumes
   persistence:
     enabled: true
+
+mongodb:
+    enabled: true
+    url: ''
+    image:
+        tag: 6.0.3
+        pullPolicy: IfNotPresent
+    auth:
+        enabled: true
+        rootUser: api-platform
+        rootPassword: "!ChangeMe!"
+        
 
 
 podAnnotations: {}
 
 podSecurityContext: {}
 
-securityContextPhp:
-#    privileged: false
-#    allowPrivilegeEscalation: false
-#    runAsNonRoot: false
-#    capabilities:
-#      drop:
-#          - all
-#    runAsUser: 101
-#    # Warning: enabling the root filesystem for the PHP container disables the possibility of adding code packages for the gateway on runtime
-#    readOnlyRootFilesystem: false
-securityContextNginx:
-#    privileged: false
-#    allowPrivilegeEscalation: false
-#    runAsNonRoot: false
-#    capabilities:
-#      drop:
-#        - all
-#      add:
-#        - chown
-#        - dac_override
-#        - setgid
-#        - setuid
-#        - net_bind_service
+securityContextPhp: 
+    privileged: false
+    allowPrivilegeEscalation: false
+    runAsNonRoot: false
+    capabilities:
+      drop:
+          - all
+    runAsUser: 101
+    # Warning: enabling the root filesystem for the PHP container disables the possibility of adding code packages for the gateway on runtime
+    readOnlyRootFilesystem: false
+securityContextNginx: 
+    privileged: false
+    allowPrivilegeEscalation: false
+    runAsNonRoot: false
+    capabilities:
+      drop:
+        - all
+      add:
+        - chown
+        - dac_override
+        - setgid
+        - setuid
+        - net_bind_service
+    runAsUser: 101
 #    # Warning: the Nginx image is at this moment not able to run on a read-only filesystem.
 #    readOnlyRootFilesystem: false
 
