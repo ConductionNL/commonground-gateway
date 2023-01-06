@@ -342,14 +342,14 @@ class Endpoint
                     if ($counter == 1) {
                         // Add prefix path
                         foreach ($explodedPrefixPath as $key => $prefixPathItem) {
-                            !empty($prefixPathItem) && $pathRegEx[] = ($key < 1 ? '^' : '/') . $prefixPathItem;
+                            !empty($prefixPathItem) && $pathRegEx[] = ($key < 1 ? '^' : '/').$prefixPathItem;
                         }
                     }
 
                     if ($counter == $countPaths) {
-                        $pathRegEx[] = $pathArray . '/?([a-z0-9-]+)?$';
+                        $pathRegEx[] = $pathArray.'/?([a-z0-9-]+)?$';
                     } else {
-                        $pathRegEx[] = $pathArray . '/?([a-z0-9-]+)?';
+                        $pathRegEx[] = $pathArray.'/?([a-z0-9-]+)?';
                     }
                     $counter++;
                 }
