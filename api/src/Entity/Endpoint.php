@@ -313,8 +313,11 @@ class Endpoint
                 $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path[0];
             }
             $exploded = explode('/', $path);
+            $exploded = array_filter($exploded);
             $explodedPathArray = [];
-            $explodedPathArray[] = $exploded[0];
+            foreach ($exploded as $pathItem) {
+                $explodedPathArray[] = $pathItem;
+            }
             foreach ($paths as $pathAsString) {
                 $explodedPath = explode('/', $pathAsString);
                 if ($explodedPath[0] == '') {
@@ -337,13 +340,16 @@ class Endpoint
             if ($countPaths > 0) {
                 foreach ($paths as $pathArray) {
                     if ($counter == 1) {
-                        $pathRegEx[] = '^'.$explodedPrefixPath[0];
+                        // Add prefix path
+                        foreach ($explodedPrefixPath as $key => $prefixPathItem) {
+                            !empty($prefixPathItem) && $pathRegEx[] = ($key < 1 ? '^' : '/') . $prefixPathItem;
+                        }
                     }
 
                     if ($counter == $countPaths) {
-                        $pathRegEx[] = $pathArray.'/?([a-z0-9-]+)?$';
+                        $pathRegEx[] = $pathArray . '/?([a-z0-9-]+)?$';
                     } else {
-                        $pathRegEx[] = $pathArray.'/?([a-z0-9-]+)?';
+                        $pathRegEx[] = $pathArray . '/?([a-z0-9-]+)?';
                     }
                     $counter++;
                 }
