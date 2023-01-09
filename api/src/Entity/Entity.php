@@ -1207,7 +1207,7 @@ class Entity
             if ($attribute->getType() == 'object' && $attribute->getObject() !== null) {
                 $property['_list'] = '/admin/object_entities?entity.id='.$attribute->getObject()->getId()->toString();
             }
-            
+
             $attribute->getType() && $property['type'] = $attribute->getType();
             $attribute->getFormat() && $property['format'] = $attribute->getFormat();
             $attribute->getDescription() && $property['description'] = $attribute->getDescription();
