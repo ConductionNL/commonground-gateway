@@ -145,7 +145,6 @@ class ObjectSubscriber implements EventSubscriberInterface
                 break;
         }
 
-        
         // Old code
         // $validationErrors = $this->objectEntityService->switchMethod($body, null, $schema, $requestIds['objectId'], $request->getMethod(), $acceptType);
         // if (isset($validationErrors)) {
