@@ -302,9 +302,11 @@ class Endpoint
             $this->setMethods($methods !== [] ? $methods : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
             $paths = [];
-            foreach ($customPaths as $customPath) {
-                // Lets make a path
-                $paths[] = $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
+            if($customPaths && is_array($customPaths)){
+                foreach ($customPaths as $customPath) {
+                    // Lets make a path
+                    $paths[] = $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
+                }
             }
 
             $criteria = Criteria::create()

@@ -14,8 +14,6 @@
         "api-platform/core": "^2.6",
         "beberlei/doctrineextensions": "^1.3",
         "common-gateway/formio-bundle": "dev-main",
-        "common-gateway/xxllnc-zgw-bundle": "^0.0.14",
-        "common-gateway/zgw-bundle": "^0.1.8",
         "commongateway/corebundle": "dev-master",
         "composer/package-versions-deprecated": "1.11.99.3",
         "conduction/commongroundbundle": "dev-feature-gateway",
