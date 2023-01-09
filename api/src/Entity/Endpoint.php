@@ -301,6 +301,9 @@ class Endpoint
             $this->setMethod('GET');
             $this->setMethods($methods !== [] ? $methods : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
+            // Lets generate a path
+            $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
+
             $paths = [];
             if($customPaths && is_array($customPaths)){
                 foreach ($customPaths as $customPath) {
@@ -309,11 +312,13 @@ class Endpoint
                 }
             }
 
-            $criteria = Criteria::create()
-                ->orderBy(['date_created' => Criteria::DESC]);
+            $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
             if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
-                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path[0];
+               // $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path[0];
             }
+
+            /*
+
             $exploded = explode('/', $path);
             $explodedPathArray = [];
             $explodedPathArray[] = $exploded[0];
@@ -353,6 +358,17 @@ class Endpoint
 
             $implodePathRegEx = implode($pathRegEx);
             $this->setPathRegex($implodePathRegEx);
+            */
+
+            $explodedPath = explode('/', $path);
+            if ($explodedPath[0] == '') {
+                array_shift($explodedPath);
+            }
+
+            $explodedPath[] = 'id';
+            $this->setPath($explodedPath);
+            $pathRegEx = '^'.$path.'/?([a-z0-9-]+)?$';
+            $this->setPathRegex($pathRegEx);
 
             /*@depricated kept here for lagacy */
             $this->setOperationType('GET');
