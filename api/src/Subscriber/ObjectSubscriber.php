@@ -128,7 +128,7 @@ class ObjectSubscriber implements EventSubscriberInterface
             return $renderedObjectEntities;
         }
 
-        // We need to use CoreBundle -> RequestService
+        // @TODO We need to use CoreBundle -> RequestService
 
         switch ($request->getMethod()) {
             case 'PUT':
