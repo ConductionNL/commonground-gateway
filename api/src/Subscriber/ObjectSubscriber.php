@@ -145,15 +145,6 @@ class ObjectSubscriber implements EventSubscriberInterface
                 break;
         }
 
-        // Old code
-        // $validationErrors = $this->objectEntityService->switchMethod($body, null, $schema, $requestIds['objectId'], $request->getMethod(), $acceptType);
-        // if (isset($validationErrors)) {
-        //     throw new GatewayException('Validation errors', null, null, [
-        //         'data'         => $validationErrors, 'path' => $schema->getName(),
-        //         'responseType' => Response::HTTP_BAD_REQUEST,
-        //     ]);
-        // }
-
         return $body;
     }
 
