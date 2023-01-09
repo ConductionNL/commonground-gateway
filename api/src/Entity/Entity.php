@@ -1203,6 +1203,11 @@ class Entity
             // Aanmaken property
             // @todo ik laad dit nu in als array maar eigenlijk wil je testen en alleen zetten als er waardes in zitten
 
+            // Create a url to fetch the objects from the schema this property refers to
+            if ($attribute->getType() == 'object' && $attribute->getObject() !== null) {
+                $property['_list'] = '/admin/object_entities?entity.id='.$attribute->getObject()->getId()->toString();
+            }
+            
             $attribute->getType() && $property['type'] = $attribute->getType();
             $attribute->getFormat() && $property['format'] = $attribute->getFormat();
             $attribute->getDescription() && $property['description'] = $attribute->getDescription();
