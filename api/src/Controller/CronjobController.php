@@ -29,7 +29,7 @@ class CronjobController extends AbstractController
         $status = 200;
 
         // Start the procces
-        $process = new Process('cronjob:command');
+        $process = new Process(['bin/console', 'cronjob:command']);
         $process->setWorkingDirectory('/srv/api');
         $process->setTimeout(3600);
         $process->run();

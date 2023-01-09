@@ -26,6 +26,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * A value for a given attribute on an Object Entity.
  *
  * @category Entity
+ * @ORM\HasLifecycleCallbacks()
  *
  * @ApiResource(
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
@@ -232,6 +233,8 @@ class Value
         //@We no longer use string value?
         if (is_array($stringValue)) {
             return $this;
+        } elseif ($stringValue instanceof ObjectEntity) {
+            $stringValue = $stringValue->getId()->toString();
         }
         $this->stringValue = $stringValue;
 
@@ -568,6 +571,10 @@ class Value
                     // Catch Array input (for hydrator)
                     if (is_array($value)) {
                         $valueObject = new ObjectEntity($this->getAttribute()->getObject());
+                        if (key_exists('_id', $value)) {
+                            $valueObject->setExternalId($value['_id']);
+                        }
+
                         $valueObject->setOwner($this->getObjectEntity()->getOwner());
                         $valueObject->setApplication($this->getObjectEntity()->getApplication());
                         $valueObject->setOrganization($this->getObjectEntity()->getOrganization());
@@ -577,9 +584,9 @@ class Value
 
                     if (is_string($value)) {
                         $idArray[] = $value;
-                    } elseif ($value == null) {
+                    } elseif (!$value) {
                         continue;
-                    } else {
+                    } elseif ($value instanceof ObjectEntity) {
                         $this->addObject($value);
                     }
                 }
@@ -621,6 +628,10 @@ class Value
                         return $this->setDateTimeValue(null);
                     }
 
+                    if (is_array($value)) {
+                        return $this->setDateTimeValue(null);
+                    }
+
                     return $this->setDateTimeValue(new DateTime($value));
                 case 'file':
                     if ($value === null) {
@@ -641,26 +652,29 @@ class Value
                     }
 
                     // Catch Array input (for hydrator)
-                    if (is_array($value)) {
+                    if (is_array($value) && $this->getAttribute()->getObject()) {
                         $valueObject = new ObjectEntity($this->getAttribute()->getObject());
                         $valueObject->setOwner($this->getObjectEntity()->getOwner());
                         $valueObject->setApplication($this->getObjectEntity()->getApplication());
                         $valueObject->setOrganization($this->getObjectEntity()->getOrganization());
                         $valueObject->hydrate($value, $unsafe, $dateModified);
                         $value = $valueObject;
+                    } elseif (is_array($value)) {
+                        return $this;
                     }
 
                     $this->objects->clear();
 
                     // Set a string reprecentation of the object
-                    $this->stringValue = $value->getId();
+                    // var_dump('schema: '.$this->getObjectEntity()->getEntity()->getName());
+                    $value->getId() && $this->stringValue = $value->getId()->toString();
 
                     return $this->addObject($value);
 
                 case 'array':
                     return $this->setArrayValue($value);
                 default:
-                    throw new \UnexpectedValueException('Could not create a value for the attribute type of: '.$this->getAttribute()->getType());
+                    throw new \UnexpectedValueException($this->getAttribute()->getEntity()->getName().$this->getAttribute()->getName().': Could not create a value for the attribute type of: '.$this->getAttribute()->getType());
             }
         } else {
             //TODO: correct error handling

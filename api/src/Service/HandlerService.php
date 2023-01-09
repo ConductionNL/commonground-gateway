@@ -154,14 +154,26 @@ class HandlerService
 
         // If no handlers are found check if endpoint throws events
         // Throw event if set
-        if ($endpoint->getThrows() !== null) {
+        if ($endpoint->getThrows() !== null || !empty($endpoint->getThrows())) {
+            if (count($endpoint->getThrows()) == 0) {
+                return $this->requestService->requestHandler($parameters, []);
+            }
+
             // Will use the first throw in array
             foreach ($endpoint->getThrows() as $throw) {
-                $event = new ActionEvent('commongateway.action.event', ['request' => $this->getDataFromRequest(), 'response' => [], 'parameters' => $this->request], $throw);
-                $this->eventDispatcher->dispatch($event, 'commongateway.action.event');
+                if ($this->request->getMethod() == 'POST' || $this->request->getMethod() == 'PUT') {
+                    $response = json_decode($this->requestService->requestHandler($parameters, [])->getContent(), true);
+                    $event = new ActionEvent('commongateway.action.event', ['request' => $this->getDataFromRequest(), 'response' => $response, 'parameters' => $this->request], $throw);
+                    $this->eventDispatcher->dispatch($event, 'commongateway.action.event');
+                } else {
+                    $event = new ActionEvent('commongateway.action.event', ['request' => $this->getDataFromRequest(), 'response' => [], 'parameters' => $this->request], $throw);
+                    $this->eventDispatcher->dispatch($event, 'commongateway.action.event');
 
-                return $this->createResponse($event->getData()['response'], $endpoint);
+                    return $this->requestService->requestHandler($parameters, []);
+                }
             }
+
+            return $this->createResponse($event->getData()['response'], $endpoint);
         }
 
         // Let default

@@ -110,14 +110,14 @@ class Entity
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $endpoint;
+    private $endpoint = '';
 
     /**
      * @Groups({"read","write"})
      * @ORM\OneToOne(targetEntity=Soap::class, fetch="EAGER", mappedBy="fromEntity")
      * @MaxDepth(1)
      */
-    private ?soap $toSoap;
+    private ?Soap $toSoap = null;
 
     /**
      * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="toEntity", orphanRemoval=true)
@@ -153,7 +153,7 @@ class Entity
      *
      * @Assert\Choice({"noFunction","organization", "person", "user", "userGroup", "processingLog"})
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", options={"default":"noFunction"})
+     * @ORM\Column(type="string", options={"default":"noFunction"}, name="function_column")
      */
     private string $function = 'noFunction';
 
@@ -226,7 +226,7 @@ class Entity
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private ?array $availableProperties;
+    private ?array $availableProperties = [];
 
     /**
      * @var array|null The properties used for this entity (for all CRUD calls) if null all properties will be used. This affects which properties will be written / shown.
@@ -315,9 +315,10 @@ class Entity
     /**
      * @var ?Collection The collections of this Entity
      *
-     * @Groups({"write"})
+     * @Groups({"write", "read"})
      * @MaxDepth(1)
-     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="entities", fetch="EXTRA_LAZY")
+     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="entities")
+     * @ORM\OrderBy({"dateCreated" = "DESC"})
      */
     private ?Collection $collections;
 
@@ -325,7 +326,7 @@ class Entity
      * @var ?string The uri to a schema.org object
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null}, name="schema_column")
      */
     private ?string $schema = null;
 
@@ -474,7 +475,7 @@ class Entity
         return $this->endpoint;
     }
 
-    public function setEndpoint(string $endpoint): self
+    public function setEndpoint(?string $endpoint): self
     {
         $this->endpoint = $endpoint;
 
@@ -1146,7 +1147,6 @@ class Entity
                 $attribute = new Attribute();
                 $attribute->setName($name);
             }
-
             $this->addAttribute($attribute->fromSchema($property));
         }
 
@@ -1202,6 +1202,11 @@ class Entity
 
             // Aanmaken property
             // @todo ik laad dit nu in als array maar eigenlijk wil je testen en alleen zetten als er waardes in zitten
+
+            // Create a url to fetch the objects from the schema this property refers to
+            if ($attribute->getType() == 'object' && $attribute->getObject() !== null) {
+                $property['_list'] = '/admin/object_entities?entity.id='.$attribute->getObject()->getId()->toString();
+            }
 
             $attribute->getType() && $property['type'] = $attribute->getType();
             $attribute->getFormat() && $property['format'] = $attribute->getFormat();

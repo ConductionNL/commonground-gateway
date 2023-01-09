@@ -8,6 +8,7 @@ use App\Entity\Entity;
 use App\Entity\Gateway as Source;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
+use App\Event\ActionEvent;
 use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
@@ -22,6 +23,7 @@ use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -47,6 +49,9 @@ class SynchronizationService
     private SymfonyStyle $io;
     private Environment $twig;
 
+    private ActionEvent $event;
+    private EventDispatcherInterface $eventDispatcher;
+
     private bool $asyncError = false;
 
     /**
@@ -63,7 +68,7 @@ class SynchronizationService
      * @param EavService             $eavService
      * @param Environment            $twig
      */
-    public function __construct(CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig)
+    public function __construct(CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig, EventDispatcherInterface $eventDispatcher)
     {
         $this->callService = $callService;
         $this->entityManager = $entityManager;
@@ -80,6 +85,8 @@ class SynchronizationService
         $this->configuration = [];
         $this->data = [];
         $this->twig = $twig;
+        $this->event = new ActionEvent('', []);
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -573,12 +580,13 @@ class SynchronizationService
      *
      * @param array $callServiceConfig The configuration for the source
      * @param int   $page              The current page to be requested
+     * @param ?int  $errorsInARowCount The amount of failed fetches in a row
      *
      * @throws GuzzleException
      *
      * @return array
      */
-    private function fetchObjectsFromSource(array $callServiceConfig, int $page = 1): array
+    private function fetchObjectsFromSource(array $callServiceConfig, int $page = 1, ?int $errorsInARowCount = 0): array
     {
         // Get a single page
         if (is_array($callServiceConfig['query'])) {
@@ -603,13 +611,23 @@ class SynchronizationService
             );
         } catch (Exception|GuzzleException $exception) {
             // If no next page with this $page exists...
-            $this->ioCatchException($exception, ['line', 'file', 'message' => [
-                'preMessage' => '(This might just be the final page!) - Error while doing fetchObjectsFromSource: ',
-            ]]);
+            if ($errorsInARowCount == 3) {
+                $this->ioCatchException($exception, ['line', 'file', 'message' => [
+                    'preMessage' => '(This might just be the final page!) -  Error while doing fetchObjectsFromSource, tried to fetch page 3 times: ',
+                ]]);
+
+                return [];
+            }
 
             //todo: error, log this
-            return [];
+
+            $this->ioCatchException($exception, ['line', 'file', 'message' => [
+                'preMessage' => 'Failed fetching page '.$page,
+            ]]);
+
+            return $this->fetchObjectsFromSource($callServiceConfig, $page + 1, $errorsInARowCount++);
         }
+
         $pageResult = $this->callService->decodeResponse($callServiceConfig['source'], $response);
 
         $dot = new Dot($pageResult);
@@ -757,9 +775,12 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->text("Created new ObjectEntity for Synchronization with id = {$synchronization->getId()->toString()}");
             }
+            $this->event = new ActionEvent('commongateway.object.create', []);
 
             return 'POST';
         }
+
+        $this->event = new ActionEvent('commongateway.object.update', []);
 
         return 'PUT';
     }
@@ -810,8 +831,10 @@ class SynchronizationService
      *
      * @return Synchronization The updated synchronization object
      */
-    public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
+    public function handleSync(Synchronization $synchronization, array $sourceObject = [], ?array $customConfig = null): Synchronization
     {
+        isset($customConfig) && $this->configuration = $customConfig;
+
         if (isset($this->io)) {
             $this->io->text("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
         }
@@ -881,35 +904,10 @@ class SynchronizationService
     {
         // todo: move this function to ObjectEntityService to prevent duplicate code...
 
-        if (isset($this->io)) {
-            $this->io->text("populateObject $method ObjectEntity with id = {$objectEntity->getId()->toString()}");
-        }
+        $objectEntity->hydrate($data);
 
-        $this->setApplicationAndOrganization($objectEntity);
-
-        $owner = $this->objectEntityService->checkAndUnsetOwner($data);
-        if (array_key_exists('owner', $this->configuration)) {
-            $owner = $this->configuration['owner'];
-        }
-
-        if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), $method)) {
-            if (isset($this->io)) {
-                $this->io->warning("ValidationErrors: [{$this->objectEntityService->implodeMultiArray($validationErrors)}]");
-            }
-            //@TODO: Write errors to logs
-
-            foreach ($validationErrors as $error) {
-                if (!is_array($error) && strpos($error, 'must be present') !== false) {
-                    return $objectEntity;
-                }
-            }
-        }
-
-        $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'jsonld');
-        // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
-        if (!$this->checkActionConditionsEntity($objectEntity->getEntity()->getId()->toString())) {
-            $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()]);
-        }
+        $this->event->setData(['response' => $objectEntity->toArray(), 'entity' => $objectEntity->getEntity()->getId()->toString()]);
+        $this->eventDispatcher->dispatch($this->event, $this->event->getType());
 
         return $objectEntity;
     }
@@ -1237,6 +1235,7 @@ class SynchronizationService
         } elseif (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
             $sourceObject = $this->translationService->dotHydrator($sourceObject, $sourceObject, $this->configuration['apiSource']['mappingIn']);
         } elseif (array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
+            // todo: this^ should be skeletonIn ?
             $sourceObject = $this->translationService->dotHydrator(array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']), $sourceObject, $sourceObject);
         }
 

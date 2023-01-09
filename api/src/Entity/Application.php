@@ -94,7 +94,7 @@ class Application
      * @var string A public uuid of this Application.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="string", nullable=true, name="public_column")
      */
     private ?string $public = null;
 

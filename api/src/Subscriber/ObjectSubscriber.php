@@ -118,22 +118,31 @@ class ObjectSubscriber implements EventSubscriberInterface
         }
 
         $schema = $this->findSchema($requestIds, $request->getUri());
+        if ($this->route == 'api_object_entities_get_objects_schema_collection' || $this->route == 'api_entities_get_objects_collection') {
+            $objectEntities = $schema->getObjectEntities();
+            $renderedObjectEntities = [];
+            foreach ($objectEntities as &$objectEntity) {
+                $renderedObjectEntities[] = $acceptType === 'json' ? $objectEntity->toArray() : $this->responseService->renderResult($objectEntity, null, null, $acceptType);
+            }
+
+            return $renderedObjectEntities;
+        }
+
+        // @TODO We need to use CoreBundle -> RequestService
 
         switch ($request->getMethod()) {
+            case 'PUT':
             case 'POST':
+                !isset($objectEntity) && $objectEntity = new ObjectEntity($schema);
+                $objectEntity->hydrate($body);
+                $this->entityManager->persist($objectEntity);
+                $this->entityManager->flush();
+                $body = $objectEntity->toArray();
                 $response->setStatusCode(Response::HTTP_CREATED);
                 break;
             case 'DELETE':
                 $response->setStatusCode(Response::HTTP_NO_CONTENT);
                 break;
-        }
-
-        $validationErrors = $this->objectEntityService->switchMethod($body, null, $schema, $requestIds['objectId'], $request->getMethod(), $acceptType);
-        if (isset($validationErrors)) {
-            throw new GatewayException('Validation errors', null, null, [
-                'data'         => $validationErrors, 'path' => $schema->getName(),
-                'responseType' => Response::HTTP_BAD_REQUEST,
-            ]);
         }
 
         return $body;
