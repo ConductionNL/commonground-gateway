@@ -128,8 +128,16 @@ class ObjectSubscriber implements EventSubscriberInterface
             return $renderedObjectEntities;
         }
 
+        // We need to use CoreBundle -> RequestService
+
         switch ($request->getMethod()) {
+            case 'PUT':
             case 'POST':
+                !isset($objectEntity) && $objectEntity = new ObjectEntity($schema);
+                $objectEntity->hydrate($body);
+                $this->entityManager->persist($objectEntity);
+                $this->entityManager->flush();
+                $body = $objectEntity->toArray();
                 $response->setStatusCode(Response::HTTP_CREATED);
                 break;
             case 'DELETE':
@@ -137,13 +145,15 @@ class ObjectSubscriber implements EventSubscriberInterface
                 break;
         }
 
-        $validationErrors = $this->objectEntityService->switchMethod($body, null, $schema, $requestIds['objectId'], $request->getMethod(), $acceptType);
-        if (isset($validationErrors)) {
-            throw new GatewayException('Validation errors', null, null, [
-                'data'         => $validationErrors, 'path' => $schema->getName(),
-                'responseType' => Response::HTTP_BAD_REQUEST,
-            ]);
-        }
+        
+        // Old code
+        // $validationErrors = $this->objectEntityService->switchMethod($body, null, $schema, $requestIds['objectId'], $request->getMethod(), $acceptType);
+        // if (isset($validationErrors)) {
+        //     throw new GatewayException('Validation errors', null, null, [
+        //         'data'         => $validationErrors, 'path' => $schema->getName(),
+        //         'responseType' => Response::HTTP_BAD_REQUEST,
+        //     ]);
+        // }
 
         return $body;
     }
