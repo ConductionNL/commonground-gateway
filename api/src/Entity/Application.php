@@ -201,6 +201,11 @@ class Application
      */
     private ?string $publicKey = null;
 
+    /**
+     * @ORM\ManyToMany(targetEntity=User::class, mappedBy="applications")
+     */
+    private $users;
+
     public function __construct()
     {
         $this->requestLogs = new ArrayCollection();
@@ -208,6 +213,7 @@ class Application
         $this->endpoints = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->contracts = new ArrayCollection();
+        $this->users = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -479,6 +485,33 @@ class Application
     public function setPublicKey(string $publicKey): self
     {
         $this->publicKey = $publicKey;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|User[]
+     */
+    public function getUsers(): Collection
+    {
+        return $this->users;
+    }
+
+    public function addUser(User $user): self
+    {
+        if (!$this->users->contains($user)) {
+            $this->users[] = $user;
+            $user->addApplication($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUser(User $user): self
+    {
+        if ($this->users->removeElement($user)) {
+            $user->removeApplication($this);
+        }
 
         return $this;
     }

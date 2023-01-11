@@ -43,9 +43,10 @@ class ZZController extends AbstractController
 
         $parameters = $this->getParametersFromRequest([], $request);
 
+
         // We should check if we have an id
         if($id){
-            $parameters['path']['id'] = $id;
+            $parameters['path']['{id}'] = $id;
         }
 
         return $requestService->requestHandler($parameters, []);;

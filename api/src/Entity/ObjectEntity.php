@@ -988,6 +988,7 @@ class ObjectEntity
         // The new metadata
         $array['_self'] = [
             'id'           => $this->getId() ? $this->getId()->toString() : null,
+            'name'             => $this->getName(),
             'self'         => $this->getSelf(),
             'owner'        => $this->getOwner(),
             'organization' => $this->getOrganization(),
@@ -1000,7 +1001,6 @@ class ObjectEntity
                 'ref' => $this->getEntity()->getReference(),
             ],
             'synchronizations' => $this->getReadableSyncDataArray(),
-            'name'             => $this->getName(),
         ];
 
         // If we dont need the actual object data we can exit here

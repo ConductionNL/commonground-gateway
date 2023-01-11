@@ -27,7 +27,7 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * An entity that functions a an object template for objects that might be stored in the EAV database.
+ * An schema that functions a an object template for objects that might be stored in the EAV database.
  *
  * @ApiResource(
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
