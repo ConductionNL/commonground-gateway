@@ -311,23 +311,36 @@ class ObjectEntity
 
     public function getSelf(): ?string
     {
+        // If self not set we generate a uri with linked endpoints
         if (!isset($this->self)) {
-            // Multiple endpoints on a entity is problematic but we can work with it
-            if ($this->getEntity() !== null && $this->getEntity()->getEndpoints() !== null && !empty($this->getEntity()->getEndpoints()) && $this->getEntity()->getEndpoints()->first() !== false) {
-                $pathArray = $this->getEntity()->getEndpoints()->first()->getPath();
-                $pathString = '/api';
-                $idSet = false;
-                foreach ($pathArray as $pathItem) {
-                    if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
-                        $idSet = true;
-                        $pathString .= '/'.$this->getId()->toString();
-                    } else {
-                        $pathString .= '/'.$pathItem;
+            if ($this->getEntity() !== null) {
+                $endpoints = $this->getEntity()->getEndpoints();
+                foreach ($endpoints as $endpoint) {
+                    // We need a GET endpoint
+                    if (!in_array('get', $endpoint->getMethods()) && !in_array('GET', $endpoint->getMethods())) {
+                        continue;
+                    }
+                    $pathArray = $endpoint->getPath() ?? [];
+                    $pathString = '/api';
+                    $idSet = false;
+                    // Add path item to self uri
+                    foreach ($pathArray as $pathItem) {
+                        if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
+                            $idSet = true;
+                            $pathString .= '/'.$this->getId()->toString();
+                        } else {
+                            $pathString .= '/'.$pathItem;
+                        }
+                    }
+                    // If id is set we found a correct endpoint and we can stop the foreach
+                    if ($idSet == true) {
+                        break;
                     }
                 }
-                $idSet == false && $pathString .= '/'.$this->getId()->toString();
-            } else {
-                $pathString = '/api'.($this->getEntity()->getRoute() ?? '/'.strtolower($this->getEntity()->getName()).'/'.$this->getId());
+            }
+            // If setting uri failed with endpoints do it the old way
+            if (!isset($idSet) || $idSet == false) {
+                $pathString = $this->getId()->toString();
             }
             $this->self = $pathString;
         }
