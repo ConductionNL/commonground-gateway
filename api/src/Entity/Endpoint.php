@@ -307,8 +307,7 @@ class Endpoint
                 $paths[] = $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
             }
 
-            $criteria = Criteria::create()
-                ->orderBy(['date_created' => Criteria::DESC]);
+            $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
             if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
                 $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path[0];
             }
