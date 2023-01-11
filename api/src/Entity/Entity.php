@@ -1087,6 +1087,7 @@ class Entity
 
     /**
      * @param string|null $schema
+     *
      * @return $this This schema
      */
     public function setSchema(?string $schema): self
@@ -1097,12 +1098,14 @@ class Entity
     }
 
     /**
-     * Create or update this schema from an external schema array
+     * Create or update this schema from an external schema array.
      *
      * This function is ussed to update and create schema's form schema.json objects
      *
      * @param array $schema the schema to load
+     *
      * @throws GatewayException
+     *
      * @return $this This schema
      */
     public function fromSchema(array $schema): self

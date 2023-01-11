@@ -22,16 +22,17 @@ use Symfony\Component\Serializer\SerializerInterface;
 class ZZController extends AbstractController
 {
     /**
-     * This function handles objects in line with the new request service
+     * This function handles objects in line with the new request service.
      *
      * @Route("/admin/objects")
      * @Route("/admin/objects/{id}", requirements={"path" = ".+"})
      *
-     * @param string|null $path
-     * @param Request $request
+     * @param string|null         $path
+     * @param Request             $request
      * @param SerializerInterface $serializer
-     * @param HandlerService $handlerService
-     * @param RequestService $requestService
+     * @param HandlerService      $handlerService
+     * @param RequestService      $requestService
+     *
      * @return Response
      */
     public function objectAction(
@@ -39,36 +40,37 @@ class ZZController extends AbstractController
         Request $request,
         SerializerInterface $serializer,
         HandlerService $handlerService,
-        RequestService $requestService): Response {
-
+        RequestService $requestService
+    ): Response
+    {
         $parameters = $this->getParametersFromRequest([], $request);
 
-
         // We should check if we have an id
-        if($id){
+        if ($id) {
             $parameters['path']['{id}'] = $id;
         }
 
-        return $requestService->requestHandler($parameters, []);;
+        return $requestService->requestHandler($parameters, []);
     }
 
-
     /**
-     * This function dynamicly handles the api endpoints
+     * This function dynamicly handles the api endpoints.
      *
      * @Route("/api/{path}", name="dynamic_route", requirements={"path" = ".+"})
      *
-     * @param string|null $path
-     * @param Request $request
-     * @param DocumentService $documentService
-     * @param ValidationService $validationService
-     * @param HandlerService $handlerService
-     * @param SerializerInterface $serializer
-     * @param LogService $logService
+     * @param string|null          $path
+     * @param Request              $request
+     * @param DocumentService      $documentService
+     * @param ValidationService    $validationService
+     * @param HandlerService       $handlerService
+     * @param SerializerInterface  $serializer
+     * @param LogService           $logService
      * @param ProcessingLogService $processingLogService
-     * @param RequestService $requestService
-     * @return Response
+     * @param RequestService       $requestService
+     *
      * @throws GatewayException
+     *
+     * @return Response
      */
     public function dynamicAction(
         ?string $path,
@@ -179,16 +181,20 @@ class ZZController extends AbstractController
     }
 
     /**
-     * Builds a parameter array from the request
+     * Builds a parameter array from the request.
      *
-     * @param ?array $parameters An optional starting array of parameters
-     * @param ?Request $request The request (autowired so doesn't need te be provided
+     * @param ?array   $parameters An optional starting array of parameters
+     * @param ?Request $request    The request (autowired so doesn't need te be provided
+     *
      * @return array The parameter arrau
      */
-    private function getParametersFromRequest(?array $parameters = [], ?Request $request):array{
+    private function getParametersFromRequest(?array $parameters = [], ?Request $request): array
+    {
 
         // Lets make sure that we always have a path
-        if(!isset($parameters['path'])){$parameters['path'] =[];}
+        if (!isset($parameters['path'])) {
+            $parameters['path'] = [];
+        }
 
         $parameters['querystring'] = $request->getQueryString();
 
