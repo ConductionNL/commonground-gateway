@@ -2,12 +2,7 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -17,7 +12,6 @@ use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -252,11 +246,12 @@ class User
         return $this;
     }
 
-    public function getRoles(){
+    public function getRoles()
+    {
 
         // Lets see if we need to establisch al the roles
-        if(!empty($this->roles)){
-            foreach ($this->getUserGroups as $userGroup){
+        if (!empty($this->roles)) {
+            foreach ($this->getUserGroups as $userGroup) {
                 array_merge($this->roles, $userGroup->getRoles());
             }
         }
