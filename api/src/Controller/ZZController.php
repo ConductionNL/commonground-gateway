@@ -24,7 +24,8 @@ class ZZController extends AbstractController
     /**
      * This function handles objects in line with the new request service
      *
-     * @Route("/admin/objects/{id}", name="dynamic_route", requirements={"path" = ".+"})
+     * @Route("/admin/objects")
+     * @Route("/admin/objects/{id}", requirements={"path" = ".+"})
      *
      * @param string|null $path
      * @param Request $request
@@ -40,21 +41,14 @@ class ZZController extends AbstractController
         HandlerService $handlerService,
         RequestService $requestService): Response {
 
-        $parameters = $this->getParametersFromRequest();
+        $parameters = $this->getParametersFromRequest([], $request);
 
         // We should check if we have an id
         if($id){
             $parameters['path']['id'] = $id;
         }
 
-        $result = $this->requestService->requestHandler($parameters, []);
-
-        $acceptType = $handlerService->getRequestType('accept');
-        in_array($acceptType, ['form.io', 'jsonhal']) && $acceptType = 'json';
-
-
-
-        return $response->prepare($request);
+        return $requestService->requestHandler($parameters, []);;
     }
 
 
@@ -130,7 +124,7 @@ class ZZController extends AbstractController
 
         // Let create the variable
         // Create array for filtering (in progress, should be moved to the correct service)
-        $parameters = $this->getParametersFromRequest();
+        $parameters = $this->getParametersFromRequest([], $request);
 
         $pathArray = array_values(array_filter(explode('/', $path)));
         foreach ($endpoint->getPath() as $key => $pathPart) {
@@ -186,11 +180,11 @@ class ZZController extends AbstractController
     /**
      * Builds a parameter array from the request
      *
-     * @param array $parameters An optional starting array of parameters
-     * @param Request $request The request (autowired so doesn't need te be provided
+     * @param ?array $parameters An optional starting array of parameters
+     * @param ?Request $request The request (autowired so doesn't need te be provided
      * @return array The parameter arrau
      */
-    private function getParametersFromRequest(array $parameters = [], Request $request):array{
+    private function getParametersFromRequest(?array $parameters = [], ?Request $request):array{
 
         // Lets make sure that we always have a path
         if(!isset($parameters['path'])){$parameters['path'] =[];}
