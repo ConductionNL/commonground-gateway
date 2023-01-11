@@ -2,12 +2,6 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -23,14 +17,13 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * An (data) object that resides within the datalayer of the gateway
+ * An (data) object that resides within the datalayer of the gateway.
  *
  * @category Entity
  *
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @ORM\HasLifecycleCallbacks
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
  */
 class ObjectEntity
 {
@@ -83,7 +76,7 @@ class ObjectEntity
     private $uri;
 
     /**
-     * The application that this object belongs to
+     * The application that this object belongs to.
      *
      * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Application::class, inversedBy="objectEntities")
@@ -987,16 +980,16 @@ class ObjectEntity
 
         // The new metadata
         $array['_self'] = [
-            'id'           => $this->getId() ? $this->getId()->toString() : null,
+            'id'               => $this->getId() ? $this->getId()->toString() : null,
             'name'             => $this->getName(),
-            'self'         => $this->getSelf(),
-            'owner'        => $this->getOwner(),
-            'organization' => $this->getOrganization(),
-            'application'  => $this->getApplication() ? $this->getApplication()->getId()->toString() : null,
-            'dateCreated'  => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
-            'dateModified' => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
-            'level'        => $configuration['level'],
-            'schema'       => [
+            'self'             => $this->getSelf(),
+            'owner'            => $this->getOwner(),
+            'organization'     => $this->getOrganization(),
+            'application'      => $this->getApplication() ? $this->getApplication()->getId()->toString() : null,
+            'dateCreated'      => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
+            'dateModified'     => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
+            'level'            => $configuration['level'],
+            'schema'           => [
                 'id'  => $this->getEntity()->getId()->toString(),
                 'ref' => $this->getEntity()->getReference(),
             ],
