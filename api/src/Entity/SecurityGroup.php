@@ -15,7 +15,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * This entity holds the information about an User.
+ * A security group is a set of right defined as scopes
  *
  * @ApiResource(
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
@@ -33,7 +33,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\HasLifecycleCallbacks
  * @ORM\Entity(repositoryClass=UserGroupRepository::class)
  */
-class UserGroup
+class SecurityGroup
 {
     /**
      * @var UuidInterface The UUID identifier of this resource
@@ -74,11 +74,11 @@ class UserGroup
      * @Groups({"read", "write"})
      * @ORM\Column(type="array")
      */
-    private $roles = [];
+    private $scopes = [];
 
     /**
      * @Groups({"read"})
-     * @ORM\ManyToMany(targetEntity=User::class, inversedBy="userGroups")
+     * @ORM\ManyToMany(targetEntity=User::class, inversedBy="securityGroups")
      */
     private $users;
 
@@ -134,14 +134,14 @@ class UserGroup
         return $this;
     }
 
-    public function getRoles(): ?array
+    public function getScopes(): ?array
     {
-        return $this->roles;
+        return $this->scopes;
     }
 
-    public function setRoles(array $roles): self
+    public function setScopes(array $scopes): self
     {
-        $this->roles = $roles;
+        $this->scopes = $scopes;
 
         return $this;
     }

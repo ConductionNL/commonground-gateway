@@ -91,7 +91,7 @@ class Application
     private array $domains = [];
 
     /**
-     * @var string A public uuid of this Application.
+     * @var string A public key of this Application.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true, name="public_column")
@@ -99,12 +99,21 @@ class Application
     private ?string $public = null;
 
     /**
-     * @var string A secret uuid of this Application.
+     * @var string A secret key of this Application.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", nullable=true)
      */
     private ?string $secret = null;
+
+    /**
+     * @var string|null A public key for authentication, or a secret for HS256 keys
+     *
+     * @Groups({"write"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $publicKey = null;
+
 
     /**
      * @var string Uri of user object.
@@ -113,23 +122,6 @@ class Application
      * @ORM\Column(type="string", nullable=true)
      */
     private ?string $resource = null;
-
-    /**
-     *  @ORM\PrePersist
-     *  @ORM\PreUpdate
-     */
-    public function prePersist()
-    {
-        if (!$this->getSecret()) {
-            $secret = Uuid::uuid4()->toString();
-            $this->setSecret($secret);
-        }
-
-        if (!$this->getPublic()) {
-            $secret = Uuid::uuid4()->toString();
-            $this->setPublic($secret);
-        }
-    }
 
     // TODO: make this required?
     /**
@@ -192,15 +184,6 @@ class Application
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
-
-    /**
-     * @var string|null A public key for authentication, or a secret for HS256 keys
-     *
-     * @Groups({"write"})
-     * @ORM\Column(type="text", nullable=true)
-     */
-    private ?string $publicKey = null;
-
     /**
      * @ORM\ManyToMany(targetEntity=User::class, mappedBy="applications")
      */
@@ -514,5 +497,22 @@ class Application
         }
 
         return $this;
+    }
+
+    /**
+     *  @ORM\PrePersist
+     *  @ORM\PreUpdate
+     */
+    public function prePersist()
+    {
+        if (!$this->getSecret()) {
+            $secret = Uuid::uuid4()->toString();
+            $this->setSecret($secret);
+        }
+
+        if (!$this->getPublic()) {
+            $secret = Uuid::uuid4()->toString();
+            $this->setPublic($secret);
+        }
     }
 }

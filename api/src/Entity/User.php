@@ -101,7 +101,7 @@ class User
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $locale;
+    private $locale = 'en';
 
     /**
      * @Groups({"read", "write"})
@@ -113,13 +113,13 @@ class User
      * @Groups({"read"})
      * The roles that this user inherrits from the user groups
      */
-    private $roles = [];
+    private $scopes = [];
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\ManyToMany(targetEntity=UserGroup::class, mappedBy="users")
+     * @ORM\ManyToMany(targetEntity=SecurityGroup::class, mappedBy="users")
      */
-    private $userGroups;
+    private $securityGroups;
 
     /**
      * @var Datetime The moment this resource was created
@@ -246,41 +246,40 @@ class User
         return $this;
     }
 
-    public function getRoles()
+    public function getScopes()
     {
-
-        // Lets see if we need to establisch al the roles
-        if (!empty($this->roles)) {
-            foreach ($this->getUserGroups as $userGroup) {
-                array_merge($this->roles, $userGroup->getRoles());
+        // Lets see if we need to establisch al the scopes
+        if (!empty($this->scopes)) {
+            foreach ($this->securityGroups as $securityGroup) {
+                array_merge($this->scopes, $securityGroup->getScopes());
             }
         }
 
-        return $this->roles;
+        return $this->scopes;
     }
 
     /**
-     * @return Collection|UserGroup[]
+     * @return Collection|SecurityGroup[]
      */
-    public function getUserGroups(): Collection
+    public function getSecurityGroups(): Collection
     {
-        return $this->userGroups;
+        return $this->securityGroups;
     }
 
-    public function addUserGroup(UserGroup $userGroup): self
+    public function addSecurityGroup(SecurityGroup $securityGroup): self
     {
-        if (!$this->userGroups->contains($userGroup)) {
-            $this->userGroups[] = $userGroup;
-            $userGroup->addUser($this);
+        if (!$this->securityGroups->contains($securityGroup)) {
+            $this->securityGroups[] = $securityGroup;
+            $securityGroup->addUser($this);
         }
 
         return $this;
     }
 
-    public function removeUserGroup(UserGroup $userGroup): self
+    public function removeSecurityGroup(SecurityGroup $securityGroup): self
     {
-        if ($this->userGroups->removeElement($userGroup)) {
-            $userGroup->removeUser($this);
+        if ($this->securityGroups->removeElement($securityGroup)) {
+            $securityGroup->removeUser($this);
         }
 
         return $this;
