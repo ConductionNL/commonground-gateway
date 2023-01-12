@@ -865,16 +865,16 @@
         },
         {
             "name": "common-gateway/zgw-bundle",
-            "version": "0.1.8",
+            "version": "0.1.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/ZGWBundle.git",
-                "reference": "2e1a58c253e28b9d0badeb8e34dcecaf70a2020e"
+                "reference": "b58cdca8b172ceabf475bd729e3ee7e667736b99"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/2e1a58c253e28b9d0badeb8e34dcecaf70a2020e",
-                "reference": "2e1a58c253e28b9d0badeb8e34dcecaf70a2020e",
+                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/b58cdca8b172ceabf475bd729e3ee7e667736b99",
+                "reference": "b58cdca8b172ceabf475bd729e3ee7e667736b99",
                 "shasum": ""
             },
             "require": {
@@ -907,9 +907,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.8"
+                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.11"
             },
-            "time": "2023-01-05T06:31:00+00:00"
+            "time": "2023-01-06T14:29:12+00:00"
         },
         {
             "name": "commongateway/corebundle",
