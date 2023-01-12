@@ -21,6 +21,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use CommonGateway\CoreBundle\Service\InstallationService;
 
 class InitializationCommand extends Command
 {
@@ -31,15 +32,19 @@ class InitializationCommand extends Command
     private EntityManagerInterface $entityManager;
     private EventDispatcherInterface $eventDispatcher;
     private SessionInterface $session;
+    private ParameterBagInterface $params;
+    private InstallationService $installationService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         EventDispatcherInterface $eventDispatcher,
-        SessionInterface $session
+        SessionInterface $session,
+        InstallationService $installationService
     ) {
         $this->entityManager = $entityManager;
         $this->eventDispatcher = $eventDispatcher;
         $this->session = $session;
+        $this->installationService = $installationService;
 
         parent::__construct();
     }
@@ -149,6 +154,17 @@ class InitializationCommand extends Command
         }
 
         $this->entityManager->flush();
+
+        // Checking for dev env
+        $io->section("Checking environment");
+        $io->info('Environment is '. getenv("APP_ENV"));
+
+        // In dev we also want to run the installer
+        if( getenv("APP_ENV") == "dev"){
+            $this->installationService->setStyle(new SymfonyStyle($input, $output));
+            $this->installationService->composerupdate();
+        }
+
 
         $io->success('Successfully finished setting basic configuration');
 
