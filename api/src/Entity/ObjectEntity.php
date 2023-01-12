@@ -88,9 +88,9 @@ class ObjectEntity
      * @var string An uuid or uri of an organization
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="objectEntities")
      */
-    private $organization;
+    private ?Organization $organization;
 
     /**
      * @var string An uuid or uri of an owner of this object
@@ -317,12 +317,12 @@ class ObjectEntity
         return $this;
     }
 
-    public function getOrganization(): ?string
+    public function getOrganization(): ?Organization
     {
         return $this->organization;
     }
 
-    public function setOrganization(?string $organization): self
+    public function setOrganization(?Organization $organization): self
     {
         $this->organization = $organization;
 

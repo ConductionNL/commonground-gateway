@@ -50,7 +50,7 @@ class SecurityGroup
     private $id;
 
     /**
-     * @var string The name of this Application.
+     * @var string The name of this Security Group.
      *
      * @Gedmo\Versioned
      * @Assert\Length(
@@ -63,7 +63,7 @@ class SecurityGroup
     private string $name;
 
     /**
-     * @var string A description of this Application.
+     * @var string A description of this Security Group.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)

@@ -63,7 +63,7 @@ class InitializationCommand extends Command
         $io->title('Check if we have the needed objects');
 
         // Handling Organizations
-        $io->section('Looking for an organisation');
+        $io->section('Looking for an organization');
         if (!$organization = $this->entityManager->getRepository('App:Organization')->findOneBy([])) {
             $io->info('No organization found, creating a new one');
             $organization = new Organization();
@@ -72,7 +72,7 @@ class InitializationCommand extends Command
 
             $this->entityManager->persist($organization);
         } else {
-            $io->info('Organization found continuing');
+            $io->info('Organization found, continuing....');
         }
 
         // Handling Applications
@@ -87,11 +87,11 @@ class InitializationCommand extends Command
 
             $this->entityManager->persist($application);
         } else {
-            $io->info('Application found continuing');
+            $io->info('Application found, continuing....');
         }
 
         // Handling user groups
-        $io->section('Looking for an security group');
+        $io->section('Looking for a security group');
         if (!$securityGroupAdmin = $this->entityManager->getRepository('App:SecurityGroup')->findOneBy([])) {
             $io->info('No securityGroup found, creating an anonymous, user and admin one');
 
@@ -114,13 +114,16 @@ class InitializationCommand extends Command
             $securityGroupAdmin->setParent($securityGroupUser);
             $securityGroupAdmin->setScopes(
                 [
-                    'admin.DELETE',
+                    'admin.GET',
+                    'admin.POST',
+                    'admin.PUT',
+                    'admin.DELETE'
                 ]
             );
 
             $this->entityManager->persist($securityGroupAdmin);
         } else {
-            $io->info('Security group found continuing');
+            $io->info('Security group found, continuing....');
         }
 
         // Handling users
@@ -138,7 +141,7 @@ class InitializationCommand extends Command
 
             $this->entityManager->persist($user);
         } else {
-            $io->info('User found continuing');
+            $io->info('User found, continuing....');
         }
 
         $this->entityManager->flush();

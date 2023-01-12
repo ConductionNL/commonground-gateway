@@ -52,7 +52,7 @@ class User
     private $id;
 
     /**
-     * @var string The name of this Application.
+     * @var string The name of this User.
      *
      * @Gedmo\Versioned
      * @Assert\Length(
@@ -65,7 +65,7 @@ class User
     private string $name;
 
     /**
-     * @var string A description of this Application.
+     * @var string A description of this User.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)

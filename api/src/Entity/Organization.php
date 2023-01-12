@@ -50,7 +50,7 @@ class Organization
     private $id;
 
     /**
-     * @var string The name of this Application.
+     * @var string The name of this Organization.
      *
      * @Gedmo\Versioned
      * @Assert\Length(
@@ -63,7 +63,7 @@ class Organization
     private string $name;
 
     /**
-     * @var string A description of this Application.
+     * @var string A description of this Organization.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
