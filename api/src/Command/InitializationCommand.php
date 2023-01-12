@@ -99,6 +99,7 @@ class InitializationCommand extends Command
         $io->section("Looking for an securitygroup");
         if(!$securityGroupAdmin = $this->entityManager->getRepository('App:SecurityGroup')->findOneBy([])){
             $io->info('No securityGroup found, creating an anonymous, user and admin one');
+
             $securityGroupAnonymous = New SecurityGroup();
             $securityGroupAnonymous->setName("Default Anonymous");
             $securityGroupAnonymous->setDescription("Created during auto configuration");
@@ -116,6 +117,13 @@ class InitializationCommand extends Command
             $securityGroupAdmin->setName("Default Admin");
             $securityGroupAdmin->setDescription("Created during auto configuration");
             $securityGroupAdmin->setParent($securityGroupUser);
+            $securityGroupAdmin->setScopes([
+                "admin.GET",
+                "admin.POST",
+                "admin.PUT",
+                "admin.DELETE"
+                ]
+            );
 
             $this->entityManager->persist($securityGroupAdmin);
 
@@ -131,6 +139,8 @@ class InitializationCommand extends Command
             $user = New User();
             $user->setName("Default User");
             $user->setDescription("Created during auto configuration");
+            $user->setEmail("no-reply@test.com");
+            $user->setPassword("!ChangeMe!");
             $user->addSecurityGroup($securityGroupAdmin);
             $user->addApplication($application);
             $user->setOrganisation($organization);
