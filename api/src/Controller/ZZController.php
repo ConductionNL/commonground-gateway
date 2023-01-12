@@ -41,8 +41,7 @@ class ZZController extends AbstractController
         SerializerInterface $serializer,
         HandlerService $handlerService,
         RequestService $requestService
-    ): Response
-    {
+    ): Response {
         $parameters = $this->getParametersFromRequest([], $request);
 
         // We should check if we have an id

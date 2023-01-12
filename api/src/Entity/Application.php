@@ -83,7 +83,7 @@ class Application
     private ?string $description;
 
     /**
-     * The hosts that this applications uses, keep in ind that a host is exluding a trailing slach / and https:// ot http://
+     * The hosts that this applications uses, keep in ind that a host is exluding a trailing slach / and https:// ot http://.
      *
      * @var array An array of hosts of this Application.
      *
@@ -115,7 +115,6 @@ class Application
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $publicKey = null;
-
 
     /**
      * @var string Uri of user object.

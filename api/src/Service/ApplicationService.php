@@ -5,7 +5,6 @@ namespace App\Service;
 use App\Entity\Application;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
-use Ramsey\Uuid\Uuid;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -57,7 +56,6 @@ class ApplicationService
                 }
             }
         }
-
 
         if (!$application) {
             $this->session->set('application', null);
