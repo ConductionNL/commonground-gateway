@@ -91,7 +91,7 @@ class InitializationCommand extends Command
             $application = New Application();
             $application->setName("Default Application");
             $application->setDescription("Created during auto configuration");
-            $application->setDomains(["http://localhost/"]);
+            $application->setDomains(["localhost"]);
             $application->setOrganization($organization);
 
             $this->entityManager->persist($application);
@@ -156,14 +156,15 @@ class InitializationCommand extends Command
         $this->entityManager->flush();
 
         // Checking for dev env
-        $io->section("Checking environment");
-        $io->info('Environment is '. getenv("APP_ENV"));
+        //$io->section("Checking environment");
+        //$io->info('Environment is '. getenv("APP_ENV"));
 
         // In dev we also want to run the installer
-        if( getenv("APP_ENV") == "dev"){
+        //if( getenv("APP_ENV") == "dev"){
+            $io->section("Running installer");
             $this->installationService->setStyle(new SymfonyStyle($input, $output));
             $this->installationService->composerupdate();
-        }
+        //}
 
 
         $io->success('Successfully finished setting basic configuration');

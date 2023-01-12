@@ -83,7 +83,9 @@ class Application
     private ?string $description;
 
     /**
-     * @var array An array of domains of this Application.
+     * The hosts that this applications uses, keep in ind that a host is exluding a trailing slach / and https:// ot http://
+     *
+     * @var array An array of hosts of this Application.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array")
