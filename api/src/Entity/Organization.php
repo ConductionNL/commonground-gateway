@@ -31,7 +31,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  })
  * )
  * @ORM\HasLifecycleCallbacks
- * @ORM\Entity(repositoryClass=OrganizationRepository::class)
+ * @ORM\Entity(repositoryClass=App\Repository\OrganizationRepository::class)
  */
 class Organization
 {
@@ -75,6 +75,12 @@ class Organization
      * @ORM\OneToMany(targetEntity=User::class, mappedBy="organisation", orphanRemoval=true)
      */
     private $users;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\OneToMany(targetEntity=Application::class, mappedBy="organisation", orphanRemoval=true)
+     */
+    private $applications;
 
     /**
      * @var Datetime The moment this resource was created
@@ -124,6 +130,36 @@ class Organization
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Application[]
+     */
+    public function getApplications(): Collection
+    {
+        return $this->applications;
+    }
+
+    public function addApplication(Application $application): self
+    {
+        if (!$this->applications->contains($application)) {
+            $this->applications[] = $application;
+            $application->setOrganisation($this);
+        }
+
+        return $this;
+    }
+
+    public function removeApplication(Application $application): self
+    {
+        if ($this->applications->removeElement($application)) {
+            // set the owning side to null (unless already changed)
+            if ($application->getOrganisation() === $this) {
+                $application->setOrganisation(null);
+            }
+        }
 
         return $this;
     }

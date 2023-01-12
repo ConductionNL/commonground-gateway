@@ -125,12 +125,13 @@ class Application
 
     // TODO: make this required?
     /**
-     * @var string An uuid or uri of an organization for this Application.
+     * @var Organization An uuid or uri of an organization for this Application.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="applications")
+     * @ORM\JoinColumn(nullable=false)
      */
-    private ?string $organization;
+    private ?Organization $organization;
 
     /**
      * @MaxDepth(1)
@@ -283,12 +284,12 @@ class Application
         return $this;
     }
 
-    public function getOrganization(): ?string
+    public function getOrganization(): ?Organization
     {
         return $this->organization;
     }
 
-    public function setOrganization(string $organization): self
+    public function setOrganization(Organization $organization): self
     {
         $this->organization = $organization;
 

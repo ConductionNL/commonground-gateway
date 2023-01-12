@@ -12,7 +12,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method SecurityGroup[]    findAll()
  * @method SecurityGroup[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class UserGroupRepository extends ServiceEntityRepository
+class SecurityGroupRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {

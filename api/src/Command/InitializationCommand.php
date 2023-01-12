@@ -96,7 +96,7 @@ class InitializationCommand extends Command
         }
 
         // Handling user groups
-        $io->section("Looking for an securitygroup");
+        $io->section("Looking for an security group");
         if(!$securityGroupAdmin = $this->entityManager->getRepository('App:SecurityGroup')->findOneBy([])){
             $io->info('No securityGroup found, creating an anonymous, user and admin one');
 
@@ -118,9 +118,6 @@ class InitializationCommand extends Command
             $securityGroupAdmin->setDescription("Created during auto configuration");
             $securityGroupAdmin->setParent($securityGroupUser);
             $securityGroupAdmin->setScopes([
-                "admin.GET",
-                "admin.POST",
-                "admin.PUT",
                 "admin.DELETE"
                 ]
             );

@@ -32,7 +32,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * )
  * @ORM\HasLifecycleCallbacks
  *
- * @ORM\Entity(repositoryClass=UserRepository::class)
+ * @ORM\Entity(repositoryClass=App\Repository\UserRepository::class)
  * @ORM\Table(name="`user`")
  */
 class User
@@ -142,7 +142,7 @@ class User
     public function __construct()
     {
         $this->applications = new ArrayCollection();
-        $this->userGroups = new ArrayCollection();
+        $this->securityGroups = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -158,6 +158,18 @@ class User
     public function setName(string $name): self
     {
         $this->name = $name;
+
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(string $description): self
+    {
+        $this->description = $description;
 
         return $this;
     }
