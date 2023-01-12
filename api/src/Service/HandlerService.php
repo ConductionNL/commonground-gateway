@@ -115,9 +115,11 @@ class HandlerService
         $this->stopwatch->start('newSession', 'handleEndpoint');
         $session = new Session();
         $this->stopwatch->stop('newSession');
+
         $this->stopwatch->start('saveEndpointInSession', 'handleEndpoint');
         $session->set('endpoint', $endpoint->getId()->toString());
         $this->stopwatch->stop('saveEndpointInSession');
+
         $this->stopwatch->start('saveParametersInSession', 'handleEndpoint');
         $session->set('parameters', $parameters);
         $this->stopwatch->stop('saveParametersInSession');

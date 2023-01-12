@@ -1,0 +1,24 @@
+<?php
+return (object)[
+    'rootNamespace' => 'Classes',
+    'destDirectory' => 'docs/classes',
+    'format' => 'github',
+    'classes' => [
+        '\App\Entity\Action',
+        '\App\Entity\ActionHandler',
+        '\App\Entity\Application',
+        '\App\Entity\Attribute',
+        '\App\Entity\Cronjob',
+        '\App\Entity\DashboardCard',
+        '\App\Entity\Endpoint',
+        '\App\Entity\Entity',
+        '\App\Entity\Gateway',
+        '\App\Entity\ObjectEntity',
+        '\App\Entity\Organization',
+        '\App\Entity\User',
+        '\App\Entity\UserGroup',
+        '\App\Entity\Value',
+        '\App\Entity\Synchronization',
+        '\App\Service\ActionService'
+    ],
+];
