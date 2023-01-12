@@ -268,7 +268,7 @@ class Endpoint
     /**
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="endpoints")
      */
-    private $Entity;
+    private $entity;
 
     /**
      * The Entities of this Endpoint.

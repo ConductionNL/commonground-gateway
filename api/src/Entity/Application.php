@@ -129,6 +129,7 @@ class Application
      * @var Organization An uuid or uri of an organization for this Application.
      *
      * @Groups({"read", "write"})
+     * @MaxDepth(1)
      * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="applications")
      * @ORM\JoinColumn(nullable=false)
      */
@@ -141,8 +142,8 @@ class Application
     private Collection $requestLogs;
 
     /**
-     * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="application", fetch="EXTRA_LAZY", cascade={"remove"})
      * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="application", fetch="EXTRA_LAZY", cascade={"remove"})
      */
     private Collection $objectEntities;
 
@@ -186,7 +187,9 @@ class Application
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
+
     /**
+     * @MaxDepth(1)
      * @ORM\ManyToMany(targetEntity=User::class, mappedBy="applications")
      */
     private $users;
