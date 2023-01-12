@@ -12,6 +12,7 @@ use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -86,13 +87,16 @@ class User
 
     /**
      * @Groups({"read", "write"})
+     * @MaxDepth(1)
      * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="users")
      * @ORM\JoinColumn(nullable=false)
      */
-    private $organisation;
+    private Organization $organisation;
 
     /**
      * @Groups({"read", "write"})
+     *
+     * @MaxDepth(1)
      * @ORM\ManyToMany(targetEntity=Application::class, inversedBy="users")
      */
     private $applications;
@@ -117,6 +121,8 @@ class User
 
     /**
      * @Groups({"read", "write"})
+     *
+     * @MaxDepth(1)
      * @ORM\ManyToMany(targetEntity=SecurityGroup::class, mappedBy="users")
      */
     private $securityGroups;
@@ -145,9 +151,16 @@ class User
         $this->securityGroups = new ArrayCollection();
     }
 
-    public function getId(): ?int
+    public function getId(): ?UuidInterface
     {
         return $this->id;
+    }
+
+    public function setId(UuidInterface $id): self
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function getName(): ?string
