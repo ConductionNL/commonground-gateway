@@ -1190,7 +1190,7 @@ class Entity
 
             // Create a url to fetch the objects from the schema this property refers to
             if ($attribute->getType() == 'object' && $attribute->getObject() !== null) {
-                $property['_list'] = '/admin/object_entities?entity.id='.$attribute->getObject()->getId()->toString();
+                $property['_list'] = '/admin/objects?_self.schema.id='.$attribute->getObject()->getId()->toString();
             }
 
             $attribute->getType() && $property['type'] = $attribute->getType();
