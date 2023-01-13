@@ -29,7 +29,7 @@
         "guzzlehttp/psr7": "1.9",
         "hautelook/alice-bundle": "^2.9.0",
         "jwadhams/json-logic-php": "^1.4",
-        "klantinteractie-servicesysteem/kiss-bundle": "0.0.17",
+        "klantinteractie-servicesysteem/kiss-bundle": "0.0.18",
         "mongodb/mongodb": "^1.15",
         "monolog/monolog": "^2.8.0",
         "nelmio/cors-bundle": "^2.1",
