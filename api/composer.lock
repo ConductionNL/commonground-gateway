@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6265505620232672b93cd0600c570bb9",
+    "content-hash": "001905420b3860c03d83094973059877",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -4542,6 +4542,54 @@
                 }
             ],
             "time": "2021-09-02T17:10:53+00:00"
+        },
+        {
+            "name": "larping-base/larping-bundle",
+            "version": "1.0.18",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/LarpingBase/LarpingBundle.git",
+                "reference": "e0ecfff159d42a96f65ab1c62d7cd914ffbd3e4b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/e0ecfff159d42a96f65ab1c62d7cd914ffbd3e4b",
+                "reference": "e0ecfff159d42a96f65ab1c62d7cd914ffbd3e4b",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": ">=0.0.1",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "LarpingBase\\LarpingBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An Commong Gateay bundle for the larping application",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "larping",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
+                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.18"
+            },
+            "time": "2023-01-13T13:00:25+00:00"
         },
         {
             "name": "league/html-to-markdown",
