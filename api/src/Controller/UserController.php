@@ -62,7 +62,8 @@ class UserController extends AbstractController
         // Lets try to get an user
         $user = $this->entityManager->getRepository("App:User")->findOneBy(["username"=>$data['username']]);
 
-        if(!$user || $this->userService->validatePassword($user, $data['password'])){
+        if(!$user || !$this->userService->validatePassword($user, $data['password'])){
+
             $userLogin = [
                 'message' => 'Invalid credentials',
                 'type'    => 'error',
@@ -73,23 +74,6 @@ class UserController extends AbstractController
             return new Response(json_encode($userLogin), 403, ['Content-type' => 'application/json']);
         }
 
-
-
-
-        // Add all the sub organisations
-        // Add all the parent organisations
-        $parentOrganizations = [];
-        foreach ($organizations as $organization) {
-            $organizations = $this->getSubOrganizations($organizations, $organization, $commonGroundService, $functionService);
-            $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $commonGroundService, $functionService);
-        }
-
-        $organizations[] = 'localhostOrganization';
-        $parentOrganizations[] = 'localhostOrganization';
-        $this->session->set('organizations', $organizations);
-        $this->session->set('parentOrganizations', $parentOrganizations);
-        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
-        $this->session->set('activeOrganization', $this->getActiveOrganization($user, $organizations));
 
         return new Response(json_encode($userLogin), $status, ['Content-type' => 'application/json']);
     }
