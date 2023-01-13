@@ -36,7 +36,7 @@ class ValueSubscriber implements EventSubscriberInterface
             try {
                 $subObject = $this->entityManager->getRepository(ObjectEntity::class)->findByAnyId($uuid);
             } catch (NonUniqueResultException $exception) {
-                throw new Exception('Found more than one ObjectEntity with this externalId or id: '. $uuid);
+                throw new Exception('Found more than one ObjectEntity with this externalId or id: '.$uuid);
             }
         }
         if (!$subObject instanceof ObjectEntity) {
