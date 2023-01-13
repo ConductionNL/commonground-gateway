@@ -22,9 +22,5 @@ return [
     CommonGateway\CoreBundle\CoreBundle::class => ['all' => true],
     Endroid\QrCodeBundle\EndroidQrCodeBundle::class => ['all' => true],
     CommonGateway\FormIOBundle\FormIOBundle::class => ['all' => true],
-    CommonGateway\ZGWBundle\ZGWBundle::class => ['all' => true],
     Symfony\Bundle\MonologBundle\MonologBundle::class => ['all' => true],
-    CommonGateway\KlantenBundle\KlantenBundle::class => ['all' => true],
-    CommonGateway\BRPBundle\BRPBundle::class => ['all' => true],
-    Kiss\KissBundle\KissBundle::class => ['all' => true],
 ];
