@@ -314,6 +314,11 @@ class ObjectEntity
     {
         $this->application = $application;
 
+        // If we don't have an organization we can pull one from the application
+        if(!isset($this->organization)){
+            $this->application->getOrganization();
+        }
+
         return $this;
     }
 
@@ -997,7 +1002,8 @@ class ObjectEntity
             'name'             => $this->getName(),
             'self'             => $this->getSelf(),
             'owner'            => $this->getOwner(),
-            'organization'     => $this->getOrganization(),
+            // ToDo: Ugly fix, we should make sure that organisatin and application are set on object creation
+            //'organization'     => $this->getOrganization() ? $this->getOrganization()->getId()->toString() : null,
             'application'      => $this->getApplication() ? $this->getApplication()->getId()->toString() : null,
             'dateCreated'      => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
             'dateModified'     => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
@@ -1355,6 +1361,13 @@ class ObjectEntity
                 return;
             }
         }
+
         $this->setName($this->getId());
+
+        // Todo: this is an ugly fix, in actuallity we should run a postUpdate subscriber that checks this and repersists the enitity if thsi happens (it can anly happen if we dont have an id on pre persist e.g. new objects)
+        // Just in case we endup here
+        if(!$this->getName()){
+            $this->setName("No name could be established for this entity");
+        }
     }
 }
