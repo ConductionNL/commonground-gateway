@@ -133,7 +133,7 @@ class InitializationCommand extends Command
             $user = new User();
             $user->setName('Default User');
             $user->setDescription('Created during auto configuration');
-            $user->setEmail('no-reply@test.com');
+            $user->setEmail('test@gateway.local');
             $user->setPassword('!ChangeMe!');
             $user->addSecurityGroup($securityGroupAdmin);
             $user->addApplication($application);

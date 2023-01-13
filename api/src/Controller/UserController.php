@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\Application;
 use App\Service\AuthenticationService;
 use App\Service\FunctionService;
+use CommonGateway\CoreBundle\Service\UserService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\ClientException;
@@ -28,12 +29,18 @@ class UserController extends AbstractController
     private AuthenticationService $authenticationService;
     private SessionInterface $session;
     private EntityManagerInterface $entityManager;
+    private UserService $userService;
 
-    public function __construct(AuthenticationService $authenticationService, SessionInterface $session, EntityManagerInterface $entityManager)
+    public function __construct(
+        AuthenticationService $authenticationService,
+        SessionInterface $session,
+        EntityManagerInterface $entityManager,
+        UserService $userService)
     {
         $this->authenticationService = $authenticationService;
         $this->session = $session;
         $this->entityManager = $entityManager;
+        $this->userService = $userService;
     }
 
     /**
@@ -51,9 +58,8 @@ class UserController extends AbstractController
     {
         $status = 200;
         $data = json_decode($request->getContent(), true);
-        $userLogin = $commonGroundService->createResource(['username' => $data['username'], 'password' => $data['password']], ['component' => 'uc', 'type' => 'login'], false, false, false, false);
 
-        if (!$userLogin) {
+        if(!$user = $this->entityManager->getRepository("App:User")->findOneBy(["username"=>$data['username']]) || $this->userService->validatePassword($user, $data['password'])){
             $userLogin = [
                 'message' => 'Invalid credentials',
                 'type'    => 'error',
@@ -64,18 +70,9 @@ class UserController extends AbstractController
             return new Response(json_encode($userLogin), 403, ['Content-type' => 'application/json']);
         }
 
-        // Set orgs in session for multitenancy
-        // Get user object with userGroups (login only returns a user with userGroups as: /groups/uuid)
-        $user = $commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $userLogin['id']], [], false);
-        $organizations = [];
-        if (isset($user['organization'])) {
-            $organizations[] = $user['organization'];
-        }
-        foreach ($user['userGroups'] as $userGroup) {
-            if (isset($userGroup['organization']) && !in_array($userGroup['organization'], $organizations)) {
-                $organizations[] = $userGroup['organization'];
-            }
-        }
+
+
+
         // Add all the sub organisations
         // Add all the parent organisations
         $parentOrganizations = [];
