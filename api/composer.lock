@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1afc95ee7c994be22aa30822cfba6123",
+    "content-hash": "6265505620232672b93cd0600c570bb9",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -813,103 +813,6 @@
                 "source": "https://github.com/CommonGateway/FormIOBundle/tree/main"
             },
             "time": "2022-11-16T13:35:03+00:00"
-        },
-        {
-            "name": "common-gateway/xxllnc-zgw-bundle",
-            "version": "0.0.14",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CommonGateway/XxllncZGWBundle.git",
-                "reference": "61733fe1d3c9cc0d2331b0c9596096b9aa066038"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/XxllncZGWBundle/zipball/61733fe1d3c9cc0d2331b0c9596096b9aa066038",
-                "reference": "61733fe1d3c9cc0d2331b0c9596096b9aa066038",
-                "shasum": ""
-            },
-            "require": {
-                "common-gateway/zgw-bundle": "^0.1.0",
-                "commongateway/corebundle": "dev-master",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "CommonGateway\\XxllncZGWBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "A package for a symfony flex bundle containing functionality for mapping ZGW api standard to XXLLNC api",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "symfony",
-                "zgw"
-            ],
-            "support": {
-                "issues": "https://github.com/CommonGateway/XxllncZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/XxllncZGWBundle/tree/0.0.14"
-            },
-            "time": "2023-01-05T13:23:39+00:00"
-        },
-        {
-            "name": "common-gateway/zgw-bundle",
-            "version": "0.1.11",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CommonGateway/ZGWBundle.git",
-                "reference": "b58cdca8b172ceabf475bd729e3ee7e667736b99"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/b58cdca8b172ceabf475bd729e3ee7e667736b99",
-                "reference": "b58cdca8b172ceabf475bd729e3ee7e667736b99",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": ">=0.0.1",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "CommonGateway\\ZGWBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "Symfony bundle for zgw standard functionality",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "symfony",
-                "zgw"
-            ],
-            "support": {
-                "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.11"
-            },
-            "time": "2023-01-06T14:29:12+00:00"
         },
         {
             "name": "commongateway/corebundle",
