@@ -339,7 +339,9 @@ class Endpoint
             if ($countPaths > 0) {
                 foreach ($paths as $pathArray) {
                     if ($counter == 1) {
-                        $pathRegEx[] = '^'.$explodedPrefixPath[0];
+                        $pathRegEx[] = '^';
+                        // todo: temp disable all prefixes
+//                        $pathRegEx[] = '^'.$explodedPrefixPath[0];
                     }
 
                     if ($counter == $countPaths) {
