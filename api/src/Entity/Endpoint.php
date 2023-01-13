@@ -284,7 +284,7 @@ class Endpoint
      */
     private $proxy;
 
-    public function __construct(?Entity $entity = null, ?array $customPaths = null, array $methods = [])
+    public function __construct(?Entity $entity = null, ?array $customPaths = [], array $methods = [])
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
@@ -295,6 +295,7 @@ class Endpoint
 
         // Create simple endpoints for entities
         if ($entity) {
+            $this->addEntity($entity);
             $this->setEntity($entity);
             $this->setName($entity->getName());
             $this->setDescription($entity->getDescription());
@@ -309,9 +310,10 @@ class Endpoint
 
             $criteria = Criteria::create()
                 ->orderBy(['date_created' => Criteria::DESC]);
-            if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
-                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path[0];
-            }
+            // todo: temp disable all prefixes
+//            if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
+//                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path[0];
+//            }
             $exploded = explode('/', $path);
             $explodedPathArray = [];
             $explodedPathArray[] = $exploded[0];
@@ -337,7 +339,9 @@ class Endpoint
             if ($countPaths > 0) {
                 foreach ($paths as $pathArray) {
                     if ($counter == 1) {
-                        $pathRegEx[] = '^'.$explodedPrefixPath[0];
+                        $pathRegEx[] = '^';
+                        // todo: temp disable all prefixes
+//                        $pathRegEx[] = '^'.$explodedPrefixPath[0];
                     }
 
                     if ($counter == $countPaths) {

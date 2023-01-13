@@ -952,7 +952,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
         $query = $this->createQueryBuilder('o')
             ->leftJoin('o.synchronizations', 's')
             ->where('s.sourceId = :identifier')
-            ->orWhere('o.externalId = :identifier')
             ->setParameter('identifier', $identifier);
 
         if (Uuid::isValid($identifier)) {

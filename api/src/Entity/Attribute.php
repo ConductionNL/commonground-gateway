@@ -126,7 +126,7 @@ class Attribute
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="attributes")
      * @MaxDepth(1)
      */
-    private Entity $entity;
+    private ?Entity $entity;
 
     /**
      * @var string The function of this Attribute. This is used for making specific attribute types/functions work differently.
