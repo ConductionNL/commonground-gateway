@@ -315,7 +315,7 @@ class ObjectEntity
         $this->application = $application;
 
         // If we don't have an organization we can pull one from the application
-        if(!isset($this->organization)){
+        if (!isset($this->organization)) {
             $this->application->getOrganization();
         }
 
@@ -1366,8 +1366,8 @@ class ObjectEntity
 
         // Todo: this is an ugly fix, in actuallity we should run a postUpdate subscriber that checks this and repersists the enitity if thsi happens (it can anly happen if we dont have an id on pre persist e.g. new objects)
         // Just in case we endup here
-        if(!$this->getName()){
-            $this->setName("No name could be established for this entity");
+        if (!$this->getName()) {
+            $this->setName('No name could be established for this entity');
         }
     }
 }
