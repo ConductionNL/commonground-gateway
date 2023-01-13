@@ -22,7 +22,54 @@ use Symfony\Component\Serializer\SerializerInterface;
 class ZZController extends AbstractController
 {
     /**
+     * This function handles objects in line with the new request service.
+     *
+     * @Route("/admin/objects")
+     * @Route("/admin/objects/{id}", requirements={"path" = ".+"})
+     *
+     * @param string|null         $path
+     * @param Request             $request
+     * @param SerializerInterface $serializer
+     * @param HandlerService      $handlerService
+     * @param RequestService      $requestService
+     *
+     * @return Response
+     */
+    public function objectAction(
+        ?string $id,
+        Request $request,
+        SerializerInterface $serializer,
+        HandlerService $handlerService,
+        RequestService $requestService
+    ): Response {
+        $parameters = $this->getParametersFromRequest([], $request);
+
+        // We should check if we have an id
+        if ($id) {
+            $parameters['path']['{id}'] = $id;
+        }
+
+        return $requestService->requestHandler($parameters, []);
+    }
+
+    /**
+     * This function dynamicly handles the api endpoints.
+     *
      * @Route("/api/{path}", name="dynamic_route", requirements={"path" = ".+"})
+     *
+     * @param string|null          $path
+     * @param Request              $request
+     * @param DocumentService      $documentService
+     * @param ValidationService    $validationService
+     * @param HandlerService       $handlerService
+     * @param SerializerInterface  $serializer
+     * @param LogService           $logService
+     * @param ProcessingLogService $processingLogService
+     * @param RequestService       $requestService
+     *
+     * @throws GatewayException
+     *
+     * @return Response
      */
     public function dynamicAction(
         ?string $path,
@@ -79,7 +126,7 @@ class ZZController extends AbstractController
 
         // Let create the variable
         // Create array for filtering (in progress, should be moved to the correct service)
-        $parameters = ['path' => [], 'query' => [], 'post' => []];
+        $parameters = $this->getParametersFromRequest([], $request);
 
         $pathArray = array_values(array_filter(explode('/', $path)));
         foreach ($endpoint->getPath() as $key => $pathPart) {
@@ -93,27 +140,8 @@ class ZZController extends AbstractController
             }
         }
 
-        // Lets add the query parameters to the variables
         //todo use eavService->realRequestQueryAll(), maybe replace this function to another service than eavService?
-
-        $parameters['querystring'] = $request->getQueryString();
         $parameters['endpoint'] = $endpoint;
-
-        try {
-            $parameters['body'] = $request->toArray();
-        } catch (\Exception $exception) {
-        }
-
-        $parameters['crude_body'] = $request->getContent();
-
-        $parameters['method'] = $request->getMethod();
-        $parameters['query'] = $request->query->all();
-
-        // Lets get all the headers
-        $parameters['headers'] = $request->headers->all();
-
-        // Lets get all the post variables
-        $parameters['post'] = $request->request->all();
 
         if ($endpoint->getProxy()) {
             return $requestService->proxyHandler($parameters, []);
@@ -149,5 +177,42 @@ class ZZController extends AbstractController
 
             return $response->prepare($request);
         }
+    }
+
+    /**
+     * Builds a parameter array from the request.
+     *
+     * @param ?array   $parameters An optional starting array of parameters
+     * @param ?Request $request    The request (autowired so doesn't need te be provided
+     *
+     * @return array The parameter arrau
+     */
+    private function getParametersFromRequest(?array $parameters = [], ?Request $request): array
+    {
+
+        // Lets make sure that we always have a path
+        if (!isset($parameters['path'])) {
+            $parameters['path'] = [];
+        }
+
+        $parameters['querystring'] = $request->getQueryString();
+
+        try {
+            $parameters['body'] = $request->toArray();
+        } catch (\Exception $exception) {
+        }
+
+        $parameters['crude_body'] = $request->getContent();
+
+        $parameters['method'] = $request->getMethod();
+        $parameters['query'] = $request->query->all();
+
+        // Lets get all the headers
+        $parameters['headers'] = $request->headers->all();
+
+        // Lets get all the post variables
+        $parameters['post'] = $request->request->all();
+
+        return $parameters;
     }
 }

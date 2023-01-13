@@ -27,47 +27,19 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * An entity that functions a an object template for objects that might be stored in the EAV database.
+ * An schema that functions a an object template for objects that might be stored in the EAV database.
  *
  * @ApiResource(
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *     "get"={"path"="/admin/entities/{id}"},
- *     "get_sync"={
- *          "method"="GET",
- *          "path"="/admin/entities/{id}/sync"
- *      },
- *     "get_object"={
- *          "method"="GET",
- *          "path"="/admin/schemas/{id}/objects/{objectId}"
- *      },
  *     "put"={"path"="/admin/entities/{id}"},
- *     "put_object"={
- *          "method"="PUT",
- *          "read"=false,
- *          "validate"=false,
- *          "path"="/admin/schemas/{id}/objects/{objectId}"
- *      },
- *     "delete"={"path"="/admin/entities/{id}"},
- *     "delete_object"={
- *          "method"="DELETE",
- *          "path"="/admin/schemas/{id}/objects/{objectId}"
- *      }
+ *     "delete"={"path"="/admin/entities/{id}"}
  *  },
  *  collectionOperations={
  *     "get"={"path"="/admin/entities"},
- *     "get_objects"={
- *          "method"="GET",
- *          "path"="/admin/schemas/{id}/objects"
- *      },
- *     "post"={"path"="/admin/entities"},
- *     "post_objects"={
- *          "method"="POST",
- *          "read"=false,
- *          "validate"=false,
- *          "path"="/admin/schemas/{id}/objects"
- *      },
+ *     "post"={"path"="/admin/entities"}
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -1113,6 +1085,11 @@ class Entity
         return $this->schema;
     }
 
+    /**
+     * @param string|null $schema
+     *
+     * @return $this This schema
+     */
     public function setSchema(?string $schema): self
     {
         $this->schema = $schema;
@@ -1121,9 +1098,17 @@ class Entity
     }
 
     /**
+     * Create or update this schema from an external schema array.
+     *
+     * This function is ussed to update and create schema's form schema.json objects
+     *
+     * @param array $schema the schema to load
+     *
      * @throws GatewayException
+     *
+     * @return $this This schema
      */
-    public function fromSchema(array $schema): Entity
+    public function fromSchema(array $schema): self
     {
         // Basic stuff
         if (array_key_exists('$id', $schema)) {
@@ -1205,7 +1190,7 @@ class Entity
 
             // Create a url to fetch the objects from the schema this property refers to
             if ($attribute->getType() == 'object' && $attribute->getObject() !== null) {
-                $property['_list'] = '/admin/object_entities?entity.id='.$attribute->getObject()->getId()->toString();
+                $property['_list'] = '/admin/objects?_self.schema.id='.$attribute->getObject()->getId()->toString();
             }
 
             $attribute->getType() && $property['type'] = $attribute->getType();
