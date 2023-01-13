@@ -54,8 +54,7 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
      */
     public function supports(Request $request): ?bool
     {
-        return $request->headers->has('Authorization') &&
-            strpos($request->headers->get('Authorization'), 'Bearer') === 0;
+        return $request->headers->has('Authorization') && strpos($request->headers->get('Authorization'), 'Bearer') === 0;
     }
 
     /**

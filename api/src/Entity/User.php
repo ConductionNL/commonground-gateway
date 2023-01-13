@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use phpDocumentor\Reflection\Types\Boolean;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -63,7 +64,7 @@ class User
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
-    private string $name;
+    private string $username;
 
     /**
      * @var string A description of this User.
@@ -72,6 +73,7 @@ class User
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $description;
+
 
     /**
      * @Groups({"write"})
@@ -128,6 +130,13 @@ class User
     private $securityGroups;
 
     /**
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="boolean", nullable=true)
+     */
+    private bool $enabled = true;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -163,14 +172,14 @@ class User
         return $this;
     }
 
-    public function getName(): ?string
+    public function getUsername(): ?string
     {
-        return $this->name;
+        return $this->username;
     }
 
-    public function setName(string $name): self
+    public function setUsername(string $username): self
     {
-        $this->name = $name;
+        $this->username = $username;
 
         return $this;
     }
@@ -306,6 +315,19 @@ class User
         if ($this->securityGroups->removeElement($securityGroup)) {
             $securityGroup->removeUser($this);
         }
+
+        return $this;
+    }
+
+
+    public function getEnabled(): ?bool
+    {
+        return $this->enabled;
+    }
+
+    public function setEnabled(bool $enabled): self
+    {
+        $this->enabled = $enabled;
 
         return $this;
     }

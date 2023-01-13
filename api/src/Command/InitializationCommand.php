@@ -131,7 +131,7 @@ class InitializationCommand extends Command
         if (!$user = $this->entityManager->getRepository('App:User')->findOneBy([])) {
             $io->info('No User found, creating a new one');
             $user = new User();
-            $user->setName('Default User');
+            $user->setUsername('no-reply@test.com');
             $user->setDescription('Created during auto configuration');
             $user->setEmail('no-reply@test.com');
             $user->setPassword('!ChangeMe!');

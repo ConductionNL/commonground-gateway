@@ -284,7 +284,7 @@ class Endpoint
      */
     private $proxy;
 
-    public function __construct(?Entity $entity = null, ?array $customPaths = null, array $methods = [])
+    public function __construct(?Entity $entity = null, ?array $customPaths = [], array $methods = [])
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
@@ -311,6 +311,7 @@ class Endpoint
             if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
                 $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path[0];
             }
+
             $exploded = explode('/', $path);
             $exploded = array_filter($exploded);
             $explodedPathArray = [];

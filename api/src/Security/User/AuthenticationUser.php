@@ -4,83 +4,85 @@
 
 namespace App\Security\User;
 
+use App\Entity\Application;
+use App\Entity\Organization;
+use App\Entity\User;
+use Doctrine\Common\Collections\Collection;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
+/*
+ * The gateway UserClass
+ */
 class AuthenticationUser implements UserInterface, EquatableInterface
 {
+    private Uuid $id;
+
     /* The username display */
     private string $username;
 
     /* Provide UUID instead of normal password */
-    private $password;
-
-    /* The first name of the user */
-    private $firstName;
-
-    /* The last name of the user */
-    private $lastName;
+    private string $password;
 
     /* The first and last name of the user */
-    private $name;
+    private string $email;
 
-    /* Leave empty! */
-    private $salt;
 
     /* Iether a BRP or CC person URI */
-    private $roles;
+    private array $roles;
 
     /* Always true */
-    private $isActive;
+    private bool $isActive;
 
-    private $email;
+    /**
+     * The language of this user
+     *
+     * @var string|null
+     */
+    private string $locale;
 
-    private $organization;
+    /**
+     * @var Organization|null
+     */
+    private Organization $organization;
 
-    private $person;
+    /**
+     * @var Application|Application[]|\Doctrine\Common\Collections\Collection
+     */
+    private Application $application;
 
-    private $userIdentifier;
+    /**
+     * @var string|\App\Entity\SecurityGroup[]|Collection
+     */
+    private string $securityGroups;
 
-    public function __construct(string $userIdentifier, string $username = '', string $password = '', string $firstName = '', string $lastName = '', string $name = '', string $salt = null, array $roles = [], string $email = '', $locale = null, ?string $organization = null, ?string $person = null)
+
+    private Collection $person;
+
+    /**
+     * @var string
+     */
+    private string $salt;
+
+    public function __construct(User $user)
     {
-        $this->userIdentifier = $userIdentifier;
-        $this->username = $username;
-        $this->password = $password;
-        $this->firstName = $firstName;
-        $this->lastName = $lastName;
-        $this->name = $name;
-        $this->salt = $salt;
-        $this->roles = $roles;
-        $this->isActive = true;
-        $this->email = $email;
-        $this->locale = $locale; // The language of this user
-        $this->organization = $organization;
-        $this->person = $person;
+        $this->userIdentifier = $user->getId();
+        $this->username = $user->getUsername();
+        $this->password = $user->getPassword();
+        $this->email = $user->getEmail();
+        $this->roles = $user->getScopes();
+        $this->enabled = $user->getEnabled();
+        $this->locale = $user->getLocale(); //
+        $this->organization = $user->getOrganisation();
+        $this->application = $user->getApplications();
+        $this->person = $user->getPerson();
+        $this->securityGroups = $user->getSecurityGroups();
     }
 
-    public function getUserIdentifier(): string
+    public function getId(): string
     {
-        return $this->userIdentifier;
-    }
-
-    public function __toString()
-    {
-        return $this->name;
-    }
-
-    public function getRoles()
-    {
-        return $this->roles;
-    }
-
-    public function getPassword()
-    {
-        return $this->password;
-    }
-
-    public function getSalt()
-    {
-        return $this->salt;
+        return $this->id;
     }
 
     public function getUsername()
@@ -88,29 +90,38 @@ class AuthenticationUser implements UserInterface, EquatableInterface
         return $this->username;
     }
 
-    public function getName()
+    public function getPassword()
     {
-        return $this->name;
+        return $this->password;
     }
-
-    public function getFirstName()
-    {
-        return $this->firstName;
-    }
-
-    public function getLastName()
-    {
-        return $this->lastName;
-    }
-
     public function getEmail()
     {
         return $this->email;
     }
 
-    public function getOrganization()
+    public function getRoles()
+    {
+        return $this->roles;
+    }
+
+    public function isEnabled()
+    {
+        return $this->enabled;
+    }
+
+    public function getLocale():string
+    {
+        return $this->locale;
+    }
+
+    public function getOrganization():Organization
     {
         return $this->organization;
+    }
+
+    public function getApplication():Application
+    {
+        return $this->application;
     }
 
     public function getPerson()
@@ -118,14 +129,14 @@ class AuthenticationUser implements UserInterface, EquatableInterface
         return $this->person;
     }
 
-    public function getLocale()
+    public function getSecurityGroups()
     {
-        return $this->locale;
+        return $this->securityGroups;
     }
 
-    public function isEnabled()
+    public function getSalt()
     {
-        return $this->isActive;
+        return $this->salt;
     }
 
     public function eraseCredentials()
@@ -158,5 +169,10 @@ class AuthenticationUser implements UserInterface, EquatableInterface
     public function __call($name, $arguments)
     {
         // TODO: Implement @method string getUserIdentifier()
+    }
+
+    public function __toString()
+    {
+        return $this->username;
     }
 }

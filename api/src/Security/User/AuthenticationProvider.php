@@ -37,16 +37,7 @@ class AuthenticationProvider implements UserProviderInterface
             );
         }
 
-        $userIdentifier = $user->getUserIdentifier();
-        $username = $user->getUsername();
-        $password = $user->getPassword();
-        $firstName = $user->getFirstName();
-        $lastName = $user->getLastName();
-        $name = $user->getName();
-        $email = $user->getEmail();
-        $roles = $user->getRoles();
-
-        return $this->fetchUser($userIdentifier, $username, $password, $firstName, $lastName, $name, $roles, $email);
+        return $this->fetchUser($user);
     }
 
     public function supportsClass($class): bool
@@ -54,9 +45,9 @@ class AuthenticationProvider implements UserProviderInterface
         return AuthenticationUser::class === $class;
     }
 
-    private function fetchUser($userIdentifier, $username, $password, $firstName, $lastName, $name, $roles, $email)
+    private function fetchUser($user)
     {
-        return new AuthenticationUser($userIdentifier, $username, $password, $firstName, $lastName, $name, null, $roles, $email);
+        return new AuthenticationUser($user);
     }
 
     public function __call($name, $arguments)

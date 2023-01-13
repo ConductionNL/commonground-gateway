@@ -266,6 +266,9 @@
     "laminas/laminas-escaper": {
         "version": "2.9.0"
     },
+    "larping-base/larping-bundle": {
+        "version": "1.0.17"
+    },
     "league/html-to-markdown": {
         "version": "4.10.0"
     },
