@@ -117,7 +117,7 @@ class InitializationCommand extends Command
                     'admin.GET',
                     'admin.POST',
                     'admin.PUT',
-                    'admin.DELETE'
+                    'admin.DELETE',
                 ]
             );
 
