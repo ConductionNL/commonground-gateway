@@ -11,8 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * Class PluginControllerc.
- *
+ * Class PluginController.
  *
  * @Route("/admin/plugins")
  */

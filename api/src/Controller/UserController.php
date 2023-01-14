@@ -52,9 +52,37 @@ class UserController extends AbstractController
     }
 
     /**
+     * Handles the /me endpoints used for user identification
+     *
+     * @Route("me", methods={"POST"})
+     * @Route("api/users/me", methods={"POST"})
+     * @param Request $request
+     * @return Response
+     */
+    public function apiMeAction(Request $request):Response{
+        $status = 200;
+        if(!$this->getUser()){
+            $status = 404;
+            $result = [
+                'message' => 'No user found',
+                'type'    => 'error',
+                'path'    => 'users/me',
+                'data'    => ['you need to be logged in to use the me endpoint']
+            ];
+        }
+        else{
+            $result = $this->userService->createResponce($this->getUser());
+        }
+
+        return new Response(json_encode($result), $status, ['Content-type' => 'application/json']);
+    }
+
+    /**
+     * Handles the login requests
+     *
      * @Route("api/users/login", methods={"POST"})
      */
-    public function apiLoginAction(Request $request, CommonGroundService $commonGroundService, FunctionService $functionService)
+    public function apiLoginAction(Request $request)
     {
         $status = 200;
         $data = json_decode($request->getContent(), true);
@@ -74,6 +102,7 @@ class UserController extends AbstractController
             return new Response(json_encode($userLogin), 403, ['Content-type' => 'application/json']);
         }
 
+        $userLogin = $this->userService->createResponce($user);
 
         return new Response(json_encode($userLogin), $status, ['Content-type' => 'application/json']);
     }
@@ -232,7 +261,7 @@ class UserController extends AbstractController
         return $response;
     }
 
-    public function ApiMeAction(Request $request, CommonGroundService $commonGroundService)
+    public function ApiMeOldAction(Request $request, CommonGroundService $commonGroundService)
     {
         $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
         if (!$token) {
