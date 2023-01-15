@@ -1128,7 +1128,7 @@ class Entity
         // Properties
         foreach ($schema['properties'] as $name => $property) {
             // Some properties are considerd forbidden
-            if(in_array($name,["id"]) || str_starts_with($name,'_')){
+            if(in_array($name,["id"]) || str_starts_with($name,'_') || str_starts_with($name,'$') || str_starts_with($name,'@')){
                 continue;
             }
 
