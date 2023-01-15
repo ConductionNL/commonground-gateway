@@ -1127,6 +1127,11 @@ class Entity
 
         // Properties
         foreach ($schema['properties'] as $name => $property) {
+            // Some properties are considerd forbidden
+            if(in_array($name,["id"]) || str_starts_with($name,'_')){
+                continue;
+            }
+
             // Let see if the attribute exists
             if (!$attribute = $this->getAttributeByName($name)) {
                 $attribute = new Attribute();
