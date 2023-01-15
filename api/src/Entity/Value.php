@@ -185,6 +185,10 @@ class Value
      */
     private $dateModified;
 
+    public function __toString(){
+        return $this->getStringValue();
+    }
+
     public function __construct(?Attribute $attribute = null, ?ObjectEntity $objectEntity = null)
     {
         $this->files = new ArrayCollection();

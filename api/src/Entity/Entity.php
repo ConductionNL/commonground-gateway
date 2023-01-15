@@ -1205,7 +1205,13 @@ class Entity
 
             // What if we have an $object entity
             if ($objectEntity) {
-                $property['value'] = $objectEntity->getValue($attribute);
+                if($attribute->getType() != 'object'){
+                    $property['value'] = $objectEntity->getValue($attribute);
+                }
+                elseif ($attribute->getMultiple()){
+                    $property['value'] = $objectEntity->getValueObject($attribute)->getSimpleArrayValue();
+                }
+                $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
             }
 
             // Zetten van de property
