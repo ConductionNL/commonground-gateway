@@ -316,7 +316,8 @@ class Endpoint
 //            }
             $exploded = explode('/', $path);
             $explodedPathArray = [];
-            $explodedPathArray[] = $exploded[0];
+            // todo: temp disable all prefixes
+//            $explodedPathArray[] = $exploded[0];
             foreach ($paths as $pathAsString) {
                 $explodedPath = explode('/', $pathAsString);
                 if ($explodedPath[0] == '') {
