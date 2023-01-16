@@ -308,11 +308,14 @@ class Endpoint
             $criteria = Criteria::create()
                 ->orderBy(['date_created' => Criteria::DESC]);
 
-            // todo: temp, for kiss disable prefixes
-            $path = ltrim($path, '/');
+            // Add prefix to path
+            // todo: temp, disable prefixes for kiss
 //            if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
 //                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path;
 //            }
+            // If we disable prefixes the below code is needed
+            // Make sure we never have a starting / for PathRegex.
+            $path = ltrim($path, '/');
 
             $explodedPath = explode('/', $path);
             if ($explodedPath[0] == '') {
