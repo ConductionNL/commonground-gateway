@@ -7,6 +7,7 @@ use App\Entity\Value;
 use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
+use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Exception;
 use Ramsey\Uuid\Uuid;
@@ -31,14 +32,15 @@ class ValueSubscriber implements EventSubscriberInterface
 
     public function getSubObject(string $uuid): ?ObjectEntity
     {
-        if ($subObject = $this->entityManager->find(ObjectEntity::class, $uuid)) {
-            if (!$subObject instanceof ObjectEntity) {
-                throw new Exception('No object found with uuid: '.$uuid);
+        if (!$subObject = $this->entityManager->find(ObjectEntity::class, $uuid)) {
+            try {
+                $subObject = $this->entityManager->getRepository(ObjectEntity::class)->findByAnyId($uuid);
+            } catch (NonUniqueResultException $exception) {
+                throw new Exception("Found more than one ObjectEntity with id = '$uuid' or with a source with sourceId = '$uuid'");
             }
-        } elseif ($subObject = $this->entityManager->getRepository(ObjectEntity::class)->findByAnyId($uuid)) {
-            if (!$subObject instanceof ObjectEntity) {
-                throw new Exception('No object found with uuid: '.$uuid);
-            }
+        }
+        if (!$subObject instanceof ObjectEntity) {
+            throw new Exception('No object found with uuid: '.$uuid);
         }
 
         return $subObject;

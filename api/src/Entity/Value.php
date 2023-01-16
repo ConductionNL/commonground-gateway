@@ -575,16 +575,16 @@ class Value
 
                     // Catch Array input (for hydrator)
                     if (is_array($value)) {
-                        $valueObject = new ObjectEntity($this->getAttribute()->getObject());
+                        $object = new ObjectEntity($this->getAttribute()->getObject());
                         if (key_exists('_id', $value)) {
-                            $valueObject->setExternalId($value['_id']);
+                            $object->setExternalId($value['_id']);
                         }
 
-                        $valueObject->setOwner($this->getObjectEntity()->getOwner());
-                        $valueObject->setApplication($this->getObjectEntity()->getApplication());
-                        $valueObject->setOrganization($this->getObjectEntity()->getOrganization());
-                        $valueObject->hydrate($value, $unsafe, $dateModified);
-                        $value = $valueObject;
+                        $object->setOwner($this->getObjectEntity()->getOwner());
+                        $object->setApplication($this->getObjectEntity()->getApplication());
+                        $object->setOrganization($this->getObjectEntity()->getOrganization());
+                        $object->hydrate($value, $unsafe, $dateModified);
+                        $value = $object;
                     }
 
                     if (is_string($value)) {
@@ -658,12 +658,12 @@ class Value
 
                     // Catch Array input (for hydrator)
                     if (is_array($value) && $this->getAttribute()->getObject()) {
-                        $valueObject = new ObjectEntity($this->getAttribute()->getObject());
-                        $valueObject->setOwner($this->getObjectEntity()->getOwner());
-                        $valueObject->setApplication($this->getObjectEntity()->getApplication());
-                        $valueObject->setOrganization($this->getObjectEntity()->getOrganization());
-                        $valueObject->hydrate($value, $unsafe, $dateModified);
-                        $value = $valueObject;
+                        $object = new ObjectEntity($this->getAttribute()->getObject());
+                        $object->setOwner($this->getObjectEntity()->getOwner());
+                        $object->setApplication($this->getObjectEntity()->getApplication());
+                        $object->setOrganization($this->getObjectEntity()->getOrganization());
+                        $object->hydrate($value, $unsafe, $dateModified);
+                        $value = $object;
                     } elseif (is_array($value)) {
                         return $this;
                     }

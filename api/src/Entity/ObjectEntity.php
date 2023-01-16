@@ -718,6 +718,11 @@ class ObjectEntity
      */
     public function hydrate(array $array, bool $unsafe = false, ?DateTimeInterface $dateModified = null): ObjectEntity
     {
+        // Failsafe: we should never continue if an ObjectEntity has no Entity
+        if (!$this->entity) {
+            throw new Exception("Can't hydrate an ObjectEntity ({$this->id->toString()}) with no Entity");
+        }
+
         $array = $this->includeEmbeddedArray($array);
         $hydratedValues = [];
 
@@ -1336,6 +1341,10 @@ class ObjectEntity
      */
     public function prePersist(): void
     {
+        if (!$this->entity) {
+            return;
+        }
+
         // Lets see if the name is congigured
         if ($this->entity->getNameProperties()) {
             $name = null;
