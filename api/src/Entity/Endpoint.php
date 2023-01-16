@@ -309,6 +309,7 @@ class Endpoint
                 ->orderBy(['date_created' => Criteria::DESC]);
 
             // todo: temp, for kiss disable prefixes
+            $path = ltrim($path, '/');
 //            if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
 //                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path;
 //            }
