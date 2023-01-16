@@ -305,7 +305,7 @@ class Endpoint
             $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
 
             $paths = [];
-            if($customPaths && is_array($customPaths)){
+            if ($customPaths && is_array($customPaths)) {
                 foreach ($customPaths as $customPath) {
                     // Lets make a path
                     $paths[] = $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
@@ -314,7 +314,7 @@ class Endpoint
 
             $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
             if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
-               // $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path[0];
+                // $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path[0];
             }
 
             /*

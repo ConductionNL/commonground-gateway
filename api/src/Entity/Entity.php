@@ -1128,7 +1128,7 @@ class Entity
         // Properties
         foreach ($schema['properties'] as $name => $property) {
             // Some properties are considerd forbidden
-            if(in_array($name,["id"]) || str_starts_with($name,'_') || str_starts_with($name,'$') || str_starts_with($name,'@')){
+            if (in_array($name, ['id']) || str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
                 continue;
             }
 
@@ -1205,10 +1205,9 @@ class Entity
 
             // What if we have an $object entity
             if ($objectEntity) {
-                if($attribute->getType() != 'object'){
+                if ($attribute->getType() != 'object') {
                     $property['value'] = $objectEntity->getValue($attribute);
-                }
-                elseif ($attribute->getMultiple()){
+                } elseif ($attribute->getMultiple()) {
                     $property['value'] = $objectEntity->getValueObject($attribute)->getSimpleArrayValue();
                 }
                 $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
