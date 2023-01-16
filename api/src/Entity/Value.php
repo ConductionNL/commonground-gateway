@@ -185,7 +185,8 @@ class Value
      */
     private $dateModified;
 
-    public function __toString(){
+    public function __toString()
+    {
         return $this->getStringValue();
     }
 
