@@ -284,7 +284,7 @@ class Endpoint
      */
     private $proxy;
 
-    public function __construct(?Entity $entity = null, ?array $customPaths = null, array $methods = [])
+    public function __construct(?Entity $entity = null, ?string $customPath = null, array $methods = [])
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
@@ -295,67 +295,31 @@ class Endpoint
 
         // Create simple endpoints for entities
         if ($entity) {
+            $this->addEntity($entity);
             $this->setEntity($entity);
             $this->setName($entity->getName());
             $this->setDescription($entity->getDescription());
             $this->setMethod('GET');
             $this->setMethods($methods !== [] ? $methods : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
-            $paths = [];
-            foreach ($customPaths as $customPath) {
-                // Lets make a path
-                $paths[] = $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
-            }
+            // Lets make a path
+            $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
 
-            $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
+            $criteria = Criteria::create()
+                ->orderBy(['date_created' => Criteria::DESC]);
             if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
-                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path[0];
-            }
-            $exploded = explode('/', $path);
-            $exploded = array_filter($exploded);
-            $explodedPathArray = [];
-            foreach ($exploded as $pathItem) {
-                $explodedPathArray[] = $pathItem;
-            }
-            foreach ($paths as $pathAsString) {
-                $explodedPath = explode('/', $pathAsString);
-                if ($explodedPath[0] == '') {
-                    array_shift($explodedPath);
-                }
-                $explodedPathArray[] = $explodedPath[0];
+                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path;
             }
 
-            $explodedPrefixPath = explode('/', $path);
-            if ($explodedPrefixPath[0] == '') {
-                array_shift($explodedPrefixPath);
+            $explodedPath = explode('/', $path);
+            if ($explodedPath[0] == '') {
+                array_shift($explodedPath);
             }
 
-            $explodedPathArray[] = 'id';
-            $this->setPath($explodedPathArray);
-
-            $countPaths = count($paths);
-            $counter = 1;
-            $pathRegEx = [];
-            if ($countPaths > 0) {
-                foreach ($paths as $pathArray) {
-                    if ($counter == 1) {
-                        // Add prefix path
-                        foreach ($explodedPrefixPath as $key => $prefixPathItem) {
-                            !empty($prefixPathItem) && $pathRegEx[] = ($key < 1 ? '^' : '/').$prefixPathItem;
-                        }
-                    }
-
-                    if ($counter == $countPaths) {
-                        $pathRegEx[] = $pathArray.'/?([a-z0-9-]+)?$';
-                    } else {
-                        $pathRegEx[] = $pathArray.'/?([a-z0-9-]+)?';
-                    }
-                    $counter++;
-                }
-            }
-
-            $implodePathRegEx = implode($pathRegEx);
-            $this->setPathRegex($implodePathRegEx);
+            $explodedPath[] = 'id';
+            $this->setPath($explodedPath);
+            $pathRegEx = '^'.$path.'/?([a-z0-9-]+)?$';
+            $this->setPathRegex($pathRegEx);
 
             /*@depricated kept here for lagacy */
             $this->setOperationType('GET');
