@@ -355,6 +355,8 @@ class Endpoint
             }
 
             $implodePathRegEx = implode($pathRegEx);
+            // todo: temp disable all prefixes
+            $implodePathRegEx = str_replace('^/', '^', $implodePathRegEx);
             $this->setPathRegex($implodePathRegEx);
 
             /*@depricated kept here for lagacy */
