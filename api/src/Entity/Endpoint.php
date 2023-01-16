@@ -316,7 +316,8 @@ class Endpoint
 //            }
             $exploded = explode('/', $path);
             $explodedPathArray = [];
-            $explodedPathArray[] = $exploded[0];
+            // todo: temp disable all prefixes
+//            $explodedPathArray[] = $exploded[0];
             foreach ($paths as $pathAsString) {
                 $explodedPath = explode('/', $pathAsString);
                 if ($explodedPath[0] == '') {
@@ -354,6 +355,8 @@ class Endpoint
             }
 
             $implodePathRegEx = implode($pathRegEx);
+            // todo: temp disable all prefixes
+            $implodePathRegEx = str_replace('^/', '^', $implodePathRegEx);
             $this->setPathRegex($implodePathRegEx);
 
             /*@depricated kept here for lagacy */
