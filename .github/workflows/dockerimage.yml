@@ -6,6 +6,7 @@ on:
       - master
       - staging
       - development
+      - version-kiss
       - feature-soap
       - odyssey-hackathon-2022
 
@@ -14,6 +15,7 @@ on:
       - master
       - staging
       - development
+      - version-kiss
       - feature-soap
       - feature-soap-extra
       - feature-cleanup
