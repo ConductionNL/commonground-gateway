@@ -325,6 +325,9 @@ class ObjectEntity
 
     public function getOrganization(): ?Organization
     {
+        if(!isset($this->organization)){
+            return null;
+        }
         return $this->organization;
     }
 
