@@ -93,7 +93,7 @@ jobs:
       - name: Run the docker image
         run: docker-compose up -d
       - name: Taking some sleep (for containers to come up)
-        run: sleep 130
+        run: sleep 300
       - name: Check if all containers are running
         run: docker ps
       - name: Dumping the logs
