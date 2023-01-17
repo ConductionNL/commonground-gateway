@@ -2,12 +2,6 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -24,76 +18,13 @@ use function Symfony\Component\Translation\t;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * Description.
+ * An (data) object that resides within the datalayer of the gateway.
  *
  * @category Entity
  *
- * @ApiResource(
- *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *     "get"={"path"="/admin/object_entities/{id}"},
- *     "get_sync"={
- *          "method"="GET",
- *          "path"="/admin/object_entities/{id}/sync"
- *      },
- *     "get_object"={
- *          "method"="GET",
- *          "path"="/admin/objects/{id}"
- *      },
- *     "put"={"path"="/admin/object_entities/{id}"},
- *     "put_object"={
- *          "method"="PUT",
- *          "read"=false,
- *          "validate"=false,
- *          "path"="/admin/objects/{id}"
- *      },
- *     "delete"={"path"="/admin/object_entities/{id}"},
- *     "delete_object"={
- *          "method"="DELETE",
- *          "path"="/admin/objects/{id}"
- *      }
- *  },
- *  collectionOperations={
- *     "get"={"path"="/admin/object_entities"},
- *     "get_objects"={
- *          "method"="GET",
- *          "path"="/admin/objects"
- *      },
- *     "get_objects_schema"={
- *          "method"="GET",
- *          "path"="/admin/objects/schema/{schemaId}"
- *      },
- *     "post"={"path"="/admin/object_entities"},
- *     "post_objects_schema"={
- *          "method"="POST",
- *          "read"=false,
- *          "validate"=false,
- *          "path"="/admin/objects/schema/{schemaId}"
- *      },
- *     "create_sync"={
- *          "method"="POST",
- *          "read"=false,
- *          "validate"=false,
- *          "deserialize"=false,
- *          "write"=false,
- *          "serialize"=false,
- *          "query_parameter_validate"=false,
- *          "path"="/admin/object_entities/{id}/sync/{sourceId}"
- *      },
- *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @ORM\HasLifecycleCallbacks
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class, properties={
- *     "uri": "ipartial",
- *     "entity.id": "exact",
- *     "externalId": "exact"
- * })
  */
 class ObjectEntity
 {
@@ -120,7 +51,7 @@ class ObjectEntity
     private ?string $name;
 
     /**
-     * @var string The {at sign}id or self->href of this Object.
+     * @var string The {at sign} id or self->href of this Object.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -137,7 +68,7 @@ class ObjectEntity
     private $externalId;
 
     /**
-     * @var string An uri
+     * @var string An uri (or url identifier) for this object
      *
      * @Assert\Url
      * @Groups({"read", "write"})
@@ -146,6 +77,8 @@ class ObjectEntity
     private $uri;
 
     /**
+     * The application that this object belongs to.
+     *
      * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Application::class, inversedBy="objectEntities")
      * @MaxDepth(1)
@@ -156,12 +89,12 @@ class ObjectEntity
      * @var string An uuid or uri of an organization
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="objectEntities")
      */
-    private $organization;
+    private ?Organization $organization;
 
     /**
-     * @var string An uuid or uri of an owner
+     * @var string An uuid or uri of an owner of this object
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -211,13 +144,6 @@ class ObjectEntity
      * @ORM\ManyToMany(targetEntity=GatewayResponseLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
      */
     private $responseLogs;
-
-    /*
-     * recursion stack
-     *
-     * the point of the recursion stack is to prevent the loadinf of objects that are already loaded
-     */
-    private Collection $recursionStack;
 
     /**
      * @Groups({"read"})
@@ -312,23 +238,36 @@ class ObjectEntity
 
     public function getSelf(): ?string
     {
+        // If self not set we generate a uri with linked endpoints
         if (!isset($this->self)) {
-            // Multiple endpoints on a entity is problematic but we can work with it
-            if ($this->getEntity() !== null && $this->getEntity()->getEndpoints() !== null && !empty($this->getEntity()->getEndpoints()) && $this->getEntity()->getEndpoints()->first() !== false) {
-                $pathArray = $this->getEntity()->getEndpoints()->first()->getPath();
-                $pathString = '/api';
-                $idSet = false;
-                foreach ($pathArray as $pathItem) {
-                    if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
-                        $idSet = true;
-                        $pathString .= '/'.$this->getId()->toString();
-                    } else {
-                        $pathString .= '/'.$pathItem;
+            if ($this->getEntity() !== null) {
+                $endpoints = $this->getEntity()->getEndpoints();
+                foreach ($endpoints as $endpoint) {
+                    // We need a GET endpoint
+                    if (!in_array('get', $endpoint->getMethods()) && !in_array('GET', $endpoint->getMethods())) {
+                        continue;
+                    }
+                    $pathArray = $endpoint->getPath() ?? [];
+                    $pathString = '/api';
+                    $idSet = false;
+                    // Add path item to self uri
+                    foreach ($pathArray as $pathItem) {
+                        if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
+                            $idSet = true;
+                            $pathString .= '/'.$this->getId()->toString();
+                        } else {
+                            $pathString .= '/'.$pathItem;
+                        }
+                    }
+                    // If id is set we found a correct endpoint and we can stop the foreach
+                    if ($idSet == true) {
+                        break;
                     }
                 }
-                $idSet == false && $pathString .= '/'.$this->getId()->toString();
-            } else {
-                $pathString = '/api'.($this->getEntity()->getRoute() ?? '/'.strtolower($this->getEntity()->getName()).'/'.$this->getId());
+            }
+            // If setting uri failed with endpoints do it the old way
+            if (!isset($idSet) || $idSet == false) {
+                $pathString = $this->getId()->toString();
             }
             $this->self = $pathString;
         }
@@ -376,15 +315,20 @@ class ObjectEntity
     {
         $this->application = $application;
 
+        // If we don't have an organization we can pull one from the application
+        if (!isset($this->organization)) {
+            $this->application->getOrganization();
+        }
+
         return $this;
     }
 
-    public function getOrganization(): ?string
+    public function getOrganization(): ?Organization
     {
         return $this->organization;
     }
 
-    public function setOrganization(?string $organization): self
+    public function setOrganization(?Organization $organization): self
     {
         $this->organization = $organization;
 
@@ -1074,20 +1018,21 @@ class ObjectEntity
 
         // The new metadata
         $array['_self'] = [
-            'id'           => $this->getId() ? $this->getId()->toString() : null,
-            'self'         => $this->getSelf(),
-            'owner'        => $this->getOwner(),
-            'organization' => $this->getOrganization(),
-            'application'  => $this->getApplication() ? $this->getApplication()->getId()->toString() : null,
-            'dateCreated'  => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
-            'dateModified' => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
-            'level'        => $configuration['level'],
-            'schema'       => [
+            'id'               => $this->getId() ? $this->getId()->toString() : null,
+            'name'             => $this->getName(),
+            'self'             => $this->getSelf(),
+            'owner'            => $this->getOwner(),
+            // ToDo: Ugly fix, we should make sure that organisatin and application are set on object creation
+            //'organization'     => $this->getOrganization() ? $this->getOrganization()->getId()->toString() : null,
+            'application'      => $this->getApplication() ? $this->getApplication()->getId()->toString() : null,
+            'dateCreated'      => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
+            'dateModified'     => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
+            'level'            => $configuration['level'],
+            'schema'           => [
                 'id'  => $this->getEntity()->getId()->toString(),
                 'ref' => $this->getEntity()->getReference(),
             ],
             'synchronizations' => $this->getReadableSyncDataArray(),
-            'name'             => $this->getName(),
         ];
 
         // If we dont need the actual object data we can exit here
@@ -1440,6 +1385,13 @@ class ObjectEntity
                 return;
             }
         }
+
         $this->setName($this->getId());
+
+        // Todo: this is an ugly fix, in actuallity we should run a postUpdate subscriber that checks this and repersists the enitity if thsi happens (it can anly happen if we dont have an id on pre persist e.g. new objects)
+        // Just in case we endup here
+        if (!$this->getName()) {
+            $this->setName('No name could be established for this entity');
+        }
     }
 }
