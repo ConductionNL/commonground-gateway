@@ -958,8 +958,6 @@ class ObjectEntityRepository extends ServiceEntityRepository
             $query->orWhere('o.id = :identifier');
         }
 
-        var_dump('remove this');
-
         return $query->getQuery()->getOneOrNullResult();
     }
 }
