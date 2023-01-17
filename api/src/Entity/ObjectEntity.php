@@ -423,6 +423,20 @@ class ObjectEntity
         return $this->objectValues;
     }
 
+    /**
+     * Removes all the values from this object
+     *
+     * @return $this
+     */
+    public function clearAllValues(): self{
+
+        foreach($this->objectValues as $value){
+            $this->removeObjectValue($value);
+        }
+
+        return $this;
+    }
+
     public function addObjectValue(Value $objectValue): self
     {
         if (!$this->objectValues->contains($objectValue)) {
