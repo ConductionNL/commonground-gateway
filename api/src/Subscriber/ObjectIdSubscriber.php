@@ -52,6 +52,8 @@ class ObjectIdSubscriber implements EventSubscriberInterface
 
         // Let check if it is a new entity that has an id
         if ($object instanceof ObjectEntity && $object->getId() && !$this->entityManager->contains($object)) {
+
+            /*
             // Stack connected objects
             $values = $object->getObjectValues();
             $id = $object->getId();
@@ -69,6 +71,7 @@ class ObjectIdSubscriber implements EventSubscriberInterface
             $this->entityManager->flush();
             $this->entityManager->refresh($object);
             $object->setValues($values);
+            */
         }
     }
 
