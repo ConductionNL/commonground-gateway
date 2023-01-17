@@ -65,7 +65,7 @@
 #            - currentPassword
 #        
 #
-#    # UserGroup (security) object
+#    # SecurityGroup (security) object
 #    usergroup:
 #        function: "userGroup"
 #        route: "/user_groups"
@@ -362,7 +362,7 @@
 #        persistToGateway: true
 #        writeOnly: true
 #
-#    #     UserGroup (security) properties
+#    #     SecurityGroup (security) properties
 #    userGroup_organization:
 #        name: organization
 #        description: To which organization does this usergroup belong?
@@ -1893,9 +1893,9 @@
 #        method: DELETE
 #        operationType: item
 #
-#    # UserGroup Endpoints
+#    # SecurityGroup Endpoints
 #    userGroupEndpointGet:
-#        name: UserGroup endpoint get collection
+#        name: SecurityGroup endpoint get collection
 #        description: endpoint voor het ophalen van alles userGroups
 #        path: ['user_groups']
 #        pathRegex: "^(user_groups)$"
@@ -1903,7 +1903,7 @@
 #        operationType: collection
 #    
 #    userGroupEndpointPost:
-#        name: UserGroup endpoint post
+#        name: SecurityGroup endpoint post
 #        description: endpoint voor het toevoegen van een nieuwe userGroup
 #        path: [ 'user_groups' ]
 #        pathRegex: "^(user_groups)$"
@@ -1911,7 +1911,7 @@
 #        operationType: collection
 #
 #    userGroupEndpointGetItem:
-#        name: UserGroup endpoint get item
+#        name: SecurityGroup endpoint get item
 #        description: endpoint voor het ophalen van een userGroup
 #        path: ['user_groups', '{id}']
 #        pathRegex: <{userGroupItemRegex}>
@@ -1919,7 +1919,7 @@
 #        operationType: item
 #
 #    userGroupEndpointPut:
-#        name: UserGroup endpoint put
+#        name: SecurityGroup endpoint put
 #        description: endpoint voor het wijzigen van een userGroup
 #        path: ['user_groups', '{id}']
 #        pathRegex: <{userGroupItemRegex}>
@@ -1927,7 +1927,7 @@
 #        operationType: item
 #    
 #    userGroupEndpointDelete:
-#        name: UserGroup endpoint delete
+#        name: SecurityGroup endpoint delete
 #        description: endpoint voor het verwijderen van een userGroup
 #        path: ['user_groups', '{id}']
 #        pathRegex: <{userGroupItemRegex}>
@@ -2560,9 +2560,9 @@
 #        endpoints: ["@userEndpointGet", "@userEndpointPost", "@userEndpointGetItem", "@userEndpointPut", "@userEndpointDelete"]
 #        entity: "@user"
 #        
-#    # UserGroup Handler
+#    # SecurityGroup Handler
 #    userGroupHandler:
-#        name: UserGroup handler
+#        name: SecurityGroup handler
 #        methods: ["*"]
 #        sequence: 0
 #        conditions: "{}"

@@ -1273,7 +1273,7 @@
 #            - '@course_read'
 #            - '@courseGroup_read'
 #    
-#    # SMP UserGroup
+#    # SMP SecurityGroup
 #    smp_userGroup:
 #        id: '689cd187-5b60-4263-b440-c6ee5884514b'
 #        name: smp_userGroup

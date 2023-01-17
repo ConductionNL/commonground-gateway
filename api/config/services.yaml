@@ -36,13 +36,6 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
             - '../src/Tests/'
-
-    App\Swagger\GatewayDecorator:
-        decorates: 'api_platform.openapi.normalizer.api_gateway'
-        arguments: [ '@App\Swagger\GatewayDecorator.inner' ]
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
-
     Redis:
         class: Redis
         calls:

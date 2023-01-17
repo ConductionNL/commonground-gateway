@@ -87,6 +87,7 @@ class ObjectSubscriber implements EventSubscriberInterface
             $responseContent = ['message' =>  $gatewayException->getMessage(), 'data' => $options['data'], 'path' => $options['path']];
             $response->setStatusCode($options['responseType'] ?? Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+
         $response->setContent(json_encode($responseContent));
         $event->setResponse($response);
     }
