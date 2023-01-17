@@ -939,7 +939,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * Finds object entities on there external or internal id.
+     * Finds object entities on their id or a sourceId of a synchronization this ObjectEntity has.
      *
      * @param string $identifier
      *
@@ -957,6 +957,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
         if (Uuid::isValid($identifier)) {
             $query->orWhere('o.id = :identifier');
         }
+
+        var_dump('remove this');
 
         return $query->getQuery()->getOneOrNullResult();
     }
