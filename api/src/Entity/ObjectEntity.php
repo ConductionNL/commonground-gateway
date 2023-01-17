@@ -316,7 +316,7 @@ class ObjectEntity
         $this->application = $application;
 
         // If we don't have an organization we can pull one from the application
-        if (!isset($this->organization)) {
+        if (!isset($this->organization) && $this->application) {
             $this->application->getOrganization();
         }
 
