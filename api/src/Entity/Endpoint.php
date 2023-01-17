@@ -284,7 +284,7 @@ class Endpoint
      */
     private $proxy;
 
-    public function __construct(?Entity $entity = null, ?array $customPaths = [], array $methods = [])
+    public function __construct(?Entity $entity = null, ?string $customPath = null, array $methods = [])
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
@@ -302,62 +302,30 @@ class Endpoint
             $this->setMethod('GET');
             $this->setMethods($methods !== [] ? $methods : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
-            $paths = [];
-            foreach ($customPaths as $customPath) {
-                // Lets make a path
-                $paths[] = $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
-            }
+            // Lets make a path
+            $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
 
             $criteria = Criteria::create()
                 ->orderBy(['date_created' => Criteria::DESC]);
-            // todo: temp disable all prefixes
+
+            // Add prefix to path
+            // todo: temp, disable prefixes for kiss
 //            if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
-//                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path[0];
+//                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path;
 //            }
-            $exploded = explode('/', $path);
-            $explodedPathArray = [];
-            // todo: temp disable all prefixes
-//            $explodedPathArray[] = $exploded[0];
-            foreach ($paths as $pathAsString) {
-                $explodedPath = explode('/', $pathAsString);
-                if ($explodedPath[0] == '') {
-                    array_shift($explodedPath);
-                }
-                $explodedPathArray[] = $explodedPath[0];
+            // If we disable prefixes the below code is needed
+            // Make sure we never have a starting / for PathRegex.
+            $path = ltrim($path, '/');
+
+            $explodedPath = explode('/', $path);
+            if ($explodedPath[0] == '') {
+                array_shift($explodedPath);
             }
 
-            $explodedPrefixPath = explode('/', $path);
-            if ($explodedPrefixPath[0] == '') {
-                array_shift($explodedPrefixPath);
-            }
-
-            $explodedPathArray[] = 'id';
-            $this->setPath($explodedPathArray);
-
-            $countPaths = count($paths);
-            $counter = 1;
-            $pathRegEx = [];
-            if ($countPaths > 0) {
-                foreach ($paths as $pathArray) {
-                    if ($counter == 1) {
-                        $pathRegEx[] = '^';
-                        // todo: temp disable all prefixes
-//                        $pathRegEx[] = '^'.$explodedPrefixPath[0];
-                    }
-
-                    if ($counter == $countPaths) {
-                        $pathRegEx[] = $pathArray.'/?([a-z0-9-]+)?$';
-                    } else {
-                        $pathRegEx[] = $pathArray.'/?([a-z0-9-]+)?';
-                    }
-                    $counter++;
-                }
-            }
-
-            $implodePathRegEx = implode($pathRegEx);
-            // todo: temp disable all prefixes
-            $implodePathRegEx = str_replace('^/', '^', $implodePathRegEx);
-            $this->setPathRegex($implodePathRegEx);
+            $explodedPath[] = 'id';
+            $this->setPath($explodedPath);
+            $pathRegEx = '^'.$path.'/?([a-z0-9-]+)?$';
+            $this->setPathRegex($pathRegEx);
 
             /*@depricated kept here for lagacy */
             $this->setOperationType('GET');
