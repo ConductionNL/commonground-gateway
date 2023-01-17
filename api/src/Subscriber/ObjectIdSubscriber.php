@@ -3,14 +3,12 @@
 namespace App\Subscriber;
 
 use App\Entity\ObjectEntity;
-use App\Entity\Value;
 use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Exception;
-use Ramsey\Uuid\Uuid;
 
 class ObjectIdSubscriber implements EventSubscriberInterface
 {
