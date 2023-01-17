@@ -1,6 +1,14 @@
 monolog:
     channels:
         - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
+        - endpoint
+        - request
+        - schema
+        - cronjob
+        - action
+        - object
+        - synchronization
+        - plugin
 
 when@dev:
     monolog:
@@ -15,6 +23,54 @@ when@dev:
                 path: "%kernel.logs_dir%/%kernel.environment%.log"
                 level: debug
                 formatter: monolog.formatter.json
+            endpointLog:
+                type: stream
+                path: "%kernel.logs_dir%/endpoint.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["endpoint"]
+            requestLog:
+                type: stream
+                path: "%kernel.logs_dir%/request.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["request"]
+            schemaLog:
+                type: stream
+                path: "%kernel.logs_dir%/schema.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["schema"]
+            cronjobLog:
+                type: stream
+                path: "%kernel.logs_dir%/cronjob.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["cronjob"]
+            actionLog:
+                type: stream
+                path: "%kernel.logs_dir%/action.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["action"]
+            objectLog:
+                type: stream
+                path: "%kernel.logs_dir%/object.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["object"]
+            synchronizationLog:
+                type: stream
+                path: "%kernel.logs_dir%/synchronization.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["synchronization"]
+            pluginLog:
+                type: stream
+                path: "%kernel.logs_dir%/synchronization.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["plugin"]
             # uncomment to get logging in your browser
             # you may have to allow bigger header sizes in your Web server configuration
             #firephp:
