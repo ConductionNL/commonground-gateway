@@ -5,7 +5,6 @@ x-cache:
   cache_from:
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-nginx
-    - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-ui
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-cron
 
 services:
@@ -32,7 +31,6 @@ services:
       - api
 
   ui:
-    &ui
     image: ghcr.io/conductionnl/gateway-ui:stag
     depends_on:
       - api
