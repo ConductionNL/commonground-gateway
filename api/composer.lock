@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1d2f2d371ad0ccc0d178909c8fb481a4",
+    "content-hash": "e9244b3a219bb8bfde430c188b0f85da",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -4383,16 +4383,16 @@
         },
         {
             "name": "klantinteractie-servicesysteem/kiss-bundle",
-            "version": "0.0.22",
+            "version": "0.0.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Klantinteractie-Servicesysteem/KissBundle.git",
-                "reference": "70e7ba4d2bdf66508ce4c8112c5bea10c18ca3db"
+                "reference": "4286d4c672acab949b74941eb358a93efae47981"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/70e7ba4d2bdf66508ce4c8112c5bea10c18ca3db",
-                "reference": "70e7ba4d2bdf66508ce4c8112c5bea10c18ca3db",
+                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/4286d4c672acab949b74941eb358a93efae47981",
+                "reference": "4286d4c672acab949b74941eb358a93efae47981",
                 "shasum": ""
             },
             "require": {
@@ -4429,9 +4429,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/issues",
-                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/0.0.22"
+                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/0.0.23"
             },
-            "time": "2023-01-16T14:00:48+00:00"
+            "time": "2023-01-17T09:02:43+00:00"
         },
         {
             "name": "knplabs/knp-markdown-bundle",
