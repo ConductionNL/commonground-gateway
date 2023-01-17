@@ -51,11 +51,15 @@ class ObjectIdSubscriber implements EventSubscriberInterface
         $object = $value->getObject();
 
         // Let check if it is a new entity that has an id
-        if ($object instanceof ObjectEntity && $object->getId() && !$object->getDateCreated() ) {
+        if ($object instanceof ObjectEntity && $object->getId() && !$this->entityManager->contains($object)) {
             // Stack connected objects
             $values = $object->getObjectValues();
             $id = $object->getId();
+            $now = New \DateTime;
             $object->clearAllValues();
+            $object->setDateCreated($now);
+
+
 
             $this->entityManager->persist($object);
             $this->entityManager->flush();
