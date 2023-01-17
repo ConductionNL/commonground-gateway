@@ -40,8 +40,17 @@
     "brick/reflection": {
         "version": "0.4.1"
     },
+    "common-gateway/brp-bundle": {
+        "version": "0.0.9"
+    },
     "common-gateway/formio-bundle": {
         "version": "dev-main"
+    },
+    "common-gateway/klanten-bundle": {
+        "version": "0.0.12"
+    },
+    "common-gateway/zgw-bundle": {
+        "version": "0.1.16"
     },
     "commongateway/corebundle": {
         "version": "dev-master"
@@ -249,7 +258,7 @@
         "version": "1.0.6"
     },
     "klantinteractie-servicesysteem/kiss-bundle": {
-        "version": "0.0.12"
+        "version": "0.0.26"
     },
     "knplabs/knp-markdown-bundle": {
         "version": "1.9.0"
