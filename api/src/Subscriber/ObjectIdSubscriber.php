@@ -46,33 +46,50 @@ class ObjectIdSubscriber implements EventSubscriberInterface
         return $subObject;
     }
 
-    public function preUpdate(LifecycleEventArgs $value): void
+    public function preUpdate(LifecycleEventArgs $value)
     {
         $object = $value->getObject();
 
         // Let check if it is a new entity that has an id
-        if ($object instanceof ObjectEntity && $object->getId() && !$this->entityManager->contains($object)) {
+        if ($object instanceof ObjectEntity && $object->getId() && !$this->entityManager->contains($object) && !$object->getIdPersist()) {
 
             /*
             // Stack connected objects
-            $values = $object->getObjectValues();
+            $values = $object->getObjectValues()->toArray();
+            // todo: we should temporarilly store all collections
+
             $id = $object->getId();
             $now = New \DateTime;
             $object->clearAllValues();
             $object->setDateCreated($now);
+            $object->setIdPersist(true);
 
-
-
+            // Perist refresh
             $this->entityManager->persist($object);
             $this->entityManager->flush();
             $this->entityManager->refresh($object);
+
+            $object->setIdPersist(true);
             $object->setId($id);
+
+            // Perist refresh
             $this->entityManager->persist($object);
             $this->entityManager->flush();
-            $this->entityManager->refresh($object);
-            $object->setValues($values);
+
+            $object = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['id' => $id]);
+
+            // Reset the values
+            foreach ($values as $objectValue){
+               $object->addObjectValue($objectValue);
+            }
+
+            $this->entityManager->persist($object);
+            $this->entityManager->flush();
             */
+
         }
+
+        return;
     }
 
     public function prePersist(LifecycleEventArgs $args): void

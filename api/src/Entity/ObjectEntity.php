@@ -198,6 +198,14 @@ class ObjectEntity
      */
     private $dateModified;
 
+    /**
+     * Used to check if we are dealing with an entity that exisits just for id persisting
+     *
+     * @var bool
+     */
+    private $idPersist = false;
+
+
     public function __construct(?Entity $entity = null)
     {
         $this->objectValues = new ArrayCollection();
@@ -363,11 +371,25 @@ class ObjectEntity
     }
 
     /**
+     * Get all the object values
+     *
      * @return Collection|Value[]
      */
     public function getObjectValues(): Collection
     {
         return $this->objectValues;
+    }
+
+    /**
+     * Sets an entire collection of object values (used in the setid subscriber)
+     *
+     * @return $this
+     */
+    public function setObjectValues(Collection $objectValues): self
+    {
+        $this->objectValues = $objectValues;
+
+        return $this;
     }
 
     /**
@@ -1350,6 +1372,29 @@ class ObjectEntity
     }
 
     /**
+     * Used to check if we are dealing with an entity that exisits just for id persisting
+     *
+     * @return bool
+     */
+    public function getIdPersist(): bool
+    {
+        return $this->idPersist;
+    }
+
+    /**
+     * Used to check if we are dealing with an entity that exisits just for id persisting
+     *
+     * @param bool $idPersist
+     * @return $this
+     */
+    public function setIdPersist(bool $idPersist): self
+    {
+        $this->idPersist = $idPersist;
+
+        return $this;
+    }
+
+    /**
      * Set name on pre persist.
      *
      * This function makes sure that each and every oject alwys has a name when saved
@@ -1359,7 +1404,7 @@ class ObjectEntity
      */
     public function prePersist(): void
     {
-        if (!$this->entity) {
+        if (!$this->entity || $this->idPersist) {
             return;
         }
 
