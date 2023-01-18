@@ -364,7 +364,7 @@ class ObjectEntity
     }
 
     /**
-     * Get all the object values
+     * Get all the object values.
      *
      * @return Collection|Value[]
      */
@@ -374,7 +374,7 @@ class ObjectEntity
     }
 
     /**
-     * Sets an entire collection of object values (used in the setid subscriber)
+     * Sets an entire collection of object values (used in the setid subscriber).
      *
      * @return $this
      */
@@ -386,7 +386,7 @@ class ObjectEntity
     }
 
     /**
-     * Removes all the values from this object
+     * Removes all the values from this object.
      *
      * @return $this
      */
@@ -757,12 +757,12 @@ class ObjectEntity
         }
 
         // Allow the setting of id's trough the hydrator
-        if(!$this->getId()){
-            if(isset($array['id'])){
+        if (!$this->getId()) {
+            if (isset($array['id'])) {
                 $this->setId($array['id']);
             }
             /* @deprecated */
-            if(isset($array['_id'])){
+            if (isset($array['_id'])) {
                 $this->setId($array['_id']);
             }
         }
