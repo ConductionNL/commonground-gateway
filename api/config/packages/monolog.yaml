@@ -9,6 +9,8 @@ monolog:
         - object
         - synchronization
         - plugin
+        - cache
+        - object
 
 when@dev:
     monolog:
@@ -25,52 +27,58 @@ when@dev:
                 formatter: monolog.formatter.json
             endpointLog:
                 type: stream
-                path: "%kernel.logs_dir%/endpoint.log"
+                path: "%kernel.logs_dir%/%kernel.environment%.endpoint.log"
                 level: debug
                 formatter: monolog.formatter.json
                 channels: ["endpoint"]
             requestLog:
                 type: stream
-                path: "%kernel.logs_dir%/request.log"
+                path: "%kernel.logs_dir%/%kernel.environment%.request.log"
                 level: debug
                 formatter: monolog.formatter.json
                 channels: ["request"]
             schemaLog:
                 type: stream
-                path: "%kernel.logs_dir%/schema.log"
+                path: "%kernel.logs_dir%/%kernel.environment%.schema.log"
                 level: debug
                 formatter: monolog.formatter.json
                 channels: ["schema"]
             cronjobLog:
                 type: stream
-                path: "%kernel.logs_dir%/cronjob.log"
+                path: "%kernel.logs_dir%/%kernel.environment%.cronjob.log"
                 level: debug
                 formatter: monolog.formatter.json
                 channels: ["cronjob"]
             actionLog:
                 type: stream
-                path: "%kernel.logs_dir%/action.log"
+                path: "%kernel.logs_dir%/%kernel.environment%.action.log"
                 level: debug
                 formatter: monolog.formatter.json
                 channels: ["action"]
             objectLog:
                 type: stream
-                path: "%kernel.logs_dir%/object.log"
+                path: "%kernel.logs_dir%/%kernel.environment%.object.log"
                 level: debug
                 formatter: monolog.formatter.json
                 channels: ["object"]
             synchronizationLog:
                 type: stream
-                path: "%kernel.logs_dir%/synchronization.log"
+                path: "%kernel.logs_dir%/%kernel.environment%.synchronization.log"
                 level: debug
                 formatter: monolog.formatter.json
                 channels: ["synchronization"]
             pluginLog:
                 type: stream
-                path: "%kernel.logs_dir%/synchronization.log"
+                path: "%kernel.logs_dir%/%kernel.environment%.synchronization.log"
                 level: debug
                 formatter: monolog.formatter.json
                 channels: ["plugin"]
+            cacheLog:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.scache.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["cache"]
             # uncomment to get logging in your browser
             # you may have to allow bigger header sizes in your Web server configuration
             #firephp:

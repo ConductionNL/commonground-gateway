@@ -17,6 +17,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Psr\Log\LoggerInterface;
 
 class ActionSubscriber implements EventSubscriberInterface
 {
@@ -26,6 +27,7 @@ class ActionSubscriber implements EventSubscriberInterface
     private SessionInterface $session;
     private SymfonyStyle $io;
     private MessageBusInterface $messageBus;
+    private LoggerInterface $RequestLog;
 
     /**
      * @inheritDoc
@@ -51,6 +53,7 @@ class ActionSubscriber implements EventSubscriberInterface
         ContainerInterface $container,
         ObjectEntityService $objectEntityService,
         SessionInterface $session,
+        LoggerInterface $ActionLog,
         MessageBusInterface $messageBus
     ) {
         $this->entityManager = $entityManager;
@@ -58,6 +61,7 @@ class ActionSubscriber implements EventSubscriberInterface
         $this->objectEntityService = $objectEntityService;
         $this->session = $session;
         $this->messageBus = $messageBus;
+        $this->logger = $ActionLog;
     }
 
     public function runFunction(Action $action, array $data, string $currentThrow): array
@@ -275,10 +279,13 @@ class ActionSubscriber implements EventSubscriberInterface
 
         // Normal behaviour is using the $event->getType(), but if $event->getSubType() is set, use that one instead.
         $listeningToThrow = !$event->getSubType() ? $event->getType() : $event->getSubType();
+
         $actions = $this->entityManager->getRepository('App:Action')->findByListens($listeningToThrow);
+        $totalActions = is_countable($actions) ? count($actions) : 0;
+
+        $this->logger->info("Handling actions for event: ".$listeningToThrow.", found ".$totalActions." listening actions");
 
         if (isset($this->io)) {
-            $totalActions = is_countable($actions) ? count($actions) : 0;
             $ioMessage = "Found $totalActions Action".($totalActions !== 1 ? 's' : '')." listening to \"$listeningToThrow\"";
             $currentCronJobThrow ? $this->io->block($ioMessage) : $this->io->text($ioMessage);
             if ($totalActions !== 0) {
@@ -289,8 +296,10 @@ class ActionSubscriber implements EventSubscriberInterface
                 $currentCronJobThrow ?: $this->io->newLine();
             }
         }
+
         foreach ($actions as $key => $action) {
             // Handle Action
+            $this->logger->info("Handling action : ".$action->getName()."(".$action->getId().")");
             $this->handleAction($action, $event);
 
             if (isset($this->io) && isset($totalActions) && isset($extraDashesStr)) {
