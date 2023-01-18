@@ -652,6 +652,11 @@ class Gateway
      */
     private $proxies;
 
+    /**
+     * @todo
+     *
+     * @param array|null $configuration
+     */
     public function __construct(?array $configuration)
     {
         $this->responceLogs = new ArrayCollection();
@@ -662,7 +667,19 @@ class Gateway
         $this->callLogs = new ArrayCollection();
         $this->proxies = new ArrayCollection();
 
-        // Do not set jwt, secret, password or apikey with this constructor!
+        if ($configuration) {
+            $this->fromArray($configuration);
+        }
+    }
+
+    /**
+     * @todo
+     *
+     * @param array $configuration
+     * @return void
+     */
+    public function fromArray(array $configuration) {
+        // Do not set jwt, secret, password or apikey this way!
         array_key_exists('name', $configuration) ? $this->setName($configuration['name']) : '';
         array_key_exists('location', $configuration) ? $this->setLocation($configuration['location']) : '';
         array_key_exists('authorizationHeader', $configuration) ? $this->setAuthorizationHeader($configuration['authorizationHeader']) : '';
