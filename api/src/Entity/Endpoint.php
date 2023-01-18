@@ -292,7 +292,7 @@ class Endpoint
      * @param Entity|null $entity An entity to create an Endpoint for.
      * @param Gateway|null $source A source to create an Endpoint for. Will only work if $entity = null.
      * @param array $configuration A configuration array used to correctly create an Endpoint. The following keys are supported:
-     * 'customPath' => if $entity is given/used, a custom path can be used to set the Path and PathRegex for this Endpoint, default = $entity->getName().
+     * 'path' => a path can be used to set the Path and PathRegex for this Endpoint. Default = $entity->getName() or $source->getName().
      * 'methods' => the allowed methods for this Endpoint, default = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
      */
     public function __construct(?Entity $entity = null, ?Source $source = null, array $configuration = [])
@@ -304,48 +304,54 @@ class Endpoint
         $this->properties = new ArrayCollection();
         $this->entities = new ArrayCollection();
 
-        if ($entity || $source) {
-            // Create simple endpoint(s) for entity
-            if ($entity) {
-                $this->constructEntityEndpoint($entity);
-                // Lets make a path
-                $path = mb_strtolower(str_replace(' ', '_', $entity->getName()));
-            }
-            // Create simple endpoint(s) for source (proxy)
-            elseif ($source) {
-                $this->constructProxyEndpoint($source);
-            }
-
-            $this->setMethod(array_key_exists('method', $configuration) ? $configuration['method'] :'GET');
-            $this->setMethods(array_key_exists('methods', $configuration) ? $configuration['methods'] : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
-            $path = array_key_exists('path', $configuration) ? $configuration['path'] : $path;
-
-
-            $criteria = Criteria::create()
-                ->orderBy(['date_created' => Criteria::DESC]);
-
-            // Add prefix to path
-            // todo: temp, disable prefixes for kiss
-//            if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
-//                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path;
-//            }
-            // If we disable prefixes the below code is needed
-            // Make sure we never have a starting / for PathRegex.
-            $path = ltrim($path, '/');
-
-            $explodedPath = explode('/', $path);
-            if ($explodedPath[0] == '') {
-                array_shift($explodedPath);
-            }
-
-            $explodedPath[] = 'id';
-            $this->setPath($explodedPath);
-            $pathRegEx = '^'.$path.'/?([a-z0-9-]+)?$';
-            $this->setPathRegex($pathRegEx);
-
-            /*@depricated kept here for lagacy */
-            $this->setOperationType('GET');
+        if (!$entity && !$source) {
+            return;
         }
+
+        // Create simple endpoint(s) for entity
+        if ($entity) {
+            $this->constructEntityEndpoint($entity);
+            // Default path & pathRegex(end) for $entity
+            $path = mb_strtolower(str_replace(' ', '_', $entity->getName()));
+            $pathRegex = '?([a-z0-9-]+)?';
+        }
+        // Create simple endpoint(s) for source (proxy)
+        else {
+            $this->constructProxyEndpoint($source);
+            // Default path & pathRegex(end) for $source
+            $path = mb_strtolower(str_replace(' ', '_', $source->getName()));
+            $pathRegex = '[^.*]*';
+        }
+        // Lets make a path
+        $path = array_key_exists('path', $configuration) ? $configuration['path'] : $path;
+
+        // Add prefix to path
+        // todo: temp, disable prefixes for kiss
+//        $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
+//        if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
+//            $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path;
+//        }
+
+        // (If we disable prefixes the below code is needed)
+        // todo: just remove starting / in path for endpoints in the bundles instead of using this line of code
+        // Make sure we never have a starting / for PathRegex.
+        $path = ltrim($path, '/');
+
+        // Make sure the first item in array for setting path isn't empty
+        $explodedPath = explode('/', $path);
+        if ($explodedPath[0] == '') {
+            array_shift($explodedPath);
+        }
+
+        // If we make an Endpoint for an Entity add 'id' to path, if we make a proxy Endpoint add {route}
+        $explodedPath[] = $entity ? 'id' : '{route}';
+        $this->setPath($explodedPath);
+        $this->setPathRegex("^$path/$pathRegex$");
+        $this->setMethods(array_key_exists('methods', $configuration) ? $configuration['methods'] : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+
+        /*@depricated kept here for lagacy */
+        $this->setMethod(array_key_exists('method', $configuration) ? $configuration['method'] :'GET');
+        $this->setOperationType(array_key_exists('operationType', $configuration) ? $configuration['operationType'] :'GET');
     }
 
     /**
