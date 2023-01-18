@@ -204,6 +204,8 @@ spec:
                 configMapKeyRef:
                   key: url
                   name: {{ include "commonground-gateway.fullname" . }}
+            - name: READ_ONLY
+              value: {{ .Values.config.readOnly | quote }}
             -   name: CRON_RUNNER_ENABLED
                 valueFrom:
                     configMapKeyRef:
