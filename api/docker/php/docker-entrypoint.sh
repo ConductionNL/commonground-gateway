@@ -64,10 +64,10 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
     # Load PUBLICCODE from .env and create Collections
 	#	echo "Update commongateway plugins"
 	#	bin/console commongateway:composer:update
-	fi
 
-	echo "Initializing the gateway"
-	bin/console commongateway:initialize
+		echo "Initializing the gateway"
+		bin/console commongateway:initialize
+	fi
 
 fi
 exec docker-php-entrypoint "$@"

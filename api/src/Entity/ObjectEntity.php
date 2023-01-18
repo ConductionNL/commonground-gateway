@@ -325,9 +325,10 @@ class ObjectEntity
 
     public function getOrganization(): ?Organization
     {
-        if(!isset($this->organization)){
+        if (!isset($this->organization)) {
             return null;
         }
+
         return $this->organization;
     }
 
@@ -389,9 +390,9 @@ class ObjectEntity
      *
      * @return $this
      */
-    public function clearAllValues(): self{
-
-        foreach($this->objectValues as $value){
+    public function clearAllValues(): self
+    {
+        foreach ($this->objectValues as $value) {
             $this->removeObjectValue($value);
         }
 
