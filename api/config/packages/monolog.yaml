@@ -11,6 +11,8 @@ monolog:
         - plugin
         - cache
         - object
+        - call
+        - installation
 
 when@dev:
     monolog:
@@ -75,10 +77,16 @@ when@dev:
                 channels: ["plugin"]
             cacheLog:
                 type: stream
-                path: "%kernel.logs_dir%/%kernel.environment%.scache.log"
+                path: "%kernel.logs_dir%/%kernel.environment%.cache.log"
                 level: debug
                 formatter: monolog.formatter.json
                 channels: ["cache"]
+            callLog:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.call.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["call"]
             # uncomment to get logging in your browser
             # you may have to allow bigger header sizes in your Web server configuration
             #firephp:

@@ -7,11 +7,13 @@ use App\Entity\ActionHandler;
 use Exception;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Monolog\Logger;
 
 class ActionService
 {
     private ContainerInterface $container;
     private iterable $actionHandlers;
+    private Logger $logger;
 
     public function __construct(
         iterable $actionHandlers,
@@ -19,6 +21,7 @@ class ActionService
     ) {
         $this->actionHandlers = $actionHandlers;
         $this->container = $container;
+        $this->logger = New Logger('action');
     }
 
     /**
@@ -32,10 +35,11 @@ class ActionService
     {
         // If the action has a class
         if ($class = $action->getClass()) {
+            $this->logger->debug('Got handler for class '.$class);
             return $this->container->get($class);
         }
 
-        // if the action doesn't have class we want to return null
+        // if the action doesn't have class we want to return void
         return null;
     }
 
@@ -57,6 +61,7 @@ class ActionService
             $result[] = $newActionHandler;
         }
 
+        $this->logger->debug('Got all action handlers');
         return $result;
     }
 }
