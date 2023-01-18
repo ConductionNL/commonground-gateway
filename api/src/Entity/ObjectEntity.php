@@ -325,9 +325,10 @@ class ObjectEntity
 
     public function getOrganization(): ?Organization
     {
-        if(!isset($this->organization)){
+        if (!isset($this->organization)) {
             return null;
         }
+
         return $this->organization;
     }
 
@@ -363,7 +364,7 @@ class ObjectEntity
     }
 
     /**
-     * Get all the object values
+     * Get all the object values.
      *
      * @return Collection|Value[]
      */
@@ -373,7 +374,7 @@ class ObjectEntity
     }
 
     /**
-     * Sets an entire collection of object values (used in the setid subscriber)
+     * Sets an entire collection of object values (used in the setid subscriber).
      *
      * @return $this
      */
@@ -385,13 +386,13 @@ class ObjectEntity
     }
 
     /**
-     * Removes all the values from this object
+     * Removes all the values from this object.
      *
      * @return $this
      */
-    public function clearAllValues(): self{
-
-        foreach($this->objectValues as $value){
+    public function clearAllValues(): self
+    {
+        foreach ($this->objectValues as $value) {
             $this->removeObjectValue($value);
         }
 
@@ -756,12 +757,12 @@ class ObjectEntity
         }
 
         // Allow the setting of id's trough the hydrator
-        if(!$this->getId()){
-            if(isset($array['id'])){
+        if (!$this->getId()) {
+            if (isset($array['id'])) {
                 $this->setId($array['id']);
             }
             /* @deprecated */
-            if(isset($array['_id'])){
+            if (isset($array['_id'])) {
                 $this->setId($array['_id']);
             }
         }
