@@ -652,7 +652,7 @@ class Gateway
      */
     private $proxies;
 
-    public function __construct()
+    public function __construct(?array $configuration)
     {
         $this->responceLogs = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
@@ -661,6 +661,22 @@ class Gateway
         $this->synchronizations = new ArrayCollection();
         $this->callLogs = new ArrayCollection();
         $this->proxies = new ArrayCollection();
+
+        // Do not set jwt, secret, password or apikey with this constructor!
+        array_key_exists('name', $configuration) ? $this->setName($configuration['name']) : '';
+        array_key_exists('location', $configuration) ? $this->setLocation($configuration['location']) : '';
+        array_key_exists('authorizationHeader', $configuration) ? $this->setAuthorizationHeader($configuration['authorizationHeader']) : '';
+        array_key_exists('auth', $configuration) ? $this->setAuth($configuration['auth']) : '';
+        array_key_exists('authorizationPassthroughMethod', $configuration) ? $this->setAuthorizationPassthroughMethod($configuration['authorizationPassthroughMethod']) : '';
+        array_key_exists('locale', $configuration) ? $this->setLocale($configuration['locale']) : '';
+        array_key_exists('accept', $configuration) ? $this->setAccept($configuration['accept']) : '';
+        array_key_exists('jwtId', $configuration) ? $this->setJwtId($configuration['jwtId']) : '';
+        array_key_exists('username', $configuration) ? $this->setUsername($configuration['username']) : '';
+        array_key_exists('documentation', $configuration) ? $this->setDocumentation($configuration['documentation']) : '';
+        array_key_exists('headers', $configuration) ? $this->setHeaders($configuration['headers']) : '';
+        array_key_exists('translationConfig', $configuration) ? $this->setTranslationConfig($configuration['translationConfig']) : '';
+        array_key_exists('type', $configuration) ? $this->setType($configuration['type']) : '';
+        array_key_exists('configuration', $configuration) ? $this->setConfiguration($configuration['configuration']) : '';
     }
 
     public function export(): ?array

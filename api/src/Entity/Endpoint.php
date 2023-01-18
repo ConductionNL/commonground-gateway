@@ -20,6 +20,7 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
+use App\Entity\Gateway as Source;
 
 /**
  * This entity holds the information about an Endpoint.
@@ -284,7 +285,17 @@ class Endpoint
      */
     private $proxy;
 
-    public function __construct(?Entity $entity = null, ?string $customPath = null, array $methods = [])
+    /**
+     * Constructor for creating an Endpoint. Use $entity to create an Endpoint for an Entity or
+     * use $source to create an Endpoint for a source, a proxy Endpoint.
+     *
+     * @param Entity|null $entity An entity to create an Endpoint for.
+     * @param Gateway|null $source A source to create an Endpoint for. Will only work if $entity = null.
+     * @param array $configuration A configuration array used to correctly create an Endpoint. The following keys are supported:
+     * 'customPath' => if $entity is given/used, a custom path can be used to set the Path and PathRegex for this Endpoint, default = $entity->getName().
+     * 'methods' => the allowed methods for this Endpoint, default = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+     */
+    public function __construct(?Entity $entity = null, ?Source $source = null, array $configuration = [])
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
@@ -293,17 +304,22 @@ class Endpoint
         $this->properties = new ArrayCollection();
         $this->entities = new ArrayCollection();
 
-        // Create simple endpoints for entities
-        if ($entity) {
-            $this->addEntity($entity);
-            $this->setEntity($entity);
-            $this->setName($entity->getName());
-            $this->setDescription($entity->getDescription());
-            $this->setMethod('GET');
-            $this->setMethods($methods !== [] ? $methods : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+        if ($entity || $source) {
+            // Create simple endpoint(s) for entity
+            if ($entity) {
+                $this->constructEntityEndpoint($entity);
+                // Lets make a path
+                $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
+            }
+            // Create simple endpoint(s) for source (proxy)
+            elseif ($source) {
+                $this->constructProxyEndpoint($source);
+            }
 
-            // Lets make a path
-            $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
+            $this->setMethod(array_key_exists('method', $configuration) ? $configuration['method'] :'GET');
+            $this->setMethods(array_key_exists('methods', $configuration) ? $configuration['methods'] : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+
+
 
             $criteria = Criteria::create()
                 ->orderBy(['date_created' => Criteria::DESC]);
@@ -330,6 +346,31 @@ class Endpoint
             /*@depricated kept here for lagacy */
             $this->setOperationType('GET');
         }
+    }
+
+    /**
+     * Use the given Entity data to set some values during constructor when creating an Endpoint for an Entity.
+     *
+     * @param Entity $entity The Entity
+     * @return void
+     */
+    private function constructEntityEndpoint(Entity $entity)
+    {
+        $this->addEntity($entity);
+        $this->setEntity($entity);
+        $this->setName($entity->getName());
+        $this->setDescription($entity->getDescription());
+    }
+
+    /**
+     * Use the given Source data to set some values during constructor when creating an Endpoint for a Source (a proxy Endpoint).
+     *
+     * @param Source $source The Source
+     * @return void
+     */
+    private function constructProxyEndpoint(Source $source)
+    {
+
     }
 
     public function getId(): ?UuidInterface
