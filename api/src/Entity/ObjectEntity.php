@@ -198,14 +198,6 @@ class ObjectEntity
      */
     private $dateModified;
 
-    /**
-     * Used to check if we are dealing with an entity that exisits just for id persisting
-     *
-     * @var bool
-     */
-    private $idPersist = false;
-
-
     public function __construct(?Entity $entity = null)
     {
         $this->objectValues = new ArrayCollection();
@@ -761,6 +753,17 @@ class ObjectEntity
         // Failsafe: we should never continue if an ObjectEntity has no Entity
         if (!$this->entity) {
             throw new Exception("Can't hydrate an ObjectEntity ({$this->id->toString()}) with no Entity");
+        }
+
+        // Allow the setting of id's trough the hydrator
+        if(!$this->getId()){
+            if(isset($array['id'])){
+                $this->setId($array['id']);
+            }
+            /* @deprecated */
+            if(isset($array['_id'])){
+                $this->setId($array['_id']);
+            }
         }
 
         $array = $this->includeEmbeddedArray($array);
@@ -1372,29 +1375,6 @@ class ObjectEntity
     }
 
     /**
-     * Used to check if we are dealing with an entity that exisits just for id persisting
-     *
-     * @return bool
-     */
-    public function getIdPersist(): bool
-    {
-        return $this->idPersist;
-    }
-
-    /**
-     * Used to check if we are dealing with an entity that exisits just for id persisting
-     *
-     * @param bool $idPersist
-     * @return $this
-     */
-    public function setIdPersist(bool $idPersist): self
-    {
-        $this->idPersist = $idPersist;
-
-        return $this;
-    }
-
-    /**
      * Set name on pre persist.
      *
      * This function makes sure that each and every oject alwys has a name when saved
@@ -1404,7 +1384,7 @@ class ObjectEntity
      */
     public function prePersist(): void
     {
-        if (!$this->entity || $this->idPersist) {
+        if (!$this->entity) {
             return;
         }
 
