@@ -309,7 +309,7 @@ class Endpoint
             if ($entity) {
                 $this->constructEntityEndpoint($entity);
                 // Lets make a path
-                $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
+                $path = mb_strtolower(str_replace(' ', '_', $entity->getName()));
             }
             // Create simple endpoint(s) for source (proxy)
             elseif ($source) {
@@ -318,7 +318,7 @@ class Endpoint
 
             $this->setMethod(array_key_exists('method', $configuration) ? $configuration['method'] :'GET');
             $this->setMethods(array_key_exists('methods', $configuration) ? $configuration['methods'] : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
-
+            $path = array_key_exists('path', $configuration) ? $configuration['path'] : $path;
 
 
             $criteria = Criteria::create()
