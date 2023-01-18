@@ -149,7 +149,7 @@ class Entity
      * The attributes of this Entity.
      *
      * @Groups({"read","write"})
-     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist", "remove"}, fetch="EAGER")
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist"}, orphanRemoval=true, fetch="EAGER")
      * @MaxDepth(1)
      */
     private Collection $attributes;
@@ -1127,6 +1127,11 @@ class Entity
 
         // Properties
         foreach ($schema['properties'] as $name => $property) {
+            // Some properties are considerd forbidden
+            if (in_array($name, ['id']) || str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
+                continue;
+            }
+
             // Let see if the attribute exists
             if (!$attribute = $this->getAttributeByName($name)) {
                 $attribute = new Attribute();
@@ -1200,7 +1205,12 @@ class Entity
 
             // What if we have an $object entity
             if ($objectEntity) {
-                $property['value'] = $objectEntity->getValue($attribute);
+                if ($attribute->getType() != 'object') {
+                    $property['value'] = $objectEntity->getValue($attribute);
+                } elseif ($attribute->getMultiple()) {
+                    $property['value'] = $objectEntity->getValueObject($attribute)->getSimpleArrayValue();
+                }
+                $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
             }
 
             // Zetten van de property
