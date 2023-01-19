@@ -96,7 +96,7 @@ class Mapping
     private ?array $unset = [];
 
     /**
-     * @var boolean|null The passThrough of this mapping object
+     * @var bool|null The passThrough of this mapping object
      *
      * @Groups({"read","read_secure","write"})
      *

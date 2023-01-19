@@ -11,13 +11,13 @@ use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
-use Psr\Log\LoggerInterface;
 
 class ActionSubscriber implements EventSubscriberInterface
 {
@@ -283,7 +283,7 @@ class ActionSubscriber implements EventSubscriberInterface
         $actions = $this->entityManager->getRepository('App:Action')->findByListens($listeningToThrow);
         $totalActions = is_countable($actions) ? count($actions) : 0;
 
-        $this->logger->info("Handling actions for event: ".$listeningToThrow.", found ".$totalActions." listening actions");
+        $this->logger->info('Handling actions for event: '.$listeningToThrow.', found '.$totalActions.' listening actions');
 
         if (isset($this->io)) {
             $ioMessage = "Found $totalActions Action".($totalActions !== 1 ? 's' : '')." listening to \"$listeningToThrow\"";
@@ -299,7 +299,7 @@ class ActionSubscriber implements EventSubscriberInterface
 
         foreach ($actions as $key => $action) {
             // Handle Action
-            $this->logger->info("Handling action : ".$action->getName()."(".$action->getId().")");
+            $this->logger->info('Handling action : '.$action->getName().'('.$action->getId().')');
             $this->handleAction($action, $event);
 
             if (isset($this->io) && isset($totalActions) && isset($extraDashesStr)) {
