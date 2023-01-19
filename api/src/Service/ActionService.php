@@ -5,9 +5,9 @@ namespace App\Service;
 use App\Entity\Action;
 use App\Entity\ActionHandler;
 use Exception;
+use Monolog\Logger;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Monolog\Logger;
 
 class ActionService
 {
@@ -21,7 +21,7 @@ class ActionService
     ) {
         $this->actionHandlers = $actionHandlers;
         $this->container = $container;
-        $this->logger = New Logger('action');
+        $this->logger = new Logger('action');
     }
 
     /**
@@ -36,6 +36,7 @@ class ActionService
         // If the action has a class
         if ($class = $action->getClass()) {
             $this->logger->debug('Got handler for class '.$class);
+
             return $this->container->get($class);
         }
 
@@ -62,6 +63,7 @@ class ActionService
         }
 
         $this->logger->debug('Got all action handlers');
+
         return $result;
     }
 }

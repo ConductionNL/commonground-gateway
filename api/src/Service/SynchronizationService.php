@@ -17,6 +17,7 @@ use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use Monolog\Logger;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
@@ -30,7 +31,6 @@ use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\SyntaxError;
-use Monolog\Logger;
 
 class SynchronizationService
 {
@@ -89,7 +89,7 @@ class SynchronizationService
         $this->twig = $twig;
         $this->event = new ActionEvent('', []);
         $this->eventDispatcher = $eventDispatcher;
-        $this->logger = New Logger('installation');
+        $this->logger = new Logger('installation');
     }
 
     /**

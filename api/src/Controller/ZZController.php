@@ -11,7 +11,6 @@ use App\Service\ProcessingLogService;
 use App\Service\ValidationService;
 use CommonGateway\CoreBundle\Service\RequestService;
 use Doctrine\ORM\NonUniqueResultException;
-use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;

@@ -12,6 +12,7 @@ use App\Service\ParseDataService;
 use App\Service\PubliccodeOldService;
 use App\Service\PubliccodeService;
 use App\Subscriber\ActionSubscriber;
+use CommonGateway\CoreBundle\Service\MappingService;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
@@ -21,7 +22,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
-use CommonGateway\CoreBundle\Service\MappingService;
 
 class ConvenienceController extends AbstractController
 {
