@@ -21,6 +21,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use CommonGateway\CoreBundle\Service\MappingService;
 
 class ConvenienceController extends AbstractController
 {
@@ -34,6 +35,7 @@ class ConvenienceController extends AbstractController
     private HandlerService $handlerService;
     private ActionSubscriber $actionSubscriber;
     private ObjectEntityService $objectEntityService;
+    private MappingService $mappingService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -43,7 +45,8 @@ class ConvenienceController extends AbstractController
         HandlerService $handlerService,
         ActionSubscriber $actionSubscriber,
         ObjectEntityService $objectEntityService,
-        PubliccodeService $publiccodeService
+        PubliccodeService $publiccodeService,
+        MappingService $mappingService
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
@@ -55,6 +58,7 @@ class ConvenienceController extends AbstractController
         $this->actionSubscriber = $actionSubscriber;
         $this->objectEntityService = $objectEntityService;
         $this->publiccodeService = $publiccodeService;
+        $this->mappingService = $mappingService;
     }
 
     /**
@@ -237,6 +241,29 @@ class ConvenienceController extends AbstractController
             Response::HTTP_OK,
             ['content-type' => $contentType]
         );
+    }
+
+    /**
+     * @Route("/admin/mappings/{id}/test")
+     *
+     * @throws GatewayException
+     */
+    public function getMapping(string $id)
+    {
+        $contentType = $this->handlerService->getRequestType('content-type');
+
+        if (!$mappingObject = $this->entityManager->getRepository('App:Mapping')->find($id)) {
+            return new GatewayException(
+                $this->serializer->serialize(['message' => 'There is no mapping found with id '.$id], $contentType),
+                Response::HTTP_BAD_REQUEST,
+            );
+        }
+
+        $requestMappingArray = $this->handlerService->getDataFromRequest();
+
+        $mapping = $this->mappingService->mapping($mappingObject, $requestMappingArray);
+
+        return new Response(json_encode($mapping), 200, ['content-type' => 'json']);
     }
 
     /**
