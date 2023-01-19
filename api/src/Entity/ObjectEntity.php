@@ -364,11 +364,25 @@ class ObjectEntity
     }
 
     /**
+     * Get all the object values.
+     *
      * @return Collection|Value[]
      */
     public function getObjectValues(): Collection
     {
         return $this->objectValues;
+    }
+
+    /**
+     * Sets an entire collection of object values (used in the setid subscriber).
+     *
+     * @return $this
+     */
+    public function setObjectValues(Collection $objectValues): self
+    {
+        $this->objectValues = $objectValues;
+
+        return $this;
     }
 
     /**
@@ -740,6 +754,17 @@ class ObjectEntity
         // Failsafe: we should never continue if an ObjectEntity has no Entity
         if (!$this->entity) {
             throw new Exception("Can't hydrate an ObjectEntity ({$this->id->toString()}) with no Entity");
+        }
+
+        // Allow the setting of id's trough the hydrator
+        if (!$this->getId()) {
+            if (isset($array['id'])) {
+                $this->setId($array['id']);
+            }
+            /* @deprecated */
+            if (isset($array['_id'])) {
+                $this->setId($array['_id']);
+            }
         }
 
         $array = $this->includeEmbeddedArray($array);
