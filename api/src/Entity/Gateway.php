@@ -569,9 +569,9 @@ class Gateway
      *     }
      * )
      * @Groups({"read", "write"})
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, options={"default":null})
      */
-    private ?Datetime $lastCall;
+    private ?Datetime $lastCall = null;
 
     /**
      * @var ?Datetime The datetime from the last synchronization made to this source
@@ -585,9 +585,9 @@ class Gateway
      *     }
      * )
      * @Groups({"read", "write"})
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, options={"default":null})
      */
-    private ?Datetime $lastSync;
+    private ?Datetime $lastSync = null;
 
     /**
      * @var int The count of total sync objects from this source
