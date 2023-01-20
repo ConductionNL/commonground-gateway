@@ -8,6 +8,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Entity\Gateway as Source;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -20,7 +21,6 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
-use App\Entity\Gateway as Source;
 
 /**
  * This entity holds the information about an Endpoint.
@@ -289,11 +289,11 @@ class Endpoint
      * Constructor for creating an Endpoint. Use $entity to create an Endpoint for an Entity or
      * use $source to create an Endpoint for a source, a proxy Endpoint.
      *
-     * @param Entity|null $entity An entity to create an Endpoint for.
-     * @param Gateway|null $source A source to create an Endpoint for. Will only work if $entity = null.
-     * @param array|null $configuration A configuration array used to correctly create an Endpoint. The following keys are supported:
-     * 'path' => a path can be used to set the Path and PathRegex for this Endpoint. Default = $entity->getName() or $source->getName().
-     * 'methods' => the allowed methods for this Endpoint, default = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+     * @param Entity|null  $entity        An entity to create an Endpoint for.
+     * @param Gateway|null $source        A source to create an Endpoint for. Will only work if $entity = null.
+     * @param array|null   $configuration A configuration array used to correctly create an Endpoint. The following keys are supported:
+     *                                    'path' => a path can be used to set the Path and PathRegex for this Endpoint. Default = $entity->getName() or $source->getName().
+     *                                    'methods' => the allowed methods for this Endpoint, default = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
      */
     public function __construct(?Entity $entity = null, ?Source $source = null, ?array $configuration = [])
     {
@@ -325,13 +325,14 @@ class Endpoint
     /**
      * Uses given $configuration array to set the properties of this Endpoint.
      * $configuration or $default array must contain the key 'path'!
-     * And either $configuration array must contain the key 'pathRegex' or the $default array must contain the key 'pathRegexEnd'
+     * And either $configuration array must contain the key 'pathRegex' or the $default array must contain the key 'pathRegexEnd'.
      *
      * @param array $configuration An array with data.
-     * @param array $default An array with data. The default values used for setting properties. Can contain the following keys:
-     * 'path' => If $configuration array has no key 'path' this value is used to set the Path. (and pathRegex if $configuration has no 'pathRegex' key)
-     * 'pathRegexEnd' => A string added to the end of the pathRegex.
-     * 'pathArrayEnd' => The final item in the path array, 'id' for an Entity Endpoint and {route} for a proxy Endpoint.
+     * @param array $default       An array with data. The default values used for setting properties. Can contain the following keys:
+     *                             'path' => If $configuration array has no key 'path' this value is used to set the Path. (and pathRegex if $configuration has no 'pathRegex' key)
+     *                             'pathRegexEnd' => A string added to the end of the pathRegex.
+     *                             'pathArrayEnd' => The final item in the path array, 'id' for an Entity Endpoint and {route} for a proxy Endpoint.
+     *
      * @return void
      */
     public function fromArray(array $configuration, array $default)
@@ -359,14 +360,15 @@ class Endpoint
         // etc^...
 
         /*@depricated kept here for lagacy */
-        $this->setMethod(array_key_exists('method', $configuration) ? $configuration['method'] :'GET');
-        $this->setOperationType(array_key_exists('operationType', $configuration) ? $configuration['operationType'] :'GET');
+        $this->setMethod(array_key_exists('method', $configuration) ? $configuration['method'] : 'GET');
+        $this->setOperationType(array_key_exists('operationType', $configuration) ? $configuration['operationType'] : 'GET');
     }
 
     /**
      * Use the given Entity data to set some values during constructor when creating an Endpoint for an Entity.
      *
      * @param Entity $entity The Entity
+     *
      * @return array Returns default values for path and pathRegex if we are creating and Endpoint for an Entity.
      */
     private function constructEntityEndpoint(Entity $entity): array
@@ -378,9 +380,9 @@ class Endpoint
 
         // Default path, pathArray(end) & pathRegex(end) for $entity
         return [
-            'path' => mb_strtolower(str_replace(' ', '_', $entity->getName())),
+            'path'         => mb_strtolower(str_replace(' ', '_', $entity->getName())),
             'pathArrayEnd' => 'íd',
-            'pathRegexEnd' => '[^.*]*'
+            'pathRegexEnd' => '[^.*]*',
         ];
     }
 
@@ -388,6 +390,7 @@ class Endpoint
      * Use the given Source data to set some values during constructor when creating an Endpoint for a Source (a proxy Endpoint).
      *
      * @param Source $source The Source
+     *
      * @return array Returns default values for path and pathRegex if we are creating and Endpoint for a Source.
      */
     private function constructProxyEndpoint(Source $source): array
@@ -398,9 +401,9 @@ class Endpoint
 
         // Default path, pathArray(end) & pathRegex(end) for $source
         return [
-            'path' => mb_strtolower(str_replace(' ', '_', $source->getName())),
+            'path'         => mb_strtolower(str_replace(' ', '_', $source->getName())),
             'pathArrayEnd' => '{route}',
-            'pathRegexEnd' => '?([a-z0-9-]+)?'
+            'pathRegexEnd' => '?([a-z0-9-]+)?',
         ];
     }
 
