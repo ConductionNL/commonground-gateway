@@ -382,7 +382,7 @@ class Endpoint
         return [
             'path'         => mb_strtolower(str_replace(' ', '_', $entity->getName())),
             'pathArrayEnd' => 'id',
-            'pathRegexEnd' => '[^.*]*',
+            'pathRegexEnd' => '?([a-z0-9-]+)?',
         ];
     }
 
@@ -403,7 +403,7 @@ class Endpoint
         return [
             'path'         => mb_strtolower(str_replace(' ', '_', $source->getName())),
             'pathArrayEnd' => '{route}',
-            'pathRegexEnd' => '?([a-z0-9-]+)?',
+            'pathRegexEnd' => '[^.*]*',
         ];
     }
 
