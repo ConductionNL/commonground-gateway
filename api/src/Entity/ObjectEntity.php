@@ -198,6 +198,11 @@ class ObjectEntity
      */
     private $dateModified;
 
+    public function __toString()
+    {
+        return $this->getName().' ('.$this->getId().')';
+    }
+
     public function __construct(?Entity $entity = null)
     {
         $this->objectValues = new ArrayCollection();

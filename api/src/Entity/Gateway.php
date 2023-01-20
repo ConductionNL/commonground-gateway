@@ -569,9 +569,9 @@ class Gateway
      *     }
      * )
      * @Groups({"read", "write"})
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, options={"default":null})
      */
-    private ?Datetime $lastCall;
+    private ?Datetime $lastCall = null;
 
     /**
      * @var ?Datetime The datetime from the last synchronization made to this source
@@ -585,9 +585,9 @@ class Gateway
      *     }
      * )
      * @Groups({"read", "write"})
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, options={"default":null})
      */
-    private ?Datetime $lastSync;
+    private ?Datetime $lastSync = null;
 
     /**
      * @var int The count of total sync objects from this source
@@ -652,7 +652,12 @@ class Gateway
      */
     private $proxies;
 
-    public function __construct()
+    /**
+     * Constructor for Gateway.
+     *
+     * @param array|null $configuration If not empty this array is used to call fromArray()
+     */
+    public function __construct(?array $configuration = [])
     {
         $this->responceLogs = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
@@ -661,6 +666,36 @@ class Gateway
         $this->synchronizations = new ArrayCollection();
         $this->callLogs = new ArrayCollection();
         $this->proxies = new ArrayCollection();
+
+        if ($configuration) {
+            $this->fromArray($configuration);
+        }
+    }
+
+    /**
+     * Uses given $configuration array to set the properties of this Gateway.
+     *
+     * @param array $configuration An array with data.
+     *
+     * @return void
+     */
+    public function fromArray(array $configuration)
+    {
+        // Do not set jwt, secret, password or apikey this way!
+        array_key_exists('name', $configuration) ? $this->setName($configuration['name']) : '';
+        array_key_exists('location', $configuration) ? $this->setLocation($configuration['location']) : '';
+        array_key_exists('authorizationHeader', $configuration) ? $this->setAuthorizationHeader($configuration['authorizationHeader']) : '';
+        array_key_exists('auth', $configuration) ? $this->setAuth($configuration['auth']) : '';
+        array_key_exists('authorizationPassthroughMethod', $configuration) ? $this->setAuthorizationPassthroughMethod($configuration['authorizationPassthroughMethod']) : '';
+        array_key_exists('locale', $configuration) ? $this->setLocale($configuration['locale']) : '';
+        array_key_exists('accept', $configuration) ? $this->setAccept($configuration['accept']) : '';
+        array_key_exists('jwtId', $configuration) ? $this->setJwtId($configuration['jwtId']) : '';
+        array_key_exists('username', $configuration) ? $this->setUsername($configuration['username']) : '';
+        array_key_exists('documentation', $configuration) ? $this->setDocumentation($configuration['documentation']) : '';
+        array_key_exists('headers', $configuration) ? $this->setHeaders($configuration['headers']) : '';
+        array_key_exists('translationConfig', $configuration) ? $this->setTranslationConfig($configuration['translationConfig']) : '';
+        array_key_exists('type', $configuration) ? $this->setType($configuration['type']) : '';
+        array_key_exists('configuration', $configuration) ? $this->setConfiguration($configuration['configuration']) : '';
     }
 
     public function export(): ?array

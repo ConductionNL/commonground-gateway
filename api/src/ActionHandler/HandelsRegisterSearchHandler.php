@@ -8,6 +8,7 @@ use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
+// todo: delete, moved to kissBundle
 class HandelsRegisterSearchHandler implements ActionHandlerInterface
 {
     private HandelsRegisterSearchService $handelsRegisterSearchService;
