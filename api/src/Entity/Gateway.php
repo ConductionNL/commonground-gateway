@@ -653,11 +653,11 @@ class Gateway
     private $proxies;
 
     /**
-     * @todo
+     * Constructor for Gateway
      *
-     * @param array|null $configuration
+     * @param array|null $configuration If not empty this array is used to call fromArray()
      */
-    public function __construct(?array $configuration)
+    public function __construct(?array $configuration = [])
     {
         $this->responceLogs = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
@@ -673,9 +673,9 @@ class Gateway
     }
 
     /**
-     * @todo
+     * Uses given $configuration array to set the properties of this Gateway.
      *
-     * @param array $configuration
+     * @param array $configuration An array with data.
      * @return void
      */
     public function fromArray(array $configuration) {
