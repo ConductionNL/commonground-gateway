@@ -308,13 +308,14 @@ class Endpoint
             $criteria = Criteria::create()
                 ->orderBy(['date_created' => Criteria::DESC]);
 
+            // Make sure we never have a starting / for PathRegex.
+            // todo: make sure all bundles create endpoints with a path that does not start with a slash!
+            $path = ltrim($path, '/');
+
             // Add prefix to path
             if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
-                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path;
+                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().'/'.$path;
             }
-            // If we disable prefixes the below code is needed
-            // Make sure we never have a starting / for PathRegex.
-            $path = ltrim($path, '/');
 
             $explodedPath = explode('/', $path);
             if ($explodedPath[0] == '') {
