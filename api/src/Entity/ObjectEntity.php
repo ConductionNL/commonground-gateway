@@ -48,7 +48,7 @@ class ObjectEntity
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $name;
+    private ?string $name = null;
 
     /**
      * @var string The {at sign} id or self->href of this Object.
@@ -266,8 +266,10 @@ class ObjectEntity
                 }
             }
             // If setting uri failed with endpoints do it the old way
-            if (!isset($idSet) || $idSet == false) {
+            if ($this->id && (!isset($idSet) || $idSet == false)) {
                 $pathString = $this->getId()->toString();
+            } else {
+                $pathString = null;
             }
             $this->self = $pathString;
         }
