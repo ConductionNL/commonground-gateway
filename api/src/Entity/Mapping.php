@@ -66,7 +66,7 @@ class Mapping
      *
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private string $name;
 
     /**
      * @var string|null The description of the mapping
@@ -79,6 +79,8 @@ class Mapping
 
     /**
      * @var array The mapping of this mapping object
+     *
+     * @Assert\NotNull
      *
      * @Groups({"read","read_secure","write"})
      *
@@ -95,13 +97,12 @@ class Mapping
      */
     private ?array $unset = [];
 
-
     /**
      * @var array|null The cast of this mapping object
      *
      * @Groups({"read","read_secure","write"})
      *
-     * @ORM\Column(type="array", nullable=true)
+     * @ORM\Column(type="array", nullable=true, name="cast_column")
      */
     private ?array $cast = [];
 
@@ -112,7 +113,7 @@ class Mapping
      *
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private bool $passTrough;
+    private ?bool $passTrough = true;
 
     /**
      * @var Datetime The moment this resource was created
@@ -157,30 +158,6 @@ class Mapping
     public function setDescription(?string $description): self
     {
         $this->description = $description;
-
-        return $this;
-    }
-
-    public function getDateCreated(): ?\DateTimeInterface
-    {
-        return $this->dateCreated;
-    }
-
-    public function setDateCreated(?\DateTimeInterface $dateCreated): self
-    {
-        $this->dateCreated = $dateCreated;
-
-        return $this;
-    }
-
-    public function getDateModified(): ?\DateTimeInterface
-    {
-        return $this->dateModified;
-    }
-
-    public function setDateModified(?\DateTimeInterface $dateModified): self
-    {
-        $this->dateModified = $dateModified;
 
         return $this;
     }
@@ -232,4 +209,29 @@ class Mapping
 
         return $this;
     }
+
+    public function getDateCreated(): ?\DateTimeInterface
+    {
+        return $this->dateCreated;
+    }
+
+    public function setDateCreated(?\DateTimeInterface $dateCreated): self
+    {
+        $this->dateCreated = $dateCreated;
+
+        return $this;
+    }
+
+    public function getDateModified(): ?\DateTimeInterface
+    {
+        return $this->dateModified;
+    }
+
+    public function setDateModified(?\DateTimeInterface $dateModified): self
+    {
+        $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
 }
