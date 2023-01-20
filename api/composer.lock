@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "63f7119673ffe16e450a0760ba8988c0",
+    "content-hash": "e74eca20c8c2b0d05639de792f270d50",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -895,12 +895,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "ed3aea73b8ab79df84a7b9c16ffcb58e86ad9d1c"
+                "reference": "109515a4ddc4a4b53d49992a139cfbe96fa330e1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/ed3aea73b8ab79df84a7b9c16ffcb58e86ad9d1c",
-                "reference": "ed3aea73b8ab79df84a7b9c16ffcb58e86ad9d1c",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/109515a4ddc4a4b53d49992a139cfbe96fa330e1",
+                "reference": "109515a4ddc4a4b53d49992a139cfbe96fa330e1",
                 "shasum": ""
             },
             "require": {
@@ -958,7 +958,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-01-20T16:35:54+00:00"
+            "time": "2023-01-20T19:29:43+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -4431,16 +4431,16 @@
         },
         {
             "name": "klantinteractie-servicesysteem/kiss-bundle",
-            "version": "0.0.41",
+            "version": "0.0.42",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Klantinteractie-Servicesysteem/KissBundle.git",
-                "reference": "95202cba4abb9b799a4445b0124ec71a588ea0c6"
+                "reference": "2ce432078632033cff56c9bc5d0572fb6398353d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/95202cba4abb9b799a4445b0124ec71a588ea0c6",
-                "reference": "95202cba4abb9b799a4445b0124ec71a588ea0c6",
+                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/2ce432078632033cff56c9bc5d0572fb6398353d",
+                "reference": "2ce432078632033cff56c9bc5d0572fb6398353d",
                 "shasum": ""
             },
             "require": {
@@ -4478,9 +4478,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/issues",
-                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/0.0.41"
+                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/0.0.42"
             },
-            "time": "2023-01-20T16:39:44+00:00"
+            "time": "2023-01-20T19:14:05+00:00"
         },
         {
             "name": "knplabs/knp-markdown-bundle",
