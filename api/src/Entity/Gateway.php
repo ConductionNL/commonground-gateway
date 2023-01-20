@@ -653,7 +653,7 @@ class Gateway
     private $proxies;
 
     /**
-     * Constructor for Gateway
+     * Constructor for Gateway.
      *
      * @param array|null $configuration If not empty this array is used to call fromArray()
      */
@@ -676,9 +676,11 @@ class Gateway
      * Uses given $configuration array to set the properties of this Gateway.
      *
      * @param array $configuration An array with data.
+     *
      * @return void
      */
-    public function fromArray(array $configuration) {
+    public function fromArray(array $configuration)
+    {
         // Do not set jwt, secret, password or apikey this way!
         array_key_exists('name', $configuration) ? $this->setName($configuration['name']) : '';
         array_key_exists('location', $configuration) ? $this->setLocation($configuration['location']) : '';
