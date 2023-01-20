@@ -329,6 +329,10 @@ class Value
         foreach ($this->simpleArrayValue as $input) {
             // Switch for the correct type string", "integer", "boolean", "float", "number", "datetime", "date", "file", "object", "array"
             switch ($this->getAttribute()->getType()) {
+                case 'array':
+                    // if string
+                    $outputArray[] = $input;
+                    break;
                 case 'string':
                     // if string
                     $outputArray[] = strval($input);
