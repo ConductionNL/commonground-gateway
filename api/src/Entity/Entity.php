@@ -362,6 +362,11 @@ class Entity
      */
     private bool $exclude = false;
 
+    public function __toString()
+    {
+        return $this->getName().' ('.$this->getId().')';
+    }
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
