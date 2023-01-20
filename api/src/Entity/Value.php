@@ -156,7 +156,6 @@ class Value
     /**
      * @Groups({"write"})
      * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="objectValues", fetch="EXTRA_LAZY", cascade={"persist"})
-     * @ORM\Column(options={"default": null})
      * @MaxDepth(1)
      */
     private $objectEntity; // parent object
