@@ -95,6 +95,16 @@ class Mapping
      */
     private ?array $unset = [];
 
+
+    /**
+     * @var array|null The cast of this mapping object
+     *
+     * @Groups({"read","read_secure","write"})
+     *
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $cast = [];
+
     /**
      * @var bool|null The passThrough of this mapping object
      *
@@ -195,6 +205,18 @@ class Mapping
     public function setUnset(?array $unset): self
     {
         $this->unset = $unset;
+
+        return $this;
+    }
+
+    public function getCast(): ?array
+    {
+        return $this->cast;
+    }
+
+    public function setCast(?array $cast): self
+    {
+        $this->cast = $cast;
 
         return $this;
     }
