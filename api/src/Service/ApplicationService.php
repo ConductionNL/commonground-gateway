@@ -44,7 +44,7 @@ class ApplicationService
         // get host/domain
         $host = ($this->request->headers->get('host') ?? $this->request->query->get('host'));
 
-        $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]) && $this->session->set('application', $application->getId()->toString());
+        $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]) && !empty($application) && $this->session->set('application', $application->getId()->toString());
 
         if (!$application) {
             // @todo Create and use query in ApplicationRepository

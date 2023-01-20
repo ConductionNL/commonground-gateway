@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d6c650f5775424dbc643ee488c7f278e",
+    "content-hash": "bdf9954af01a3755d822ffbe419f5aec",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -791,6 +791,55 @@
                 "source": "https://github.com/CommonGateway/KlantenBundle/tree/0.0.12"
             },
             "time": "2023-01-17T11:36:37+00:00"
+        },
+        {
+            "name": "common-gateway/kvk-bundle",
+            "version": "0.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/KVKBundle.git",
+                "reference": "aae7e32c6e32e4f17ba64c05412d142a6618aa6a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/KVKBundle/zipball/aae7e32c6e32e4f17ba64c05412d142a6618aa6a",
+                "reference": "aae7e32c6e32e4f17ba64c05412d142a6618aa6a",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": ">=0.0.1 || dev-version-kiss",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\KVKBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An example mock for the KVK api",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "kamer van koophandel",
+                "kvk",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/CommonGateway/KVKBundle/issues",
+                "source": "https://github.com/CommonGateway/KVKBundle/tree/0.0.4"
+            },
+            "time": "2023-01-19T13:53:50+00:00"
         },
         {
             "name": "common-gateway/zgw-bundle",
@@ -4382,21 +4431,22 @@
         },
         {
             "name": "klantinteractie-servicesysteem/kiss-bundle",
-            "version": "0.0.26",
+            "version": "0.0.34",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Klantinteractie-Servicesysteem/KissBundle.git",
-                "reference": "a7de141fef4e4c843a6ab8b58c6aa5d292dfe88d"
+                "reference": "63cb815c4883568f05f142a14e7e5aa4fb34fcea"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/a7de141fef4e4c843a6ab8b58c6aa5d292dfe88d",
-                "reference": "a7de141fef4e4c843a6ab8b58c6aa5d292dfe88d",
+                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/63cb815c4883568f05f142a14e7e5aa4fb34fcea",
+                "reference": "63cb815c4883568f05f142a14e7e5aa4fb34fcea",
                 "shasum": ""
             },
             "require": {
                 "common-gateway/brp-bundle": ">=0.0.9",
                 "common-gateway/klanten-bundle": ">=0.0.12",
+                "common-gateway/kvk-bundle": ">=0.0.4",
                 "common-gateway/zgw-bundle": ">=0.1.16",
                 "commongateway/corebundle": "dev-version-kiss",
                 "php": ">=7.4"
@@ -4428,9 +4478,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/issues",
-                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/0.0.26"
+                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/0.0.34"
             },
-            "time": "2023-01-17T11:35:52+00:00"
+            "time": "2023-01-19T14:34:11+00:00"
         },
         {
             "name": "knplabs/knp-markdown-bundle",

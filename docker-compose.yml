@@ -148,20 +148,6 @@ services:
     security_opt:
       - no-new-privileges
 
-  # helmPackage:
-  #   image: alpine/helm:3.2.1
-  #   volumes:
-  #     - ./api/helm:/apps
-  #   command: package /apps
-
-  # helmIndex:
-  #   depends_on:
-  #     - helmPackage
-  #   image: alpine/helm:3.2.1
-  #   volumes:
-  #     - ./api/helm:/apps
-  #   command: repo index /apps
-
   redis:
     image: redis:4-alpine
   

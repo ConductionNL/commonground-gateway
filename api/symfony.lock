@@ -49,6 +49,9 @@
     "common-gateway/klanten-bundle": {
         "version": "0.0.12"
     },
+    "common-gateway/kvk-bundle": {
+        "version": "0.0.4"
+    },
     "common-gateway/zgw-bundle": {
         "version": "0.1.16"
     },
@@ -323,9 +326,6 @@
     },
     "onelogin/php-saml": {
         "version": "4.0.0"
-    },
-    "open-catalogi/open-catalogi-bundle": {
-        "version": "dev-main"
     },
     "paragonie/random_compat": {
         "version": "v9.99.100"

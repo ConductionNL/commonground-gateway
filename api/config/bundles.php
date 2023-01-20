@@ -26,4 +26,5 @@ return [
     CommonGateway\ZGWBundle\ZGWBundle::class                                   => ['all' => true],
     CommonGateway\BRPBundle\BRPBundle::class                                   => ['all' => true],
     Kiss\KissBundle\KissBundle::class                                          => ['all' => true],
+    CommonGateway\KVKBundle\KVKBundle::class                                   => ['all' => true],
 ];
