@@ -346,7 +346,7 @@ class Endpoint
 //        }
 
         // Set the pathRegex
-        $pathRegex = array_key_exists('pathRegex', $configuration) ? $configuration['pathRegex'] : "^$path/{$default['$pathRegexEnd']}$";
+        $pathRegex = array_key_exists('pathRegex', $configuration) ? $configuration['pathRegex'] : "^$path/{$default['pathRegexEnd']}$";
         $this->setPathRegex($pathRegex);
 
         // Create Path array (add default pathArrayEnd to this, different depending on if we create en Endpoint for $entity or $source.)
