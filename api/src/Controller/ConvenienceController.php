@@ -22,6 +22,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Twig\Environment;
+use function Symfony\Component\Translation\t;
 
 class ConvenienceController extends AbstractController
 {
@@ -36,6 +38,7 @@ class ConvenienceController extends AbstractController
     private ActionSubscriber $actionSubscriber;
     private ObjectEntityService $objectEntityService;
     private MappingService $mappingService;
+    private Environment $twig;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -46,7 +49,7 @@ class ConvenienceController extends AbstractController
         ActionSubscriber $actionSubscriber,
         ObjectEntityService $objectEntityService,
         PubliccodeService $publiccodeService,
-        MappingService $mappingService
+        Environment $twig
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
@@ -58,7 +61,8 @@ class ConvenienceController extends AbstractController
         $this->actionSubscriber = $actionSubscriber;
         $this->objectEntityService = $objectEntityService;
         $this->publiccodeService = $publiccodeService;
-        $this->mappingService = $mappingService;
+        $this->twig = $twig;
+        $this->mappingService = new MappingService($twig);
     }
 
     /**
