@@ -309,9 +309,9 @@ class Endpoint
                 ->orderBy(['date_created' => Criteria::DESC]);
 
             // Add prefix to path
-            if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
-                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path;
-            }
+            //if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
+            //    $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().$path;
+            //}
             // If we disable prefixes the below code is needed
             // Make sure we never have a starting / for PathRegex.
             $path = ltrim($path, '/');

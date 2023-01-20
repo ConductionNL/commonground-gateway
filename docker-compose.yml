@@ -5,7 +5,6 @@ x-cache:
   cache_from:
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-nginx
-    - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-ui
     - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-cron
 
 services:
@@ -17,25 +16,21 @@ services:
   #    ports:
   #      - "83:80"
   
-  oc:
-    &oc
-    image: ghcr.io/opencatalogi/web-app:dev
+  kiss:
+    image: ghcr.io/klantinteractie-servicesysteem/kiss-frontend:dev
     depends_on:
       - api
     ports:
       - "81:80"
-    volumes:
-      - ./ui/oc.js:/usr/share/nginx/html/env.js:rw,cached 
-        
+
   cron:
     &cron
     image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}_cron:${APP_ENV}
     build: ./dockerized-cron
     depends_on:
       - api
-    
+
   ui:
-    &ui
     image: ghcr.io/conductionnl/gateway-ui:stag
     depends_on:
       - api

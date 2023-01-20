@@ -14,6 +14,7 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
+use function Symfony\Component\Translation\t;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -47,7 +48,7 @@ class ObjectEntity
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $name;
+    private ?string $name = null;
 
     /**
      * @var string The {at sign} id or self->href of this Object.
@@ -265,8 +266,10 @@ class ObjectEntity
                 }
             }
             // If setting uri failed with endpoints do it the old way
-            if (!isset($idSet) || $idSet == false) {
+            if ($this->id && (!isset($idSet) || $idSet == false)) {
                 $pathString = $this->getId()->toString();
+            } else {
+                $pathString = null;
             }
             $this->self = $pathString;
         }
@@ -315,7 +318,7 @@ class ObjectEntity
         $this->application = $application;
 
         // If we don't have an organization we can pull one from the application
-        if (!isset($this->organization)) {
+        if (!isset($this->organization) && $this->application) {
             $this->application->getOrganization();
         }
 
@@ -324,6 +327,10 @@ class ObjectEntity
 
     public function getOrganization(): ?Organization
     {
+        if (!isset($this->organization)) {
+            return null;
+        }
+
         return $this->organization;
     }
 
@@ -359,11 +366,39 @@ class ObjectEntity
     }
 
     /**
+     * Get all the object values.
+     *
      * @return Collection|Value[]
      */
     public function getObjectValues(): Collection
     {
         return $this->objectValues;
+    }
+
+    /**
+     * Sets an entire collection of object values (used in the setid subscriber).
+     *
+     * @return $this
+     */
+    public function setObjectValues(Collection $objectValues): self
+    {
+        $this->objectValues = $objectValues;
+
+        return $this;
+    }
+
+    /**
+     * Removes all the values from this object.
+     *
+     * @return $this
+     */
+    public function clearAllValues(): self
+    {
+        foreach ($this->objectValues as $value) {
+            $this->removeObjectValue($value);
+        }
+
+        return $this;
     }
 
     public function addObjectValue(Value $objectValue): self
@@ -721,6 +756,17 @@ class ObjectEntity
         // Failsafe: we should never continue if an ObjectEntity has no Entity
         if (!$this->entity) {
             throw new Exception("Can't hydrate an ObjectEntity ({$this->id->toString()}) with no Entity");
+        }
+
+        // Allow the setting of id's trough the hydrator
+        if (!$this->getId()) {
+            if (isset($array['id'])) {
+                $this->setId($array['id']);
+            }
+            /* @deprecated */
+            if (isset($array['_id'])) {
+                $this->setId($array['_id']);
+            }
         }
 
         $array = $this->includeEmbeddedArray($array);

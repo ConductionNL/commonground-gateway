@@ -6,6 +6,7 @@ on:
       - master
       - staging
       - development
+      - version-kiss
       - feature-soap
       - odyssey-hackathon-2022
 
@@ -14,6 +15,7 @@ on:
       - master
       - staging
       - development
+      - version-kiss
       - feature-soap
       - feature-soap-extra
       - feature-cleanup
@@ -60,6 +62,12 @@ jobs:
           echo "APP_ENV=stag">> $GITHUB_ENV
           echo "APP_BUILD=stag-$RELEASE">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
+      - name: Setting APP_ENV to version-kiss
+        if: contains( github.ref, 'version-kiss' ) || contains( github.base_ref, 'version-kiss' )
+        run: |
+          echo "APP_ENV=kiss">> $GITHUB_ENV
+          echo "APP_BUILD=kiss-$RELEASE">> $GITHUB_ENV
+          echo "set APP_ENV to $APP_ENV"
       - name: Setting APP_ENV to soap
         if: contains( github.ref, 'feature-soap' ) || contains( github.base_ref, 'feature-soap' )
         run: |
@@ -85,7 +93,7 @@ jobs:
       - name: Run the docker image
         run: docker-compose up -d
       - name: Taking some sleep (for containers to come up)
-        run: sleep 45
+        run: sleep 300
       - name: Check if all containers are running
         run: docker ps
       - name: Dumping the logs
@@ -131,11 +139,11 @@ jobs:
          else
            echo "##[set-output name=success;]false"
          fi
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup')
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup' || github.ref == 'refs/heads/version-kiss')
         name: Push to Container Registry
         run: docker-compose push
 
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup')
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup' || github.ref == 'refs/heads/version-kiss')
         name: Push versioned containers to Container Registry
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)

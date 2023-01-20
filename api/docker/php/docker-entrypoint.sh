@@ -38,9 +38,6 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		echo "Updating the database"
 		bin/console doctrine:schema:update --force --no-interaction
 
-		echo "Updating commongateway plugins"
-		bin/console commongateway:composer:update
-
 		echo "Initializing the gateway"
 		bin/console commongateway:initialize
 		# If you want to retain data in your dev enviroment comment this command out
@@ -64,8 +61,10 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
     # Load PUBLICCODE from .env and create Collections
 	#	echo "Update commongateway plugins"
 	#	bin/console commongateway:composer:update
-	fi
 
+		echo "Initializing the gateway"
+		bin/console commongateway:initialize
+	fi
 
 fi
 exec docker-php-entrypoint "$@"

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "001905420b3860c03d83094973059877",
+    "content-hash": "67fcfc85ddcce36936cde637e5049f2f",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -659,122 +659,52 @@
             "time": "2020-10-24T20:01:03+00:00"
         },
         {
-            "name": "clean/phpatlas",
-            "version": "0.2.0",
+            "name": "common-gateway/brp-bundle",
+            "version": "0.0.9",
             "source": {
                 "type": "git",
-                "url": "https://github.com/clean/phpatlas.git",
-                "reference": "4e74a8e646b289768e77500127389acf69bbeb71"
+                "url": "https://github.com/CommonGateway/BRPBundle.git",
+                "reference": "c7ee31244794d8c4bcd2e20611f668ee120bc685"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/clean/phpatlas/zipball/4e74a8e646b289768e77500127389acf69bbeb71",
-                "reference": "4e74a8e646b289768e77500127389acf69bbeb71",
-                "shasum": ""
-            },
-            "require-dev": {
-                "phpunit/phpunit": "5.7.27"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Clean\\PhpAtlas\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "support": {
-                "issues": "https://github.com/clean/phpatlas/issues",
-                "source": "https://github.com/clean/phpatlas/tree/0.2.0"
-            },
-            "time": "2019-12-06T08:40:56+00:00"
-        },
-        {
-            "name": "clean/phpdoc-md",
-            "version": "0.19.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/clean/phpdoc-md.git",
-                "reference": "46a07faa6cc69c8b02ddc1838acfeda6b811fc3f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/clean/phpdoc-md/zipball/46a07faa6cc69c8b02ddc1838acfeda6b811fc3f",
-                "reference": "46a07faa6cc69c8b02ddc1838acfeda6b811fc3f",
+                "url": "https://api.github.com/repos/CommonGateway/BRPBundle/zipball/c7ee31244794d8c4bcd2e20611f668ee120bc685",
+                "reference": "c7ee31244794d8c4bcd2e20611f668ee120bc685",
                 "shasum": ""
             },
             "require": {
-                "clean/phpatlas": "^0.2",
-                "clean/view": "^0.1",
-                "php": "^5.6|^7|^8",
-                "phpdocumentor/reflection-docblock": "^3|^4|^5"
+                "commongateway/corebundle": ">=0.0.1 || dev-version-kiss",
+                "php": ">=7.4"
             },
             "require-dev": {
-                "clean/mpr": "^1",
-                "phpunit/phpunit": ">5"
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
             },
-            "bin": [
-                "bin/phpdoc-md"
-            ],
-            "type": "library",
+            "type": "symfony-bundle",
             "autoload": {
-                "files": [
-                    "src/snippets.php"
-                ],
                 "psr-4": {
-                    "Clean\\PhpDocMd\\": "src/"
+                    "CommonGateway\\BRPBundle\\": ""
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "MIT"
+                "EUPL-1.2"
             ],
-            "description": "Parse PHP classes and writes documentation to markdown files",
+            "description": "An example package for creating symfony flex bundles as plugins",
+            "homepage": "https://commongateway.nl",
             "keywords": [
-                "markdown",
-                "phpdoc"
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "pet store",
+                "symfony"
             ],
             "support": {
-                "issues": "https://github.com/clean/phpdoc-md/issues",
-                "source": "https://github.com/clean/phpdoc-md/tree/0.19.3"
+                "issues": "https://github.com/CommonGateway/BRPBundle/issues",
+                "source": "https://github.com/CommonGateway/BRPBundle/tree/0.0.9"
             },
-            "time": "2022-11-19T11:59:34+00:00"
-        },
-        {
-            "name": "clean/view",
-            "version": "0.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/clean/view.git",
-                "reference": "34448b22810024781392d2c07564ded0e6e978ef"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/clean/view/zipball/34448b22810024781392d2c07564ded0e6e978ef",
-                "reference": "34448b22810024781392d2c07564ded0e6e978ef",
-                "shasum": ""
-            },
-            "require-dev": {
-                "phpunit/phpunit": "4.2.*",
-                "scrutinizer/ocular": "dev-master"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Clean\\View\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "support": {
-                "issues": "https://github.com/clean/view/issues",
-                "source": "https://github.com/clean/view/tree/master"
-            },
-            "time": "2015-08-04T00:09:23+00:00"
+            "time": "2023-01-17T11:32:10+00:00"
         },
         {
             "name": "common-gateway/formio-bundle",
@@ -815,17 +745,162 @@
             "time": "2022-11-16T13:35:03+00:00"
         },
         {
-            "name": "commongateway/corebundle",
-            "version": "dev-master",
+            "name": "common-gateway/klanten-bundle",
+            "version": "0.0.12",
             "source": {
                 "type": "git",
-                "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "7146ed6f1f99e086bd61be04c585d8d1b84d92d2"
+                "url": "https://github.com/CommonGateway/KlantenBundle.git",
+                "reference": "6d586eb8ecfac12ae01273cdc3446fd02221e193"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/7146ed6f1f99e086bd61be04c585d8d1b84d92d2",
-                "reference": "7146ed6f1f99e086bd61be04c585d8d1b84d92d2",
+                "url": "https://api.github.com/repos/CommonGateway/KlantenBundle/zipball/6d586eb8ecfac12ae01273cdc3446fd02221e193",
+                "reference": "6d586eb8ecfac12ae01273cdc3446fd02221e193",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": ">=0.0.1 || dev-version-kiss",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\KlantenBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An example package for creating symfony flex bundles as plugins",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "pet store",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/CommonGateway/KlantenBundle/issues",
+                "source": "https://github.com/CommonGateway/KlantenBundle/tree/0.0.12"
+            },
+            "time": "2023-01-17T11:36:37+00:00"
+        },
+        {
+            "name": "common-gateway/kvk-bundle",
+            "version": "0.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/KVKBundle.git",
+                "reference": "aae7e32c6e32e4f17ba64c05412d142a6618aa6a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/KVKBundle/zipball/aae7e32c6e32e4f17ba64c05412d142a6618aa6a",
+                "reference": "aae7e32c6e32e4f17ba64c05412d142a6618aa6a",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": ">=0.0.1 || dev-version-kiss",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\KVKBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An example mock for the KVK api",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "kamer van koophandel",
+                "kvk",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/CommonGateway/KVKBundle/issues",
+                "source": "https://github.com/CommonGateway/KVKBundle/tree/0.0.4"
+            },
+            "time": "2023-01-19T13:53:50+00:00"
+        },
+        {
+            "name": "common-gateway/zgw-bundle",
+            "version": "0.1.16",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/ZGWBundle.git",
+                "reference": "c037f0d682f3d4491aea1348a9380be88176c291"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/c037f0d682f3d4491aea1348a9380be88176c291",
+                "reference": "c037f0d682f3d4491aea1348a9380be88176c291",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": ">=0.0.1 || dev-version-kiss",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\ZGWBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "Symfony bundle for zgw standard functionality",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "symfony",
+                "zgw"
+            ],
+            "support": {
+                "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
+                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.16"
+            },
+            "time": "2023-01-17T11:35:00+00:00"
+        },
+        {
+            "name": "commongateway/corebundle",
+            "version": "dev-version-kiss",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/CoreBundle.git",
+                "reference": "0b7cbe18837e649feb9de937563fe73307a56428"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/0b7cbe18837e649feb9de937563fe73307a56428",
+                "reference": "0b7cbe18837e649feb9de937563fe73307a56428",
                 "shasum": ""
             },
             "require": {
@@ -846,7 +921,6 @@
                 "symfony/dependency-injection": "~3.4|~4.1|~5.0",
                 "symfony/var-dumper": "^4.1.1|^5.1"
             },
-            "default-branch": true,
             "type": "symfony-bundle",
             "autoload": {
                 "psr-4": {
@@ -884,7 +958,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-01-11T14:40:24+00:00"
+            "time": "2023-01-19T14:30:15+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -4356,6 +4430,59 @@
             "time": "2022-06-29T09:25:13+00:00"
         },
         {
+            "name": "klantinteractie-servicesysteem/kiss-bundle",
+            "version": "0.0.35",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Klantinteractie-Servicesysteem/KissBundle.git",
+                "reference": "739595059561b8ad9e5f2a0a7a6eeff4fe689748"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/739595059561b8ad9e5f2a0a7a6eeff4fe689748",
+                "reference": "739595059561b8ad9e5f2a0a7a6eeff4fe689748",
+                "shasum": ""
+            },
+            "require": {
+                "common-gateway/brp-bundle": ">=0.0.9",
+                "common-gateway/klanten-bundle": ">=0.0.12",
+                "common-gateway/kvk-bundle": ">=0.0.4",
+                "common-gateway/zgw-bundle": ">=0.1.16",
+                "commongateway/corebundle": "dev-version-kiss",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "Kiss\\KissBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An example package for creating symfony flex bundles as plugins",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "dimpact",
+                "gateway",
+                "kiss",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/issues",
+                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/0.0.35"
+            },
+            "time": "2023-01-20T08:00:38+00:00"
+        },
+        {
             "name": "knplabs/knp-markdown-bundle",
             "version": "1.9.0",
             "source": {
@@ -4542,54 +4669,6 @@
                 }
             ],
             "time": "2021-09-02T17:10:53+00:00"
-        },
-        {
-            "name": "larping-base/larping-bundle",
-            "version": "1.0.20",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "7e4a59b0232d3b62868ab9d0f6916e9ed8a915c0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/7e4a59b0232d3b62868ab9d0f6916e9ed8a915c0",
-                "reference": "7e4a59b0232d3b62868ab9d0f6916e9ed8a915c0",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": ">=0.0.1",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "LarpingBase\\LarpingBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An Commong Gateay bundle for the larping application",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "larping",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.20"
-            },
-            "time": "2023-01-14T11:07:03+00:00"
         },
         {
             "name": "league/html-to-markdown",
