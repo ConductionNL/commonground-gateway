@@ -161,7 +161,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
             throw new AuthenticationException('The provided token does not match the user it refers to');
         }
         $roleArray = [];
-        foreach($user->getSecurityGroups() as $securityGroup) {
+        foreach ($user->getSecurityGroups() as $securityGroup) {
             $roleArray['roles'][] = "Role_{$securityGroup->getName()}";
             $roleArray['roles'] = array_merge($roleArray['roles'], $securityGroup->getScopes());
         }
@@ -186,11 +186,11 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
         $this->session->set('activeOrganization', $user->getOrganisation());
 
         $userArray = [
-            'id' => $user->getId()->toString(),
-            'email' => $user->getEmail(),
-            'locale' => $user->getLocale(),
+            'id'           => $user->getId()->toString(),
+            'email'        => $user->getEmail(),
+            'locale'       => $user->getLocale(),
             'organization' => $user->getOrganisation()->getId()->toString(),
-            'roles' => $roleArray['roles']
+            'roles'        => $roleArray['roles'],
         ];
 
         return new Passport(
