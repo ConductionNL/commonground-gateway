@@ -2,6 +2,7 @@
 
 namespace App\Security;
 
+use App\Entity\User;
 use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\AuthenticationService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
@@ -145,75 +146,75 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
     {
         $key = $request->headers->get('Authorization');
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['secret' => $key]);
-        if (!$application || !$application->getResource()) {
+        if (!$application) {
             throw new AuthenticationException('Invalid ApiKey');
         }
 
         try {
-            $user = $this->commonGroundService->getResource($application->getResource(), [], false);
+            $user = $application->getOrganization()->getUsers()[0];
         } catch (\Exception $exception) {
-            throw new AuthenticationException('Invalid User Uri');
+            throw new AuthenticationException('Invalid User');
         }
         $this->session->set('apiKeyApplication', $application->getId()->toString());
 
-        if (!$user) {
+        if (!$user || !($user instanceof User)) {
             throw new AuthenticationException('The provided token does not match the user it refers to');
         }
-
-        if (!in_array('ROLE_USER', $user['roles'])) {
-            $user['roles'][] = 'ROLE_USER';
+        $roleArray = [];
+        foreach($user->getSecurityGroups() as $securityGroup) {
+            $roleArray['roles'][] = "Role_{$securityGroup->getName()}";
+            $roleArray['roles'] = array_merge($roleArray['roles'], $securityGroup->getScopes());
         }
-        foreach ($user['roles'] as $key => $role) {
+
+        if (!in_array('ROLE_USER', $roleArray['roles'])) {
+            $roleArray['roles'][] = 'ROLE_USER';
+        }
+        foreach ($roleArray['roles'] as $key => $role) {
             if (strpos($role, 'ROLE_') !== 0) {
-                $user['roles'][$key] = "ROLE_$role";
+                $roleArray['roles'][$key] = "ROLE_$role";
             }
         }
 
         $organizations = [];
-        if (isset($user['organization'])) {
-            $organizations[] = $user['organization'];
+        if ($user->getOrganisation()) {
+            $organizations[] = $user->getOrganisation();
         }
-        foreach ($user['userGroups'] as $userGroup) {
-            if (isset($userGroup['organization']) && !in_array($userGroup['organization'], $organizations)) {
-                $organizations[] = $userGroup['organization'];
-            }
-        }
-        // Add all the sub organisations
-        // Add all the parent organisations
-        $parentOrganizations = [];
-        foreach ($organizations as $organization) {
-            $organizations = $this->getSubOrganizations($organizations, $organization, $this->commonGroundService, $this->functionService);
-            $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $this->commonGroundService, $this->functionService);
-        }
+
         $organizations[] = 'localhostOrganization';
-        $parentOrganizations[] = 'localhostOrganization';
         $this->session->set('organizations', $organizations);
-        $this->session->set('parentOrganizations', $parentOrganizations);
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
-        $this->session->set('activeOrganization', $this->getActiveOrganization($user, $organizations));
+        $this->session->set('activeOrganization', $user->getOrganisation());
+
+        $userArray = [
+            'id' => $user->getId()->toString(),
+            'email' => $user->getEmail(),
+            'locale' => $user->getLocale(),
+            'organization' => $user->getOrganisation()->getId()->toString(),
+            'roles' => $roleArray['roles']
+        ];
 
         return new Passport(
-            new UserBadge($user['id'], function ($userIdentifier) use ($user) {
+            new UserBadge($userArray['id'], function ($userIdentifier) use ($userArray) {
                 return new AuthenticationUser(
                     $userIdentifier,
-                    $user['user']['id'] ?? $user['username'],
+                    $userArray['email'],
                     '',
-                    $user['user']['givenName'] ?? $user['username'],
-                    $user['user']['familyName'] ?? $user['username'],
-                    $user['username'],
                     '',
-                    $user['roles'],
-                    $user['username'],
-                    $user['locale'],
-                    $user['organization'] ?? null,
-                    $user['person'] ?? null
+                    '',
+                    $userArray['email'],
+                    '',
+                    $userArray['roles'],
+                    $userArray['email'],
+                    $userArray['locale'],
+                    $userArray['organization'],
+                    null
                 );
             }),
             new CustomCredentials(
                 function (array $credentials, UserInterface $user) {
                     return $user->getUserIdentifier() == $credentials['id'];
                 },
-                $user
+                $userArray
             )
         );
     }
