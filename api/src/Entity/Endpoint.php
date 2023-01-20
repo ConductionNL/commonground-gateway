@@ -381,7 +381,7 @@ class Endpoint
         // Default path, pathArray(end) & pathRegex(end) for $entity
         return [
             'path'         => mb_strtolower(str_replace(' ', '_', $entity->getName())),
-            'pathArrayEnd' => 'íd',
+            'pathArrayEnd' => 'id',
             'pathRegexEnd' => '[^.*]*',
         ];
     }
