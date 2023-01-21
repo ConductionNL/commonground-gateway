@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "af6e1650e040c855611ad91d54650709",
+    "content-hash": "5ee49d81f1c9678ace476b57499f346a",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -746,16 +746,16 @@
         },
         {
             "name": "common-gateway/klanten-bundle",
-            "version": "0.0.15",
+            "version": "0.0.16",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/KlantenBundle.git",
-                "reference": "61be8c3df622547bd66626e8800ef0867d4bae2e"
+                "reference": "6aea131f2c53b9f62110974cbfbeffaa66752258"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/KlantenBundle/zipball/61be8c3df622547bd66626e8800ef0867d4bae2e",
-                "reference": "61be8c3df622547bd66626e8800ef0867d4bae2e",
+                "url": "https://api.github.com/repos/CommonGateway/KlantenBundle/zipball/6aea131f2c53b9f62110974cbfbeffaa66752258",
+                "reference": "6aea131f2c53b9f62110974cbfbeffaa66752258",
                 "shasum": ""
             },
             "require": {
@@ -788,9 +788,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/KlantenBundle/issues",
-                "source": "https://github.com/CommonGateway/KlantenBundle/tree/0.0.15"
+                "source": "https://github.com/CommonGateway/KlantenBundle/tree/0.0.16"
             },
-            "time": "2023-01-20T11:23:59+00:00"
+            "time": "2023-01-21T13:46:08+00:00"
         },
         {
             "name": "common-gateway/kvk-bundle",
