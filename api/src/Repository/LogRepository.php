@@ -33,13 +33,12 @@ class LogRepository extends ServiceEntityRepository
         $query = $this->createQueryBuilder('l')
             ->leftJoin('l.endpoint', 'e')
             ->where('l.objectId = :objectId AND l.responseStatusCode = :responseStatusCode AND l.userId = :userId')
-            ->andWhere('LOWER(e.method) = :method AND e.operationType = :operationType')
+            ->andWhere('LOWER(e.method) = :method')
             ->setParameters([
                 'objectId'           => $objectId,
                 'responseStatusCode' => 200,
                 'userId'             => $userId,
-                'method'             => 'get',
-                'operationType'      => 'item',
+                'method'             => 'get'
             ])
             ->orderBy('l.dateCreated', 'DESC')
             ->distinct();
