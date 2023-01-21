@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e74eca20c8c2b0d05639de792f270d50",
+    "content-hash": "83f4a06bedc0f025c9bba71de8dce7f8",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -4431,22 +4431,22 @@
         },
         {
             "name": "klantinteractie-servicesysteem/kiss-bundle",
-            "version": "0.0.42",
+            "version": "0.0.45",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Klantinteractie-Servicesysteem/KissBundle.git",
-                "reference": "2ce432078632033cff56c9bc5d0572fb6398353d"
+                "reference": "e1edb188f3846563cc84426153e744a014e80f65"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/2ce432078632033cff56c9bc5d0572fb6398353d",
-                "reference": "2ce432078632033cff56c9bc5d0572fb6398353d",
+                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/e1edb188f3846563cc84426153e744a014e80f65",
+                "reference": "e1edb188f3846563cc84426153e744a014e80f65",
                 "shasum": ""
             },
             "require": {
                 "common-gateway/brp-bundle": ">=0.0.10",
                 "common-gateway/klanten-bundle": ">=0.0.15",
-                "common-gateway/kvk-bundle": ">=0.0.6",
+                "common-gateway/kvk-bundle": ">=0.0.7",
                 "common-gateway/zgw-bundle": ">=0.1.17",
                 "commongateway/corebundle": "dev-version-kiss",
                 "php": ">=7.4"
@@ -4478,9 +4478,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/issues",
-                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/0.0.42"
+                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/0.0.45"
             },
-            "time": "2023-01-20T19:14:05+00:00"
+            "time": "2023-01-21T09:51:54+00:00"
         },
         {
             "name": "knplabs/knp-markdown-bundle",

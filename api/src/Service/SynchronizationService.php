@@ -622,10 +622,12 @@ class SynchronizationService
             //todo: error, log this
 
             $this->ioCatchException($exception, ['line', 'file', 'message' => [
-                'preMessage' => 'Failed fetching page '.$page,
+                'preMessage' => "Failed fetching page $page ",
             ]]);
 
-            return $this->fetchObjectsFromSource($callServiceConfig, $page + 1, $errorsInARowCount++);
+            $errorsInARowCount++;
+
+            return $this->fetchObjectsFromSource($callServiceConfig, $page + 1, $errorsInARowCount);
         }
 
         $pageResult = $this->callService->decodeResponse($callServiceConfig['source'], $response);
