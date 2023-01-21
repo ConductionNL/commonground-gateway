@@ -69,6 +69,7 @@ class Entity
      * @ORM\ManyToOne(targetEntity=Gateway::class, fetch="EAGER")
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
+     *
      * @deprecated
      */
     private ?Source $gateway = null;
@@ -82,6 +83,7 @@ class Entity
      * )
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255, nullable=true)
+     *
      * @deprecated
      */
     private $endpoint = '';
@@ -90,12 +92,14 @@ class Entity
      * @Groups({"read","write"})
      * @ORM\OneToOne(targetEntity=Soap::class, fetch="EAGER", mappedBy="fromEntity")
      * @MaxDepth(1)
+     *
      * @deprecated
      */
     private ?Soap $toSoap = null;
 
     /**
      * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="toEntity", orphanRemoval=true)
+     *
      * @deprecated
      */
     private $fromSoap;
@@ -130,6 +134,7 @@ class Entity
      * @Assert\Choice({"noFunction","organization", "person", "user", "userGroup", "processingLog"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", options={"default":"noFunction"}, name="function_column")
+     *
      * @deprecated
      */
     private string $function = 'noFunction';
@@ -165,6 +170,7 @@ class Entity
      * @Groups({"read","write"})
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="searchPartial", fetch="EAGER")
      * @MaxDepth(1)
+     *
      * @deprecated
      */
     private ?Collection $searchPartial;
@@ -187,6 +193,7 @@ class Entity
     /**
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
      * @deprecated
      */
     private ?array $transformations = [];
@@ -196,6 +203,7 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
+     *
      * @deprecated
      */
     private ?string $route = null;
@@ -205,6 +213,7 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
      * @deprecated
      */
     private ?array $availableProperties = [];
@@ -214,12 +223,14 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
      * @deprecated
      */
     private ?array $usedProperties = [];
 
     /**
      * @ORM\OneToMany(targetEntity=GatewayResponseLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
+     *
      * @deprecated
      */
     private $responseLogs;
@@ -227,6 +238,7 @@ class Entity
     /**
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="entity", fetch="EXTRA_LAZY", cascade={"remove"})
+     *
      * @deprecated
      */
     private Collection $requestLogs;
@@ -236,6 +248,7 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
      * @deprecated
      */
     private array $translationConfig = [];
@@ -245,6 +258,7 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
      * @deprecated
      */
     private array $collectionConfig = ['results' => 'hydra:member', 'id' => 'id', 'paginationPages' => 'hydra:view.hydra:last'];
@@ -254,6 +268,7 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
      * @deprecated
      */
     private array $itemConfig = [];
@@ -263,6 +278,7 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
      * @deprecated
      */
     private ?array $externMappingIn = [];
@@ -272,6 +288,7 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
      * @deprecated
      */
     private ?array $externMappingOut = [];
@@ -282,6 +299,7 @@ class Entity
      * @MaxDepth(1)
      * @Groups({"write"})
      * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="entity", fetch="EXTRA_LAZY")
+     *
      * @deprecated
      */
     private Collection $handlers;
@@ -292,6 +310,7 @@ class Entity
      * @MaxDepth(1)
      * @Groups({"write"})
      * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entity", fetch="EXTRA_LAZY")
+     *
      * @deprecated
      */
     private Collection $subscribers;
@@ -300,6 +319,7 @@ class Entity
      * @Groups({"write"})
      * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entityOut", fetch="EXTRA_LAZY")
      * @MaxDepth(1)
+     *
      * @deprecated
      */
     private Collection $subscriberOut;
@@ -319,6 +339,7 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true, options={"default":null}, name="schema_column")
+     *
      * @deprecated Replaced by reference
      */
     private ?string $schema = null;
