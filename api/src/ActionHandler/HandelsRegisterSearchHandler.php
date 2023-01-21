@@ -18,6 +18,16 @@ class HandelsRegisterSearchHandler implements ActionHandlerInterface
         $this->handelsRegisterSearchService = $handelsRegisterSearchService;
     }
 
+    function getConditions() {
+        return ['==' => [1, 1]];
+    }
+
+    function getListens() {
+        return [
+            'none'
+        ];
+    }
+
     /**
      *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
      *

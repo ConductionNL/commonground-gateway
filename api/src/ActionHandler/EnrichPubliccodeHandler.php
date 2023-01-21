@@ -13,6 +13,16 @@ class EnrichPubliccodeHandler implements ActionHandlerInterface
         $this->publiccodeService = $publiccodeService;
     }
 
+    function getConditions() {
+        return ['==' => [1, 1]];
+    }
+
+    function getListens() {
+        return [
+            'none'
+        ];
+    }
+
     /**
      *  This function returns the required configuration as a [json-schema](https://json-schema.org/) array.
      *

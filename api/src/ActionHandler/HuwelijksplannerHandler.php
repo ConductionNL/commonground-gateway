@@ -13,6 +13,16 @@ class HuwelijksplannerHandler implements ActionHandlerInterface
         $this->huwelijksplannerService = $huwelijksplannerService;
     }
 
+    function getConditions() {
+        return ['==' => [1, 1]];
+    }
+
+    function getListens() {
+        return [
+            'none'
+        ];
+    }
+
     /**
      *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
      *

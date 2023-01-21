@@ -14,6 +14,16 @@ class SimXMLToZGWHandler implements ActionHandlerInterface
         $this->simXMLZaakService = $simXMLZaakService;
     }
 
+    function getConditions() {
+        return ['==' => [1, 1]];
+    }
+
+    function getListens() {
+        return [
+            'none'
+        ];
+    }
+
     /**
      *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
      *

@@ -13,6 +13,16 @@ class PubliccodeRatingHandler implements ActionHandlerInterface
         $this->publiccodeService = $publiccodeService;
     }
 
+    function getConditions() {
+        return ['==' => [1, 1]];
+    }
+
+    function getListens() {
+        return [
+            'none'
+        ];
+    }
+
     public function getConfiguration()
     {
         return [
