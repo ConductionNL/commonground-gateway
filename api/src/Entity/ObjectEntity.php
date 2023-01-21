@@ -1396,7 +1396,7 @@ class ObjectEntity
             return;
         }
 
-        // Lets see if the name is congigured
+        // Lets see if the name is configured
         if ($this->entity->getNameProperties()) {
             $name = null;
             foreach ($this->entity->getNameProperties() as $nameProperty) {
