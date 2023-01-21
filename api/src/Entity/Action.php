@@ -224,14 +224,21 @@ class Action
         if ($actionHandler) {
             $conditions = ['==' => [1, 1]];
 
+            // Taking default conditions from the action handler
             if(isset($actionHandler->DEFAULT_CONDITIONS)){
                 $conditions = $actionHandler->DEFAULT_CONDITIONS;
+            }
+
+            // Taking default listens from the action handler
+            if(isset($actionHandler->DEFAULT_LISTENS)){
+                $this->setListens($actionHandler->DEFAULT_LISTENS);
             }
 
             if (!$schema = $actionHandler->getConfiguration()) {
                 return;
             }
 
+            // Setting further defaults from the action handler
             (isset($schema['title']) ? $this->setName($schema['title']) : '');
             (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
             $this->setClass(get_class($actionHandler));
