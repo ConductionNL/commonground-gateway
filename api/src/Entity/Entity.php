@@ -391,15 +391,8 @@ class Entity
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
-        $this->searchPartial = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
-        $this->responseLogs = new ArrayCollection();
-        $this->requestLogs = new ArrayCollection();
-        $this->soap = new ArrayCollection();
-        $this->handlers = new ArrayCollection();
-        $this->subscribers = new ArrayCollection();
-        $this->subscriberOut = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->endpoints = new ArrayCollection();
     }
@@ -461,13 +454,6 @@ class Entity
         return $this->gateway;
     }
 
-    public function setSource(?Source $source): self
-    {
-        $this->gateway = $source;
-
-        return $this;
-    }
-
     public function getEndpoint(): ?string
     {
         return $this->endpoint;
@@ -485,42 +471,6 @@ class Entity
         return $this->toSoap;
     }
 
-    public function setToSoap(?Soap $toSoap): self
-    {
-        $this->toSoap = $toSoap;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Soap[]
-     */
-    public function getFromSoap(): Collection
-    {
-        return $this->fromSoap;
-    }
-
-    public function addFromSoap(Soap $fromSoap): self
-    {
-        if (!$this->fromSoap->contains($fromSoap)) {
-            $this->fromSoap[] = $fromSoap;
-            $fromSoap->setToEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeFromSoap(Soap $fromSoap): self
-    {
-        if ($this->fromSoap->removeElement($fromSoap)) {
-            // set the owning side to null (unless already changed)
-            if ($fromSoap->getToEntity() === $this) {
-                $fromSoap->setToEntity(null);
-            }
-        }
-
-        return $this;
-    }
 
     public function getName(): ?string
     {
@@ -552,12 +502,6 @@ class Entity
         return $this->function;
     }
 
-    public function setFunction(?string $function): self
-    {
-        $this->function = $function;
-
-        return $this;
-    }
 
     public function getDescription(): ?string
     {

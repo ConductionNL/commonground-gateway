@@ -661,7 +661,6 @@ class OasParserService
         $newEntity = new Entity();
         $newEntity->setName($name);
         $newEntity->addCollection($collection);
-        $collection->getSource() !== null && $newEntity->setSource($collection->getSource());
         isset($schema['x-context']) && strpos($schema['x-context'], 'schema') !== false && $newEntity->setSchema($schema['x-context']);
 
         $this->entityManager->persist($newEntity);
