@@ -255,7 +255,6 @@ class ObjectEntity
                         continue;
                     }
 
-
                     $pathArray = $endpoint->getPath() ?? [];
                     $idSet = false;
                     $tempPath = '';
