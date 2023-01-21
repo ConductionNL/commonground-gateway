@@ -397,7 +397,6 @@ class Entity
         $this->responseLogs = new ArrayCollection();
         $this->requestLogs = new ArrayCollection();
         $this->soap = new ArrayCollection();
-        $$this->soap = new ArrayCollection();
         $this->handlers = new ArrayCollection();
         $this->subscribers = new ArrayCollection();
         $this->subscriberOut = new ArrayCollection();
