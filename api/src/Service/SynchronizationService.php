@@ -626,6 +626,7 @@ class SynchronizationService
             ]]);
 
             $errorsInARowCount++;
+
             return $this->fetchObjectsFromSource($callServiceConfig, $page + 1, $errorsInARowCount);
         }
 
