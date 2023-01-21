@@ -222,6 +222,12 @@ class Action
         $this->actionLogs = new ArrayCollection();
 
         if ($actionHandler) {
+            $conditions = ['==' => [1, 1]];
+
+            if(isset($actionHandler->DEFAULT_CONDITIONS)){
+                $conditions = $actionHandler->DEFAULT_CONDITIONS;
+            }
+
             if (!$schema = $actionHandler->getConfiguration()) {
                 return;
             }
@@ -229,7 +235,7 @@ class Action
             (isset($schema['title']) ? $this->setName($schema['title']) : '');
             (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
             $this->setClass(get_class($actionHandler));
-            $this->setConditions(['==' => [1, 1]]);
+            $this->setConditions($conditions);
             $this->setConfiguration($this->getDefaultConfigFromSchema($schema));
         }
     }
