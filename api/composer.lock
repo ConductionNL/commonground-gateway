@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "83f4a06bedc0f025c9bba71de8dce7f8",
+    "content-hash": "a32d5233eb1df7d445062942321b6ef9",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -794,16 +794,16 @@
         },
         {
             "name": "common-gateway/kvk-bundle",
-            "version": "0.0.7",
+            "version": "0.0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/KVKBundle.git",
-                "reference": "8c7e09ad477337283e4afc99655eae47c41fa566"
+                "reference": "78aac490dcf810b0b99f62d4cc95a2204be99a22"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/KVKBundle/zipball/8c7e09ad477337283e4afc99655eae47c41fa566",
-                "reference": "8c7e09ad477337283e4afc99655eae47c41fa566",
+                "url": "https://api.github.com/repos/CommonGateway/KVKBundle/zipball/78aac490dcf810b0b99f62d4cc95a2204be99a22",
+                "reference": "78aac490dcf810b0b99f62d4cc95a2204be99a22",
                 "shasum": ""
             },
             "require": {
@@ -837,22 +837,22 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/KVKBundle/issues",
-                "source": "https://github.com/CommonGateway/KVKBundle/tree/0.0.7"
+                "source": "https://github.com/CommonGateway/KVKBundle/tree/0.0.8"
             },
-            "time": "2023-01-20T20:32:13+00:00"
+            "time": "2023-01-21T11:34:48+00:00"
         },
         {
             "name": "common-gateway/zgw-bundle",
-            "version": "0.1.17",
+            "version": "0.1.18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/ZGWBundle.git",
-                "reference": "951605651290afab6608a5b525ad1de5c5a767cc"
+                "reference": "ef0ffb63a8b112460b2820312aa7b0818c88fdbc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/951605651290afab6608a5b525ad1de5c5a767cc",
-                "reference": "951605651290afab6608a5b525ad1de5c5a767cc",
+                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/ef0ffb63a8b112460b2820312aa7b0818c88fdbc",
+                "reference": "ef0ffb63a8b112460b2820312aa7b0818c88fdbc",
                 "shasum": ""
             },
             "require": {
@@ -885,9 +885,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.17"
+                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.18"
             },
-            "time": "2023-01-20T10:47:54+00:00"
+            "time": "2023-01-21T12:39:16+00:00"
         },
         {
             "name": "commongateway/corebundle",
@@ -895,12 +895,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "462e590e7abf6344040034f19faf1063821eedde"
+                "reference": "bd68f8c16bebdeb736b06078715b6a3ec39b208f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/462e590e7abf6344040034f19faf1063821eedde",
-                "reference": "462e590e7abf6344040034f19faf1063821eedde",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/bd68f8c16bebdeb736b06078715b6a3ec39b208f",
+                "reference": "bd68f8c16bebdeb736b06078715b6a3ec39b208f",
                 "shasum": ""
             },
             "require": {
@@ -958,7 +958,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-01-20T21:08:09+00:00"
+            "time": "2023-01-21T12:37:05+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -4431,23 +4431,23 @@
         },
         {
             "name": "klantinteractie-servicesysteem/kiss-bundle",
-            "version": "0.0.45",
+            "version": "0.0.47",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Klantinteractie-Servicesysteem/KissBundle.git",
-                "reference": "e1edb188f3846563cc84426153e744a014e80f65"
+                "reference": "6132312b9182219695f9cb841cf6d7281c4cd18c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/e1edb188f3846563cc84426153e744a014e80f65",
-                "reference": "e1edb188f3846563cc84426153e744a014e80f65",
+                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/6132312b9182219695f9cb841cf6d7281c4cd18c",
+                "reference": "6132312b9182219695f9cb841cf6d7281c4cd18c",
                 "shasum": ""
             },
             "require": {
                 "common-gateway/brp-bundle": ">=0.0.10",
                 "common-gateway/klanten-bundle": ">=0.0.15",
-                "common-gateway/kvk-bundle": ">=0.0.7",
-                "common-gateway/zgw-bundle": ">=0.1.17",
+                "common-gateway/kvk-bundle": ">=0.0.8",
+                "common-gateway/zgw-bundle": ">=0.1.18",
                 "commongateway/corebundle": "dev-version-kiss",
                 "php": ">=7.4"
             },
@@ -4478,9 +4478,9 @@
             ],
             "support": {
                 "issues": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/issues",
-                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/0.0.45"
+                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/0.0.47"
             },
-            "time": "2023-01-21T09:51:54+00:00"
+            "time": "2023-01-21T12:44:06+00:00"
         },
         {
             "name": "knplabs/knp-markdown-bundle",
