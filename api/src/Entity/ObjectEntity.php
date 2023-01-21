@@ -244,7 +244,9 @@ class ObjectEntity
     public function getSelf(): ?string
     {
         // If self not set we generate a uri with linked endpoints
-        if (!isset($this->self)) {
+        if (!isset($this->self) || empty($this->self)) {
+            $pathString = '/api';
+
             if ($this->getEntity() !== null) {
                 $endpoints = $this->getEntity()->getEndpoints();
                 foreach ($endpoints as $endpoint) {
@@ -252,30 +254,35 @@ class ObjectEntity
                     if (!in_array('get', $endpoint->getMethods()) && !in_array('GET', $endpoint->getMethods())) {
                         continue;
                     }
+
+
                     $pathArray = $endpoint->getPath() ?? [];
-                    $pathString = '/api';
                     $idSet = false;
+                    $tempPath = '';
+
                     // Add path item to self uri
                     foreach ($pathArray as $pathItem) {
                         if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
                             $idSet = true;
-                            $pathString .= '/'.$this->getId()->toString();
+                            $tempPath .= '/'.$this->getId()->toString();
                         } else {
-                            $pathString .= '/'.$pathItem;
+                            $tempPath .= '/'.$pathItem;
                         }
                     }
+
                     // If id is set we found a correct endpoint and we can stop the foreach
                     if ($idSet == true) {
+                        $pathString = $pathString.$tempPath;
                         break;
                     }
                 }
             }
-            // If setting uri failed with endpoints do it the old way
-            if ($this->id && (!isset($idSet) || $idSet == false)) {
-                $pathString = $this->getId()->toString();
-            } else {
-                $pathString = null;
+
+            // Fallback for valid url
+            if ($pathString == '/api') {
+                $pathString = $pathString.'/objects/'.$this->getId()->toString();
             }
+
             $this->self = $pathString;
         }
 
