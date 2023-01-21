@@ -278,8 +278,10 @@ class ObjectEntity
             }
 
             // Fallback for valid url
-            if ($pathString == '/api') {
+            if ($pathString == '/api' && $this->id) {
                 $pathString = $pathString.'/objects/'.$this->getId()->toString();
+            } else {
+                $pathString = '';
             }
 
             $this->self = $pathString;
