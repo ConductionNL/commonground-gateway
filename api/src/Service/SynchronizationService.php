@@ -856,24 +856,24 @@ class SynchronizationService
         $now = new DateTime();
         $synchronization->setLastChecked($now);
 
-        // Counter
-        $counter = $synchronization->getTryCounter() + 1;
-        $synchronization->setTryCounter($counter);
-
-        // Set dont try before, expensional so in minutes  1,8,27,64,125,216,343,512,729,1000
-        $addMinutes = pow($counter, 3);
-        if ($synchronization->getDontSyncBefore()) {
-            $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT'.$addMinutes.'M'));
-        } else {
-            $dontTryBefore = new DateTime();
-        }
-        $synchronization->setDontSyncBefore($dontTryBefore);
-
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
 
         //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
         // todo: this if, elseif, else needs fixing, conditions aren't correct for if we ever want to syncToSource with this handleSync function
         if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() >= $synchronization->getObject()->getDateModified())) {
+            // Counter
+            $counter = $synchronization->getTryCounter() + 1;
+            $synchronization->setTryCounter($counter);
+
+            // Set dont try before, expensional so in minutes  1,8,27,64,125,216,343,512,729,1000
+            $addMinutes = pow($counter, 3);
+            if ($synchronization->getDontSyncBefore()) {
+                $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT'.$addMinutes.'M'));
+            } else {
+                $dontTryBefore = new DateTime();
+            }
+            $synchronization->setDontSyncBefore($dontTryBefore);
+
             $synchronization = $this->syncToGateway($synchronization, $sourceObject, $method);
         }
         // todo: we currently never use handleSync to do syncToSource, so let's make sure we aren't trying to by accident
@@ -1297,6 +1297,7 @@ class SynchronizationService
 
         $now = new DateTime();
         $synchronization->setLastSynced($now);
+        $synchronization->setTryCounter(0);
 
         return $synchronization->setObject($object);
     }
