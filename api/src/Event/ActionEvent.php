@@ -17,6 +17,13 @@ class ActionEvent extends Event
         'commongateway.object.update',
         'commongateway.object.delete',
         'commongateway.action.event',
+        'commongateway.object.pre.delete',
+        'commongateway.object.pre.create',
+        'commongateway.object.pre.update',
+        'commongateway.object.post.delete',
+        'commongateway.object.post.create',
+        'commongateway.object.post.update',
+        'commongateway.object.post.read'
     ];
 
     protected string $type;
