@@ -268,7 +268,6 @@ class ObjectEntity
                             $tempPath .= '/'.$pathItem;
                         }
                     }
-
                     // If id is set we found a correct endpoint and we can stop the foreach
                     if ($idSet == true) {
                         $pathString = $pathString.$tempPath;
@@ -280,7 +279,7 @@ class ObjectEntity
             // Fallback for valid url
             if ($pathString == '/api' && $this->getId()) {
                 $pathString = $pathString.'/objects/'.$this->getId()->toString();
-            } else {
+            } elseif (!$this->getId()) {
                 $pathString = '';
             }
 
