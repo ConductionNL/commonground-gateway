@@ -163,7 +163,8 @@ class Value
 
     /**
      * @MaxDepth(1)
-     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="LAZY", cascade={"persist"})
+     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="LAZY", cascade={"persist"}, orphanRemoval=true)
+     * @TODO THIS MUST NEVER LEAVE THE KISS BRANCH!
      */
     private $objects; // sub objects
 
@@ -501,14 +502,14 @@ class Value
      */
     public function removeNonHydratedObjects():void{
         // Savety
-        if(!$this->getAttribute()->getMultiple() || $this->getAttribute()->getType() == 'object'){
+        if(!$this->getAttribute()->getMultiple() || $this->getAttribute()->getType() !== 'object'){
             return;
         }
 
         // Loop trough the objects
         foreach($this->getObjects() as $object){
             // If the where not just hydrated remove them
-            if(in_array($object, $this->hydratedObjects)){
+            if(!in_array($object, $this->hydratedObjects)){
                 $this->removeObject($object);
             }
         }
@@ -610,7 +611,7 @@ class Value
                         $object->setOrganization($this->getObjectEntity()->getOrganization());
                         $object->hydrate($value, $unsafe, $dateModified);
                         $value = $object;
-                        $this->hydratedObjects = $object;
+                        $this->hydratedObjects[] = $object;
                     }
 
                     if (is_string($value)) {
