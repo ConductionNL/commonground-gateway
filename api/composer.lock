@@ -660,16 +660,16 @@
         },
         {
             "name": "common-gateway/brp-bundle",
-            "version": "0.0.10",
+            "version": "0.0.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/BRPBundle.git",
-                "reference": "ebd1bbf418416cfd0b9cb451aa68e95d1491acfa"
+                "reference": "37d1229ecbbf9b308a1ed34296164a23f15470e6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/BRPBundle/zipball/ebd1bbf418416cfd0b9cb451aa68e95d1491acfa",
-                "reference": "ebd1bbf418416cfd0b9cb451aa68e95d1491acfa",
+                "url": "https://api.github.com/repos/CommonGateway/BRPBundle/zipball/37d1229ecbbf9b308a1ed34296164a23f15470e6",
+                "reference": "37d1229ecbbf9b308a1ed34296164a23f15470e6",
                 "shasum": ""
             },
             "require": {
@@ -702,9 +702,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/BRPBundle/issues",
-                "source": "https://github.com/CommonGateway/BRPBundle/tree/0.0.10"
+                "source": "https://github.com/CommonGateway/BRPBundle/tree/0.0.11"
             },
-            "time": "2023-01-20T10:47:49+00:00"
+            "time": "2023-01-22T08:36:36+00:00"
         },
         {
             "name": "common-gateway/formio-bundle",
@@ -746,16 +746,16 @@
         },
         {
             "name": "common-gateway/klanten-bundle",
-            "version": "0.0.17",
+            "version": "0.0.18",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/KlantenBundle.git",
-                "reference": "de1eba92a5fdc1fafd0f560a495cbb5fc3865474"
+                "reference": "a2f9e4e646934fd53c0133907976e811794567be"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/KlantenBundle/zipball/de1eba92a5fdc1fafd0f560a495cbb5fc3865474",
-                "reference": "de1eba92a5fdc1fafd0f560a495cbb5fc3865474",
+                "url": "https://api.github.com/repos/CommonGateway/KlantenBundle/zipball/a2f9e4e646934fd53c0133907976e811794567be",
+                "reference": "a2f9e4e646934fd53c0133907976e811794567be",
                 "shasum": ""
             },
             "require": {
@@ -788,9 +788,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/KlantenBundle/issues",
-                "source": "https://github.com/CommonGateway/KlantenBundle/tree/0.0.17"
+                "source": "https://github.com/CommonGateway/KlantenBundle/tree/0.0.18"
             },
-            "time": "2023-01-21T15:57:01+00:00"
+            "time": "2023-01-22T08:36:24+00:00"
         },
         {
             "name": "common-gateway/kvk-bundle",
@@ -895,12 +895,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "931cd942686f299f8fc96fa1566b09bdc4945208"
+                "reference": "c706a8df7ee93dbd7b2818b8c2a1696dfe22c8d7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/931cd942686f299f8fc96fa1566b09bdc4945208",
-                "reference": "931cd942686f299f8fc96fa1566b09bdc4945208",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/c706a8df7ee93dbd7b2818b8c2a1696dfe22c8d7",
+                "reference": "c706a8df7ee93dbd7b2818b8c2a1696dfe22c8d7",
                 "shasum": ""
             },
             "require": {
@@ -958,7 +958,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-01-21T20:17:18+00:00"
+            "time": "2023-01-22T09:20:21+00:00"
         },
         {
             "name": "composer/ca-bundle",
