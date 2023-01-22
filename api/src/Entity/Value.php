@@ -16,6 +16,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
+use mysql_xdevapi\CollectionRemove;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -165,6 +166,13 @@ class Value
      * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="LAZY", cascade={"persist"})
      */
     private $objects; // sub objects
+
+    /**
+     * Used to store values that where hydrated in the current call, therby enabling the removal of non hydrated values on PUT requests
+     *
+     * @var array
+     */
+    private array $hydratedObjects = [];
 
     /**
      * @var Datetime The moment this resource was created
@@ -487,6 +495,27 @@ class Value
     }
 
     /**
+     * Removes any values that where not hydrated on the current request
+     *
+     * @return void
+     */
+    public function removeNonHydratedObjects():void{
+        // Savety
+        if(!$this->getAttribute()->getMultiple() || $this->getAttribute()->getType() == 'object'){
+            return;
+        }
+
+        // Loop trough the objects
+        foreach($this->getObjects() as $object){
+            // If the where not just hydrated remove them
+            if(in_array($object, $this->hydratedObjects)){
+                $this->removeObject($object);
+            }
+        }
+    }
+
+
+    /**
      * @return Collection|File[]
      */
     public function getFiles(): Collection
@@ -581,6 +610,7 @@ class Value
                         $object->setOrganization($this->getObjectEntity()->getOrganization());
                         $object->hydrate($value, $unsafe, $dateModified);
                         $value = $object;
+                        $this->hydratedObjects = $object;
                     }
 
                     if (is_string($value)) {
