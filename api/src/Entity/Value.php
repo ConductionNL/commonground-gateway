@@ -168,13 +168,6 @@ class Value
     private $objects; // sub objects
 
     /**
-     * Used to store values that where hydrated in the current call, therby enabling the removal of non hydrated values on PUT requests
-     *
-     * @var array
-     */
-    private array $hydratedObjects = [];
-
-    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -497,6 +490,7 @@ class Value
     /**
      * Removes any values that where not hydrated on the current request
      *
+     * @param  ObjectEntity $parent The parent object
      * @return void
      */
     public function removeNonHydratedObjects():void{
@@ -507,8 +501,10 @@ class Value
 
         // Loop trough the objects
         foreach($this->getObjects() as $object){
+            // Catch new objects
+
             // If the where not just hydrated remove them
-            if(!in_array($object, $this->hydratedObjects)){
+            if($object->getId() && !$object->getHydrated()){
                 $this->removeObject($object);
             }
         }
