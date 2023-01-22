@@ -353,7 +353,7 @@ class Endpoint
         $explodedPath = explode('/', $path);
         array_key_exists('pathArrayEnd', $default) && $explodedPath[] = $default['pathArrayEnd'];
         $this->setPath($explodedPath);
-        $this->setMethods(array_key_exists('methods', $configuration) ? $configuration['methods'] : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+        $this->setMethods(array_key_exists('methods', $configuration) && $configuration['methods'] ? $configuration['methods'] : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
         array_key_exists('name', $configuration) ? $this->setName($configuration['name']) : '';
         array_key_exists('description', $configuration) ? $this->setDescription($configuration['description']) : '';
