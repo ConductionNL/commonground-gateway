@@ -244,7 +244,7 @@ class ObjectEntity
     public function getSelf(): ?string
     {
         // If self not set we generate a uri with linked endpoints
-        if (!isset($this->self) || empty($this->self)) {
+        if (!isset($this->self) || empty($this->self) || $this->self == '') {
             $pathString = '/api';
 
             if ($this->getEntity() !== null) {
@@ -254,7 +254,6 @@ class ObjectEntity
                     if (!in_array('get', $endpoint->getMethods()) && !in_array('GET', $endpoint->getMethods())) {
                         continue;
                     }
-
 
                     $pathArray = $endpoint->getPath() ?? [];
                     $idSet = false;
@@ -281,8 +280,7 @@ class ObjectEntity
             // Fallback for valid url
             if ($pathString == '/api' && $this->getId()) {
                 $pathString = $pathString.'/objects/'.$this->getId()->toString();
-            }
-            else{
+            } else {
                 $pathString = '';
             }
 
@@ -1406,7 +1404,7 @@ class ObjectEntity
             return;
         }
 
-        // Lets see if the name is congigured
+        // Lets see if the name is configured
         if ($this->entity->getNameProperties()) {
             $name = null;
             foreach ($this->entity->getNameProperties() as $nameProperty) {
