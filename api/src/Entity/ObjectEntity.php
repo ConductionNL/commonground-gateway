@@ -181,6 +181,13 @@ class ObjectEntity
     private Collection $usedIn;
 
     /**
+     * Used to check if the object has been hydrated
+     *
+     * @var bool
+     */
+    private bool $hydrated = false;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -790,6 +797,9 @@ class ObjectEntity
             $this->changeCascade($dateModified);
         }
 
+        // Note down that the object has been hydrated
+        $this->hydrated = true;
+
         foreach ($array as $key => $value) {
             $this->setValue($key, $value, $unsafe, $dateModified);
             $hydratedValues[] = $key;
@@ -798,7 +808,7 @@ class ObjectEntity
         if ($unsafe) {
             foreach ($this->getObjectValues() as $value) {
                 // Drop values from values
-                $value->removeNonHydratedObjects();
+                $value->removeNonHydratedObjects($this);
                 // Drop the value itself
                 if (!in_array($value->getAttribute()->getName(), $hydratedValues)) {
                     $this->removeObjectValue($value);
@@ -1344,6 +1354,10 @@ class ObjectEntity
         }
 
         return $this;
+    }
+
+    public function getHydrated(): bool{
+        return $this->hydrated;
     }
 
     public function getDateCreated(): ?DateTimeInterface
