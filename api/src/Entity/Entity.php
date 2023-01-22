@@ -1070,7 +1070,7 @@ class Entity
         if (array_key_exists('maxDepth', $schema)) {
             $this->setMaxDepth($schema['maxDepth']);
         }
-        if (array_key_exists('nameProperties(', $schema)) {
+        if (array_key_exists('nameProperties', $schema)) {
             $this->setNameProperties($schema['nameProperties']);
         }
 
