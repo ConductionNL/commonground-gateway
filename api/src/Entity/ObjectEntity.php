@@ -808,7 +808,7 @@ class ObjectEntity
         if ($unsafe) {
             foreach ($this->getObjectValues() as $value) {
                 // Drop values from values
-                $value->removeNonHydratedObjects($this);
+                $value->removeNonHydratedObjects();
                 // Drop the value itself
                 if (!in_array($value->getAttribute()->getName(), $hydratedValues)) {
                     $this->removeObjectValue($value);
