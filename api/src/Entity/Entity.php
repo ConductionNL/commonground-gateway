@@ -395,6 +395,7 @@ class Entity
         $this->usedIn = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->endpoints = new ArrayCollection();
+        $this->searchPartial = new ArrayCollection();
     }
 
     public function export()
