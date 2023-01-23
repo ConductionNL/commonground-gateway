@@ -54,13 +54,13 @@ class InitializationCommand extends Command
             ->addOption('data', 'd', InputOption::VALUE_OPTIONAL, 'Load (example) data set(s) from the bundle', false)
             ->addOption('skip-schema', 'sa', InputOption::VALUE_OPTIONAL, 'Don\'t update schema\'s during upgrade', false)
             ->addOption('skip-script', 'sp', InputOption::VALUE_OPTIONAL, 'Don\'t execute installation scripts during upgrade', false)
-            ->addOption('unsafe', 'u', InputOption::VALUE_OPTIONAL, 'Delete data that is not pressent in the test data', false)
+            ->addOption('unsafe', 'u', InputOption::VALUE_OPTIONAL, 'Delete data that is not present in the test data', false)
             // the short description shown while running "php bin/console list"
             ->setDescription('Facilitates the initialization of the gateway and checks configuration')
 
             // the full command description shown when running the command with
             // the "--help" option
-            ->setHelp('This command is supposed to be run whenever a gateway initilizes to make sure there is enough basic configuration to actually start the gateway');
+            ->setHelp('This command is supposed to be run whenever a gateway initializes to make sure there is enough basic configuration to actually start the gateway');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
