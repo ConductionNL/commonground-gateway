@@ -188,7 +188,7 @@ class Organization
     {
         if (!$this->users->contains($user)) {
             $this->users[] = $user;
-            $user->setOrganisation($this);
+            $user->setOrganization($this);
         }
 
         return $this;
@@ -198,8 +198,8 @@ class Organization
     {
         if ($this->users->removeElement($user)) {
             // set the owning side to null (unless already changed)
-            if ($user->getOrganisation() === $this) {
-                $user->setOrganisation(null);
+            if ($user->getOrganization() === $this) {
+                $user->setOrganization(null);
             }
         }
 

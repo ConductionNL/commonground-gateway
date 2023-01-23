@@ -176,20 +176,20 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
         }
 
         $organizations = [];
-        if ($user->getOrganisation()) {
-            $organizations[] = $user->getOrganisation();
+        if ($user->getOrganization()) {
+            $organizations[] = $user->getOrganization();
         }
 
         $organizations[] = 'localhostOrganization';
         $this->session->set('organizations', $organizations);
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
-        $this->session->set('activeOrganization', $user->getOrganisation());
+        $this->session->set('activeOrganization', $user->getOrganization());
 
         $userArray = [
             'id'           => $user->getId()->toString(),
             'email'        => $user->getEmail(),
             'locale'       => $user->getLocale(),
-            'organization' => $user->getOrganisation()->getId()->toString(),
+            'organization' => $user->getOrganization()->getId()->toString(),
             'roles'        => $roleArray['roles'],
         ];
 

@@ -83,7 +83,7 @@ class InitializationCommand extends Command
             $this->entityManager->persist($organization);
             $this->entityManager->flush();
             $organization = $this->entityManager->getRepository('App:Organization')->findOneBy(['id' => $id]);
-            
+
             $organization->setDescription('Created during auto configuration');
 
             $this->entityManager->persist($organization);
@@ -158,7 +158,7 @@ class InitializationCommand extends Command
             $user->setPassword('!ChangeMe!');
             $user->addSecurityGroup($securityGroupAdmin);
             $user->addApplication($application);
-            $user->setOrganisation($organization);
+            $user->setOrganization($organization);
 
             $this->entityManager->persist($user);
         } else {
