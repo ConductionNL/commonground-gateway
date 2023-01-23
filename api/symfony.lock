@@ -49,9 +49,6 @@
     "common-gateway/klanten-bundle": {
         "version": "0.0.12"
     },
-    "common-gateway/kvk-bundle": {
-        "version": "0.0.4"
-    },
     "common-gateway/zgw-bundle": {
         "version": "0.1.16"
     },
