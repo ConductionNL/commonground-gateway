@@ -71,6 +71,20 @@ class InitializationCommand extends Command
             $io->info('No organization found, creating a new one');
             $organization = new Organization();
             $organization->setName('Default Organization');
+
+            // Set default id to this id for now (backwards compatibility)
+            $id = 'a1c8e0b6-2f78-480d-a9fb-9792142f4761';
+            // Create the entity
+            $this->entityManager->persist($organization);
+            $this->entityManager->flush();
+            $this->entityManager->refresh($organization);
+            // Reset the id
+            $organization->setId($id);
+            $this->entityManager->persist($organization);
+            $this->entityManager->flush();
+            $organization = $this->entityManager->getRepository('App:Organization')->findOneBy(['id' => $id]);
+
+            $organization->setName('Default Organization');
             $organization->setDescription('Created during auto configuration');
 
             $this->entityManager->persist($organization);
