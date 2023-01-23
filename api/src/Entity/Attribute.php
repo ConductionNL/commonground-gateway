@@ -670,6 +670,13 @@ class Attribute
     private ?string $schema = null;
 
     /**
+     * @var string|null The property name that inverses the value of the property
+     *
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     */
+    private ?string $inversedByPropertyName = null;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -738,6 +745,9 @@ class Attribute
         }
         if (array_key_exists('default', $property)) {
             $this->setDefaultValue($property['default']);
+        }
+        if (array_key_exists('inversedBy', $property)) {
+            $this->setInversedByPropertyName($property['inversedBy']);
         }
 
         $this->setDateModified(new DateTime());
@@ -1749,6 +1759,24 @@ class Attribute
     public function setReference(?string $reference): self
     {
         $this->reference = $reference;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getInversedByPropertyName(): ?string
+    {
+        return $this->inversedByPropertyName;
+    }
+
+    /**
+     * @param string|null $inversedByPropertyName
+     */
+    public function setInversedByPropertyName(?string $inversedByPropertyName): self
+    {
+        $this->inversedByPropertyName = $inversedByPropertyName;
 
         return $this;
     }

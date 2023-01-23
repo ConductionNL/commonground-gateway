@@ -86,6 +86,11 @@ class CollectionPersistSubscriber implements EventSubscriberInterface
 
             $this->entityManager->persist($attribute);
         }
+        if($attribute->getInversedByPropertyName() && !$attribute->getInversedBy()) {
+            $attribute->setInversedBy($entity->getAttributeByName($attribute->getInversedByPropertyName()));
+
+            $this->entityManager->persist($attribute);
+        }
     }
 
     private function bindAttributesToEntities(array $schemaRefs): void
