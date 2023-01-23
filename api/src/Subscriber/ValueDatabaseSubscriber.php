@@ -33,7 +33,7 @@ class ValueDatabaseSubscriber implements EventSubscriberInterface
     public function preUpdate(LifecycleEventArgs $args)
     {
         $value = $args->getObject();
-        if ($value instanceof Value && $value->getStringValue()) {
+        if ($value instanceof Value && $value->getAttribute()->getTwigable() && $value->getStringValue()) {
             $value->setStringValue($this->twig->createTemplate($value->getStringValue())->render());
         }
     }

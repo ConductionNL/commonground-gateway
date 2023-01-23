@@ -662,6 +662,15 @@ class Attribute
     private bool $mayBeOrphaned = true;
 
     /**
+     * @var ?bool Whether or not this property can be used by twig renderer.
+     *
+     * @Assert\Type("bool")
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
+     */
+    private ?bool $twigable = false;
+
+    /**
      * @var ?string The uri to a schema.org property
      *
      * @Groups({"read", "write"})
@@ -1701,6 +1710,18 @@ class Attribute
     public function setMayBeOrphaned(?bool $mayBeOrphaned): self
     {
         $this->mayBeOrphaned = $mayBeOrphaned;
+
+        return $this;
+    }
+
+    public function getTwigable(): ?bool
+    {
+        return $this->twigable;
+    }
+
+    public function setTwigable(?bool $twigable): self
+    {
+        $this->twigable = $twigable;
 
         return $this;
     }
