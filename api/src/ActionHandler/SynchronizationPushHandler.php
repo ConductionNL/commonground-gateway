@@ -31,6 +31,12 @@ class SynchronizationPushHandler implements ActionHandlerInterface
             'description'=> '',
             'required'   => ['source', 'entity', 'idField'],
             'properties' => [
+                'location' => [
+                    'type'        => 'string',
+                    'description' => 'The subpath to sync from',
+                    'example'     => '/subpath',
+                    'required'    => true,
+                ],
                 'source' => [
                     'type'        => 'uuid',
                     'description' => 'The source to sync from',
