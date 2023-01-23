@@ -158,7 +158,7 @@ class InitializationCommand extends Command
             $user->setPassword('!ChangeMe!');
             $user->addSecurityGroup($securityGroupAdmin);
             $user->addApplication($application);
-            $user->setOrganization($organization);
+            $user->setOrganisation($organization);
 
             $this->entityManager->persist($user);
         } else {

@@ -91,7 +91,7 @@ class User
      * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="users")
      * @ORM\JoinColumn(nullable=false)
      */
-    private Organization $organization;
+    private Organization $organisation;
 
     /**
      * @Groups({"read", "write"})
@@ -211,14 +211,14 @@ class User
         return $this;
     }
 
-    public function getOrganization(): ?Organization
+    public function getOrganisation(): ?Organization
     {
-        return $this->organization;
+        return $this->organisation;
     }
 
-    public function setOrganization(?Organization $organization): self
+    public function setOrganisation(?Organization $organisation): self
     {
-        $this->organization = $organization;
+        $this->organisation = $organisation;
 
         return $this;
     }
