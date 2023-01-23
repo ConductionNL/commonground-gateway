@@ -4426,16 +4426,16 @@
         },
         {
             "name": "larping-base/larping-bundle",
-            "version": "1.0.35",
+            "version": "1.0.36",
             "source": {
                 "type": "git",
                 "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "7d0ba13e05ec7cf2ea42429f44c630fa56b4940b"
+                "reference": "7ed4e445bed9304cbaf813615bb201e446ec71d5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/7d0ba13e05ec7cf2ea42429f44c630fa56b4940b",
-                "reference": "7d0ba13e05ec7cf2ea42429f44c630fa56b4940b",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/7ed4e445bed9304cbaf813615bb201e446ec71d5",
+                "reference": "7ed4e445bed9304cbaf813615bb201e446ec71d5",
                 "shasum": ""
             },
             "require": {
@@ -4468,9 +4468,9 @@
             ],
             "support": {
                 "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.35"
+                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.36"
             },
-            "time": "2023-01-23T05:17:49+00:00"
+            "time": "2023-01-23T09:59:27+00:00"
         },
         {
             "name": "league/html-to-markdown",
