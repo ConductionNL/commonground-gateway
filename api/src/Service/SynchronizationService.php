@@ -767,7 +767,7 @@ class SynchronizationService
     {
         if (!$synchronization->getObject()) {
             $object = new ObjectEntity();
-            Uuid::isValid($synchronization->getSourceId()) && $object->setExternalId($synchronization->getSourceId());
+            $synchronization->getSourceId() && $object->setExternalId($synchronization->getSourceId());
             $object->setEntity($synchronization->getEntity());
             $object = $this->setApplicationAndOrganization($object);
             $synchronization->setObject($object);
