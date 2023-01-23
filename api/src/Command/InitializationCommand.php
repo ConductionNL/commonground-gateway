@@ -71,10 +71,10 @@ class InitializationCommand extends Command
 
         $config = [];
         $config['bundle'] = $input->getOption('bundle');
-        $config['bundle'] = $input->getOption('data');
-        $config['bundle'] = $input->getOption('schema');
-        $config['bundle'] = $input->getOption('script');
-        $config['bundle'] = $input->getOption('unsafe');
+        $config['data'] = $input->getOption('data');
+        $config['skip-schema'] = $input->getOption('skip-schema');
+        $config['skip-script'] = $input->getOption('skip-script');
+        $config['unsafe'] = $input->getOption('unsafe');
 
         $io->title('Check if we have the needed objects');
 
