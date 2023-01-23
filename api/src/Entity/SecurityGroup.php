@@ -103,7 +103,7 @@ class SecurityGroup
      *
      * @var bool
      * @Groups({"read", "write"})
-     * @ORM\Column(type="bool")
+     * @ORM\Column(type="boolean", options={"default"=false})
      */
     private $anonymous = false;
 
