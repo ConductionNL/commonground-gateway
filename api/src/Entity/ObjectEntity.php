@@ -181,7 +181,7 @@ class ObjectEntity
     private Collection $usedIn;
 
     /**
-     * Used to check if the object has been hydrated
+     * Used to check if the object has been hydrated.
      *
      * @var bool
      */
@@ -1356,7 +1356,8 @@ class ObjectEntity
         return $this;
     }
 
-    public function getHydrated(): bool{
+    public function getHydrated(): bool
+    {
         return $this->hydrated;
     }
 
