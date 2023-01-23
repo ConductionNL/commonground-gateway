@@ -38,7 +38,7 @@ class LogRepository extends ServiceEntityRepository
                 'objectId'           => $objectId,
                 'responseStatusCode' => 200,
                 'userId'             => $userId,
-                'method'             => 'get'
+                'method'             => 'get',
             ])
             ->orderBy('l.dateCreated', 'DESC')
             ->distinct();

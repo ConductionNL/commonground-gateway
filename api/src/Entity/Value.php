@@ -488,28 +488,29 @@ class Value
     }
 
     /**
-     * Removes any values that where not hydrated on the current request
+     * Removes any values that where not hydrated on the current request.
      *
-     * @param  ObjectEntity $parent The parent object
+     * @param ObjectEntity $parent The parent object
+     *
      * @return void
      */
-    public function removeNonHydratedObjects():void{
+    public function removeNonHydratedObjects(): void
+    {
         // Savety
-        if(!$this->getAttribute()->getMultiple() || $this->getAttribute()->getType() !== 'object'){
+        if (!$this->getAttribute()->getMultiple() || $this->getAttribute()->getType() !== 'object') {
             return;
         }
 
         // Loop trough the objects
-        foreach($this->getObjects() as $object){
+        foreach ($this->getObjects() as $object) {
             // Catch new objects
 
             // If the where not just hydrated remove them
-            if($object->getId() && !$object->getHydrated()){
+            if ($object->getId() && !$object->getHydrated()) {
                 $this->removeObject($object);
             }
         }
     }
-
 
     /**
      * @return Collection|File[]
