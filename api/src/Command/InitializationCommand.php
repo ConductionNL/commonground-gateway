@@ -83,8 +83,7 @@ class InitializationCommand extends Command
             $this->entityManager->persist($organization);
             $this->entityManager->flush();
             $organization = $this->entityManager->getRepository('App:Organization')->findOneBy(['id' => $id]);
-
-            $organization->setName('Default Organization');
+            
             $organization->setDescription('Created during auto configuration');
 
             $this->entityManager->persist($organization);
