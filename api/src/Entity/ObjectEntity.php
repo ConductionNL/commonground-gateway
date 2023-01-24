@@ -315,8 +315,8 @@ class ObjectEntity
         $this->application = $application;
 
         // If we don't have an organization we can pull one from the application
-        if (!isset($this->organization)) {
-            $this->application->getOrganization();
+        if (!isset($this->organization) && isset($this->application) && $this->application->getOrganization()) {
+            $this->setOrganization($this->application->getOrganization());
         }
 
         return $this;
@@ -324,7 +324,7 @@ class ObjectEntity
 
     public function getOrganization(): ?Organization
     {
-        return $this->organization;
+        return $this->organization ?? null;
     }
 
     public function setOrganization(?Organization $organization): self
@@ -804,9 +804,9 @@ class ObjectEntity
     {
         return
             isset($array['embedded']) ? 'embedded' : (
-                isset($array['@embedded']) ? '@embedded' : (
-                    isset($array['_embedded']) ? '_embedded' : false
-                )
+            isset($array['@embedded']) ? '@embedded' : (
+            isset($array['_embedded']) ? '_embedded' : false
+            )
             );
     }
 
