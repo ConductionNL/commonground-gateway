@@ -222,7 +222,6 @@ class Action
         $this->actionLogs = new ArrayCollection();
 
         if ($actionHandler) {
-
             if (!$schema = $actionHandler->getConfiguration()) {
                 return;
             }
@@ -235,7 +234,6 @@ class Action
             $this->setConfiguration($this->getDefaultConfigFromSchema($schema));
         }
     }
-
 
     /**
      * Gets the default config from a json schema definition of an ActionHandler.

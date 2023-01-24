@@ -16,13 +16,15 @@ class CreeerGebruiksrechtHandler implements ActionHandlerInterface
         $this->zdsZaakService = $zdsZaakService;
     }
 
-    function getConditions() {
+    public function getConditions()
+    {
         return ['==' => [1, 1]];
     }
 
-    function getListens() {
+    public function getListens()
+    {
         return [
-            'none'
+            'none',
         ];
     }
 
