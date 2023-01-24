@@ -18,13 +18,15 @@ class HandelsRegisterSearchHandler implements ActionHandlerInterface
         $this->handelsRegisterSearchService = $handelsRegisterSearchService;
     }
 
-    function getConditions() {
+    public function getConditions()
+    {
         return ['==' => [1, 1]];
     }
 
-    function getListens() {
+    public function getListens()
+    {
         return [
-            'none'
+            'none',
         ];
     }
 

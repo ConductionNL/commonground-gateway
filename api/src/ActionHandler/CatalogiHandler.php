@@ -13,13 +13,15 @@ class CatalogiHandler implements ActionHandlerInterface
         $this->catalogiService = $catalogiService;
     }
 
-    function getConditions() {
+    public function getConditions()
+    {
         return ['==' => [1, 1]];
     }
 
-    function getListens() {
+    public function getListens()
+    {
         return [
-            'none'
+            'none',
         ];
     }
 

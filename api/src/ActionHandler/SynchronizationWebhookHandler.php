@@ -20,13 +20,15 @@ class SynchronizationWebhookHandler implements ActionHandlerInterface
         $this->synchronizationService = $synchronizationService;
     }
 
-    function getConditions() {
+    public function getConditions()
+    {
         return ['==' => [1, 1]];
     }
 
-    function getListens() {
+    public function getListens()
+    {
         return [
-            'none'
+            'none',
         ];
     }
 
