@@ -210,7 +210,7 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
     {
         $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
         $payload = $this->validateToken($token);
-        $this->setOrganizations($payload);
+//        $this->setOrganizations($payload);
 
         $application = $this->applicationService->getApplication();
         if (!isset($payload['client_id'])) {

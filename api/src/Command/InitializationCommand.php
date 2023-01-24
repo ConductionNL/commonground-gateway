@@ -14,6 +14,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
@@ -26,19 +27,21 @@ class InitializationCommand extends Command
     private EntityManagerInterface $entityManager;
     private EventDispatcherInterface $eventDispatcher;
     private SessionInterface $session;
-    private ParameterBagInterface $params;
+    private ParameterBagInterface $parameterBag;
     private InstallationService $installationService;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         EventDispatcherInterface $eventDispatcher,
         SessionInterface $session,
-        InstallationService $installationService
+        InstallationService $installationService,
+        ParameterBagInterface $parameterBag
     ) {
         $this->entityManager = $entityManager;
         $this->eventDispatcher = $eventDispatcher;
         $this->session = $session;
         $this->installationService = $installationService;
+        $this->parameterBag = $parameterBag;
 
         parent::__construct();
     }
@@ -68,6 +71,19 @@ class InitializationCommand extends Command
             $io->info('No organization found, creating a new one');
             $organization = new Organization();
             $organization->setName('Default Organization');
+
+            // Set default id to this id for now (backwards compatibility)
+            $id = 'a1c8e0b6-2f78-480d-a9fb-9792142f4761';
+            // Create the entity
+            $this->entityManager->persist($organization);
+            $this->entityManager->flush();
+            $this->entityManager->refresh($organization);
+            // Reset the id
+            $organization->setId($id);
+            $this->entityManager->persist($organization);
+            $this->entityManager->flush();
+            $organization = $this->entityManager->getRepository('App:Organization')->findOneBy(['id' => $id]);
+
             $organization->setDescription('Created during auto configuration');
 
             $this->entityManager->persist($organization);
@@ -82,7 +98,12 @@ class InitializationCommand extends Command
             $application = new Application();
             $application->setName('Default Application');
             $application->setDescription('Created during auto configuration');
-            $application->setDomains(['localhost']);
+            $domains = ['localhost'];
+            $parsedAppUrl = parse_url($this->parameterBag->get('app_url'));
+            if (isset($parsedAppUrl['host']) && !empty($parsedAppUrl['host']) && $parsedAppUrl['host'] !== 'localhost') {
+                $domains[] = $parsedAppUrl['host'];
+            }
+            $application->setDomains($domains);
             $application->setOrganization($organization);
 
             $this->entityManager->persist($application);
