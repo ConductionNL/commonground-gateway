@@ -12,6 +12,7 @@ use CommonGateway\CoreBundle\Service\InstallationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -49,12 +50,17 @@ class InitializationCommand extends Command
     protected function configure(): void
     {
         $this
+            ->addOption('bundle', 'b', InputOption::VALUE_OPTIONAL, 'The bundle that you want to install (install only that bundle)')
+            ->addOption('data', 'd', InputOption::VALUE_OPTIONAL, 'Load (example) data set(s) from the bundle', false)
+            ->addOption('skip-schema', 'sa', InputOption::VALUE_OPTIONAL, 'Don\'t update schema\'s during upgrade', false)
+            ->addOption('skip-script', 'sp', InputOption::VALUE_OPTIONAL, 'Don\'t execute installation scripts during upgrade', false)
+            ->addOption('unsafe', 'u', InputOption::VALUE_OPTIONAL, 'Delete data that is not present in the test data', false)
             // the short description shown while running "php bin/console list"
             ->setDescription('Facilitates the initialization of the gateway and checks configuration')
 
             // the full command description shown when running the command with
             // the "--help" option
-            ->setHelp('This command is supposed to be run whenever a gateway initilizes to make sure there is enough basic configuration to actually start the gateway');
+            ->setHelp('This command is supposed to be run whenever a gateway initializes to make sure there is enough basic configuration to actually start the gateway');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -62,6 +68,13 @@ class InitializationCommand extends Command
         $this->input = $input;
         $this->output = $output;
         $io = new SymfonyStyle($input, $output);
+
+        $config = [];
+        $config['bundle'] = $input->getOption('bundle');
+        $config['data'] = $input->getOption('data');
+        $config['skip-schema'] = $input->getOption('skip-schema');
+        $config['skip-script'] = $input->getOption('skip-script');
+        $config['unsafe'] = $input->getOption('unsafe');
 
         $io->title('Check if we have the needed objects');
 
@@ -175,7 +188,7 @@ class InitializationCommand extends Command
         //if( getenv("APP_ENV") == "dev"){
         $io->section('Running installer');
         $this->installationService->setStyle(new SymfonyStyle($input, $output));
-        $this->installationService->composerupdate();
+        $this->installationService->composerupdate($config);
         //}
 
         $io->success('Successfully finished setting basic configuration');
