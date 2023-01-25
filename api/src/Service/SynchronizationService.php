@@ -17,6 +17,7 @@ use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use Monolog\Logger;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
@@ -51,6 +52,7 @@ class SynchronizationService
 
     private ActionEvent $event;
     private EventDispatcherInterface $eventDispatcher;
+    private Logger $logger;
 
     private bool $asyncError = false;
 
@@ -87,6 +89,7 @@ class SynchronizationService
         $this->twig = $twig;
         $this->event = new ActionEvent('', []);
         $this->eventDispatcher = $eventDispatcher;
+        $this->logger = new Logger('installation');
     }
 
     /**
@@ -101,10 +104,12 @@ class SynchronizationService
     {
         $this->configuration = $configuration;
         $this->data = $data;
+
         if ($this->session->get('io')) {
             $this->io = $this->session->get('io');
             $this->io->note('SynchronizationService->SynchronizationItemHandler()');
         }
+        $this->logger->debug('SynchronizationService->SynchronizationItemHandler()');
 
         return $data;
     }
@@ -123,10 +128,12 @@ class SynchronizationService
     {
         $this->configuration = $configuration;
         $this->data = $data;
+
         if ($this->session->get('io')) {
             $this->io = $this->session->get('io');
             $this->io->note('SynchronizationService->synchronizationPushHandler()');
         }
+        $this->logger->debug('SynchronizationService->synchronizationPushHandler()');
 
         $source = $this->getSourceFromConfig();
         $entity = $this->getEntityFromConfig();
@@ -170,10 +177,12 @@ class SynchronizationService
     {
         $this->configuration = $configuration;
         $this->data = $data;
+
         if ($this->session->get('io')) {
             $this->io = $this->session->get('io');
             $this->io->note('SynchronizationService->SynchronizationWebhookHandler()');
         }
+        $this->logger->debug('SynchronizationService->SynchronizationWebhookHandler()');
 
         $source = $this->getSourceFromConfig();
         $entity = $this->getEntityFromConfig();
@@ -229,6 +238,7 @@ class SynchronizationService
             $this->io = $this->session->get('io');
             $this->io->note('SynchronizationService->SynchronizationCollectionHandler()');
         }
+        $this->logger->debug('SynchronizationService->SynchronizationCollectionHandler()');
 
         $source = $this->getSourceFromConfig();
         $entity = $this->getEntityFromConfig();
@@ -328,6 +338,7 @@ class SynchronizationService
                 $this->io->text('totalResultsSynced +1 = '.++$config['totalResultsSynced']);
                 $this->io->newLine();
             }
+            $this->logger->debug('totalResultsSynced +1 = '.++$config['totalResultsSynced']);
         }
 
         return [
@@ -354,6 +365,7 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->text("Deleting Object with id: {$object->getId()->toString()} & Synchronization with id: {$synchronization->getId()->toString()}");
             }
+            $this->logger->info("Deleting Object with id: {$object->getId()->toString()} & Synchronization with id: {$synchronization->getId()->toString()}");
 
             // Delete object (this will remove this object result from the cache)
             // This will also delete the sync because of cascade delete
@@ -365,6 +377,8 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->warning("{$exception->getMessage()}");
             }
+
+            $this->logger->error("{$exception->getMessage()}");
 
             return false;
         }
@@ -392,6 +406,11 @@ class SynchronizationService
                 $this->io->error("Could not get a Source with current Action->Configuration['$configKey']");
             }
         }
+        if (isset($source) && $source instanceof Source && !$source->getIsEnabled()) {
+            $this->logger->warning("This source is not enabled: {$source->getName()}");
+        } else {
+            $this->logger->error("Could not get a Source with current Action->Configuration['$configKey']");
+        }
 
         return null;
     }
@@ -414,6 +433,8 @@ class SynchronizationService
         if (isset($this->io)) {
             $this->io->error("Could not get an Entity with current Action->Configuration['$configKey']");
         }
+
+        $this->logger->error("Could not get an Entity with current Action->Configuration['$configKey']");
 
         return null;
     }
@@ -838,10 +859,12 @@ class SynchronizationService
         if (isset($this->io)) {
             $this->io->text("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
         }
+        $this->logger->info("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
         $method = $this->checkObjectEntity($synchronization);
 
         // If we don't have an sourced object, we need to get one
         $sourceObject = $sourceObject ?: $this->getSingleFromSource($synchronization);
+
         if ($sourceObject === null) {
             if (isset($this->io)) {
                 $this->io->warning("Can not handleSync for Synchronization with id = {$synchronization->getId()->toString()} if \$sourceObject === null");
@@ -883,6 +906,7 @@ class SynchronizationService
                 //todo: temp, maybe put something else here later
                 $this->io->text("Nothing to sync because source and gateway haven't changed");
             }
+            $this->logger->info("Nothing to sync because source and gateway haven't changed");
             $synchronization = $this->syncThroughComparing($synchronization);
         }
 
@@ -1174,6 +1198,8 @@ class SynchronizationService
         if (isset($this->io)) {
             $this->io->text("syncToSource for Synchronization with id = {$synchronization->getId()->toString()}");
         }
+        $this->logger->info("syncToSource for Synchronization with id = {$synchronization->getId()->toString()}");
+
         if ($synchronization->isBlocked()) {
             return $synchronization;
         }
@@ -1277,6 +1303,8 @@ class SynchronizationService
         if (isset($this->io)) {
             $this->io->text("syncToGateway for Synchronization with id = {$synchronization->getId()->toString()}");
         }
+        $this->logger->info("syncToGateway for Synchronization with id = {$synchronization->getId()->toString()}");
+
         $object = $synchronization->getObject();
 
         $sourceObject = $this->mapInput($sourceObject);

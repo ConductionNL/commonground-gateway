@@ -820,12 +820,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "7146ed6f1f99e086bd61be04c585d8d1b84d92d2"
+                "reference": "e81088dea203f861f162952a0f5028f7ae4f015d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/7146ed6f1f99e086bd61be04c585d8d1b84d92d2",
-                "reference": "7146ed6f1f99e086bd61be04c585d8d1b84d92d2",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/e81088dea203f861f162952a0f5028f7ae4f015d",
+                "reference": "e81088dea203f861f162952a0f5028f7ae4f015d",
                 "shasum": ""
             },
             "require": {
@@ -884,7 +884,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-01-11T14:40:24+00:00"
+            "time": "2023-01-19T15:59:50+00:00"
         },
         {
             "name": "composer/ca-bundle",

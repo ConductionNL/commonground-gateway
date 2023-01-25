@@ -26,6 +26,7 @@ npm-debug.log
 .DS_Store
 .idea
 
+api/var/log
 
 
 api/var/log/
