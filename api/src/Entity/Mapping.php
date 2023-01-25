@@ -10,6 +10,8 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\MappingRepository;
 use DateTime;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
@@ -133,6 +135,16 @@ class Mapping
      */
     private $dateModified;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="mapping")
+     */
+    private $synchronizations;
+
+    public function __construct()
+    {
+        $this->synchronizations = new ArrayCollection();
+    }
+
     public function getId(): ?UuidInterface
     {
         return $this->id;
@@ -230,6 +242,36 @@ class Mapping
     public function setDateModified(?\DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Synchronization[]
+     */
+    public function getSynchronizations(): Collection
+    {
+        return $this->synchronizations;
+    }
+
+    public function addSynchronization(Synchronization $synchronization): self
+    {
+        if (!$this->synchronizations->contains($synchronization)) {
+            $this->synchronizations[] = $synchronization;
+            $synchronization->setMapping($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSynchronization(Synchronization $synchronization): self
+    {
+        if ($this->synchronizations->removeElement($synchronization)) {
+            // set the owning side to null (unless already changed)
+            if ($synchronization->getMapping() === $this) {
+                $synchronization->setMapping(null);
+            }
+        }
 
         return $this;
     }

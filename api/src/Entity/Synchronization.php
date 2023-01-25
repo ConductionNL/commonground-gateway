@@ -11,6 +11,8 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Gateway as Source;
 use DateTime;
 use DateTimeInterface;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
@@ -88,13 +90,26 @@ class Synchronization
     private ?Action $action = null;
 
     /**
+     * The source of this synchronization might be an external source (gateway)
+     *
      * @var Source The Source of this resource
      *
      * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=Gateway::class, cascade={"persist"}, inversedBy="synchronizations")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
-    private Source $gateway;
+    private ?Source $gateway = null;
+
+    /**
+     * The source of this synchronization might be an internal object
+     *
+     * @var Source The Source of this resource
+     *
+     * @Groups({"read","write"})
+     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="sourceOfSynchronizations")
+     * @ORM\JoinColumn(nullable=true)
+     */
+    private ?ObjectEntity $sourceObject = null;
 
     /**
      * @var string|null
@@ -183,6 +198,12 @@ class Synchronization
      * @ORM\Column(type="datetime", nullable=true, options={"default" : "CURRENT_TIMESTAMP"})
      */
     private $dontSyncBefore;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Mapping::class, inversedBy="synchronizations")
+     */
+    private $mapping;
+
 
     public function __construct(?Source $source = null, ?Entity $entity = null)
     {
@@ -412,4 +433,30 @@ class Synchronization
             $this->blocked = true;
         }
     }
+
+    public function getMapping(): ?Mapping
+    {
+        return $this->mapping;
+    }
+
+    public function setMapping(?Mapping $mapping): self
+    {
+        $this->mapping = $mapping;
+
+        return $this;
+    }
+
+    public function getSourceObject(): ?ObjectEntity
+    {
+        return $this->sourceObject;
+    }
+
+    public function setSourceObject(?ObjectEntity $sourceObject): self
+    {
+        $this->sourceObject = $sourceObject;
+
+        return $this;
+    }
+
+
 }
