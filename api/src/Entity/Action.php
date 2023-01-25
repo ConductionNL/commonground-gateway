@@ -234,6 +234,11 @@ class Action
         }
     }
 
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
     /**
      * Gets the default config from a json schema definition of an ActionHandler.
      *

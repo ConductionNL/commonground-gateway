@@ -59,6 +59,12 @@ class Mapping
     private UuidInterface $id;
 
     /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $reference;
+
+    /**
      * @var string The name of the mapping
      *
      * @Assert\NotNull
@@ -118,6 +124,11 @@ class Mapping
     private ?bool $passTrough = true;
 
     /**
+     * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="mapping")
+     */
+    private $synchronizations;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -135,19 +146,45 @@ class Mapping
      */
     private $dateModified;
 
-    /**
-     * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="mapping")
-     */
-    private $synchronizations;
-
     public function __construct()
     {
         $this->synchronizations = new ArrayCollection();
     }
 
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
     public function getId(): ?UuidInterface
     {
         return $this->id;
+    }
+
+    public function fromSchema(array $schema): self
+    {
+
+        return  $this;
+    }
+
+    public function toSchema(): array
+    {
+        $schema = [];
+
+        return $schema;
+    }
+
+
+    public function getReference(): ?string
+{
+    return $this->reference;
+}
+
+    public function setReference(string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
     }
 
     public function getName(): ?string
@@ -222,30 +259,6 @@ class Mapping
         return $this;
     }
 
-    public function getDateCreated(): ?\DateTimeInterface
-    {
-        return $this->dateCreated;
-    }
-
-    public function setDateCreated(?\DateTimeInterface $dateCreated): self
-    {
-        $this->dateCreated = $dateCreated;
-
-        return $this;
-    }
-
-    public function getDateModified(): ?\DateTimeInterface
-    {
-        return $this->dateModified;
-    }
-
-    public function setDateModified(?\DateTimeInterface $dateModified): self
-    {
-        $this->dateModified = $dateModified;
-
-        return $this;
-    }
-
     /**
      * @return Collection|Synchronization[]
      */
@@ -272,6 +285,30 @@ class Mapping
                 $synchronization->setMapping(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getDateCreated(): ?\DateTimeInterface
+    {
+        return $this->dateCreated;
+    }
+
+    public function setDateCreated(?\DateTimeInterface $dateCreated): self
+    {
+        $this->dateCreated = $dateCreated;
+
+        return $this;
+    }
+
+    public function getDateModified(): ?\DateTimeInterface
+    {
+        return $this->dateModified;
+    }
+
+    public function setDateModified(?\DateTimeInterface $dateModified): self
+    {
+        $this->dateModified = $dateModified;
 
         return $this;
     }

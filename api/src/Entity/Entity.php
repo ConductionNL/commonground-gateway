@@ -378,6 +378,11 @@ class Entity
         $this->endpoints = new ArrayCollection();
     }
 
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
     public function export()
     {
         if ($this->getSource() !== null) {
