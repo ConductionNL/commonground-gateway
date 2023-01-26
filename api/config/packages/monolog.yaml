@@ -19,7 +19,7 @@ when@dev:
         handlers:
             main:
                 type: stream
-                path: php://stderr
+#                path: php://stderr
                 level: debug
                 channels: ["!event"]
             nested:
@@ -52,11 +52,16 @@ when@dev:
                 formatter: monolog.formatter.json
                 channels: ["cronjob"]
             actionLog:
-                type: stream
-                path: "%kernel.logs_dir%/%kernel.environment%.action.log"
+                type: mongo
                 level: debug
-                formatter: monolog.formatter.json
                 channels: ["action"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: actionLogs
+                    id: monolog.logger.mongo
+                    
+                    
             objectLog:
                 type: stream
                 path: "%kernel.logs_dir%/%kernel.environment%.object.log"

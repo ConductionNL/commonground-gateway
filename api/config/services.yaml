@@ -60,3 +60,7 @@ services:
             - { name: doctrine.event_subscriber, connection: default }
         calls:
             - [ setAnnotationReader, [ '@annotation_reader' ] ]
+
+    monolog.logger.mongo:
+        class: MongoDB\Client
+        arguments: [ '%cache_url%' ]
