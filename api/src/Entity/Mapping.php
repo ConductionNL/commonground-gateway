@@ -8,6 +8,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Exception\GatewayException;
 use App\Repository\MappingRepository;
 use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -63,6 +64,13 @@ class Mapping
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $reference;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $version;
+
 
     /**
      * @var string The name of the mapping
@@ -163,13 +171,36 @@ class Mapping
 
     public function fromSchema(array $schema): self
     {
+        if(!isset($schema['$schema']) || $schema['$schema'] != 'https://json-schema.org/draft/2020-12/mapping'){
+            // todo: throw exception on wron schema (requieres design desigin on referencese
+           // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://json-schema.org/draft/2020-12/mapping is required');
+        }
+
+        (isset($schema['$id'])? $this->setReference($schema['$id']) : "");
+        (isset($schema['title'])? $this->setName($schema['title']) : "");
+        (isset($schema['description'])? $this->setDescription($schema['description']) : "");
+        (isset($schema['version'])? $this->setVersion($schema['version']) : "");
+        (isset($schema['passTrough'])? $this->setPassTrough($schema['passTrough']) : "");
+        (isset($schema['mapping'])? $this->setMapping($schema['mapping']) : "");
+        (isset($schema['unset'])? $this->setUnset($schema['unset']) : "");
+        (isset($schema['cast'])? $this->setCast($schema['cast']) : "");
 
         return  $this;
     }
 
     public function toSchema(): array
     {
-        $schema = [];
+        $schema = [
+            '$id'            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'        => 'https://json-schema.org/draft/2020-12/mapping',
+            'title'          => $this->getName(),
+            'description'    => $this->getDescription(),
+            'version'        => $this->getVersion(),
+            'passTrough'       => $this->getPassTrough(),
+            'mapping'       => $this->getMapping(),
+            'unset'         => $this->getUnset(),
+            'cast'          => $this->getCast(),
+        ];
 
         return $schema;
     }
@@ -183,6 +214,19 @@ class Mapping
     public function setReference(string $reference): self
     {
         $this->reference = $reference;
+
+        return $this;
+    }
+
+
+    public function getversion(): ?string
+    {
+        return $this->version;
+    }
+
+    public function setversion(string $version): self
+    {
+        $this->version = $version;
 
         return $this;
     }
