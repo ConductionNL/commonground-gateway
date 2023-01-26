@@ -1330,7 +1330,9 @@ class SynchronizationService
 
         $object = $synchronization->getObject();
 
-        $sourceObject = $this->mappingService->mapping($synchronization->getMapping(), $sourceObject);
+        if ($synchronization->getMapping()) {
+            $sourceObject = $this->mappingService->mapping($synchronization->getMapping(), $sourceObject);
+        }
 
         $sourceObjectDot = new Dot($sourceObject);
 
