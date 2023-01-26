@@ -1436,18 +1436,15 @@ class ObjectEntity
 
         // Lets check agains common names
         $nameProperties = ['name', 'title', 'naam', 'titel'];
-        foreach ($nameProperties as $nameProperty) {
-            if ($name = $this->getValue($nameProperty)) {
-                if (!is_string($name)) {
-                    continue;
-                }
-                $this->setName($name);
-
-                return;
+        foreach ($this->getObjectValues() as $value){
+            if(in_array($value->getAttribute()->getName(),$nameProperties)){
+                $this->setName($value->getAttribute()->getName());
             }
         }
 
-        $this->setName($this->getId());
+        if($this->getId()){
+            $this->setName($this->getId()->toString());
+        }
 
         // Todo: this is an ugly fix, in actuallity we should run a postUpdate subscriber that checks this and repersists the enitity if thsi happens (it can anly happen if we dont have an id on pre persist e.g. new objects)
         // Just in case we endup here
