@@ -330,10 +330,6 @@ class ActionSubscriber implements EventSubscriberInterface
      */
     private function handleEventIo(ActionEvent $event): bool
     {
-        var_dump(get_class($this->logger));
-        if($this->logger instanceof Logger) {
-            var_dump($this->logger->getName());
-        }
         if ($this->session->get('io')) {
             $this->io = $this->session->get('io');
             if ($this->session->get('currentCronJobThrow') &&
