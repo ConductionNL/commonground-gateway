@@ -12,6 +12,7 @@ use App\Event\ActionEvent;
 use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
+use CommonGateway\CoreBundle\Service\MappingService;
 use DateInterval;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
@@ -49,6 +50,7 @@ class SynchronizationService
     private array $data;
     private SymfonyStyle $io;
     private Environment $twig;
+    private MappingService $mappingService;
 
     private ActionEvent $event;
     private EventDispatcherInterface $eventDispatcher;
@@ -69,8 +71,9 @@ class SynchronizationService
      * @param ValidatorService       $validatorService
      * @param EavService             $eavService
      * @param Environment            $twig
+     * @param MappingService $mappingService
      */
-    public function __construct(CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig, EventDispatcherInterface $eventDispatcher)
+    public function __construct(CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig, EventDispatcherInterface $eventDispatcher, MappingService $mappingService)
     {
         $this->callService = $callService;
         $this->entityManager = $entityManager;
@@ -90,6 +93,7 @@ class SynchronizationService
         $this->event = new ActionEvent('', []);
         $this->eventDispatcher = $eventDispatcher;
         $this->logger = new Logger('installation');
+        $this->mappingService = $mappingService;
     }
 
     /**
@@ -905,11 +909,13 @@ class SynchronizationService
 
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
 
+
         //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
         // todo: this if, elseif, else needs fixing, conditions aren't correct for if we ever want to syncToSource with this handleSync function
         if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() >= $synchronization->getObject()->getDateModified())) {
             $synchronization = $this->syncToGateway($synchronization, $sourceObject, $method);
         }
+
         // todo: we currently never use handleSync to do syncToSource, so let's make sure we aren't trying to by accident
 //        elseif ((!$synchronization->getLastSynced() || $synchronization->getLastSynced() < $synchronization->getObject()->getDateModified()) && $synchronization->getSourceLastChanged() < $synchronization->getObject()->getDateModified()) {
 //            $synchronization = $this->syncToSource($synchronization, true);
@@ -942,6 +948,9 @@ class SynchronizationService
         // todo: move this function to ObjectEntityService to prevent duplicate code...
 
         $objectEntity->hydrate($data);
+
+        $this->entityManager->persist($objectEntity);
+
 
         $this->event->setData(['response' => $objectEntity->toArray(), 'entity' => $objectEntity->getEntity()->getId()->toString()]);
         $this->eventDispatcher->dispatch($this->event, $this->event->getType());
@@ -1318,14 +1327,16 @@ class SynchronizationService
         }
         $this->logger->info("syncToGateway for Synchronization with id = {$synchronization->getId()->toString()}");
 
+
         $object = $synchronization->getObject();
 
-        $sourceObject = $this->mapInput($sourceObject);
+        $sourceObject = $this->mappingService->mapping($synchronization->getMapping(), $sourceObject);
 
         $sourceObjectDot = new Dot($sourceObject);
 
         $object = $this->populateObject($sourceObject, $object, $method);
         $object->setUri($synchronization->getSource()->getLocation().$this->getCallServiceEndpoint($synchronization->getSourceId()));
+
 
         if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
             $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
