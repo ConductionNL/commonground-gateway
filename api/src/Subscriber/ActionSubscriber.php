@@ -11,6 +11,8 @@ use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -27,7 +29,7 @@ class ActionSubscriber implements EventSubscriberInterface
     private SessionInterface $session;
     private SymfonyStyle $io;
     private MessageBusInterface $messageBus;
-    private LoggerInterface $RequestLog;
+    private LoggerInterface $logger;
 
     /**
      * @inheritDoc
@@ -53,7 +55,7 @@ class ActionSubscriber implements EventSubscriberInterface
         ContainerInterface $container,
         ObjectEntityService $objectEntityService,
         SessionInterface $session,
-        LoggerInterface $ActionLog,
+        LoggerInterface $actionLogger,
         MessageBusInterface $messageBus
     ) {
         $this->entityManager = $entityManager;
@@ -61,7 +63,7 @@ class ActionSubscriber implements EventSubscriberInterface
         $this->objectEntityService = $objectEntityService;
         $this->session = $session;
         $this->messageBus = $messageBus;
-        $this->logger = $ActionLog;
+        $this->logger = $actionLogger;
     }
 
     public function runFunction(Action $action, array $data, string $currentThrow): array
@@ -328,6 +330,10 @@ class ActionSubscriber implements EventSubscriberInterface
      */
     private function handleEventIo(ActionEvent $event): bool
     {
+        var_dump(get_class($this->logger));
+        if($this->logger instanceof Logger) {
+            var_dump($this->logger->getName());
+        }
         if ($this->session->get('io')) {
             $this->io = $this->session->get('io');
             if ($this->session->get('currentCronJobThrow') &&
