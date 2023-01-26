@@ -702,12 +702,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "34c02f1026f446f38f3c8919763505b7002dba1a"
+                "reference": "9171350196e58f6f643ef84b74f7db4be2c323f4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/34c02f1026f446f38f3c8919763505b7002dba1a",
-                "reference": "34c02f1026f446f38f3c8919763505b7002dba1a",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/9171350196e58f6f643ef84b74f7db4be2c323f4",
+                "reference": "9171350196e58f6f643ef84b74f7db4be2c323f4",
                 "shasum": ""
             },
             "require": {
@@ -765,7 +765,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-01-23T16:33:36+00:00"
+            "time": "2023-01-24T15:18:15+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -4426,20 +4426,20 @@
         },
         {
             "name": "larping-base/larping-bundle",
-            "version": "1.0.36",
+            "version": "1.0.43",
             "source": {
                 "type": "git",
                 "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "7ed4e445bed9304cbaf813615bb201e446ec71d5"
+                "reference": "def2a2ab3e28fe06724ff93522495616ea06de54"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/7ed4e445bed9304cbaf813615bb201e446ec71d5",
-                "reference": "7ed4e445bed9304cbaf813615bb201e446ec71d5",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/def2a2ab3e28fe06724ff93522495616ea06de54",
+                "reference": "def2a2ab3e28fe06724ff93522495616ea06de54",
                 "shasum": ""
             },
             "require": {
-                "commongateway/corebundle": ">=0.0.1 | dev-version-kiss | dev-master",
+                "commongateway/corebundle": "dev-version-kiss",
                 "php": ">=7.4"
             },
             "require-dev": {
@@ -4468,9 +4468,9 @@
             ],
             "support": {
                 "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.36"
+                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.43"
             },
-            "time": "2023-01-23T09:59:27+00:00"
+            "time": "2023-01-24T21:27:54+00:00"
         },
         {
             "name": "league/html-to-markdown",
