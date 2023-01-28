@@ -8,8 +8,10 @@ use App\Entity\Application;
 use App\Entity\Organization;
 use App\Entity\SecurityGroup;
 use App\Entity\User;
+use App\Event\ActionEvent;
 use CommonGateway\CoreBundle\Service\InstallationService;
 use Doctrine\ORM\EntityManagerInterface;
+use Monolog\Logger;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -30,6 +32,7 @@ class InitializationCommand extends Command
     private SessionInterface $session;
     private ParameterBagInterface $parameterBag;
     private InstallationService $installationService;
+    private Logger $logger;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -75,6 +78,13 @@ class InitializationCommand extends Command
         $config['skip-schema'] = $input->getOption('skip-schema');
         $config['skip-script'] = $input->getOption('skip-script');
         $config['unsafe'] = $input->getOption('unsafe');
+
+        // todo: actualy throw it
+        $io->info('Trowing commongateway.pre.initialization event');
+
+        // Throw the event
+        $event = new ActionEvent('commongateway.pre.initialization', []);
+        $this->eventDispatcher->dispatch($event, 'commongateway.pre.initialization');
 
         $io->title('Check if we have the needed objects');
 
@@ -192,6 +202,13 @@ class InitializationCommand extends Command
         //}
 
         $io->success('Successfully finished setting basic configuration');
+
+        // todo: actualy throw it
+        $io->info('Trowing commongateway.post.initialization event');
+
+        // Throw the event
+        $event = new ActionEvent('commongateway.post.initialization', []);
+        $this->eventDispatcher->dispatch($event, 'commongateway.post.initialization');
 
         return Command::SUCCESS;
     }
