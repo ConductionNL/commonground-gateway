@@ -137,10 +137,6 @@ parameters:
   documentation_licence_name: "%env(DOCUMENTATION_LICENCE_NAME)%"
   documentation_licence_url: "%env(DOCUMENTATION_LICENCE_URL)%"
   documentation_version: "%env(DOCUMENTATION_VERSION)%"
-
-  app_certificate: "%env(APP_CERT)%"
-  app_ssl_key: "%env(APP_KEY)%"
-
   app_shasign: "%env(APP_SHASIGN)%"
 
   mode: "%env(APP_MODE)%"
