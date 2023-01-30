@@ -116,6 +116,13 @@ class SecurityGroup
      */
     private $dateModified;
 
+    /**
+     * @var bool
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", options={"default"=false})
+     */
+    private bool $anonymous = false;
+
     public function __construct()
     {
         $this->users = new ArrayCollection();
@@ -261,6 +268,24 @@ class SecurityGroup
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAnonymous(): bool
+    {
+        return $this->anonymous;
+    }
+
+    /**
+     * @param bool $anonymous
+     */
+    public function setAnonymous(bool $anonymous): self
+    {
+        $this->anonymous = $anonymous;
 
         return $this;
     }

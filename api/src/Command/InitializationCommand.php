@@ -132,6 +132,7 @@ class InitializationCommand extends Command
             $securityGroupAnonymous = new SecurityGroup();
             $securityGroupAnonymous->setName('Default Anonymous');
             $securityGroupAnonymous->setDescription('Created during auto configuration');
+            $securityGroupAnonymous->setAnonymous(true);
 
             $this->entityManager->persist($securityGroupAnonymous);
 
