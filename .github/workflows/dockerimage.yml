@@ -78,6 +78,12 @@ jobs:
           echo "APP_ENV=soapextensions">> $GITHUB_ENV
           echo "APP_BUILD=soapextensions-$RELEASE">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
+      - name: Setting APP_ENV to soap-extensions
+        if: contains( github.ref, 'version-oc' ) || contains( github.base_ref, 'version-oc' )
+        run: |
+          echo "APP_ENV=opencatalogi">> $GITHUB_ENV
+          echo "APP_BUILD=opencatalogi-$RELEASE">> $GITHUB_ENV
+          echo "set APP_ENV to $APP_ENV"
       - name: Print definitive APP_ENV
         run: echo "APP_ENV is now $APP_ENV and APP_BUILD is now $APP_BUILD"
       - name: Build the Docker image
@@ -131,11 +137,11 @@ jobs:
          else
            echo "##[set-output name=success;]false"
          fi
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup')
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup' || github.ref == 'refs/heads/version-oc')
         name: Push to Container Registry
         run: docker-compose push
 
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup')
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/staging' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup' || github.ref == 'refs/heads/version-oc')
         name: Push versioned containers to Container Registry
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
