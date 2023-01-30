@@ -270,24 +270,6 @@ class ConvenienceController extends AbstractController
     }
 
     /**
-     * This function gets the event from github if something has changed in a repository.
-     *
-     * @Route("/github_events")
-     *
-     * @throws Exception|GuzzleException
-     */
-    public function githubEvents(Request $request): Response
-    {
-        if (!$content = json_decode($request->request->get('payload'), true)) {
-//            var_dump($content = $this->handlerService->getDataFromRequest());
-
-            return $this->publiccodeService->updateRepositoryWithEventResponse($this->handlerService->getDataFromRequest());
-        }
-
-        return $this->publiccodeService->updateRepositoryWithEventResponse($content);
-    }
-
-    /**
      * @Route("/admin/publiccode")
      *
      * @throws GuzzleException
