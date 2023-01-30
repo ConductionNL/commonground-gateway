@@ -254,21 +254,21 @@ class Action
 
     public function fromSchema(array $schema): self
     {
-        if(!isset($schema['$schema']) || $schema['$schema'] != 'https://json-schema.org/draft/2020-12/action'){
+        if (!isset($schema['$schema']) || $schema['$schema'] != 'https://json-schema.org/draft/2020-12/action') {
             // todo: throw exception on wron schema (requieres design desigin on referencese
             // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://json-schema.org/draft/2020-12/mapping is required');
         }
 
-        (isset($schema['$id'])? $this->setReference($schema['$id']) : "");
-        (isset($schema['title'])? $this->setName($schema['title']) : "");
-        (isset($schema['description'])? $this->setDescription($schema['description']) : "");
-        (isset($schema['version'])? $this->setVersion($schema['version']) : "");
-        (isset($schema['listens'])? $this->setListens($schema['listens']) : "");
-        (isset($schema['throws'])? $this->setThrows($schema['throws']) : "");
-        (isset($schema['conditions'])? $this->setConditions($schema['conditions']) : "");
-        (isset($schema['configuration'])? $this->setConfiguration($schema['configuration']) : "");
-        (isset($schema['isLockable'])? $this->setIsLockable($schema['isLockable']) : "");
-        (isset($schema['isEnabled'])? $this->getIsEnabled($schema['isEnabled']) : "");
+        (isset($schema['$id']) ? $this->setReference($schema['$id']) : '');
+        (isset($schema['title']) ? $this->setName($schema['title']) : '');
+        (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
+        (isset($schema['version']) ? $this->setVersion($schema['version']) : '');
+        (isset($schema['listens']) ? $this->setListens($schema['listens']) : '');
+        (isset($schema['throws']) ? $this->setThrows($schema['throws']) : '');
+        (isset($schema['conditions']) ? $this->setConditions($schema['conditions']) : '');
+        (isset($schema['configuration']) ? $this->setConfiguration($schema['configuration']) : '');
+        (isset($schema['isLockable']) ? $this->setIsLockable($schema['isLockable']) : '');
+        (isset($schema['isEnabled']) ? $this->getIsEnabled($schema['isEnabled']) : '');
 
         return  $this;
     }
@@ -276,17 +276,17 @@ class Action
     public function toSchema(): array
     {
         $schema = [
-            '$id'            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema'        => 'https://json-schema.org/draft/2020-12/action',
-            'title'          => $this->getName(),
-            'description'    => $this->getDescription(),
-            'version'        => $this->getVersion(),
-            'listens'       => $this->getListens(),
-            'throws'         => $this->getThrows(),
-            'conditions'          => $this->getConditions(),
+            '$id'                    => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'                => 'https://json-schema.org/draft/2020-12/action',
+            'title'                  => $this->getName(),
+            'description'            => $this->getDescription(),
+            'version'                => $this->getVersion(),
+            'listens'                => $this->getListens(),
+            'throws'                 => $this->getThrows(),
+            'conditions'             => $this->getConditions(),
             'configuration'          => $this->getConfiguration(),
-            'isLockable'          => $this->getIsLockable(),
-            'isEnabled'          => $this->getIsEnabled()
+            'isLockable'             => $this->getIsLockable(),
+            'isEnabled'              => $this->getIsEnabled(),
         ];
 
         return $schema;
@@ -322,7 +322,6 @@ class Action
         return $this->id;
     }
 
-
     public function getReference(): ?string
     {
         return $this->reference;
@@ -334,7 +333,6 @@ class Action
 
         return $this;
     }
-
 
     public function getversion(): ?string
     {
