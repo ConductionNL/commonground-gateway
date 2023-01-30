@@ -1423,17 +1423,18 @@ class ObjectEntity
 
         // Lets see if the name is configured
         $nameProperties = array_merge(['name', 'title', 'naam', 'titel'], $this->entity->getNameProperties());
-
-        // Lets check agains common names
-        $nameProperties = ['name', 'title', 'naam', 'titel'];
+        $nameArray = [];
         foreach ($this->getObjectValues() as $value){
             if(in_array($value->getAttribute()->getName(),$nameProperties)){
-                $this->setName($value->getValue());
-                break;
+                $nameArray[] = $value->getStringValue();
             }
         }
 
-        if($this->getId()){
+        if(count($nameArray) > 0 && $name = implode(' ',$nameArray)){
+            $this->setName($name);
+        }
+
+        if(!$this->getName() && $this->getId()){
             $this->setName($this->getId()->toString());
         }
 
