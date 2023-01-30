@@ -71,7 +71,7 @@ class SynchronizationService
      * @param ValidatorService       $validatorService
      * @param EavService             $eavService
      * @param Environment            $twig
-     * @param MappingService $mappingService
+     * @param MappingService         $mappingService
      */
     public function __construct(CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig, EventDispatcherInterface $eventDispatcher, MappingService $mappingService)
     {
@@ -97,9 +97,10 @@ class SynchronizationService
     }
 
     /**
-     * Set symfony style in order to output to the console
+     * Set symfony style in order to output to the console.
      *
      * @param SymfonyStyle $io
+     *
      * @return self
      */
     public function setStyle(SymfonyStyle $io): self
@@ -909,7 +910,6 @@ class SynchronizationService
 
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
 
-
         //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
         // todo: this if, elseif, else needs fixing, conditions aren't correct for if we ever want to syncToSource with this handleSync function
         if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() >= $synchronization->getObject()->getDateModified())) {
@@ -950,7 +950,6 @@ class SynchronizationService
         $objectEntity->hydrate($data);
 
         $this->entityManager->persist($objectEntity);
-
 
         $this->event->setData(['response' => $objectEntity->toArray(), 'entity' => $objectEntity->getEntity()->getId()->toString()]);
         $this->eventDispatcher->dispatch($this->event, $this->event->getType());
@@ -1327,7 +1326,6 @@ class SynchronizationService
         }
         $this->logger->info("syncToGateway for Synchronization with id = {$synchronization->getId()->toString()}");
 
-
         $object = $synchronization->getObject();
 
         if ($synchronization->getMapping()) {
@@ -1338,7 +1336,6 @@ class SynchronizationService
 
         $object = $this->populateObject($sourceObject, $object, $method);
         $object->setUri($synchronization->getSource()->getLocation().$this->getCallServiceEndpoint($synchronization->getSourceId()));
-
 
         if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
             $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
