@@ -809,7 +809,7 @@ class SynchronizationService
             $synchronization->getSourceId() && $object->setExternalId($synchronization->getSourceId());
             $object->setEntity($synchronization->getEntity());
             $object = $this->setApplicationAndOrganization($object);
-            $synchronization->setObject($object);
+            $object->addSynchronization($synchronization);
             $this->entityManager->persist($object);
             if (isset($this->io)) {
                 $this->io->text("Created new ObjectEntity for Synchronization with id = {$synchronization->getId()->toString()}");
