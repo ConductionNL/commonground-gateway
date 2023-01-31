@@ -811,8 +811,8 @@ class ObjectEntity
         return
             isset($array['embedded']) ? 'embedded' : (
                 isset($array['@embedded']) ? '@embedded' : (
-                isset($array['_embedded']) ? '_embedded' : false
-            )
+                    isset($array['_embedded']) ? '_embedded' : false
+                )
             );
     }
 
