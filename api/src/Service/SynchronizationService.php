@@ -812,7 +812,7 @@ class SynchronizationService
             $synchronization->setObject($object);
             $this->entityManager->persist($object);
             if (isset($this->io)) {
-                $this->io->text("Created new ObjectEntity for Synchronization with id = {$synchronization->getId()->toString()}");
+                $this->io->text("Created new ObjectEntity for Synchronization");
             }
             $this->event = new ActionEvent('commongateway.object.create', []);
 
@@ -872,12 +872,17 @@ class SynchronizationService
      */
     public function handleSync(Synchronization $synchronization, array $sourceObject = [], ?array $customConfig = null): Synchronization
     {
+
         isset($customConfig) && $this->configuration = $customConfig;
 
-        if (isset($this->io)) {
-            $this->io->text("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
+        if ($synchronization->getId()) {
+            (isset($this->io) ?$this->io->text("handleSync for Synchronization with id = {$synchronization->getId()->toString()}"): '');
+            $this->logger->info("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
         }
-        $this->logger->info("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
+        else{
+            (isset($this->io) ? $this->io->text("Setting up new sync"): '');
+        }
+
         $method = $this->checkObjectEntity($synchronization);
 
         // If we don't have an sourced object, we need to get one
@@ -885,7 +890,7 @@ class SynchronizationService
 
         if ($sourceObject === null) {
             if (isset($this->io)) {
-                $this->io->warning("Can not handleSync for Synchronization with id = {$synchronization->getId()->toString()} if \$sourceObject === null");
+                $this->io->warning("Can not handleSync for Synchronization if \$sourceObject === null");
             }
             //todo: error, user feedback and log this? (see getSingleFromSource function)
             return $synchronization;
@@ -1322,9 +1327,9 @@ class SynchronizationService
     private function syncToGateway(Synchronization $synchronization, array $sourceObject, string $method = 'POST'): Synchronization
     {
         if (isset($this->io)) {
-            $this->io->text("syncToGateway for Synchronization with id = {$synchronization->getId()->toString()}");
+            $this->io->text("syncToGateway for Synchronization");
         }
-        $this->logger->info("syncToGateway for Synchronization with id = {$synchronization->getId()->toString()}");
+        $this->logger->info("syncToGateway for Synchronization");
 
         $object = $synchronization->getObject();
 

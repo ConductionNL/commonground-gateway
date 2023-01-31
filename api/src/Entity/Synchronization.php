@@ -215,6 +215,9 @@ class Synchronization
 
     public function getId(): ?UuidInterface
     {
+        if(!isset($this->id)){
+            return null;
+        }
         return $this->id;
     }
 
