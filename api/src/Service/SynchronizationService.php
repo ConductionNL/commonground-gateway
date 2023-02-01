@@ -932,6 +932,73 @@ class SynchronizationService
         return $synchronization;
     }
 
+    public function synchronize (Synchronization $synchronization, array $sourceObject): Synchronization
+    {
+
+        if (isset($this->io)) {
+            $this->io->text("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
+        }
+        $this->logger->info("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
+
+        //create new object if no object exists
+        if(!$synchronization->getObject()){
+            $this->io->text('creating new objectEntity');
+            $object = new ObjectEntity($synchronization->getEntity());
+            $object->addSynchronization($synchronization);
+            $this->entityManager->persist($object);
+            $this->entityManager->persist($synchronization);
+            $oldDateModified = null;
+        } else {
+            $oldDateModified = $synchronization->getObject()->getDateModified()->getTimestamp();
+        }
+
+
+        $sourceObject = $sourceObject ?: $this->getSingleFromSource($synchronization);
+
+        if ($sourceObject === null) {
+            if (isset($this->io)) {
+                $this->io->warning("Can not handleSync for Synchronization with id = {$synchronization->getId()->toString()} if \$sourceObject === null");
+            }
+            //todo: error, user feedback and log this? (see getSingleFromSource function)
+            return $synchronization;
+        }
+
+        // Let check
+        $now = new DateTime();
+        $synchronization->setLastChecked($now);
+
+        // Counter
+        $counter = $synchronization->getTryCounter() + 1;
+        $synchronization->setTryCounter($counter);
+
+        // Set dont try before, expensional so in minutes  1,8,27,64,125,216,343,512,729,1000
+        $addMinutes = pow($counter, 3);
+        if ($synchronization->getDontSyncBefore()) {
+            $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT'.$addMinutes.'M'));
+        } else {
+            $dontTryBefore = new DateTime();
+        }
+        $synchronization->setDontSyncBefore($dontTryBefore);
+
+
+        if ($synchronization->getMapping()) {
+            $sourceObject = $this->mappingService->mapping($synchronization->getMapping(), $sourceObject);
+        }
+        $synchronization->getObject()->hydrate($sourceObject);
+        $this->entityManager->persist($synchronization);
+
+        if($oldDateModified !== $synchronization->getObject()->getDateModified()->getTimestamp()) {
+            $date = new DateTime();
+            $this->io->text("set new dateLastChanged to {$date->format('d-m-YTH:i:s')}");
+            $synchronization->setLastSynced(new DateTime());
+        } else {
+            $this->io->text("lastSynced is still {$synchronization->getObject()->getDateModified()->format('d-m-YTH:i:s')}");
+        }
+        //@TODO: write to source if internal timestamp > external timestamp & sourceobject is new
+
+        return $synchronization;
+    }
+
     /**
      * This function populates a pre-existing objectEntity with data that has been validated.
      * This function is only meant for synchronization.
@@ -1348,6 +1415,8 @@ class SynchronizationService
         $synchronization->setLastSynced($now);
 
         return $synchronization->setObject($object);
+
+
     }
 
     // todo: docs
