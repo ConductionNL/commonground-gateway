@@ -932,18 +932,17 @@ class SynchronizationService
         return $synchronization;
     }
 
-
     /**
      * Executes the synchronization between source and gateway.
      *
      * @param Synchronization $synchronization The synchronization to update
-     * @param array $sourceObject The object in the source
-     *
-     * @return Synchronization The updated synchronization
+     * @param array           $sourceObject    The object in the source
      *
      * @throws GuzzleException
      * @throws LoaderError
      * @throws SyntaxError
+     *
+     * @return Synchronization The updated synchronization
      */
     public function synchronize(Synchronization $synchronization, array $sourceObject = []): Synchronization
     {
