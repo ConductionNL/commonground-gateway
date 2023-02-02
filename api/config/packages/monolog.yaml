@@ -13,6 +13,7 @@ monolog:
         - object
         - call
         - installation
+        - mapping
 
 when@dev:
     monolog:
@@ -118,6 +119,16 @@ when@dev:
                 path: "%kernel.logs_dir%/%kernel.environment%.cache.log"
                 level: debug
                 channels: ["cache"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
+            mappingLog:
+                type: mongo
+                path: "%kernel.logs_dir%/%kernel.environment%.cache.log"
+                level: debug
+                channels: ["mapping"]
                 mongo:
                     host: "%cache_url%"
                     database: logs

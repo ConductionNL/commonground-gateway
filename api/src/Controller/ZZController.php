@@ -15,6 +15,7 @@ use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -80,7 +81,8 @@ class ZZController extends AbstractController
         SerializerInterface $serializer,
         LogService $logService,
         ProcessingLogService $processingLogService,
-        RequestService $requestService
+        RequestService $requestService,
+        SessionInterface $session
     ): Response {
         // Below is hacky tacky
         // @todo refactor
@@ -100,6 +102,8 @@ class ZZController extends AbstractController
         */
         // End of hacky tacky
 
+        //set process ID for logging:
+        $session->set('process', Uuid::uuid4()->toString());
         // default acceptType for if we throw an error response.
         $acceptType = $handlerService->getRequestType('accept');
         in_array($acceptType, ['form.io', 'jsonhal']) && $acceptType = 'json';
@@ -174,6 +178,8 @@ class ZZController extends AbstractController
             }
             $logService->saveLog($request, $response, 10);
             $processingLogService->saveProcessingLog();
+
+            $session->remove('process');
 
             return $response->prepare($request);
         }

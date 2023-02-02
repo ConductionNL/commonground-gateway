@@ -9,6 +9,8 @@ use App\Event\ActionEvent;
 use Cron\CronExpression;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use Psr\Log\LoggerInterface;
+use Ramsey\Uuid\Uuid;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Helper\TableSeparator;
@@ -27,15 +29,18 @@ class CronjobCommand extends Command
     private EntityManagerInterface $entityManager;
     private EventDispatcherInterface $eventDispatcher;
     private SessionInterface $session;
+    private LoggerInterface $logger;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         EventDispatcherInterface $eventDispatcher,
-        SessionInterface $session
+        SessionInterface $session,
+        LoggerInterface $cronjobLogger
     ) {
         $this->entityManager = $entityManager;
         $this->eventDispatcher = $eventDispatcher;
         $this->session = $session;
+        $this->logger = $cronjobLogger;
 
         parent::__construct();
     }
@@ -61,6 +66,7 @@ class CronjobCommand extends Command
      */
     public function makeActionEvent(Cronjob $cronjob, SymfonyStyle $io): void
     {
+
         $totalThrows = $cronjob->getThrows() ? count($cronjob->getThrows()) : 0;
         $io->section("Found $totalThrows Throw".($totalThrows !== 1 ? 's' : '').' for this Cronjob');
 
@@ -111,6 +117,7 @@ class CronjobCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $this->session->set('process', Uuid::uuid4()->toString());
         $this->input = $input;
         $this->output = $output;
         $io = new SymfonyStyle($input, $output);
@@ -127,6 +134,8 @@ class CronjobCommand extends Command
         $errorCount = 0;
         if ($cronjobs !== null) {
             foreach ($cronjobs as $cronjob) {
+                $this->session->set('cronjob', $cronjob->getId()->toString());
+                $this->logger->info("Start running cronjob {$cronjob->getId()->toString()}");
                 try {
                     $this->handleCronjobIoStart($io, $cronjob);
 
@@ -135,6 +144,7 @@ class CronjobCommand extends Command
                     $this->handleCronjobIoFinish($io, $cronjob);
                 } catch (Exception $exception) {
                     $io->error("Stopped running this cronjob because of the following error: {$exception->getMessage()}");
+                    $this->logger->error("Stopped running this cronjob because of the following error: {$exception->getMessage()}");
                     $io->block("Code: {$exception->getCode()}");
                     $io->block("File: {$exception->getFile()}");
                     $io->block("Line: {$exception->getLine()}");
@@ -147,6 +157,7 @@ class CronjobCommand extends Command
         }
 
         $io->progressFinish();
+        $this->session->remove('process');
 
         return $this->handleExecuteResponse($io, $errorCount, $total);
     }
