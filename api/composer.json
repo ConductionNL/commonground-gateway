@@ -33,7 +33,7 @@
         "mongodb/mongodb": "^1.15",
         "monolog/monolog": "^2.8.0",
         "nelmio/cors-bundle": "^2.1",
-        "open-catalogi/open-catalogi-bundle": "0.0.36",
+        "open-catalogi/open-catalogi-bundle": "0.0.41",
         "phpdocumentor/reflection-docblock": "^5.2",
         "phpoffice/phpword": "^0.18.2",
         "respect/validation": "^2.2",
