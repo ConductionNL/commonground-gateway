@@ -64,3 +64,8 @@ services:
     monolog.logger.mongo:
         class: MongoDB\Client
         arguments: [ '%cache_url%' ]
+        
+    monolog.session.processor:
+        class: App\Logger\SessionDataProcessor
+        tags:
+            - { name: monolog.processor }
