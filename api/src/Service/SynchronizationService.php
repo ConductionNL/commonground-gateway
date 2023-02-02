@@ -1424,6 +1424,7 @@ class SynchronizationService
 
         $now = new DateTime();
         $synchronization->setLastSynced($now);
+        $synchronization->setTryCounter(0);
 
         return $synchronization->setObject($object);
     }
