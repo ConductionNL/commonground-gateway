@@ -1003,7 +1003,7 @@ class SynchronizationService
             $synchronization->setLastSynced(new DateTime());
             $synchronization->setTryCounter(0);
         } else {
-            $this->io->text("lastSynced is still {$synchronization->getObject()->getDateModified()->format('d-m-YTH:i:s')}");
+            isset($this->io) ?? $this->io->text("lastSynced is still {$synchronization->getObject()->getDateModified()->format('d-m-YTH:i:s')}");
         }
         //@TODO: write to source if internal timestamp > external timestamp & sourceobject is new
 
