@@ -932,16 +932,15 @@ class SynchronizationService
         return $synchronization;
     }
 
-    public function synchronize (Synchronization $synchronization, array $sourceObject): Synchronization
+    public function synchronize(Synchronization $synchronization, array $sourceObject): Synchronization
     {
-
         if (isset($this->io)) {
             $this->io->text("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
         }
         $this->logger->info("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
 
         //create new object if no object exists
-        if(!$synchronization->getObject()){
+        if (!$synchronization->getObject()) {
             $this->io->text('creating new objectEntity');
             $object = new ObjectEntity($synchronization->getEntity());
             $object->addSynchronization($synchronization);
@@ -951,7 +950,6 @@ class SynchronizationService
         } else {
             $oldDateModified = $synchronization->getObject()->getDateModified()->getTimestamp();
         }
-
 
         $sourceObject = $sourceObject ?: $this->getSingleFromSource($synchronization);
 
@@ -980,14 +978,13 @@ class SynchronizationService
         }
         $synchronization->setDontSyncBefore($dontTryBefore);
 
-
         if ($synchronization->getMapping()) {
             $sourceObject = $this->mappingService->mapping($synchronization->getMapping(), $sourceObject);
         }
         $synchronization->getObject()->hydrate($sourceObject);
         $this->entityManager->persist($synchronization);
 
-        if($oldDateModified !== $synchronization->getObject()->getDateModified()->getTimestamp()) {
+        if ($oldDateModified !== $synchronization->getObject()->getDateModified()->getTimestamp()) {
             $date = new DateTime();
             $this->io->text("set new dateLastChanged to {$date->format('d-m-YTH:i:s')}");
             $synchronization->setLastSynced(new DateTime());
@@ -1415,8 +1412,6 @@ class SynchronizationService
         $synchronization->setLastSynced($now);
 
         return $synchronization->setObject($object);
-
-
     }
 
     // todo: docs
