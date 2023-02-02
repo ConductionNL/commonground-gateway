@@ -932,7 +932,20 @@ class SynchronizationService
         return $synchronization;
     }
 
-    public function synchronize(Synchronization $synchronization, array $sourceObject): Synchronization
+
+    /**
+     * Executes the synchronization between source and gateway.
+     *
+     * @param Synchronization $synchronization The synchronization to update
+     * @param array $sourceObject The object in the source
+     *
+     * @return Synchronization The updated synchronization
+     *
+     * @throws GuzzleException
+     * @throws LoaderError
+     * @throws SyntaxError
+     */
+    public function synchronize(Synchronization $synchronization, array $sourceObject = []): Synchronization
     {
         if (isset($this->io)) {
             $this->io->text("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
@@ -988,6 +1001,7 @@ class SynchronizationService
             $date = new DateTime();
             $this->io->text("set new dateLastChanged to {$date->format('d-m-YTH:i:s')}");
             $synchronization->setLastSynced(new DateTime());
+            $synchronization->setTryCounter(0);
         } else {
             $this->io->text("lastSynced is still {$synchronization->getObject()->getDateModified()->format('d-m-YTH:i:s')}");
         }
