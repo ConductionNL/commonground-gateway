@@ -1426,17 +1426,17 @@ class ObjectEntity
         // Lets see if the name is configured
         $nameProperties = array_merge(['name', 'title', 'naam', 'titel'], $this->entity->getNameProperties());
         $nameArray = [];
-        foreach ($this->getObjectValues() as $value){
-            if(in_array($value->getAttribute()->getName(),$nameProperties)){
+        foreach ($this->getObjectValues() as $value) {
+            if (in_array($value->getAttribute()->getName(), $nameProperties)) {
                 $nameArray[] = $value->getStringValue();
             }
         }
 
-        if(count($nameArray) > 0 && $name = implode(' ',$nameArray)){
+        if (count($nameArray) > 0 && $name = implode(' ', $nameArray)) {
             $this->setName($name);
         }
 
-        if(!$this->getName() && $this->getId()){
+        if (!$this->getName() && $this->getId()) {
             $this->setName($this->getId()->toString());
         }
 
