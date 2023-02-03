@@ -339,11 +339,13 @@ class Endpoint
     {
         // Lets make a path & add prefix to this path if it is needed.
         $path = array_key_exists('path', $configuration) ? $configuration['path'] : $default['path'];
-        // todo: temp, disabled prefixes for kiss, put this back on cleanup
-//        $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
-//        if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
-//            $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().'/'.$path;
-//        }
+
+        $entity = array_key_exists('entities', $configuration) && is_array($configuration['entities']) && !empty($configuration['entities'])
+            ? $configuration['entities'][0] : ($this->entities->first() ?? $this->entity);
+        $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
+        if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
+            $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().'/'.$path;
+        }
 
         // Set the pathRegex
         $pathRegex = array_key_exists('pathRegex', $configuration) ? $configuration['pathRegex'] : "^$path/{$default['pathRegexEnd']}$";
