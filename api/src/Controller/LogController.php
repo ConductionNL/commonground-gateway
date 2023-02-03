@@ -62,6 +62,24 @@ class LogController extends AbstractController
         }
     }
 
+    public function setPagination(&$limit, &$start, array $filters): array
+    {
+        if (isset($filters['_limit'])) {
+            $limit = intval($filters['_limit']);
+        } else {
+            $limit = 30;
+        }
+        if (isset($filters['_start']) || isset($filters['_offset'])) {
+            $start = isset($filters['_start']) ? intval($filters['_start']) : intval($filters['_offset']);
+        } elseif (isset($filters['_page'])) {
+            $start = (intval($filters['_page']) - 1) * $limit;
+        } else {
+            $start = 0;
+        }
+
+        return $filters;
+    }
+
     /**
      * This function is a wrapper for the cronjob command.
      *
@@ -75,7 +93,13 @@ class LogController extends AbstractController
 
         $collection = $client->logs->logs;
         $filter = $this->realRequestQueryAll('get', $request->getQueryString());
-        $content = json_encode($collection->find($filter)->toArray());
+        $completeFilter = $filter;
+
+        unset($filter['_start'], $filter['_offset'], $filter['_limit'], $filter['_page'],
+            $filter['_extend'], $filter['_search'], $filter['_order'], $filter['_fields']);
+        $completeFilter = $this->setPagination($limit, $start, $completeFilter);
+
+        $content = json_encode(['results' => $collection->find($filter, ['limit' => $limit, 'skip' => $start])->toArray(), 'page' => intval($completeFilter['_page']), 'count' => $total = $collection->count($filter), 'pages' => floor($total/$limit)]);
 
         return new Response($content, $status, ['Content-type' => 'application/json']);
     }
