@@ -129,12 +129,6 @@ class File
     private Value $value;
 
     /**
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="file", fetch="EXTRA_LAZY")
-     */
-    private Collection $requestLogs;
-
-    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -154,7 +148,7 @@ class File
 
     public function __construct()
     {
-        $this->requestLogs = new ArrayCollection();
+
     }
 
     public function getId(): ?UuidInterface
@@ -237,36 +231,6 @@ class File
     public function setValue(?Value $value): self
     {
         $this->value = $value;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|RequestLog[]
-     */
-    public function getRequestLogs(): Collection
-    {
-        return $this->requestLogs;
-    }
-
-    public function addRequestLog(RequestLog $requestLog): self
-    {
-        if (!$this->requestLogs->contains($requestLog)) {
-            $this->requestLogs[] = $requestLog;
-            $requestLog->setFile($this);
-        }
-
-        return $this;
-    }
-
-    public function removeRequestLog(RequestLog $requestLog): self
-    {
-        if ($this->requestLogs->removeElement($requestLog)) {
-            // set the owning side to null (unless already changed)
-            if ($requestLog->getFile() === $this) {
-                $requestLog->setFile(null);
-            }
-        }
 
         return $this;
     }

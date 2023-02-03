@@ -36,7 +36,6 @@ class EavService
 {
     private EntityManagerInterface $em;
     private CommonGroundService $commonGroundService;
-    private ValidationService $validationService;
     private SerializerService $serializerService;
     private SerializerInterface $serializer;
     private AuthorizationService $authorizationService;
@@ -53,7 +52,6 @@ class EavService
     public function __construct(
         EntityManagerInterface $em,
         CommonGroundService $commonGroundService,
-        ValidationService $validationService,
         SerializerService $serializerService,
         SerializerInterface $serializer,
         AuthorizationService $authorizationService,
@@ -69,7 +67,6 @@ class EavService
     ) {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
-        $this->validationService = $validationService;
         $this->serializerService = $serializerService;
         $this->serializer = $serializer;
         $this->authorizationService = $authorizationService;
@@ -82,11 +79,6 @@ class EavService
         $this->functionService = $functionService;
         $this->cache = $cache;
         $this->stopwatch = $stopwatch;
-    }
-
-    public function getValidationService(): ValidationService
-    {
-        return $this->validationService;
     }
 
     /**
@@ -668,12 +660,12 @@ class EavService
                     } else {
                         // Loop through all files, validate them and store them in the files ArrayCollection
                         foreach ($value as $file) {
-                            $objectEntity = $this->validationService->validateFile($objectEntity, $attribute, $this->validationService->uploadedFileToFileArray($file, $file->getClientOriginalName()));
+
                         }
                     }
                 } else {
                     // Validate (and create/update) this file
-                    $objectEntity = $this->validationService->validateFile($objectEntity, $attribute, $this->validationService->uploadedFileToFileArray($value));
+
                 }
 
                 return $objectEntity;
@@ -864,68 +856,8 @@ class EavService
             unset($body['@owner']);
         }
 
-        // Validation stap
-        $this->validationService->setRequest($request);
-        $this->validationService->createdObjects = $request->getMethod() == 'POST' ? [$object] : [];
-        $this->validationService->removeObjectsNotMultiple = []; // to be sure
-        $this->validationService->notifications = []; // to be sure
-        $object = $this->validationService->validateEntity($object, $body);
-
-        // Let see if we have errors
-        if ($object->getHasErrors()) {
-            $errorsResponse = $this->returnErrors($object);
-            $this->handleDeleteOnError();
-
-            return $errorsResponse;
-        }
-
-        // TODO: use (ObjectEntity) $object->promises instead
-        /* this way of working is way vasther then passing stuff trough the object's, lets also implement this for error checks */
-        if (!empty($this->validationService->promises)) {
-            Utils::settle($this->validationService->promises)->wait();
-
-            foreach ($this->validationService->promises as $promise) {
-                echo $promise->wait();
-            }
-        }
-
         // Check optional conditional logic
         $object->checkConditionlLogic(); // Old way of checking condition logic
-
-        // Afther guzzle has cleared we need to again check for errors
-        if ($object->getHasErrors()) {
-            $errorsResponse = $this->returnErrors($object);
-            $this->handleDeleteOnError();
-
-            return $errorsResponse;
-        }
-
-        // Remove relations for inversedBy objects that are not multiple (example-> POST organization.postalCodes: ["postalCodeUuid"] when the used postalCode already has a postalCode.organization connected, we are disconnecting the old connection here)
-        foreach ($this->validationService->removeObjectsNotMultiple as $removeObjectNotMultiple) {
-            $removeObjectNotMultiple['object']->removeSubresourceOf($removeObjectNotMultiple['valueObject']);
-        }
-        $this->em->flush();
-
-        // Check if we need to remove relations and/or objects for multiple objects arrays during a PUT (example-> emails: [])
-        if ($request->getMethod() == 'PUT') {
-            foreach ($this->validationService->removeObjectsOnPut as $removeObjectOnPut) {
-                $removeObjectOnPut['object']->removeSubresourceOf($removeObjectOnPut['valueObject']);
-                // If the object has no other 'parent' connections, if the attribute of the value must be unique...
-                // Example: Entity "Organization" has Attribute "organization_postalCodes" (array of postalCodes objects) that mustBeUnique
-                if (count($removeObjectOnPut['object']->getSubresourceOf()) == 0 && $removeObjectOnPut['valueObject']->getAttribute()->getMustBeUnique()) {
-                    // ...and if the object of the attribute has a value that must be unique
-                    // Example: Entity "postalCode" has Attribute "code" (integer) that mustBeUnique
-                    foreach ($removeObjectOnPut['valueObject']->getAttribute()->getObject()->getAttributes() as $attribute) {
-                        if ($attribute->getMustBeUnique()) {
-                            // delete it entirely. This is because mustBeUnique checks will trigger if these objects keep existing. And if they have no connection to anything, they shouldn't
-                            $this->handleDelete($removeObjectOnPut['object']); // Do make sure to check for mayBeOrphaned and cascadeDelete though
-                            break;
-                        }
-                    }
-                }
-            }
-            $this->em->flush();
-        }
 
         // Saving the data
         $this->em->persist($object);
@@ -935,11 +867,6 @@ class EavService
         $this->objectEntityService->handleOwner($object, $owner); // note: $owner is allowed to be null!
         $this->em->persist($object);
         $this->em->flush();
-
-        // Send notifications
-        foreach ($this->validationService->notifications as $notification) {
-            $this->validationService->notify($notification['objectEntity'], $notification['method']);
-        }
 
         return $this->responseService->renderResult($object, $fields, null);
     }
@@ -1356,22 +1283,7 @@ class EavService
         $this->em->remove($object);
         $this->em->flush();
 
-        // Send a notification
-        $this->validationService->notify($object, 'DELETE');
-
         return [];
-    }
-
-    /**
-     * We need to do a clean up if there are errors, almost same as handleDelete, but without the cascade checks and notifications.
-     *
-     * @return void
-     */
-    public function handleDeleteOnError()
-    {
-        foreach (array_reverse($this->validationService->createdObjects) as $createdObject) {
-            $this->handleDeleteObjectOnError($createdObject); // see to do in this function
-        }
     }
 
     /**

@@ -229,21 +229,6 @@ class Entity
     private ?array $usedProperties = [];
 
     /**
-     * @ORM\OneToMany(targetEntity=GatewayResponseLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
-     *
-     * @deprecated
-     */
-    private $responseLogs;
-
-    /**
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="entity", fetch="EXTRA_LAZY", cascade={"remove"})
-     *
-     * @deprecated
-     */
-    private Collection $requestLogs;
-
-    /**
      * @var array Used for ConvertToGatewayService. Config to translate specific calls to a different method or endpoint. When changing the endpoint, if you want, you can use {id} to specify the location of the id in the endpoint.
      *
      * @Groups({"read", "write"})
@@ -423,11 +408,6 @@ class Entity
         $this->subscriberOut = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->endpoints = new ArrayCollection();
-    }
-
-    public function __toString()
-    {
-        return $this->getName();
     }
 
     public function export()
@@ -796,36 +776,6 @@ class Entity
     public function setUsedProperties(?array $usedProperties): self
     {
         $this->usedProperties = $usedProperties;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|GatewayResponseLog[]
-     */
-    public function getResponseLogs(): Collection
-    {
-        return $this->responseLogs;
-    }
-
-    public function addResponseLog(GatewayResponseLog $responseLog): self
-    {
-        if (!$this->responseLogs->contains($responseLog)) {
-            $this->responseLogs[] = $responseLog;
-            $responseLog->setEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeResponseLog(GatewayResponseLog $responseLog): self
-    {
-        if ($this->responseLogs->removeElement($responseLog)) {
-            // set the owning side to null (unless already changed)
-            if ($responseLog->getEntity() === $this) {
-                $responseLog->setEntity(null);
-            }
-        }
 
         return $this;
     }

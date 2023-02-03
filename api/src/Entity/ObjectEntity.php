@@ -141,11 +141,6 @@ class ObjectEntity
     private ?array $externalResult = [];
 
     /**
-     * @ORM\ManyToMany(targetEntity=GatewayResponseLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
-     */
-    private $responseLogs;
-
-    /**
      * @Groups({"read"})
      * @MaxDepth(1)
      * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"})
@@ -161,12 +156,6 @@ class ObjectEntity
      * @Groups({"read", "write"})
      */
     private ?string $subresourceIndex = null;
-
-    /**
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY", cascade={"remove"})
-     */
-    private Collection $requestLogs;
 
     /**
      * @MaxDepth(1)
@@ -931,36 +920,6 @@ class ObjectEntity
         }
 
         return $subresources;
-    }
-
-    /**
-     * @return Collection|GatewayResponseLog[]
-     */
-    public function getResponseLogs(): Collection
-    {
-        return $this->responseLogs;
-    }
-
-    public function addResponseLog(GatewayResponseLog $responseLog): self
-    {
-        if (!$this->responseLogs->contains($responseLog)) {
-            $this->responseLogs->add($responseLog);
-            $responseLog->setObjectEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeResponseLog(GatewayResponseLog $responseLog): self
-    {
-        if ($this->responseLogs->removeElement($responseLog)) {
-            // set the owning side to null (unless already changed)
-            if ($responseLog->getObjectEntity() === $this) {
-                $responseLog->setObjectEntity(null);
-            }
-        }
-
-        return $this;
     }
 
     /**

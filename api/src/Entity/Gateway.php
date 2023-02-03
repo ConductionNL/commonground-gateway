@@ -470,11 +470,6 @@ class Gateway
     private ?string $documentation = null;
 
     /**
-     * @ORM\OneToMany(targetEntity=GatewayResponseLog::class, mappedBy="gateway", orphanRemoval=true, fetch="EXTRA_LAZY")
-     */
-    private $responseLogs;
-
-    /**
      * Setting logging to true will couse ALL responses to be logged (normaly we only log errors). Doing so wil dramaticly slow down the gateway and couse an increase in database size. This is not recomended outside of development purposes.
      *
      * @ORM\Column(type="boolean", nullable=true)
@@ -952,36 +947,6 @@ class Gateway
     public function setDocumentation(?string $documentation): self
     {
         $this->documentation = $documentation;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|GatewayResponseLog[]
-     */
-    public function getResponseLogs(): Collection
-    {
-        return $this->responceLogs;
-    }
-
-    public function addResponseLog(GatewayResponseLog $responceLog): self
-    {
-        if (!$this->responceLogs->contains($responceLog)) {
-            $this->responceLogs[] = $responceLog;
-            $responceLog->setSource($this);
-        }
-
-        return $this;
-    }
-
-    public function removeResponseLog(GatewayResponseLog $responceLog): self
-    {
-        if ($this->responceLogs->removeElement($responceLog)) {
-            // set the owning side to null (unless already changed)
-            if ($responceLog->getSource() === $this) {
-                $responceLog->setSource(null);
-            }
-        }
 
         return $this;
     }

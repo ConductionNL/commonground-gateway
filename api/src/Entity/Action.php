@@ -199,11 +199,6 @@ class Action
     private ?bool $isEnabled = true;
 
     /**
-     * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="action", orphanRemoval=true, fetch="EXTRA_LAZY")
-     */
-    private $actionLogs;
-
-    /**
      * @var array|null The configuration of the action handler
      *
      * @Groups({"read","write"})
@@ -233,8 +228,6 @@ class Action
     public function __construct(
         $actionHandler = false
     ) {
-        $this->actionLogs = new ArrayCollection();
-
         if ($actionHandler) {
             if (!$schema = $actionHandler->getConfiguration()) {
                 return;
@@ -530,36 +523,6 @@ class Action
     public function setIsEnabled(?bool $isEnabled): self
     {
         $this->isEnabled = $isEnabled;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|ActionLog[]
-     */
-    public function getActionLogs(): Collection
-    {
-        return $this->actionLogs;
-    }
-
-    public function addActionLog(ActionLog $actionLog): self
-    {
-        if (!$this->actionLogs->contains($actionLog)) {
-            $this->actionLogs[] = $actionLog;
-            $actionLog->setAction($this);
-        }
-
-        return $this;
-    }
-
-    public function removeActionLog(ActionLog $actionLog): self
-    {
-        if ($this->actionLogs->removeElement($actionLog)) {
-            // set the owning side to null (unless already changed)
-            if ($actionLog->getAction() === $this) {
-                $actionLog->setAction(null);
-            }
-        }
 
         return $this;
     }

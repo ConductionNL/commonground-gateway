@@ -17,7 +17,6 @@ class ParseDataService
     private EntityManagerInterface $entityManager;
     private Client $client;
     private EavService $eavService;
-    private ValidationService $validationService;
     private FunctionService $functionService;
 
     /**
@@ -27,16 +26,14 @@ class ParseDataService
 
     /**
      * @param EntityManagerInterface $entityManager
-     * @param ValidationService      $validationService
      * @param EavService             $eavService
      * @param FunctionService        $functionService
      */
-    public function __construct(EntityManagerInterface $entityManager, ValidationService $validationService, EavService $eavService, FunctionService $functionService)
+    public function __construct(EntityManagerInterface $entityManager, EavService $eavService, FunctionService $functionService)
     {
         $this->entityManager = $entityManager;
         $this->client = new Client();
         $this->eavService = $eavService;
-        $this->validationService = $validationService;
         $this->functionService = $functionService;
     }
 
@@ -143,7 +140,6 @@ class ParseDataService
             $object = $this->eavService->getObject(null, 'POST', $entity);
             //TODO: add admin scopes to grantedScopes in the session so this validateEntity function doesn't fail on missing scopes
             // todo use new validation and saveObject function instead of validateEntity
-            $object = $this->validationService->validateEntity($object, $properties['properties'], $dontCheckAuth);
             $this->entityManager->persist($object);
             $result[] = $object;
         }
@@ -174,19 +170,6 @@ class ParseDataService
     }
 
     /**
-     * Bridges some functionality in the validationService that cannot be deduced.
-     *
-     * @return void
-     */
-    private function bridgeValidationService(): void
-    {
-        $this->validationService->setIgnoreErrors(true);
-        $mockRequest = new Request();
-        $mockRequest->setMethod('POST');
-        $this->validationService->setRequest($mockRequest);
-    }
-
-    /**
      * Loads data from a specified location.
      *
      * @param string|null $dataFile The location of the datafile
@@ -198,7 +181,6 @@ class ParseDataService
      */
     public function loadData(?string $dataFile, string $oas, ?bool $dontCheckAuth = false): bool
     {
-        $this->bridgeValidationService();
         if (empty($dataFile)) {
             return false;
         }

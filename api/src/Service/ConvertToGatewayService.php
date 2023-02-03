@@ -318,7 +318,7 @@ class ConvertToGatewayService
         return $objectEntity;
     }
 
-    // TODO: duplicate with other notify functions in validationService & objectEntityService.
+    // TODO: duplicate with other notify functions in objectEntityService.
     /**
      * @param ObjectEntity $objectEntity
      * @param string       $method

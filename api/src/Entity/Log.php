@@ -340,14 +340,9 @@ class Log
      */
     private $dateModified;
 
-    /**
-     * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="log", orphanRemoval=true)
-     */
-    private $actionLogs;
-
     public function __construct()
     {
-        $this->actionLogs = new ArrayCollection();
+
     }
 
     public function getId()
@@ -663,36 +658,6 @@ class Log
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|ActionLog[]
-     */
-    public function getActionLogs(): Collection
-    {
-        return $this->actionLogs;
-    }
-
-    public function addActionLog(ActionLog $actionLog): self
-    {
-        if (!$this->actionLogs->contains($actionLog)) {
-            $this->actionLogs[] = $actionLog;
-            $actionLog->setLog($this);
-        }
-
-        return $this;
-    }
-
-    public function removeActionLog(ActionLog $actionLog): self
-    {
-        if ($this->actionLogs->removeElement($actionLog)) {
-            // set the owning side to null (unless already changed)
-            if ($actionLog->getLog() === $this) {
-                $actionLog->setLog(null);
-            }
-        }
 
         return $this;
     }

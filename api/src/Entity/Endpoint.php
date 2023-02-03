@@ -135,12 +135,6 @@ class Endpoint
     private ?array $path = [];
 
     /**
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="endpoint", fetch="EXTRA_LAZY", cascade={"remove"})
-     */
-    private Collection $requestLogs;
-
-    /**
      * @var array Everything we do *not* want to log when logging errors on this endpoint, defaults to only the authorization header. See the entity RequestLog for the possible options. For headers an array of headers can be given, if you only want to filter out specific headers.
      *
      * @example ["statusCode", "status", "headers" => ["authorization", "accept"]]
