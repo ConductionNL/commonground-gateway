@@ -953,7 +953,7 @@ class SynchronizationService
 
         //create new object if no object exists
         if (!$synchronization->getObject()) {
-            $this->io->text('creating new objectEntity');
+            isset($this->io) && $this->io->text('creating new objectEntity');
             $object = new ObjectEntity($synchronization->getEntity());
             $object->addSynchronization($synchronization);
             $this->entityManager->persist($object);
