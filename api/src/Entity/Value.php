@@ -381,7 +381,13 @@ class Value
                 // Lets catch files and objects
                 $input = $this->simpleArraySwitch($input);
 
-                $outputArray[] = strval($input);
+                try {
+                    $outputArray[] = strval($input);
+                } catch (Exception $exception) {
+                    // todo: monolog?
+                    // If we catch an array to string conversion here you are probably using windows
+                    // and have to many schema files in for example zgw-bundle (delete some in your vendor map)
+                }
             }
 
             $this->simpleArrayValue = $outputArray;

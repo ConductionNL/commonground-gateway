@@ -339,8 +339,10 @@ class Endpoint
 
         $entity = (array_key_exists('entities', $configuration) && is_array($configuration['entities']) && !empty($configuration['entities']))
             ? $configuration['entities'][0] : ($this->entities->first() ?? $this->entity);
+        
         $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
-        if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
+        if ($entity instanceof Entity && !$entity->getCollections()->isEmpty() &&
+            $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
             $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().'/'.$path;
         }
 
