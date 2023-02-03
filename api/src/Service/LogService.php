@@ -170,9 +170,15 @@ class LogService
      */
     private function removeUnreads(Log $callLog)
     {
-        if ($callLog->getResponseStatusCode() === 200 && !empty($callLog->getEndpoint()) &&
-            $callLog->getEndpoint()->getOperationType() === 'item' && $callLog->getUserId() !== null &&
-            strtolower($callLog->getEndpoint()->getMethod()) === 'get' && !empty($callLog->getObjectId())) {
+        if (
+            $callLog->getResponseStatusCode() === 200 &&
+            !empty($callLog->getEndpoint())
+            && $callLog->getUserId() !== null && !empty($callLog->getObjectId()) &&
+            strtolower($callLog->getRequestMethod()) === 'get' &&
+            (
+                strtolower($callLog->getEndpoint()->getMethod()) === 'get' ||
+                in_array('get', array_map('strtolower', $callLog->getEndpoint()->getMethods()))
+            )) {
             // Check if there exist Unread objects for this Object+User. If so, delete them.
             $object = $this->entityManager->getRepository('App:ObjectEntity')->find($callLog->getObjectId());
             if ($object instanceof ObjectEntity) {
