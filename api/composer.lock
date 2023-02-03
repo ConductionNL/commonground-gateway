@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "001905420b3860c03d83094973059877",
+    "content-hash": "d82128b579f1088df11a7917ddf26b66",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -698,16 +698,16 @@
         },
         {
             "name": "commongateway/corebundle",
-            "version": "dev-master",
+            "version": "dev-version-kiss",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "7146ed6f1f99e086bd61be04c585d8d1b84d92d2"
+                "reference": "8c3607d53336e5f8c850d1b48491b6cf89c505a3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/7146ed6f1f99e086bd61be04c585d8d1b84d92d2",
-                "reference": "7146ed6f1f99e086bd61be04c585d8d1b84d92d2",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/8c3607d53336e5f8c850d1b48491b6cf89c505a3",
+                "reference": "8c3607d53336e5f8c850d1b48491b6cf89c505a3",
                 "shasum": ""
             },
             "require": {
@@ -765,7 +765,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-01-11T14:40:24+00:00"
+            "time": "2023-02-03T14:08:16+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -4426,20 +4426,20 @@
         },
         {
             "name": "larping-base/larping-bundle",
-            "version": "1.0.20",
+            "version": "1.0.52",
             "source": {
                 "type": "git",
                 "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "7e4a59b0232d3b62868ab9d0f6916e9ed8a915c0"
+                "reference": "ae186bd53d6506f58eeb3879d61169daf9f7ed12"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/7e4a59b0232d3b62868ab9d0f6916e9ed8a915c0",
-                "reference": "7e4a59b0232d3b62868ab9d0f6916e9ed8a915c0",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/ae186bd53d6506f58eeb3879d61169daf9f7ed12",
+                "reference": "ae186bd53d6506f58eeb3879d61169daf9f7ed12",
                 "shasum": ""
             },
             "require": {
-                "commongateway/corebundle": ">=0.0.1",
+                "commongateway/corebundle": "dev-version-kiss",
                 "php": ">=7.4"
             },
             "require-dev": {
@@ -4468,9 +4468,9 @@
             ],
             "support": {
                 "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.20"
+                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.52"
             },
-            "time": "2023-01-14T11:07:03+00:00"
+            "time": "2023-01-30T16:23:29+00:00"
         },
         {
             "name": "league/html-to-markdown",

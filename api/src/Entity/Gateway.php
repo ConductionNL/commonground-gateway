@@ -509,12 +509,6 @@ class Gateway
     private array $translationConfig = [];
 
     /**
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="gateway", fetch="EXTRA_LAZY", cascade={"remove"})
-     */
-    private Collection $requestLogs;
-
-    /**
      * @Groups({"read", "write"})
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=CollectionEntity::class, mappedBy="source")
@@ -609,14 +603,6 @@ class Gateway
     private Collection $synchronizations;
 
     /**
-     * @var Collection The call logs of this source
-     *
-     * @Groups({"write"})
-     * @ORM\OneToMany(targetEntity=CallLog::class, fetch="EXTRA_LAZY", mappedBy="source", orphanRemoval=true)
-     */
-    private Collection $callLogs;
-
-    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -654,12 +640,9 @@ class Gateway
      */
     public function __construct(?array $configuration = [])
     {
-        $this->responceLogs = new ArrayCollection();
-        $this->requestLogs = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->subscribers = new ArrayCollection();
         $this->synchronizations = new ArrayCollection();
-        $this->callLogs = new ArrayCollection();
         $this->proxies = new ArrayCollection();
 
         if ($configuration) {
@@ -1000,36 +983,6 @@ class Gateway
     }
 
     /**
-     * @return Collection|RequestLog[]
-     */
-    public function getRequestLogs(): Collection
-    {
-        return $this->requestLogs;
-    }
-
-    public function addRequestLog(RequestLog $requestLog): self
-    {
-        if (!$this->requestLogs->contains($requestLog)) {
-            $this->requestLogs[] = $requestLog;
-            $requestLog->setSource($this);
-        }
-
-        return $this;
-    }
-
-    public function removeRequestLog(RequestLog $requestLog): self
-    {
-        if ($this->requestLogs->removeElement($requestLog)) {
-            // set the owning side to null (unless already changed)
-            if ($requestLog->getSource() === $this) {
-                $requestLog->setSource(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
      * @return Collection|CollectionEntity[]
      */
     public function getCollections(): Collection
@@ -1151,24 +1104,6 @@ class Gateway
         if (!$this->synchronizations->contains($synchronization)) {
             $this->synchronizations[] = $synchronization;
             $synchronization->setSource($this);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|CallLog[]
-     */
-    public function getCallLogs(): Collection
-    {
-        return $this->callLogs;
-    }
-
-    public function addCallLog(CallLog $callLog): self
-    {
-        if (!$this->callLogs->contains($callLog)) {
-            $this->callLogs[] = $callLog;
-            $callLog->setSource($this);
         }
 
         return $this;

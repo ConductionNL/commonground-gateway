@@ -27,7 +27,6 @@ class ActionSubscriber implements EventSubscriberInterface
     private SessionInterface $session;
     private SymfonyStyle $io;
     private MessageBusInterface $messageBus;
-    private LoggerInterface $RequestLog;
 
     /**
      * @inheritDoc

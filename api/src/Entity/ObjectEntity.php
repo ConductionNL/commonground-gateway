@@ -207,9 +207,7 @@ class ObjectEntity
     public function __construct(?Entity $entity = null)
     {
         $this->objectValues = new ArrayCollection();
-        $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
-        $this->requestLogs = new ArrayCollection();
         $this->synchronizations = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
 
@@ -1222,36 +1220,6 @@ class ObjectEntity
     public function setSubresourceIndex(?string $subresourceIndex): self
     {
         $this->subresourceIndex = $subresourceIndex;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|RequestLog[]
-     */
-    public function getRequestLogs(): Collection
-    {
-        return $this->requestLogs;
-    }
-
-    public function addRequestLog(RequestLog $requestLog): self
-    {
-        if (!$this->requestLogs->contains($requestLog)) {
-            $this->requestLogs[] = $requestLog;
-            $requestLog->setObjectEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeRequestLog(RequestLog $requestLog): self
-    {
-        if ($this->requestLogs->removeElement($requestLog)) {
-            // set the owning side to null (unless already changed)
-            if ($requestLog->getObjectEntity() === $this) {
-                $requestLog->setObjectEntity(null);
-            }
-        }
 
         return $this;
     }

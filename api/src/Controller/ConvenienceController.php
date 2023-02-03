@@ -43,7 +43,6 @@ class ConvenienceController extends AbstractController
         HandlerService $handlerService,
         ActionSubscriber $actionSubscriber,
         ObjectEntityService $objectEntityService,
-        PubliccodeService $publiccodeService,
         Environment $twig
     ) {
         $this->entityManager = $entityManager;
@@ -54,7 +53,6 @@ class ConvenienceController extends AbstractController
         $this->handlerService = $handlerService;
         $this->actionSubscriber = $actionSubscriber;
         $this->objectEntityService = $objectEntityService;
-        $this->publiccodeService = $publiccodeService;
         $this->twig = $twig;
         $this->mappingService = new MappingService($twig);
     }
@@ -262,54 +260,6 @@ class ConvenienceController extends AbstractController
         $mapping = $this->mappingService->mapping($mappingObject, $requestMappingArray);
 
         return new Response(json_encode($mapping), 200, ['content-type' => 'json']);
-    }
-
-    /**
-     * This function gets the event from github if something has changed in a repository.
-     *
-     * @Route("/github_events")
-     *
-     * @throws Exception|GuzzleException
-     */
-    public function githubEvents(Request $request): Response
-    {
-        if (!$content = json_decode($request->request->get('payload'), true)) {
-//            var_dump($content = $this->handlerService->getDataFromRequest());
-
-            return $this->publiccodeService->updateRepositoryWithEventResponse($this->handlerService->getDataFromRequest());
-        }
-
-        return $this->publiccodeService->updateRepositoryWithEventResponse($content);
-    }
-
-    /**
-     * @Route("/admin/publiccode")
-     *
-     * @throws GuzzleException
-     */
-    public function getRepositories(): Response
-    {
-        return $this->publiccodeOldService->discoverGithub();
-    }
-
-    /**
-     * @Route("/admin/publiccode/github/{id}")
-     *
-     * @throws GuzzleException
-     */
-    public function getGithubRepository(string $id): Response
-    {
-        return $this->publiccodeOldService->getGithubRepositoryContent($id);
-    }
-
-    /**
-     * @Route("/admin/publiccode/github/install/{id}")
-     *
-     * @throws GuzzleException
-     */
-    public function installRepository(string $id): Response
-    {
-        return $this->publiccodeOldService->createCollection($id);
     }
 
     /**

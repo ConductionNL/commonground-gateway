@@ -39,7 +39,6 @@ class EavService
     private SerializerService $serializerService;
     private SerializerInterface $serializer;
     private AuthorizationService $authorizationService;
-    private ConvertToGatewayService $convertToGatewayService;
     private SessionInterface $session;
     private ObjectEntityService $objectEntityService;
     private ResponseService $responseService;
@@ -55,7 +54,6 @@ class EavService
         SerializerService $serializerService,
         SerializerInterface $serializer,
         AuthorizationService $authorizationService,
-        ConvertToGatewayService $convertToGatewayService,
         SessionInterface $session,
         ObjectEntityService $objectEntityService,
         ResponseService $responseService,
@@ -70,7 +68,6 @@ class EavService
         $this->serializerService = $serializerService;
         $this->serializer = $serializer;
         $this->authorizationService = $authorizationService;
-        $this->convertToGatewayService = $convertToGatewayService;
         $this->session = $session;
         $this->objectEntityService = $objectEntityService;
         $this->responseService = $responseService;
@@ -161,7 +158,6 @@ class EavService
             if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'id' => $id])) {
                 if (!$object = $this->em->getRepository('App:ObjectEntity')->findOneBy(['entity' => $entity, 'externalId' => $id])) {
                     // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside of the gateway for an existing object.
-                    $object = $this->convertToGatewayService->convertToGatewayObject($entity, null, $id);
                     if (!$object) {
                         return [
                             'message' => 'Could not find an object with id '.$id.' of type '.$entity->getName(),
@@ -349,11 +345,6 @@ class EavService
             $date = $date->format('Ymd_His');
             $disposition = $response->headers->makeDisposition(ResponseHeaderBag::DISPOSITION_ATTACHMENT, "{$entity->getName()}_{$date}.{$requestBase['extension']}");
             $response->headers->set('Content-Disposition', $disposition);
-        }
-
-        // Lets see if we have to log an error
-        if ($this->responseService->checkForErrorResponse($resultConfig['result'], $resultConfig['responseType'])) {
-            $this->responseService->createRequestLog($request, $entity ?? null, $resultConfig['result'], $response, $resultConfig['object'] ?? null);
         }
 
         return $response;

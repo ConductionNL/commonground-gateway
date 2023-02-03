@@ -400,8 +400,6 @@ class Entity
         $this->searchPartial = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
-        $this->responseLogs = new ArrayCollection();
-        $this->requestLogs = new ArrayCollection();
         $this->soap = new ArrayCollection();
         $this->handlers = new ArrayCollection();
         $this->subscribers = new ArrayCollection();
@@ -788,36 +786,6 @@ class Entity
     public function setExtend(?bool $extend): self
     {
         $this->extend = $extend;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|RequestLog[]
-     */
-    public function getRequestLogs(): Collection
-    {
-        return $this->requestLogs;
-    }
-
-    public function addRequestLog(RequestLog $requestLog): self
-    {
-        if (!$this->requestLogs->contains($requestLog)) {
-            $this->requestLogs[] = $requestLog;
-            $requestLog->setEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeRequestLog(RequestLog $requestLog): self
-    {
-        if ($this->requestLogs->removeElement($requestLog)) {
-            // set the owning side to null (unless already changed)
-            if ($requestLog->getEntity() === $this) {
-                $requestLog->setEntity(null);
-            }
-        }
 
         return $this;
     }

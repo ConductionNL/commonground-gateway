@@ -58,7 +58,6 @@ class ObjectEntityService
     private MessageBusInterface $messageBus;
     private GatewayService $gatewayService;
     private LogService $logService;
-    private ConvertToGatewayService $convertToGatewayService;
     private EventDispatcherInterface $eventDispatcher;
     public array $notifications;
     private Environment $twig;
@@ -97,7 +96,6 @@ class ObjectEntityService
         $this->gatewayService = $gatewayService;
         $this->translationService = $translationService;
         $this->logService = $logService;
-        $this->convertToGatewayService = new ConvertToGatewayService($commonGroundService, $entityManager, $session, $gatewayService, $this->functionService, $logService, $messageBus, $translationService);
         $this->notifications = [];
         $this->eventDispatcher = $eventDispatcher;
         $this->twig = $twig;
@@ -1065,7 +1063,6 @@ class ObjectEntityService
                         if (!$subObject = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $object])) {
                             if (!$subObject = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'externalId' => $object])) {
                                 // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside the gateway for an existing object.
-                                $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $object, $valueObject, $objectEntity);
                                 if (!$subObject) {
                                     // todo: throw error?
 //                                    var_dump('Could not find an object with id '.$object.' of type '.$attribute->getObject()->getName());
@@ -1089,7 +1086,6 @@ class ObjectEntityService
                         });
                         if (count($subObject) == 0) {
                             // look outside the gateway
-                            $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $object['id'], $valueObject, $objectEntity);
 
                             if (!$subObject) {
                                 // todo: throw error?
@@ -1207,7 +1203,6 @@ class ObjectEntityService
                     if (!$subObject = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'id' => $value])) {
                         if (!$subObject = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['entity' => $attribute->getObject(), 'externalId' => $value])) {
                             // If gateway->location and endpoint are set on the attribute(->getObject) Entity look outside the gateway for an existing object.
-                            $subObject = $this->convertToGatewayService->convertToGatewayObject($attribute->getObject(), null, $value, $valueObject, $objectEntity);
                             if (!$subObject) {
                                 // todo: throw error?
 //                                var_dump('Could not find an object with id '.$value.' of type '.$attribute->getObject()->getName());

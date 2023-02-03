@@ -291,7 +291,6 @@ class Endpoint
      */
     public function __construct(?Entity $entity = null, ?Source $source = null, ?array $configuration = [])
     {
-        $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
         $this->applications = new ArrayCollection();
         $this->collections = new ArrayCollection();
@@ -540,36 +539,6 @@ class Endpoint
     public function setStatus(?bool $status): self
     {
         $this->status = $status;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|RequestLog[]
-     */
-    public function getRequestLogs(): Collection
-    {
-        return $this->requestLogs;
-    }
-
-    public function addRequestLog(RequestLog $requestLog): self
-    {
-        if (!$this->requestLogs->contains($requestLog)) {
-            $this->requestLogs[] = $requestLog;
-            $requestLog->setEndpoint($this);
-        }
-
-        return $this;
-    }
-
-    public function removeRequestLog(RequestLog $requestLog): self
-    {
-        if ($this->requestLogs->removeElement($requestLog)) {
-            // set the owning side to null (unless already changed)
-            if ($requestLog->getEndpoint() === $this) {
-                $requestLog->setEndpoint(null);
-            }
-        }
 
         return $this;
     }
