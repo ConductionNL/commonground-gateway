@@ -162,8 +162,7 @@ class Value
 
     /**
      * @MaxDepth(1)
-     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="LAZY", cascade={"persist"}, orphanRemoval=true)
-     * @TODO THIS MUST NEVER LEAVE THE KISS BRANCH!
+     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="LAZY", cascade={"persist"})
      */
     private $objects; // sub objects
 
