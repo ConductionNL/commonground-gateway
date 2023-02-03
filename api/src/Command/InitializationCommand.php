@@ -76,6 +76,13 @@ class InitializationCommand extends Command
         $config['skip-script'] = $input->getOption('skip-script');
         $config['unsafe'] = $input->getOption('unsafe');
 
+        // todo: actualy throw it
+        $io->info('Trowing commongateway.pre.initialization event');
+
+        // Throw the event
+        $event = new ActionEvent('commongateway.pre.initialization', []);
+        $this->eventDispatcher->dispatch($event, 'commongateway.pre.initialization');
+
         $io->title('Check if we have the needed objects');
 
         // Handling Organizations
