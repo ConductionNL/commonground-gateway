@@ -5,6 +5,7 @@
 namespace App\Controller;
 
 use CommonGateway\CoreBundle\Service\RequestService;
+use MongoDB\BSON\ObjectId;
 use MongoDB\Client;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -94,6 +95,9 @@ class LogController extends AbstractController
         $collection = $client->logs->logs;
         $filter = $this->realRequestQueryAll('get', $request->getQueryString());
         $completeFilter = $filter;
+        if(isset($filter["_id"])) {
+            $filter["_id"] = new ObjectId($filter['_id']);
+        }
 
         unset($filter['_start'], $filter['_offset'], $filter['_limit'], $filter['_page'],
             $filter['_extend'], $filter['_search'], $filter['_order'], $filter['_fields']);
