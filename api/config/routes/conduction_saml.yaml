@@ -1,0 +1,3 @@
+conduction_bundle:
+    resource: '@SamlBundle/Resources/config/routes.xml'
+    prefix: /

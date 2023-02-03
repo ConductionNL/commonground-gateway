@@ -1422,21 +1422,32 @@ class ObjectEntity
         }
 
         // Lets see if the name is configured
-        $nameProperties = array_merge(['name', 'title', 'naam', 'titel'], $this->entity->getNameProperties());
-        $nameArray = [];
-        foreach ($this->getObjectValues() as $value){
-            if(in_array($value->getAttribute()->getName(),$nameProperties)){
-                $nameArray[] = $value->getStringValue();
+        if ($this->entity->getNameProperties()) {
+            $name = null;
+            foreach ($this->entity->getNameProperties() as $nameProperty) {
+                if ($nameProperty && $namePart = $this->getValue($nameProperty)) {
+                    $name = "$name $namePart";
+                }
+            }
+            $this->setName(trim($name));
+
+            return;
+        }
+
+        // Lets check agains common names
+        $nameProperties = ['name', 'title', 'naam', 'titel'];
+        foreach ($nameProperties as $nameProperty) {
+            if ($name = $this->getValue($nameProperty)) {
+                if (!is_string($name)) {
+                    continue;
+                }
+                $this->setName($name);
+
+                return;
             }
         }
 
-        if(count($nameArray) > 0 && $name = implode(' ',$nameArray)){
-            $this->setName($name);
-        }
-
-        if(!$this->getName() && $this->getId()){
-            $this->setName($this->getId()->toString());
-        }
+        $this->setName($this->getId());
 
         // Todo: this is an ugly fix, in actuallity we should run a postUpdate subscriber that checks this and repersists the enitity if thsi happens (it can anly happen if we dont have an id on pre persist e.g. new objects)
         // Just in case we endup here

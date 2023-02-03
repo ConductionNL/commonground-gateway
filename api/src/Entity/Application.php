@@ -96,7 +96,7 @@ class Application
      * @var string A public key of this Application.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="text", nullable=true, name="public_column")
+     * @ORM\Column(type="string", nullable=true, name="public_column")
      */
     private ?string $public = null;
 
@@ -104,7 +104,7 @@ class Application
      * @var string A secret key of this Application.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="string", nullable=true)
      */
     private ?string $secret = null;
 
