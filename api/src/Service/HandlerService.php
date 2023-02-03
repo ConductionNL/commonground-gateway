@@ -34,7 +34,6 @@ class HandlerService
     private ProcessingLogService $processingLogService;
     private TemplateService $templateService;
     private ObjectEntityService $objectEntityService;
-    private FormIOService $formIOService;
     private SubscriberService $subscriberService;
     private CacheInterface $cache;
     private GatewayService $gatewayService;
@@ -74,7 +73,6 @@ class HandlerService
         Environment $twig,
         TemplateService $templateService,
         ObjectEntityService $objectEntityService,
-        FormIOService $formIOService,
         SubscriberService $subscriberService,
         CacheInterface $cache,
         GatewayService $gatewayService,
@@ -93,7 +91,6 @@ class HandlerService
         $this->templating = $twig;
         $this->templateService = $templateService;
         $this->objectEntityService = $objectEntityService->addServices($eavService); // todo: temp fix untill we no longer need these services here
-        $this->formIOService = $formIOService;
         $this->subscriberService = $subscriberService;
         $this->cache = $cache;
         $this->gatewayService = $gatewayService;

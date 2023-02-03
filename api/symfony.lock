@@ -49,9 +49,6 @@
     "common-gateway/klanten-bundle": {
         "version": "0.0.12"
     },
-    "common-gateway/kvk-bundle": {
-        "version": "0.0.4"
-    },
     "common-gateway/zgw-bundle": {
         "version": "0.1.16"
     },
@@ -271,6 +268,9 @@
     },
     "laminas/laminas-escaper": {
         "version": "2.9.0"
+    },
+    "larping-base/larping-bundle": {
+        "version": "1.0.35"
     },
     "league/html-to-markdown": {
         "version": "4.10.0"
