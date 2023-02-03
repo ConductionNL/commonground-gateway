@@ -337,7 +337,7 @@ class Endpoint
         // todo: make sure all bundles create endpoints with a path that does not start with a slash!
         $path = ltrim($path, '/');
 
-        $entity = array_key_exists('entities', $configuration) && is_array($configuration['entities']) && !empty($configuration['entities'])
+        $entity = (array_key_exists('entities', $configuration) && is_array($configuration['entities']) && !empty($configuration['entities']))
             ? $configuration['entities'][0] : ($this->entities->first() ?? $this->entity);
         $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
         if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
