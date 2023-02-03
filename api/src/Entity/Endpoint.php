@@ -8,6 +8,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Entity\Gateway as Source;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -284,7 +285,17 @@ class Endpoint
      */
     private $proxy;
 
-    public function __construct(?Entity $entity = null, ?string $customPath = null, array $methods = [])
+    /**
+     * Constructor for creating an Endpoint. Use $entity to create an Endpoint for an Entity or
+     * use $source to create an Endpoint for a source, a proxy Endpoint.
+     *
+     * @param Entity|null  $entity        An entity to create an Endpoint for.
+     * @param Gateway|null $source        A source to create an Endpoint for. Will only work if $entity = null.
+     * @param array|null   $configuration A configuration array used to correctly create an Endpoint. The following keys are supported:
+     *                                    'path' => a path can be used to set the Path and PathRegex for this Endpoint. Default = $entity->getName() or $source->getName().
+     *                                    'methods' => the allowed methods for this Endpoint, default = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+     */
+    public function __construct(?Entity $entity = null, ?Source $source = null, ?array $configuration = [])
     {
         $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
@@ -293,48 +304,118 @@ class Endpoint
         $this->properties = new ArrayCollection();
         $this->entities = new ArrayCollection();
 
-        // Create simple endpoints for entities
-        if ($entity) {
-            $this->addEntity($entity);
-            $this->setEntity($entity);
-            $this->setName($entity->getName());
-            $this->setDescription($entity->getDescription());
-            $this->setMethod('GET');
-            $this->setMethods($methods !== [] ? $methods : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
-
-            // Lets make a path
-            $path = $customPath ?? mb_strtolower(str_replace(' ', '_', $entity->getName()));
-
-            $criteria = Criteria::create()
-                ->orderBy(['date_created' => Criteria::DESC]);
-
-            // Make sure we never have a starting / for PathRegex.
-            // todo: make sure all bundles create endpoints with a path that does not start with a slash!
-            $path = ltrim($path, '/');
-
-            // Add prefix to path
-            if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
-                $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().'/'.$path;
-            }
-
-            $explodedPath = explode('/', $path);
-            if ($explodedPath[0] == '') {
-                array_shift($explodedPath);
-            }
-
-            $explodedPath[] = 'id';
-            $this->setPath($explodedPath);
-            $pathRegEx = '^'.$path.'/?([a-z0-9-]+)?$';
-            $this->setPathRegex($pathRegEx);
-
-            /*@depricated kept here for lagacy */
-            $this->setOperationType('GET');
+        if (!$entity && !$source) {
+            return;
         }
+
+        // Create simple endpoint(s) for entity
+        if ($entity) {
+            $default = $this->constructEntityEndpoint($entity);
+        }
+        // Create simple endpoint(s) for source (proxy)
+        else {
+            $default = $this->constructProxyEndpoint($source);
+        }
+
+        if ($configuration) {
+            $this->fromArray($configuration, $default);
+        }
+    }
+
+    /**
+     * Uses given $configuration array to set the properties of this Endpoint.
+     * $configuration or $default array must contain the key 'path'!
+     * And either $configuration array must contain the key 'pathRegex' or the $default array must contain the key 'pathRegexEnd'.
+     *
+     * @param array $configuration An array with data.
+     * @param array $default       An array with data. The default values used for setting properties. Can contain the following keys:
+     *                             'path' => If $configuration array has no key 'path' this value is used to set the Path. (and pathRegex if $configuration has no 'pathRegex' key)
+     *                             'pathRegexEnd' => A string added to the end of the pathRegex.
+     *                             'pathArrayEnd' => The final item in the path array, 'id' for an Entity Endpoint and {route} for a proxy Endpoint.
+     *
+     * @return void
+     */
+    public function fromArray(array $configuration, array $default)
+    {
+        // Lets make a path & add prefix to this path if it is needed.
+        $path = array_key_exists('path', $configuration) ? $configuration['path'] : $default['path'];
+
+        // Make sure we never have a starting / for PathRegex.
+        // todo: make sure all bundles create endpoints with a path that does not start with a slash!
+        $path = ltrim($path, '/');
+
+        $entity = array_key_exists('entities', $configuration) && is_array($configuration['entities']) && !empty($configuration['entities'])
+            ? $configuration['entities'][0] : ($this->entities->first() ?? $this->entity);
+        $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
+        if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
+            $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().'/'.$path;
+        }
+
+        // Set the pathRegex
+        $pathRegex = array_key_exists('pathRegex', $configuration) ? $configuration['pathRegex'] : "^$path/{$default['pathRegexEnd']}$";
+        $this->setPathRegex($pathRegex);
+
+        // Create Path array (add default pathArrayEnd to this, different depending on if we create en Endpoint for $entity or $source.)
+        $explodedPath = explode('/', $path);
+        array_key_exists('pathArrayEnd', $default) && $explodedPath[] = $default['pathArrayEnd'];
+        $this->setPath($explodedPath);
+        $this->setMethods(array_key_exists('methods', $configuration) && $configuration['methods'] ? $configuration['methods'] : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+
+        array_key_exists('name', $configuration) ? $this->setName($configuration['name']) : '';
+        array_key_exists('description', $configuration) ? $this->setDescription($configuration['description']) : '';
+        // etc^...
+
+        /*@depricated kept here for lagacy */
+        $this->setMethod(array_key_exists('method', $configuration) ? $configuration['method'] : 'GET');
+        $this->setOperationType(array_key_exists('operationType', $configuration) ? $configuration['operationType'] : 'GET');
     }
 
     public function __toString()
     {
         return $this->getName();
+    }
+
+    /**
+     * Use the given Entity data to set some values during constructor when creating an Endpoint for an Entity.
+     *
+     * @param Entity $entity The Entity
+     *
+     * @return array Returns default values for path and pathRegex if we are creating and Endpoint for an Entity.
+     */
+    private function constructEntityEndpoint(Entity $entity): array
+    {
+        $this->addEntity($entity);
+        $this->setEntity($entity);
+        $this->setName($entity->getName());
+        $this->setDescription($entity->getDescription());
+
+        // Default path, pathArray(end) & pathRegex(end) for $entity
+        return [
+            'path'         => mb_strtolower(str_replace(' ', '_', $entity->getName())),
+            'pathArrayEnd' => 'id',
+            'pathRegexEnd' => '?([a-z0-9-]+)?',
+        ];
+    }
+
+    /**
+     * Use the given Source data to set some values during constructor when creating an Endpoint for a Source (a proxy Endpoint).
+     *
+     * @param Source $source The Source
+     *
+     * @return array Returns default values for path and pathRegex if we are creating and Endpoint for a Source.
+     */
+    private function constructProxyEndpoint(Source $source): array
+    {
+        $this->setProxy($source);
+        $this->setName("{$source->getName()} proxy endpoint");
+        $this->setDescription($source->getDescription());
+
+        // Default path, pathArray(end) & pathRegex(end) for $source
+        return [
+            'path'         => mb_strtolower(str_replace(' ', '_', $source->getName())),
+            'pathArrayEnd' => '{route}',
+            'pathRegexEnd' => '[^.*]*',
+        ];
     }
 
     public function getId(): ?UuidInterface

@@ -9,8 +9,6 @@ use App\Service\OasParserService;
 use App\Service\ObjectEntityService;
 use App\Service\PackagesService;
 use App\Service\ParseDataService;
-use App\Service\PubliccodeOldService;
-use App\Service\PubliccodeService;
 use App\Subscriber\ActionSubscriber;
 use CommonGateway\CoreBundle\Service\MappingService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -26,8 +24,6 @@ use Twig\Environment;
 
 class ConvenienceController extends AbstractController
 {
-    private PubliccodeOldService $publiccodeOldService;
-    private PubliccodeService $publiccodeService;
     private EntityManagerInterface $entityManager;
     private OasParserService $oasParser;
     private SerializerInterface $serializer;
@@ -53,7 +49,6 @@ class ConvenienceController extends AbstractController
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
         $this->oasParser = new OasParserService($entityManager);
-        $this->publiccodeOldService = new PubliccodeOldService($entityManager, $params, $serializer);
         $this->packagesService = new PackagesService();
         $this->dataService = $dataService;
         $this->handlerService = $handlerService;

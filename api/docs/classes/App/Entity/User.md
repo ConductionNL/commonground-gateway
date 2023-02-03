@@ -20,7 +20,7 @@ This entity holds the information about an User.
 |[getId](#usergetid)||
 |[getLocale](#usergetlocale)||
 |[getName](#usergetname)||
-|[getOrganisation](#usergetorganisation)||
+|[getOrganisation](#usergetorganization)||
 |[getPassword](#usergetpassword)||
 |[getPerson](#usergetperson)||
 |[getRoles](#usergetroles)||
@@ -32,7 +32,7 @@ This entity holds the information about an User.
 |[setEmail](#usersetemail)||
 |[setLocale](#usersetlocale)||
 |[setName](#usersetname)||
-|[setOrganisation](#usersetorganisation)||
+|[setOrganisation](#usersetorganization)||
 |[setPassword](#usersetpassword)||
 |[setPerson](#usersetperson)||
 

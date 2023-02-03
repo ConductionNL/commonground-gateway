@@ -99,6 +99,15 @@ class SecurityGroup
     private $children;
 
     /**
+     * Wheter or not this is the user group that defines the rights for anonymus users.
+     *
+     * @var bool
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", options={"default"=false})
+     */
+    private $anonymous = false;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -244,6 +253,18 @@ class SecurityGroup
                 $child->setParent(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getAnonymous(): bool
+    {
+        return $this->anonymous;
+    }
+
+    public function setAnonymous(bool $anonymous): self
+    {
+        $this->anonymous = $anonymous;
 
         return $this;
     }

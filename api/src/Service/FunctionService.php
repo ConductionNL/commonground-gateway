@@ -133,6 +133,9 @@ class FunctionService
      */
     public function getOrganizationFromCache($url): array
     {
+        return [];
+        // todo: stop using this code... deprecated
+
         $item = $this->cache->getItem('organizations_'.base64_encode("$url"));
         if ($item->isHit()) {
             return $item->get();
