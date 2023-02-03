@@ -9,6 +9,7 @@ on:
       - version-kiss
       - feature-soap
       - odyssey-hackathon-2022
+      - version-oc
 
   push:
     branches:
@@ -19,6 +20,7 @@ on:
       - feature-soap
       - feature-soap-extra
       - feature-cleanup
+      - version-oc
 
 jobs:
   build:
@@ -85,6 +87,12 @@ jobs:
         run: |
           echo "APP_ENV=soapextensions">> $GITHUB_ENV
           echo "APP_BUILD=soapextensions-$RELEASE">> $GITHUB_ENV
+          echo "set APP_ENV to $APP_ENV"
+      - name: Setting APP_ENV to soap-extensions
+        if: contains( github.ref, 'version-oc' ) || contains( github.base_ref, 'version-oc' )
+        run: |
+          echo "APP_ENV=opencatalogi">> $GITHUB_ENV
+          echo "APP_BUILD=opencatalogi-$RELEASE">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
       - name: Print definitive APP_ENV
         run: echo "APP_ENV is now $APP_ENV and APP_BUILD is now $APP_BUILD"

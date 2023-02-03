@@ -340,6 +340,10 @@ class Endpoint
         // Lets make a path & add prefix to this path if it is needed.
         $path = array_key_exists('path', $configuration) ? $configuration['path'] : $default['path'];
 
+        // Make sure we never have a starting / for PathRegex.
+        // todo: make sure all bundles create endpoints with a path that does not start with a slash!
+        $path = ltrim($path, '/');
+
         $entity = array_key_exists('entities', $configuration) && is_array($configuration['entities']) && !empty($configuration['entities'])
             ? $configuration['entities'][0] : ($this->entities->first() ?? $this->entity);
         $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
@@ -364,6 +368,11 @@ class Endpoint
         /*@depricated kept here for lagacy */
         $this->setMethod(array_key_exists('method', $configuration) ? $configuration['method'] : 'GET');
         $this->setOperationType(array_key_exists('operationType', $configuration) ? $configuration['operationType'] : 'GET');
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
     }
 
     /**

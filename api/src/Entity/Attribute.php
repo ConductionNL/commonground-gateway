@@ -707,6 +707,11 @@ class Attribute
         $this->attributeValues = new ArrayCollection();
     }
 
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
     /**
      * JSON schema to attribute.
      *

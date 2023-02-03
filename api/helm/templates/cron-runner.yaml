@@ -1,5 +1,9 @@
 {{- if .Values.config.cronRunner.enabled }}
+    {{- if semverCompare ">=1.21-0" .Capabilities.KubeVersion.Version }}
+apiVersion: batch/v1
+    {{- else }}
 apiVersion: batch/v1beta1
+    {{- end }}
 kind: CronJob
 metadata:
   name: {{ include "commonground-gateway.fullname" . }}-runner

@@ -205,6 +205,11 @@ class ObjectEntity
      */
     private $dateModified;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="sourceObject")
+     */
+    private $sourceOfSynchronizations;
+
     public function __toString()
     {
         return $this->getName().' ('.$this->getId().')';
@@ -222,6 +227,7 @@ class ObjectEntity
         if ($entity) {
             $this->setEntity($entity);
         }
+        $this->sourceOfSynchronizations = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -337,8 +343,8 @@ class ObjectEntity
         $this->application = $application;
 
         // If we don't have an organization we can pull one from the application
-        if (!isset($this->organization) && $this->application) {
-            $this->application->getOrganization();
+        if (!isset($this->organization) && isset($this->application) && $this->application->getOrganization()) {
+            $this->setOrganization($this->application->getOrganization());
         }
 
         return $this;
@@ -346,11 +352,7 @@ class ObjectEntity
 
     public function getOrganization(): ?Organization
     {
-        if (!isset($this->organization)) {
-            return null;
-        }
-
-        return $this->organization;
+        return $this->organization ?? null;
     }
 
     public function setOrganization(?Organization $organization): self
@@ -1424,17 +1426,17 @@ class ObjectEntity
         // Lets see if the name is configured
         $nameProperties = array_merge(['name', 'title', 'naam', 'titel'], $this->entity->getNameProperties());
         $nameArray = [];
-        foreach ($this->getObjectValues() as $value){
-            if(in_array($value->getAttribute()->getName(),$nameProperties)){
+        foreach ($this->getObjectValues() as $value) {
+            if (in_array($value->getAttribute()->getName(), $nameProperties)) {
                 $nameArray[] = $value->getStringValue();
             }
         }
 
-        if(count($nameArray) > 0 && $name = implode(' ',$nameArray)){
+        if (count($nameArray) > 0 && $name = implode(' ', $nameArray)) {
             $this->setName($name);
         }
 
-        if(!$this->getName() && $this->getId()){
+        if (!$this->getName() && $this->getId()) {
             $this->setName($this->getId()->toString());
         }
 
@@ -1443,5 +1445,35 @@ class ObjectEntity
         if (!$this->getName()) {
             $this->setName('No name could be established for this entity');
         }
+    }
+
+    /**
+     * @return Collection|Synchronization[]
+     */
+    public function getSourceOfSynchronizations(): Collection
+    {
+        return $this->sourceOfSynchronizations;
+    }
+
+    public function addSourceOfSynchronization(Synchronization $sourceOfSynchronization): self
+    {
+        if (!$this->sourceOfSynchronizations->contains($sourceOfSynchronization)) {
+            $this->sourceOfSynchronizations[] = $sourceOfSynchronization;
+            $sourceOfSynchronization->setSourceObject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSourceOfSynchronization(Synchronization $sourceOfSynchronization): self
+    {
+        if ($this->sourceOfSynchronizations->removeElement($sourceOfSynchronization)) {
+            // set the owning side to null (unless already changed)
+            if ($sourceOfSynchronization->getSourceObject() === $this) {
+                $sourceOfSynchronization->setSourceObject(null);
+            }
+        }
+
+        return $this;
     }
 }

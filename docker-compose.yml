@@ -16,15 +16,7 @@ services:
   #    ports:
   #      - "83:80"
   
-  kiss:
-    image: ghcr.io/klantinteractie-servicesysteem/kiss-frontend:dev
-    depends_on:
-      - api
-    ports:
-      - "81:80"
-
   cron:
-    &cron
     image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}_cron:${APP_ENV}
     build: ./dockerized-cron
     depends_on:

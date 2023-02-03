@@ -698,6 +698,11 @@ class Gateway
         array_key_exists('configuration', $configuration) ? $this->setConfiguration($configuration['configuration']) : '';
     }
 
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
     public function export(): ?array
     {
         $data = [
