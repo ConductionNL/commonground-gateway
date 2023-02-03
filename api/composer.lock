@@ -5324,54 +5324,6 @@
             "time": "2021-03-02T10:19:19+00:00"
         },
         {
-            "name": "open-catalogi/open-catalogi-bundle",
-            "version": "0.0.42",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/OpenCatalogi/OpenCatalogiBundle.git",
-                "reference": "9d93afbfb420804b3c0962711a9a0d9a539c250e"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/9d93afbfb420804b3c0962711a9a0d9a539c250e",
-                "reference": "9d93afbfb420804b3c0962711a9a0d9a539c250e",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": "dev-version-oc",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "OpenCatalogi\\OpenCatalogiBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An example package for creating symfony flex bundles as plugins",
-            "homepage": "https://commongatway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "open catalogi",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/OpenCatalogi/OpenCatalogiBundle/issues",
-                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/0.0.42"
-            },
-            "time": "2023-02-02T14:26:39+00:00"
-        },
-        {
             "name": "paragonie/random_compat",
             "version": "v9.99.100",
             "source": {
