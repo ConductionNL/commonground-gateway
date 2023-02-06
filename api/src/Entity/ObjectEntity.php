@@ -752,12 +752,13 @@ class ObjectEntity
     /**
      * Populate this object with an array of values, where attributes are diffined by key.
      *
-     * @param array $array the data to set
-     * @param bool $unsafe unset atributes that are not inlcuded in the hydrator array
+     * @param array                  $array        the data to set
+     * @param bool                   $unsafe       unset atributes that are not inlcuded in the hydrator array
      * @param DateTimeInterface|null $dateModified
-     * @return ObjectEntity
      *
      * @throws Exception
+     *
+     * @return ObjectEntity
      */
     public function hydrate(array $array, bool $unsafe = false, ?DateTimeInterface $dateModified = null): ObjectEntity
     {
