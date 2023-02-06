@@ -17,7 +17,6 @@ use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use function GuzzleHttp\json_decode;
-use GuzzleHttp\Promise\Utils;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
@@ -651,12 +650,10 @@ class EavService
                     } else {
                         // Loop through all files, validate them and store them in the files ArrayCollection
                         foreach ($value as $file) {
-
                         }
                     }
                 } else {
                     // Validate (and create/update) this file
-
                 }
 
                 return $objectEntity;
