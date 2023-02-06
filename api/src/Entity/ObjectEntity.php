@@ -752,29 +752,18 @@ class ObjectEntity
     /**
      * Populate this object with an array of values, where attributes are diffined by key.
      *
-     * @param array $array  the data to set
-     * @param bool  $unsafe unset atributes that are not inlcuded in the hydrator array
+     * @param array $array the data to set
+     * @param bool $unsafe unset atributes that are not inlcuded in the hydrator array
+     * @param DateTimeInterface|null $dateModified
+     * @return ObjectEntity
      *
      * @throws Exception
-     *
-     * @return ObjectEntity
      */
     public function hydrate(array $array, bool $unsafe = false, ?DateTimeInterface $dateModified = null): ObjectEntity
     {
         // Failsafe: we should never continue if an ObjectEntity has no Entity
         if (!$this->entity) {
             throw new Exception("Can't hydrate an ObjectEntity ({$this->id->toString()}) with no Entity");
-        }
-
-        // Allow the setting of id's trough the hydrator
-        if (!$this->getId()) {
-            if (isset($array['id']) && Uuid::isValid($array['id'])) {
-                $this->setId($array['id']);
-            }
-            /* @deprecated */
-            if (isset($array['_id']) && Uuid::isValid($array['_id'])) {
-                $this->setId($array['_id']);
-            }
         }
 
         $array = $this->includeEmbeddedArray($array);
