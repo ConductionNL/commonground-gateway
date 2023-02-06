@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Document;
 use App\Exception\GatewayException;
 use App\Service\DocumentService;
 use App\Service\HandlerService;
@@ -10,7 +9,6 @@ use App\Service\LogService;
 use App\Service\ProcessingLogService;
 use CommonGateway\CoreBundle\Service\RequestService;
 use Doctrine\ORM\NonUniqueResultException;
-use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;

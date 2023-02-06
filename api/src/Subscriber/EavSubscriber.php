@@ -3,7 +3,6 @@
 namespace App\Subscriber;
 
 use ApiPlatform\Core\EventListener\EventPriorities;
-use App\Entity\Entity;
 use App\Service\AuthorizationService;
 use App\Service\EavService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
