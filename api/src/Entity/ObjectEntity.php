@@ -768,11 +768,11 @@ class ObjectEntity
 
         // Allow the setting of id's trough the hydrator
         if (!$this->getId()) {
-            if (isset($array['id'])) {
+            if (isset($array['id']) && Uuid::isValid($array['id'])) {
                 $this->setId($array['id']);
             }
             /* @deprecated */
-            if (isset($array['_id'])) {
+            if (isset($array['_id']) && Uuid::isValid($array['_id'])) {
                 $this->setId($array['_id']);
             }
         }
