@@ -43,6 +43,12 @@
     "common-gateway/formio-bundle": {
         "version": "dev-main"
     },
+    "common-gateway/geboorte-vrijbrp-bundle": {
+        "version": "0.0.7"
+    },
+    "common-gateway/zgw-bundle": {
+        "version": "0.1.19"
+    },
     "commongateway/corebundle": {
         "version": "dev-master"
     },

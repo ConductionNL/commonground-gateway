@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bed99e1b5c41cb66c62729f670db8708",
+    "content-hash": "b35cc0f74990b3900d1258118b03dc58",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -695,6 +695,103 @@
                 "source": "https://github.com/CommonGateway/FormIOBundle/tree/main"
             },
             "time": "2022-11-16T13:35:03+00:00"
+        },
+        {
+            "name": "common-gateway/geboorte-vrijbrp-bundle",
+            "version": "0.0.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/GeboorteVrijBRPBundle.git",
+                "reference": "536b660dc0e110a51184652b168a6171f60638f3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/GeboorteVrijBRPBundle/zipball/536b660dc0e110a51184652b168a6171f60638f3",
+                "reference": "536b660dc0e110a51184652b168a6171f60638f3",
+                "shasum": ""
+            },
+            "require": {
+                "common-gateway/zgw-bundle": "^0.1",
+                "commongateway/corebundle": "dev-master",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\GeboorteVrijBRPBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An example package for creating symfony flex bundles as plugins",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "pet store",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/CommonGateway/GeboorteVrijBRPBundle/issues",
+                "source": "https://github.com/CommonGateway/GeboorteVrijBRPBundle/tree/0.0.7"
+            },
+            "time": "2023-02-07T09:08:15+00:00"
+        },
+        {
+            "name": "common-gateway/zgw-bundle",
+            "version": "0.1.19",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/ZGWBundle.git",
+                "reference": "af3d84bf0c0053486e0ada3197967ada5dac6b1b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/af3d84bf0c0053486e0ada3197967ada5dac6b1b",
+                "reference": "af3d84bf0c0053486e0ada3197967ada5dac6b1b",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": ">=0.0.1",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\ZGWBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "Symfony bundle for zgw standard functionality",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "symfony",
+                "zgw"
+            ],
+            "support": {
+                "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
+                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.19"
+            },
+            "time": "2023-02-03T14:55:00+00:00"
         },
         {
             "name": "commongateway/corebundle",
