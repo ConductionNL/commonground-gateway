@@ -260,7 +260,8 @@ class Action
         (isset($schema['conditions']) ? $this->setConditions($schema['conditions']) : '');
         (isset($schema['configuration']) ? $this->setConfiguration($schema['configuration']) : '');
         (isset($schema['isLockable']) ? $this->setIsLockable($schema['isLockable']) : '');
-        (isset($schema['isEnabled']) ? $this->getIsEnabled($schema['isEnabled']) : '');
+        (isset($schema['isEnabled']) ? $this->setIsEnabled($schema['isEnabled']) : '');
+        (isset($schema['class']) ? $this->setClass($schema['class']) : '');
 
         return  $this;
     }
