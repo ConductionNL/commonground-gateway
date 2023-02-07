@@ -516,13 +516,6 @@ class Gateway
     private ?Collection $collections;
 
     /**
-     * @Groups({"read", "write"})
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="gateway")
-     */
-    private ?Collection $subscribers;
-
-    /**
      * @var array|null The guzzle configuration of the source
      *
      * @Groups({"read", "write"})
@@ -641,7 +634,6 @@ class Gateway
     public function __construct(?array $configuration = [])
     {
         $this->collections = new ArrayCollection();
-        $this->subscribers = new ArrayCollection();
         $this->synchronizations = new ArrayCollection();
         $this->proxies = new ArrayCollection();
 
@@ -1006,36 +998,6 @@ class Gateway
             // set the owning side to null (unless already changed)
             if ($collection->getSource() === $this) {
                 $collection->setSource(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Subscriber[]
-     */
-    public function getSubscribers(): Collection
-    {
-        return $this->subscribers;
-    }
-
-    public function addSubscriber(Subscriber $subscriber): self
-    {
-        if (!$this->subscribers->contains($subscriber)) {
-            $this->subscribers[] = $subscriber;
-            $subscriber->setSource($this);
-        }
-
-        return $this;
-    }
-
-    public function removeSubscriber(Subscriber $subscriber): self
-    {
-        if ($this->subscribers->removeElement($subscriber)) {
-            // set the owning side to null (unless already changed)
-            if ($subscriber->getSource() === $this) {
-                $subscriber->setSource(null);
             }
         }
 

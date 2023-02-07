@@ -290,26 +290,6 @@ class Entity
     private Collection $handlers;
 
     /**
-     * @var array|null The subscribers used for this entity.
-     *
-     * @MaxDepth(1)
-     * @Groups({"write"})
-     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entity", fetch="EXTRA_LAZY")
-     *
-     * @deprecated
-     */
-    private Collection $subscribers;
-
-    /**
-     * @Groups({"write"})
-     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entityOut", fetch="EXTRA_LAZY")
-     * @MaxDepth(1)
-     *
-     * @deprecated
-     */
-    private Collection $subscriberOut;
-
-    /**
      * @var ?Collection The collections of this Entity
      *
      * @Groups({"write", "read"})
@@ -402,8 +382,6 @@ class Entity
         $this->usedIn = new ArrayCollection();
         $this->soap = new ArrayCollection();
         $this->handlers = new ArrayCollection();
-        $this->subscribers = new ArrayCollection();
-        $this->subscriberOut = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->endpoints = new ArrayCollection();
     }
@@ -888,83 +866,6 @@ class Entity
                 $handler->setEntity(null);
             }
         }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Subscriber[]
-     */
-    public function getSubscribers(): Collection
-    {
-        return $this->subscribers;
-    }
-
-    public function addSubscribers(Subscriber $subscriber): self
-    {
-        if (!$this->subscribers->contains($subscriber)) {
-            $this->subscribers[] = $subscriber;
-            $subscriber->setEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeSubscribers(Subscriber $subscriber): self
-    {
-        if ($this->subscribers->removeElement($subscriber)) {
-            // set the owning side to null (unless already changed)
-            if ($subscriber->getEntity() === $this) {
-                $subscriber->setEntity(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Subscriber[]
-     */
-    public function getSubscriberOut(): Collection
-    {
-        return $this->subscriberOut;
-    }
-
-    public function addSubscriberOut(Subscriber $subscriberOut): self
-    {
-        if (!$this->subscriberOut->contains($subscriberOut)) {
-            $this->subscriberOut[] = $subscriberOut;
-            $subscriberOut->setEntityOut($this);
-        }
-
-        return $this;
-    }
-
-    public function removeSubscriberOut(Subscriber $subscriberOut): self
-    {
-        if ($this->subscriberOut->removeElement($subscriberOut)) {
-            // set the owning side to null (unless already changed)
-            if ($subscriberOut->getEntityOut() === $this) {
-                $subscriberOut->setEntityOut(null);
-            }
-        }
-
-        return $this;
-    }
-
-    public function setSubscriberOut(?Subscriber $subscriberOut): self
-    {
-        // unset the owning side of the relation if necessary
-        if ($subscriberOut === null && $this->subscriberOut !== null) {
-            $this->subscriberOut->setEntityOut(null);
-        }
-
-        // set the owning side of the relation if necessary
-        if ($subscriberOut !== null && $subscriberOut->getEntityOut() !== $this) {
-            $subscriberOut->setEntityOut($this);
-        }
-
-        $this->subscriberOut = $subscriberOut;
 
         return $this;
     }
