@@ -772,7 +772,7 @@ class SynchronizationService
      *
      * @return Synchronization|null A synchronization object related to the object in the gateway
      */
-    private function findSyncByObject(ObjectEntity $objectEntity, Source $source, Entity $entity): ?Synchronization
+    public function findSyncByObject(ObjectEntity $objectEntity, Source $source, Entity $entity): ?Synchronization
     {
         $synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['object' => $objectEntity->getId(), 'gateway' => $source, 'entity' => $entity]);
         if ($synchronization instanceof Synchronization) {
