@@ -1150,7 +1150,7 @@ class Entity
             foreach ($schema['required'] as $required) {
                 $attribute = $this->getAttributeByName($required);
                 //We can only set the atribute on required if it exisits so.
-                if($attribute === true){
+                if ($attribute === true) {
                     $attribute->setRequired(true);
                 }
             }
