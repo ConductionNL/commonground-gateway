@@ -1211,8 +1211,8 @@ class Entity
             $attribute->getDescription() && $property['description'] = $attribute->getDescription();
             $attribute->getExample() && $property['example'] = $attribute->getExample();
 
-            // What if we have an $object entity
-            if ($objectEntity) {
+            // What if we have an $object entity.
+            if ($objectEntity === true) {
                 if ($attribute->getType() != 'object') {
                     $property['value'] = $objectEntity->getValue($attribute);
                 } elseif ($attribute->getMultiple()) {
@@ -1221,7 +1221,14 @@ class Entity
                 $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
             }
 
-            // Zetten van de property
+            // What if the atribute is hooked to an object.
+            if($attribute->getType() === 'object'){
+                $property['$ref'] = '#/components/schemas/'.$attribute->getObject()->getName();
+            }
+
+
+
+            // Zetten van de property.
             $schema['properties'][$attribute->getName()] = $property;
 
             // Add the validators
