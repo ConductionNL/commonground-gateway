@@ -204,14 +204,19 @@ class Application
         $this->users = new ArrayCollection();
     }
 
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
     public function getId(): ?UuidInterface
     {
         return $this->id;
     }
 
-    public function setId(UuidInterface $id): self
+    public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }

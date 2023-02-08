@@ -49,6 +49,9 @@
     "clean/view": {
         "version": "0.1.0"
     },
+    "common-gateway/brp-bundle": {
+        "version": "0.0.12"
+    },
     "common-gateway/formio-bundle": {
         "version": "dev-main"
     },

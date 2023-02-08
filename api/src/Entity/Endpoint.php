@@ -332,6 +332,11 @@ class Endpoint
         }
     }
 
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
     public function getId(): ?UuidInterface
     {
         return $this->id;

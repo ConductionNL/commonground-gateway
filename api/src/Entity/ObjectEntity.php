@@ -197,6 +197,11 @@ class ObjectEntity
      */
     private $dateModified;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="sourceObject")
+     */
+    private $sourceOfSynchronizations;
+
     public function __construct(?Entity $entity = null)
     {
         $this->objectValues = new ArrayCollection();
@@ -209,6 +214,7 @@ class ObjectEntity
         if ($entity) {
             $this->setEntity($entity);
         }
+        $this->sourceOfSynchronizations = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -324,7 +330,7 @@ class ObjectEntity
 
     public function getOrganization(): ?Organization
     {
-        return $this->organization;
+        return $this->organization ?? null;
     }
 
     public function setOrganization(?Organization $organization): self
@@ -1378,5 +1384,35 @@ class ObjectEntity
         if (!$this->getName()) {
             $this->setName('No name could be established for this entity');
         }
+    }
+
+    /**
+     * @return Collection|Synchronization[]
+     */
+    public function getSourceOfSynchronizations(): Collection
+    {
+        return $this->sourceOfSynchronizations;
+    }
+
+    public function addSourceOfSynchronization(Synchronization $sourceOfSynchronization): self
+    {
+        if (!$this->sourceOfSynchronizations->contains($sourceOfSynchronization)) {
+            $this->sourceOfSynchronizations[] = $sourceOfSynchronization;
+            $sourceOfSynchronization->setSourceObject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSourceOfSynchronization(Synchronization $sourceOfSynchronization): self
+    {
+        if ($this->sourceOfSynchronizations->removeElement($sourceOfSynchronization)) {
+            // set the owning side to null (unless already changed)
+            if ($sourceOfSynchronization->getSourceObject() === $this) {
+                $sourceOfSynchronization->setSourceObject(null);
+            }
+        }
+
+        return $this;
     }
 }

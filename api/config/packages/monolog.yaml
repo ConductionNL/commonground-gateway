@@ -1,15 +1,92 @@
 monolog:
     channels:
         - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
+        - endpoint
+        - request
+        - schema
+        - cronjob
+        - action
+        - object
+        - synchronization
+        - plugin
+        - cache
+        - object
+        - call
+        - installation
 
 when@dev:
     monolog:
         handlers:
             main:
                 type: stream
-                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                path: php://stderr
                 level: debug
                 channels: ["!event"]
+            nested:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                level: debug
+                formatter: monolog.formatter.json
+            endpointLog:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.endpoint.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["endpoint"]
+            requestLog:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.request.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["request"]
+            schemaLog:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.schema.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["schema"]
+            cronjobLog:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.cronjob.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["cronjob"]
+            actionLog:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.action.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["action"]
+            objectLog:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.object.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["object"]
+            synchronizationLog:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.synchronization.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["synchronization"]
+            pluginLog:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.synchronization.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["plugin"]
+            cacheLog:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.cache.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["cache"]
+            callLog:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.call.log"
+                level: debug
+                formatter: monolog.formatter.json
+                channels: ["call"]
             # uncomment to get logging in your browser
             # you may have to allow bigger header sizes in your Web server configuration
             #firephp:
@@ -48,7 +125,7 @@ when@prod:
                 buffer_size: 50 # How many messages should be saved? Prevent memory leaks
             nested:
                 type: stream
-                path: php://stderr
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
                 level: debug
                 formatter: monolog.formatter.json
             console:
