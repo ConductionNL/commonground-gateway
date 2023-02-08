@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c2ba47228b95b035f5139e4e82d664ab",
+    "content-hash": "32f072fe308d711e48f9def64ccd2ee1",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -777,54 +777,6 @@
             "time": "2015-08-04T00:09:23+00:00"
         },
         {
-            "name": "common-gateway/brp-bundle",
-            "version": "0.0.12",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CommonGateway/BRPBundle.git",
-                "reference": "7309f5bca00bbb3ed64563169b47bdbe176f4791"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/BRPBundle/zipball/7309f5bca00bbb3ed64563169b47bdbe176f4791",
-                "reference": "7309f5bca00bbb3ed64563169b47bdbe176f4791",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": ">=0.0.1",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "CommonGateway\\BRPBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An example package for creating symfony flex bundles as plugins",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "pet store",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/CommonGateway/BRPBundle/issues",
-                "source": "https://github.com/CommonGateway/BRPBundle/tree/0.0.12"
-            },
-            "time": "2023-02-03T14:55:20+00:00"
-        },
-        {
             "name": "common-gateway/formio-bundle",
             "version": "dev-main",
             "source": {
@@ -864,16 +816,16 @@
         },
         {
             "name": "common-gateway/huwelijksplanner-bundle",
-            "version": "0.0.24",
+            "version": "0.0.25",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/HuwelijksplannerBundle.git",
-                "reference": "c38bf00845abd965e2f93e268a069f76fc73a9d0"
+                "reference": "f1683ecb1ff0418127d26698a461481363c2b2e9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/HuwelijksplannerBundle/zipball/c38bf00845abd965e2f93e268a069f76fc73a9d0",
-                "reference": "c38bf00845abd965e2f93e268a069f76fc73a9d0",
+                "url": "https://api.github.com/repos/CommonGateway/HuwelijksplannerBundle/zipball/f1683ecb1ff0418127d26698a461481363c2b2e9",
+                "reference": "f1683ecb1ff0418127d26698a461481363c2b2e9",
                 "shasum": ""
             },
             "require": {
@@ -907,9 +859,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/HuwelijksplannerBundle/issues",
-                "source": "https://github.com/CommonGateway/HuwelijksplannerBundle/tree/0.0.24"
+                "source": "https://github.com/CommonGateway/HuwelijksplannerBundle/tree/0.0.25"
             },
-            "time": "2023-02-03T08:38:35+00:00"
+            "time": "2023-02-08T08:33:31+00:00"
         },
         {
             "name": "common-gateway/klanten-bundle",
