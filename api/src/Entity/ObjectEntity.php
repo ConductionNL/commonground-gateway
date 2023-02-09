@@ -245,6 +245,7 @@ class ObjectEntity
     {
         // If self not set we generate a uri with linked endpoints
         if (!isset($this->self) && isset($this->id)) {
+            $pathString = '/api';
             if ($this->getEntity() !== null) {
                 $endpoints = $this->getEntity()->getEndpoints();
                 foreach ($endpoints as $endpoint) {
