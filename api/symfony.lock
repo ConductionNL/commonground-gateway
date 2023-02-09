@@ -43,6 +43,12 @@
     "common-gateway/formio-bundle": {
         "version": "dev-main"
     },
+    "common-gateway/geboorte-vrijbrp-bundle": {
+        "version": "0.0.8"
+    },
+    "common-gateway/zgw-bundle": {
+        "version": "0.1.20"
+    },
     "commongateway/corebundle": {
         "version": "dev-master"
     },
@@ -256,9 +262,6 @@
     },
     "laminas/laminas-escaper": {
         "version": "2.9.0"
-    },
-    "larping-base/larping-bundle": {
-        "version": "1.0.35"
     },
     "league/html-to-markdown": {
         "version": "4.10.0"
