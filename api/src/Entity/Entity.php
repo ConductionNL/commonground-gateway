@@ -1222,11 +1222,9 @@ class Entity
             }
 
             // What if the atribute is hooked to an object.
-            if($attribute->getType() === 'object'){
+            if($attribute->getType() === 'object' &&  $attribute->getObject() === true){
                 $property['$ref'] = '#/components/schemas/'.$attribute->getObject()->getName();
             }
-
-
 
             // Zetten van de property.
             $schema['properties'][$attribute->getName()] = $property;

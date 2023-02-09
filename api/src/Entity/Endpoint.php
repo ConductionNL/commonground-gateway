@@ -134,6 +134,14 @@ class Endpoint
     private ?array $path = [];
 
     /**
+     * @var array|null The parameters in the path of this Endpoint.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array")
+     */
+    private ?array $parameters = [];
+
+    /**
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="endpoint", fetch="EXTRA_LAZY", cascade={"remove"})
      */
@@ -324,6 +332,7 @@ class Endpoint
 
             $explodedPath[] = 'id';
             $this->setPath($explodedPath);
+            $this->setParameters(['id']);
             $pathRegEx = '^'.$path.'/?([a-z0-9-]+)?$';
             $this->setPathRegex($pathRegEx);
 
@@ -429,6 +438,18 @@ class Endpoint
     public function setPath(array $path): self
     {
         $this->path = $path;
+
+        return $this;
+    }
+
+    public function getParameters(): ?array
+    {
+        return $this->parameters;
+    }
+
+    public function setParameters(array $parameters): self
+    {
+        $this->parameters = $parameters;
 
         return $this;
     }
