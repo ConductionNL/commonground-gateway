@@ -24,7 +24,7 @@ class CronjobController extends AbstractController
      *
      * @Route("/", methods={"GET"})
      */
-    public function installedAction(Request $request)
+    public function crontabAction(Request $request)
     {
         $status = 200;
 

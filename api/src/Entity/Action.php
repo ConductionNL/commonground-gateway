@@ -8,6 +8,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Exception\GatewayException;
 use App\Repository\ActionRepository;
 use DateTime;
 use DateTimeInterface;
@@ -60,6 +61,18 @@ class Action
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private UuidInterface $id;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $reference;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $version;
 
     /**
      * @var string The name of the action
@@ -234,6 +247,51 @@ class Action
         }
     }
 
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
+    public function fromSchema(array $schema): self
+    {
+        if(!isset($schema['$schema']) || $schema['$schema'] != 'https://json-schema.org/draft/2020-12/action'){
+            // todo: throw exception on wron schema (requieres design desigin on referencese
+            // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://json-schema.org/draft/2020-12/mapping is required');
+        }
+
+        (isset($schema['$id'])? $this->setReference($schema['$id']) : "");
+        (isset($schema['title'])? $this->setName($schema['title']) : "");
+        (isset($schema['description'])? $this->setDescription($schema['description']) : "");
+        (isset($schema['version'])? $this->setVersion($schema['version']) : "");
+        (isset($schema['listens'])? $this->setListens($schema['listens']) : "");
+        (isset($schema['throws'])? $this->setThrows($schema['throws']) : "");
+        (isset($schema['conditions'])? $this->setConditions($schema['conditions']) : "");
+        (isset($schema['configuration'])? $this->setConfiguration($schema['configuration']) : "");
+        (isset($schema['isLockable'])? $this->setIsLockable($schema['isLockable']) : "");
+        (isset($schema['isEnabled'])? $this->getIsEnabled($schema['isEnabled']) : "");
+
+        return  $this;
+    }
+
+    public function toSchema(): array
+    {
+        $schema = [
+            '$id'            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'        => 'https://json-schema.org/draft/2020-12/action',
+            'title'          => $this->getName(),
+            'description'    => $this->getDescription(),
+            'version'        => $this->getVersion(),
+            'listens'       => $this->getListens(),
+            'throws'         => $this->getThrows(),
+            'conditions'          => $this->getConditions(),
+            'configuration'          => $this->getConfiguration(),
+            'isLockable'          => $this->getIsLockable(),
+            'isEnabled'          => $this->getIsEnabled()
+        ];
+
+        return $schema;
+    }
+
     /**
      * Gets the default config from a json schema definition of an ActionHandler.
      *
@@ -262,6 +320,32 @@ class Action
     public function getId(): ?UuidInterface
     {
         return $this->id;
+    }
+
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+
+    public function getversion(): ?string
+    {
+        return $this->version;
+    }
+
+    public function setversion(string $version): self
+    {
+        $this->version = $version;
+
+        return $this;
     }
 
     public function getName(): ?string

@@ -18,17 +18,15 @@ services:
   #      - "83:80"
   
   oc:
-    &oc
     image: ghcr.io/opencatalogi/web-app:dev
     depends_on:
       - api
     ports:
       - "81:80"
     volumes:
-      - ./ui/oc.js:/usr/share/nginx/html/env.js:rw,cached 
-        
+      - ./ui/oc.js:/usr/share/nginx/html/env.js:rw,cached
+  
   cron:
-    &cron
     image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}_cron:${APP_ENV}
     build: ./dockerized-cron
     depends_on:
@@ -56,6 +54,7 @@ services:
     volumes:
       - ./api:/srv/api:rw,cached
       - ./api/var/certs:/var/certs:rw,cached
+      - ./api/var/log:/srv/api/var/log:rw,cached
       - ./gateway:/srv/api/fixtures:rw,cached
     environment:
       - CONTAINER_REGISTRY_BASE=${CONTAINER_REGISTRY_BASE}

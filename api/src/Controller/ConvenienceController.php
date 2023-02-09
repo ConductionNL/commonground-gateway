@@ -12,6 +12,7 @@ use App\Service\ParseDataService;
 use App\Service\PubliccodeOldService;
 use App\Service\PubliccodeService;
 use App\Subscriber\ActionSubscriber;
+use CommonGateway\CoreBundle\Service\MappingService;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
@@ -21,6 +22,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Twig\Environment;
+use function Symfony\Component\Translation\t;
 
 class ConvenienceController extends AbstractController
 {
@@ -34,6 +37,8 @@ class ConvenienceController extends AbstractController
     private HandlerService $handlerService;
     private ActionSubscriber $actionSubscriber;
     private ObjectEntityService $objectEntityService;
+    private MappingService $mappingService;
+    private Environment $twig;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -43,7 +48,8 @@ class ConvenienceController extends AbstractController
         HandlerService $handlerService,
         ActionSubscriber $actionSubscriber,
         ObjectEntityService $objectEntityService,
-        PubliccodeService $publiccodeService
+        PubliccodeService $publiccodeService,
+        Environment $twig
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
@@ -55,6 +61,8 @@ class ConvenienceController extends AbstractController
         $this->actionSubscriber = $actionSubscriber;
         $this->objectEntityService = $objectEntityService;
         $this->publiccodeService = $publiccodeService;
+        $this->twig = $twig;
+        $this->mappingService = new MappingService($twig);
     }
 
     /**
@@ -237,6 +245,29 @@ class ConvenienceController extends AbstractController
             Response::HTTP_OK,
             ['content-type' => $contentType]
         );
+    }
+
+    /**
+     * @Route("/admin/mappings/{id}/test")
+     *
+     * @throws GatewayException
+     */
+    public function getMapping(string $id)
+    {
+        $contentType = $this->handlerService->getRequestType('content-type');
+
+        if (!$mappingObject = $this->entityManager->getRepository('App:Mapping')->find($id)) {
+            return new GatewayException(
+                $this->serializer->serialize(['message' => 'There is no mapping found with id '.$id], $contentType),
+                Response::HTTP_BAD_REQUEST,
+            );
+        }
+
+        $requestMappingArray = $this->handlerService->getDataFromRequest();
+
+        $mapping = $this->mappingService->mapping($mappingObject, $requestMappingArray);
+
+        return new Response(json_encode($mapping), 200, ['content-type' => 'json']);
     }
 
     /**
