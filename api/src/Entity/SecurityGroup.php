@@ -99,6 +99,15 @@ class SecurityGroup
     private $children;
 
     /**
+     * Wheter or not this is the user group that defines the rights for anonymous users.
+     *
+     * @var bool
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", options={"default"=false})
+     */
+    private bool $anonymous = false;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -122,14 +131,19 @@ class SecurityGroup
         $this->children = new ArrayCollection();
     }
 
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
     public function getId(): ?UuidInterface
     {
         return $this->id;
     }
 
-    public function setId(UuidInterface $id): self
+    public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
@@ -232,6 +246,18 @@ class SecurityGroup
                 $child->setParent(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getAnonymous(): bool
+    {
+        return $this->anonymous;
+    }
+
+    public function setAnonymous(bool $anonymous): self
+    {
+        $this->anonymous = $anonymous;
 
         return $this;
     }

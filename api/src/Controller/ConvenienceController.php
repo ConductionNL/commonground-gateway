@@ -9,9 +9,8 @@ use App\Service\OasParserService;
 use App\Service\ObjectEntityService;
 use App\Service\PackagesService;
 use App\Service\ParseDataService;
-use App\Service\PubliccodeOldService;
-use App\Service\PubliccodeService;
 use App\Subscriber\ActionSubscriber;
+use CommonGateway\CoreBundle\Service\MappingService;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
@@ -21,11 +20,10 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use Twig\Environment;
 
 class ConvenienceController extends AbstractController
 {
-    private PubliccodeOldService $publiccodeOldService;
-    private PubliccodeService $publiccodeService;
     private EntityManagerInterface $entityManager;
     private OasParserService $oasParser;
     private SerializerInterface $serializer;
@@ -34,6 +32,8 @@ class ConvenienceController extends AbstractController
     private HandlerService $handlerService;
     private ActionSubscriber $actionSubscriber;
     private ObjectEntityService $objectEntityService;
+    private MappingService $mappingService;
+    private Environment $twig;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -43,18 +43,18 @@ class ConvenienceController extends AbstractController
         HandlerService $handlerService,
         ActionSubscriber $actionSubscriber,
         ObjectEntityService $objectEntityService,
-        PubliccodeService $publiccodeService
+        Environment $twig
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
         $this->oasParser = new OasParserService($entityManager);
-        $this->publiccodeOldService = new PubliccodeOldService($entityManager, $params, $serializer);
         $this->packagesService = new PackagesService();
         $this->dataService = $dataService;
         $this->handlerService = $handlerService;
         $this->actionSubscriber = $actionSubscriber;
         $this->objectEntityService = $objectEntityService;
-        $this->publiccodeService = $publiccodeService;
+        $this->twig = $twig;
+        $this->mappingService = new MappingService($twig);
     }
 
     /**
@@ -240,51 +240,26 @@ class ConvenienceController extends AbstractController
     }
 
     /**
-     * This function gets the event from github if something has changed in a repository.
+     * @Route("/admin/mappings/{id}/test")
      *
-     * @Route("/github_events")
-     *
-     * @throws Exception|GuzzleException
+     * @throws GatewayException
      */
-    public function githubEvents(Request $request): Response
+    public function getMapping(string $id)
     {
-        if (!$content = json_decode($request->request->get('payload'), true)) {
-//            var_dump($content = $this->handlerService->getDataFromRequest());
+        $contentType = $this->handlerService->getRequestType('content-type');
 
-            return $this->publiccodeService->updateRepositoryWithEventResponse($this->handlerService->getDataFromRequest());
+        if (!$mappingObject = $this->entityManager->getRepository('App:Mapping')->find($id)) {
+            return new GatewayException(
+                $this->serializer->serialize(['message' => 'There is no mapping found with id '.$id], $contentType),
+                Response::HTTP_BAD_REQUEST,
+            );
         }
 
-        return $this->publiccodeService->updateRepositoryWithEventResponse($content);
-    }
+        $requestMappingArray = $this->handlerService->getDataFromRequest();
 
-    /**
-     * @Route("/admin/publiccode")
-     *
-     * @throws GuzzleException
-     */
-    public function getRepositories(): Response
-    {
-        return $this->publiccodeOldService->discoverGithub();
-    }
+        $mapping = $this->mappingService->mapping($mappingObject, $requestMappingArray);
 
-    /**
-     * @Route("/admin/publiccode/github/{id}")
-     *
-     * @throws GuzzleException
-     */
-    public function getGithubRepository(string $id): Response
-    {
-        return $this->publiccodeOldService->getGithubRepositoryContent($id);
-    }
-
-    /**
-     * @Route("/admin/publiccode/github/install/{id}")
-     *
-     * @throws GuzzleException
-     */
-    public function installRepository(string $id): Response
-    {
-        return $this->publiccodeOldService->createCollection($id);
+        return new Response(json_encode($mapping), 200, ['content-type' => 'json']);
     }
 
     /**

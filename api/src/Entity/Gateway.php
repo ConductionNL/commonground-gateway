@@ -470,11 +470,6 @@ class Gateway
     private ?string $documentation = null;
 
     /**
-     * @ORM\OneToMany(targetEntity=GatewayResponseLog::class, mappedBy="gateway", orphanRemoval=true, fetch="EXTRA_LAZY")
-     */
-    private $responseLogs;
-
-    /**
      * Setting logging to true will couse ALL responses to be logged (normaly we only log errors). Doing so wil dramaticly slow down the gateway and couse an increase in database size. This is not recomended outside of development purposes.
      *
      * @ORM\Column(type="boolean", nullable=true)
@@ -514,24 +509,11 @@ class Gateway
     private array $translationConfig = [];
 
     /**
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="gateway", fetch="EXTRA_LAZY", cascade={"remove"})
-     */
-    private Collection $requestLogs;
-
-    /**
      * @Groups({"read", "write"})
      * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=CollectionEntity::class, mappedBy="source")
      */
     private ?Collection $collections;
-
-    /**
-     * @Groups({"read", "write"})
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="gateway")
-     */
-    private ?Collection $subscribers;
 
     /**
      * @var array|null The guzzle configuration of the source
@@ -569,9 +551,9 @@ class Gateway
      *     }
      * )
      * @Groups({"read", "write"})
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, options={"default":null})
      */
-    private ?Datetime $lastCall;
+    private ?Datetime $lastCall = null;
 
     /**
      * @var ?Datetime The datetime from the last synchronization made to this source
@@ -585,9 +567,9 @@ class Gateway
      *     }
      * )
      * @Groups({"read", "write"})
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="datetime", nullable=true, options={"default":null})
      */
-    private ?Datetime $lastSync;
+    private ?Datetime $lastSync = null;
 
     /**
      * @var int The count of total sync objects from this source
@@ -612,14 +594,6 @@ class Gateway
      * @ORM\OneToMany(targetEntity=Synchronization::class, fetch="EXTRA_LAZY", mappedBy="gateway", orphanRemoval=true)
      */
     private Collection $synchronizations;
-
-    /**
-     * @var Collection The call logs of this source
-     *
-     * @Groups({"write"})
-     * @ORM\OneToMany(targetEntity=CallLog::class, fetch="EXTRA_LAZY", mappedBy="source", orphanRemoval=true)
-     */
-    private Collection $callLogs;
 
     /**
      * @var Datetime The moment this resource was created
@@ -652,15 +626,51 @@ class Gateway
      */
     private $proxies;
 
-    public function __construct()
+    /**
+     * Constructor for Gateway.
+     *
+     * @param array|null $configuration If not empty this array is used to call fromArray()
+     */
+    public function __construct(?array $configuration = [])
     {
-        $this->responceLogs = new ArrayCollection();
-        $this->requestLogs = new ArrayCollection();
         $this->collections = new ArrayCollection();
-        $this->subscribers = new ArrayCollection();
         $this->synchronizations = new ArrayCollection();
-        $this->callLogs = new ArrayCollection();
         $this->proxies = new ArrayCollection();
+
+        if ($configuration) {
+            $this->fromArray($configuration);
+        }
+    }
+
+    /**
+     * Uses given $configuration array to set the properties of this Gateway.
+     *
+     * @param array $configuration An array with data.
+     *
+     * @return void
+     */
+    public function fromArray(array $configuration)
+    {
+        // Do not set jwt, secret, password or apikey this way!
+        array_key_exists('name', $configuration) ? $this->setName($configuration['name']) : '';
+        array_key_exists('location', $configuration) ? $this->setLocation($configuration['location']) : '';
+        array_key_exists('authorizationHeader', $configuration) ? $this->setAuthorizationHeader($configuration['authorizationHeader']) : '';
+        array_key_exists('auth', $configuration) ? $this->setAuth($configuration['auth']) : '';
+        array_key_exists('authorizationPassthroughMethod', $configuration) ? $this->setAuthorizationPassthroughMethod($configuration['authorizationPassthroughMethod']) : '';
+        array_key_exists('locale', $configuration) ? $this->setLocale($configuration['locale']) : '';
+        array_key_exists('accept', $configuration) ? $this->setAccept($configuration['accept']) : '';
+        array_key_exists('jwtId', $configuration) ? $this->setJwtId($configuration['jwtId']) : '';
+        array_key_exists('username', $configuration) ? $this->setUsername($configuration['username']) : '';
+        array_key_exists('documentation', $configuration) ? $this->setDocumentation($configuration['documentation']) : '';
+        array_key_exists('headers', $configuration) ? $this->setHeaders($configuration['headers']) : '';
+        array_key_exists('translationConfig', $configuration) ? $this->setTranslationConfig($configuration['translationConfig']) : '';
+        array_key_exists('type', $configuration) ? $this->setType($configuration['type']) : '';
+        array_key_exists('configuration', $configuration) ? $this->setConfiguration($configuration['configuration']) : '';
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
     }
 
     public function export(): ?array
@@ -916,36 +926,6 @@ class Gateway
         return $this;
     }
 
-    /**
-     * @return Collection|GatewayResponseLog[]
-     */
-    public function getResponseLogs(): Collection
-    {
-        return $this->responceLogs;
-    }
-
-    public function addResponseLog(GatewayResponseLog $responceLog): self
-    {
-        if (!$this->responceLogs->contains($responceLog)) {
-            $this->responceLogs[] = $responceLog;
-            $responceLog->setSource($this);
-        }
-
-        return $this;
-    }
-
-    public function removeResponseLog(GatewayResponseLog $responceLog): self
-    {
-        if ($this->responceLogs->removeElement($responceLog)) {
-            // set the owning side to null (unless already changed)
-            if ($responceLog->getSource() === $this) {
-                $responceLog->setSource(null);
-            }
-        }
-
-        return $this;
-    }
-
     public function getLogging(): ?bool
     {
         return $this->logging;
@@ -995,36 +975,6 @@ class Gateway
     }
 
     /**
-     * @return Collection|RequestLog[]
-     */
-    public function getRequestLogs(): Collection
-    {
-        return $this->requestLogs;
-    }
-
-    public function addRequestLog(RequestLog $requestLog): self
-    {
-        if (!$this->requestLogs->contains($requestLog)) {
-            $this->requestLogs[] = $requestLog;
-            $requestLog->setSource($this);
-        }
-
-        return $this;
-    }
-
-    public function removeRequestLog(RequestLog $requestLog): self
-    {
-        if ($this->requestLogs->removeElement($requestLog)) {
-            // set the owning side to null (unless already changed)
-            if ($requestLog->getSource() === $this) {
-                $requestLog->setSource(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
      * @return Collection|CollectionEntity[]
      */
     public function getCollections(): Collection
@@ -1048,36 +998,6 @@ class Gateway
             // set the owning side to null (unless already changed)
             if ($collection->getSource() === $this) {
                 $collection->setSource(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Subscriber[]
-     */
-    public function getSubscribers(): Collection
-    {
-        return $this->subscribers;
-    }
-
-    public function addSubscriber(Subscriber $subscriber): self
-    {
-        if (!$this->subscribers->contains($subscriber)) {
-            $this->subscribers[] = $subscriber;
-            $subscriber->setSource($this);
-        }
-
-        return $this;
-    }
-
-    public function removeSubscriber(Subscriber $subscriber): self
-    {
-        if ($this->subscribers->removeElement($subscriber)) {
-            // set the owning side to null (unless already changed)
-            if ($subscriber->getSource() === $this) {
-                $subscriber->setSource(null);
             }
         }
 
@@ -1146,24 +1066,6 @@ class Gateway
         if (!$this->synchronizations->contains($synchronization)) {
             $this->synchronizations[] = $synchronization;
             $synchronization->setSource($this);
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|CallLog[]
-     */
-    public function getCallLogs(): Collection
-    {
-        return $this->callLogs;
-    }
-
-    public function addCallLog(CallLog $callLog): self
-    {
-        if (!$this->callLogs->contains($callLog)) {
-            $this->callLogs[] = $callLog;
-            $callLog->setSource($this);
         }
 
         return $this;
