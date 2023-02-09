@@ -52,6 +52,12 @@
     "common-gateway/formio-bundle": {
         "version": "dev-main"
     },
+    "common-gateway/xxllnc-zgw-bundle": {
+        "version": "0.0.16"
+    },
+    "common-gateway/zgw-bundle": {
+        "version": "0.1.18"
+    },
     "commongateway/corebundle": {
         "version": "dev-master"
     },
