@@ -73,4 +73,41 @@ class ZZController extends AbstractController
     ): Response {
         return $endpointService->handleRequest($request);
     }
+
+    /**
+     * Builds a parameter array from the request.
+     *
+     * @param ?array   $parameters An optional starting array of parameters
+     * @param ?Request $request    The request (autowired so doesn't need te be provided
+     *
+     * @return array The parameter arrau
+     */
+    private function getParametersFromRequest(?array $parameters = [], ?Request $request): array
+    {
+
+        // Lets make sure that we always have a path
+        if (!isset($parameters['path'])) {
+            $parameters['path'] = [];
+        }
+
+        $parameters['querystring'] = $request->getQueryString();
+
+        try {
+            $parameters['body'] = $request->toArray();
+        } catch (\Exception $exception) {
+        }
+
+        $parameters['crude_body'] = $request->getContent();
+
+        $parameters['method'] = $request->getMethod();
+        $parameters['query'] = $request->query->all();
+
+        // Lets get all the headers
+        $parameters['headers'] = $request->headers->all();
+
+        // Lets get all the post variables
+        $parameters['post'] = $request->request->all();
+
+        return $parameters;
+    }
 }
