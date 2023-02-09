@@ -296,7 +296,7 @@ class HandlerService
             // Update current Log
             $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 2, json_encode($data));
 
-            $event = new ActionEvent('commongateway.response.pre', ['entity' => $handler->getEntity()->getId()->toString(), 'httpRequest' => $this->request, 'request' => $originalData, 'response' => $data, 'queryParameters' => $this->request->query->all()]);
+            $event = new ActionEvent('commongateway.response.pre', ['entity' => $handler->getEntity()->getReference() ?? $handler->getEntity()->getReference(), 'httpRequest' => $this->request, 'request' => $originalData, 'response' => $data, 'queryParameters' => $this->request->query->all()]);
             $this->eventDispatcher->dispatch($event, 'commongateway.response.pre');
             $data = $event->getData()['response'];
 
