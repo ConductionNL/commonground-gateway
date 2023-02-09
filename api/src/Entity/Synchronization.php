@@ -11,10 +11,9 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Gateway as Source;
 use DateTime;
 use DateTimeInterface;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -90,7 +89,7 @@ class Synchronization
     private ?Action $action = null;
 
     /**
-     * The source of this synchronization might be an external source (gateway)
+     * The source of this synchronization might be an external source (gateway).
      *
      * @var Source The Source of this resource
      *
@@ -101,7 +100,7 @@ class Synchronization
     private ?Source $gateway = null;
 
     /**
-     * The source of this synchronization might be an internal object
+     * The source of this synchronization might be an internal object.
      *
      * @var Source The Source of this resource
      *
@@ -204,7 +203,6 @@ class Synchronization
      */
     private $mapping;
 
-
     public function __construct(?Source $source = null, ?Entity $entity = null)
     {
         if (isset($source)) {
@@ -218,6 +216,13 @@ class Synchronization
     public function getId(): ?UuidInterface
     {
         return $this->id;
+    }
+
+    public function setId(string $id): self
+    {
+        $this->id = Uuid::fromString($id);
+
+        return $this;
     }
 
     public function getEntity(): ?Entity
@@ -457,6 +462,4 @@ class Synchronization
 
         return $this;
     }
-
-
 }

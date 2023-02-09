@@ -195,7 +195,6 @@ class Authentication
      */
     private $dateModified;
 
-
     public function __toString()
     {
         return $this->getName();

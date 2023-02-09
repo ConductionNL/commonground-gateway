@@ -12,10 +12,9 @@ use App\Exception\GatewayException;
 use App\Repository\ActionRepository;
 use DateTime;
 use DateTimeInterface;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -198,11 +197,6 @@ class Action
     private ?bool $isEnabled = true;
 
     /**
-     * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="action", orphanRemoval=true, fetch="EXTRA_LAZY")
-     */
-    private $actionLogs;
-
-    /**
      * @var array|null The configuration of the action handler
      *
      * @Groups({"read","write"})
@@ -232,8 +226,6 @@ class Action
     public function __construct(
         $actionHandler = false
     ) {
-        $this->actionLogs = new ArrayCollection();
-
         if ($actionHandler) {
             if (!$schema = $actionHandler->getConfiguration()) {
                 return;
@@ -254,21 +246,22 @@ class Action
 
     public function fromSchema(array $schema): self
     {
-        if(!isset($schema['$schema']) || $schema['$schema'] != 'https://json-schema.org/draft/2020-12/action'){
+        if (!isset($schema['$schema']) || $schema['$schema'] != 'https://json-schema.org/draft/2020-12/action') {
             // todo: throw exception on wron schema (requieres design desigin on referencese
             // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://json-schema.org/draft/2020-12/mapping is required');
         }
 
-        (isset($schema['$id'])? $this->setReference($schema['$id']) : "");
-        (isset($schema['title'])? $this->setName($schema['title']) : "");
-        (isset($schema['description'])? $this->setDescription($schema['description']) : "");
-        (isset($schema['version'])? $this->setVersion($schema['version']) : "");
-        (isset($schema['listens'])? $this->setListens($schema['listens']) : "");
-        (isset($schema['throws'])? $this->setThrows($schema['throws']) : "");
-        (isset($schema['conditions'])? $this->setConditions($schema['conditions']) : "");
-        (isset($schema['configuration'])? $this->setConfiguration($schema['configuration']) : "");
-        (isset($schema['isLockable'])? $this->setIsLockable($schema['isLockable']) : "");
-        (isset($schema['isEnabled'])? $this->getIsEnabled($schema['isEnabled']) : "");
+        (isset($schema['$id']) ? $this->setReference($schema['$id']) : '');
+        (isset($schema['title']) ? $this->setName($schema['title']) : '');
+        (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
+        (isset($schema['version']) ? $this->setVersion($schema['version']) : '');
+        (isset($schema['listens']) ? $this->setListens($schema['listens']) : '');
+        (isset($schema['throws']) ? $this->setThrows($schema['throws']) : '');
+        (isset($schema['conditions']) ? $this->setConditions($schema['conditions']) : '');
+        (isset($schema['configuration']) ? $this->setConfiguration($schema['configuration']) : '');
+        (isset($schema['isLockable']) ? $this->setIsLockable($schema['isLockable']) : '');
+        (isset($schema['isEnabled']) ? $this->setIsEnabled($schema['isEnabled']) : '');
+        (isset($schema['class']) ? $this->setClass($schema['class']) : '');
 
         return  $this;
     }
@@ -276,17 +269,17 @@ class Action
     public function toSchema(): array
     {
         $schema = [
-            '$id'            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema'        => 'https://json-schema.org/draft/2020-12/action',
-            'title'          => $this->getName(),
-            'description'    => $this->getDescription(),
-            'version'        => $this->getVersion(),
-            'listens'       => $this->getListens(),
-            'throws'         => $this->getThrows(),
-            'conditions'          => $this->getConditions(),
+            '$id'                    => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'                => 'https://json-schema.org/draft/2020-12/action',
+            'title'                  => $this->getName(),
+            'description'            => $this->getDescription(),
+            'version'                => $this->getVersion(),
+            'listens'                => $this->getListens(),
+            'throws'                 => $this->getThrows(),
+            'conditions'             => $this->getConditions(),
             'configuration'          => $this->getConfiguration(),
-            'isLockable'          => $this->getIsLockable(),
-            'isEnabled'          => $this->getIsEnabled()
+            'isLockable'             => $this->getIsLockable(),
+            'isEnabled'              => $this->getIsEnabled(),
         ];
 
         return $schema;
@@ -322,6 +315,12 @@ class Action
         return $this->id;
     }
 
+    public function setId(string $id): self
+    {
+        $this->id = Uuid::fromString($id);
+
+        return $this;
+    }
 
     public function getReference(): ?string
     {
@@ -334,7 +333,6 @@ class Action
 
         return $this;
     }
-
 
     public function getversion(): ?string
     {
@@ -524,36 +522,6 @@ class Action
     public function setIsEnabled(?bool $isEnabled): self
     {
         $this->isEnabled = $isEnabled;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|ActionLog[]
-     */
-    public function getActionLogs(): Collection
-    {
-        return $this->actionLogs;
-    }
-
-    public function addActionLog(ActionLog $actionLog): self
-    {
-        if (!$this->actionLogs->contains($actionLog)) {
-            $this->actionLogs[] = $actionLog;
-            $actionLog->setAction($this);
-        }
-
-        return $this;
-    }
-
-    public function removeActionLog(ActionLog $actionLog): self
-    {
-        if ($this->actionLogs->removeElement($actionLog)) {
-            // set the owning side to null (unless already changed)
-            if ($actionLog->getAction() === $this) {
-                $actionLog->setAction(null);
-            }
-        }
 
         return $this;
     }

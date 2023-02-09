@@ -156,7 +156,6 @@ class Value
     /**
      * @Groups({"write"})
      * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="objectValues", fetch="EXTRA_LAZY", cascade={"persist"})
-     * @ORM\JoinColumn(nullable=false)
      * @MaxDepth(1)
      */
     private $objectEntity; // parent object
@@ -209,9 +208,9 @@ class Value
         return $this->id;
     }
 
-    public function setId(UuidInterface $id): self
+    public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
@@ -382,7 +381,13 @@ class Value
                 // Lets catch files and objects
                 $input = $this->simpleArraySwitch($input);
 
-                $outputArray[] = strval($input);
+                try {
+                    $outputArray[] = strval($input);
+                } catch (Exception $exception) {
+                    // todo: monolog?
+                    // If we catch an array to string conversion here you are probably using windows
+                    // and have to many schema files in for example zgw-bundle (delete some in your vendor map)
+                }
             }
 
             $this->simpleArrayValue = $outputArray;
@@ -488,6 +493,31 @@ class Value
     }
 
     /**
+     * Removes any values that where not hydrated on the current request.
+     *
+     * @param ObjectEntity $parent The parent object
+     *
+     * @return void
+     */
+    public function removeNonHydratedObjects(): void
+    {
+        // Savety
+        if (!$this->getAttribute()->getMultiple() || $this->getAttribute()->getType() !== 'object') {
+            return;
+        }
+
+        // Loop trough the objects
+        foreach ($this->getObjects() as $object) {
+            // Catch new objects
+
+            // If the where not just hydrated remove them
+            if ($object->getId() && !$object->getHydrated()) {
+                $this->removeObject($object);
+            }
+        }
+    }
+
+    /**
      * @return Collection|File[]
      */
     public function getFiles(): Collection
@@ -576,15 +606,13 @@ class Value
                     // Catch Array input (for hydrator)
                     if (is_array($value)) {
                         $object = new ObjectEntity($this->getAttribute()->getObject());
-                        if (key_exists('_id', $value)) {
-                            $object->setExternalId($value['_id']);
-                        }
 
                         $object->setOwner($this->getObjectEntity()->getOwner());
                         $object->setApplication($this->getObjectEntity()->getApplication());
                         $object->setOrganization($this->getObjectEntity()->getOrganization());
                         $object->hydrate($value, $unsafe, $dateModified);
                         $value = $object;
+                        $this->hydratedObjects[] = $object;
                     }
 
                     if (is_string($value)) {
