@@ -91,7 +91,7 @@ class ObjectEntity
      * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="objectEntities")
      */
-    private ?Organization $organization;
+    private ?Organization $organization = null;
 
     /**
      * @var string An uuid or uri of an owner of this object
