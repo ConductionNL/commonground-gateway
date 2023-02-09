@@ -9,12 +9,10 @@ use App\Service\LogService;
 use App\Service\ProcessingLogService;
 use CommonGateway\CoreBundle\Service\EndpointService;
 use CommonGateway\CoreBundle\Service\RequestService;
-use Doctrine\ORM\NonUniqueResultException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Serializer\Exception\NotEncodableValueException;
 use Symfony\Component\Serializer\SerializerInterface;
 
 class ZZController extends AbstractController
