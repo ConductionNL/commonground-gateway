@@ -66,7 +66,6 @@ class CronjobCommand extends Command
      */
     public function makeActionEvent(Cronjob $cronjob, SymfonyStyle $io): void
     {
-
         $totalThrows = $cronjob->getThrows() ? count($cronjob->getThrows()) : 0;
         $io->section("Found $totalThrows Throw".($totalThrows !== 1 ? 's' : '').' for this Cronjob');
 
@@ -136,6 +135,7 @@ class CronjobCommand extends Command
             foreach ($cronjobs as $cronjob) {
                 $this->session->set('cronjob', $cronjob->getId()->toString());
                 $this->logger->info("Start running cronjob {$cronjob->getId()->toString()}");
+
                 try {
                     $this->handleCronjobIoStart($io, $cronjob);
 
