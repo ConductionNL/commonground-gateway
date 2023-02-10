@@ -1,3 +1,0 @@
-conduction_bundle:
-    resource: '@DigidBundle/Resources/config/routes.xml'
-    prefix: /

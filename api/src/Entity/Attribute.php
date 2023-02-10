@@ -187,7 +187,7 @@ class Attribute
      *
      * @Assert\Length(max = 255)
      */
-    private $ref;
+    private $ref = '';
 
     /**
      * @var string *Can only be used in combination with type integer* Specifies a number where the value should be a multiple of, e.g. a multiple of 2 would validate 2,4 and 6 but would prevent 5

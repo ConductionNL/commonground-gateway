@@ -661,10 +661,12 @@ class SynchronizationService
             //todo: error, log this
 
             $this->ioCatchException($exception, ['line', 'file', 'message' => [
-                'preMessage' => 'Failed fetching page '.$page,
+                'preMessage' => "Failed fetching page $page ",
             ]]);
 
-            return $this->fetchObjectsFromSource($callServiceConfig, $page + 1, $errorsInARowCount++);
+            $errorsInARowCount++;
+
+            return $this->fetchObjectsFromSource($callServiceConfig, $page + 1, $errorsInARowCount);
         }
 
         $pageResult = $this->callService->decodeResponse($callServiceConfig['source'], $response);
@@ -770,7 +772,7 @@ class SynchronizationService
      *
      * @return Synchronization|null A synchronization object related to the object in the gateway
      */
-    private function findSyncByObject(ObjectEntity $objectEntity, Source $source, Entity $entity): ?Synchronization
+    public function findSyncByObject(ObjectEntity $objectEntity, Source $source, Entity $entity): ?Synchronization
     {
         $synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['object' => $objectEntity->getId(), 'gateway' => $source, 'entity' => $entity]);
         if ($synchronization instanceof Synchronization) {
@@ -895,24 +897,24 @@ class SynchronizationService
         $now = new DateTime();
         $synchronization->setLastChecked($now);
 
-        // Counter
-        $counter = $synchronization->getTryCounter() + 1;
-        $synchronization->setTryCounter($counter);
-
-        // Set dont try before, expensional so in minutes  1,8,27,64,125,216,343,512,729,1000
-        $addMinutes = pow($counter, 3);
-        if ($synchronization->getDontSyncBefore()) {
-            $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT'.$addMinutes.'M'));
-        } else {
-            $dontTryBefore = new DateTime();
-        }
-        $synchronization->setDontSyncBefore($dontTryBefore);
-
         $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
 
         //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
         // todo: this if, elseif, else needs fixing, conditions aren't correct for if we ever want to syncToSource with this handleSync function
         if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() >= $synchronization->getObject()->getDateModified())) {
+            // Counter
+            $counter = $synchronization->getTryCounter() + 1;
+            $synchronization->setTryCounter($counter);
+
+            // Set dont try before, expensional so in minutes  1,8,27,64,125,216,343,512,729,1000
+            $addMinutes = pow($counter, 3);
+            if ($synchronization->getDontSyncBefore()) {
+                $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT'.$addMinutes.'M'));
+            } else {
+                $dontTryBefore = new DateTime();
+            }
+            $synchronization->setDontSyncBefore($dontTryBefore);
+
             $synchronization = $this->syncToGateway($synchronization, $sourceObject, $method);
         }
 
@@ -953,7 +955,7 @@ class SynchronizationService
 
         //create new object if no object exists
         if (!$synchronization->getObject()) {
-            $this->io->text('creating new objectEntity');
+            isset($this->io) && $this->io->text('creating new objectEntity');
             $object = new ObjectEntity($synchronization->getEntity());
             $object->addSynchronization($synchronization);
             $this->entityManager->persist($object);

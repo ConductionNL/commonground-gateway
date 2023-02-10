@@ -939,7 +939,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
-     * Finds object entities on there external or internal id.
+     * Finds object entities on their id or a sourceId of a synchronization this ObjectEntity has.
      *
      * @param string $identifier
      *

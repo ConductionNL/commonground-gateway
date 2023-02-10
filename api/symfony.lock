@@ -40,17 +40,14 @@
     "brick/reflection": {
         "version": "0.4.1"
     },
-    "clean/phpatlas": {
-        "version": "0.2.0"
-    },
-    "clean/phpdoc-md": {
-        "version": "0.19.3"
-    },
-    "clean/view": {
-        "version": "0.1.0"
-    },
     "common-gateway/formio-bundle": {
         "version": "dev-main"
+    },
+    "common-gateway/geboorte-vrijbrp-bundle": {
+        "version": "0.0.8"
+    },
+    "common-gateway/zgw-bundle": {
+        "version": "0.1.20"
     },
     "commongateway/corebundle": {
         "version": "dev-master"
@@ -265,9 +262,6 @@
     },
     "laminas/laminas-escaper": {
         "version": "2.9.0"
-    },
-    "larping-base/larping-bundle": {
-        "version": "1.0.18"
     },
     "league/html-to-markdown": {
         "version": "4.10.0"
