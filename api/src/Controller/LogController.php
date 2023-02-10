@@ -20,6 +20,14 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class LogController extends AbstractController
 {
+
+    /**
+     * @TODO: This is duplicate code from the corebundle, once moving logging to core, reuse code from there
+     *
+     * @param string $method
+     * @param string|null $queryString
+     * @return array
+     */
     private function realRequestQueryAll(string $method = 'get', ?string $queryString = ''): array
     {
         $vars = [];
@@ -42,6 +50,14 @@ class LogController extends AbstractController
         return $vars;
     }
 
+    /**
+     * @TODO: This is duplicate code from the corebundle, once moving logging to core, reuse code from there
+     *
+     * @param array $vars
+     * @param string $name
+     * @param string $nameKey
+     * @param string $value
+     */
     private function recursiveRequestQueryKey(array &$vars, string $name, string $nameKey, string $value)
     {
         $matchesCount = preg_match('/(\[[^[\]]*])/', $name, $matches);
@@ -60,6 +76,14 @@ class LogController extends AbstractController
         }
     }
 
+    /**
+     * @TODO: This is duplicate code from the corebundle, once moving logging to core, reuse code from there
+     *
+     * @param $limit
+     * @param $start
+     * @param array $filters
+     * @return array
+     */
     public function setPagination(&$limit, &$start, array $filters): array
     {
         if (isset($filters['_limit'])) {
