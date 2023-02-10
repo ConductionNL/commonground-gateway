@@ -2,7 +2,6 @@
 
 namespace App\Logger;
 
-use Monolog\LogRecord;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
@@ -11,7 +10,8 @@ class SessionDataProcessor
     private SessionInterface $session;
     private RequestStack $requestStack;
 
-    public function __construct(SessionInterface $session, RequestStack $requestStack) {
+    public function __construct(SessionInterface $session, RequestStack $requestStack)
+    {
         $this->session = $session;
         $this->requestStack = $requestStack;
     }

@@ -10,8 +10,6 @@ use MongoDB\Client;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Process\Exception\ProcessFailedException;
-use Symfony\Component\Process\Process;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
@@ -22,7 +20,6 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class LogController extends AbstractController
 {
-
     private function realRequestQueryAll(string $method = 'get', ?string $queryString = ''): array
     {
         $vars = [];
@@ -95,15 +92,15 @@ class LogController extends AbstractController
         $collection = $client->logs->logs;
         $filter = $this->realRequestQueryAll('get', $request->getQueryString());
         $completeFilter = $filter;
-        if(isset($filter["_id"])) {
-            $filter["_id"] = new ObjectId($filter['_id']);
+        if (isset($filter['_id'])) {
+            $filter['_id'] = new ObjectId($filter['_id']);
         }
 
         unset($filter['_start'], $filter['_offset'], $filter['_limit'], $filter['_page'],
             $filter['_extend'], $filter['_search'], $filter['_order'], $filter['_fields']);
         $completeFilter = $this->setPagination($limit, $start, $completeFilter);
 
-        $content = json_encode(['results' => $collection->find($filter, ['limit' => $limit, 'skip' => $start])->toArray(), 'page' => intval($completeFilter['_page'] ?? 1), 'count' => $total = $collection->count($filter), 'pages' => floor($total/$limit)]);
+        $content = json_encode(['results' => $collection->find($filter, ['limit' => $limit, 'skip' => $start])->toArray(), 'page' => intval($completeFilter['_page'] ?? 1), 'count' => $total = $collection->count($filter), 'pages' => floor($total / $limit)]);
 
         return new Response($content, $status, ['Content-type' => 'application/json']);
     }
