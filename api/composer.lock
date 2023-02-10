@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "99511e4949afa191b3adeb3e7614706c",
+    "content-hash": "7f55495eb3e7e860b2ca49a1b2c3599a",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -698,16 +698,16 @@
         },
         {
             "name": "common-gateway/geboorte-vrijbrp-bundle",
-            "version": "0.0.22",
+            "version": "0.0.26",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/GeboorteVrijBRPBundle.git",
-                "reference": "7d246b61d12f15c06801307d9c93563bf8061ec3"
+                "reference": "1d9b5f012cd4cd2aa73f88fb89ce7fb37f060c63"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/GeboorteVrijBRPBundle/zipball/7d246b61d12f15c06801307d9c93563bf8061ec3",
-                "reference": "7d246b61d12f15c06801307d9c93563bf8061ec3",
+                "url": "https://api.github.com/repos/CommonGateway/GeboorteVrijBRPBundle/zipball/1d9b5f012cd4cd2aa73f88fb89ce7fb37f060c63",
+                "reference": "1d9b5f012cd4cd2aa73f88fb89ce7fb37f060c63",
                 "shasum": ""
             },
             "require": {
@@ -728,22 +728,25 @@
             "license": [
                 "EUPL-1.2"
             ],
-            "description": "An example package for creating symfony flex bundles as plugins",
+            "description": "A vrijbrp e-dienst bundle for birth",
             "homepage": "https://commongateway.nl",
             "keywords": [
+                "birth",
                 "common",
                 "common-gateway-plugin",
                 "commongateway",
                 "conduction",
+                "e-dienst",
                 "gateway",
-                "pet store",
-                "symfony"
+                "geboorte",
+                "symfony",
+                "vrijbrp"
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/GeboorteVrijBRPBundle/issues",
-                "source": "https://github.com/CommonGateway/GeboorteVrijBRPBundle/tree/0.0.22"
+                "source": "https://github.com/CommonGateway/GeboorteVrijBRPBundle/tree/0.0.26"
             },
-            "time": "2023-02-10T08:47:35+00:00"
+            "time": "2023-02-10T10:38:12+00:00"
         },
         {
             "name": "common-gateway/zgw-bundle",
