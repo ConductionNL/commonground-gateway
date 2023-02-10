@@ -22,4 +22,5 @@ return [
     Symfony\Bundle\MonologBundle\MonologBundle::class                          => ['all' => true],
     CommonGateway\ZGWBundle\ZGWBundle::class                                   => ['all' => true],
     CommonGateway\GeboorteVrijBRPBundle\GeboorteVrijBRPBundle::class           => ['all' => true],
+    CommonGateway\NaamgebruikVrijBRPBundle\NaamgebruikVrijBRPBundle::class           => ['all' => true],
 ];
