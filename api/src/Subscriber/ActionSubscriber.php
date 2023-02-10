@@ -308,7 +308,7 @@ class ActionSubscriber implements EventSubscriberInterface
                 if ($key !== array_key_last($actions)) {
                     $keyStr = $key + 1;
                     $this->io->text("$keyStr/$totalActions --$extraDashesStr Looping through all Actions listening to \"$listeningToThrow\"...");
-                    $this->logger->debug("$keyStr/$totalActions --$extraDashesStr Looping through all Actions listening to \"$listeningToThrow\"...");
+                    $this->logger->debug("$keyStr/$totalActions -- Looping through all Actions listening to \"$listeningToThrow\"...");
                     !$currentCronJobThrow ?: $this->io->newLine();
                 }
             }
@@ -316,10 +316,10 @@ class ActionSubscriber implements EventSubscriberInterface
         }
 
         if (isset($this->io) && isset($totalActions) && $totalActions !== 0 && isset($extraDashesStr)) {
-            $this->io->text("$totalActions/$totalActions --$extraDashesStr Finished looping all Actions listening to \"$listeningToThrow\"");
+            $this->io->text("$totalActions/$totalActions -- Finished looping all Actions listening to \"$listeningToThrow\"");
             $this->io->newLine();
         }
-        $this->logger->info("$totalActions/$totalActions --$extraDashesStr Finished looping all Actions listening to \"$listeningToThrow\"");
+        $this->logger->info("$totalActions/$totalActions -- Finished looping all Actions listening to \"$listeningToThrow\"");
 
         return $event;
     }
