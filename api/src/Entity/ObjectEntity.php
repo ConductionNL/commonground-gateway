@@ -750,6 +750,20 @@ class ObjectEntity
     }
 
     /**
+     * All entities should incoprate a from schema function
+     *
+     * @param array $schema The object as an array
+     * @return $this
+     */
+    public function fromSchema(array  $schema): self{
+
+        
+
+        return $this;
+    }
+
+
+    /**
      * Populate this object with an array of values, where attributes are diffined by key.
      *
      * @param array                  $array        the data to set
