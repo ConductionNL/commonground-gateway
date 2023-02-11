@@ -145,6 +145,12 @@ class User
      */
     private $dateModified;
 
+    /**
+     * @var string RS512 token
+     */
+
+    private string $token;
+
     public function __construct()
     {
         $this->applications = new ArrayCollection();
@@ -332,5 +338,17 @@ class User
         $this->dateModified = $dateModified;
 
         return $this;
+    }
+
+    public function setToken(string $token): self
+    {
+        $this->token = $token;
+
+        return $this;
+    }
+
+    public function getToken(): string
+    {
+        return $this->token;
     }
 }

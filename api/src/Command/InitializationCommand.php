@@ -20,6 +20,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\PasswordHasher\PasswordHasherInterface;
 
 class InitializationCommand extends Command
 {
@@ -33,19 +34,22 @@ class InitializationCommand extends Command
     private ParameterBagInterface $parameterBag;
     private InstallationService $installationService;
     private Logger $logger;
+    private PasswordHasherInterface $hasher;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         EventDispatcherInterface $eventDispatcher,
         SessionInterface $session,
         InstallationService $installationService,
-        ParameterBagInterface $parameterBag
+        ParameterBagInterface $parameterBag,
+        PasswordHasherInterface $hasher
     ) {
         $this->entityManager = $entityManager;
         $this->eventDispatcher = $eventDispatcher;
         $this->session = $session;
         $this->installationService = $installationService;
         $this->parameterBag = $parameterBag;
+        $this->hasher = $hasher;
 
         parent::__construct();
     }
@@ -205,7 +209,7 @@ gpbdNh0=
             $user->setName('Default User');
             $user->setDescription('Created during auto configuration');
             $user->setEmail('no-reply@test.com');
-            $user->setPassword('!ChangeMe!');
+            $user->setPassword($this->hasher->hash('!ChangeMe!'));
             $user->addSecurityGroup($securityGroupAdmin);
             $user->addApplication($application);
             $user->setOrganisation($organization);
