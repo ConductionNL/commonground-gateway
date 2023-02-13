@@ -96,7 +96,7 @@ class Application
      * @var string A public key of this Application.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true, name="public_column")
+     * @ORM\Column(type="text", nullable=true, name="public_column")
      */
     private ?string $public = null;
 
@@ -104,7 +104,7 @@ class Application
      * @var string A secret key of this Application.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     private ?string $secret = null;
 
@@ -115,6 +115,14 @@ class Application
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $publicKey = null;
+
+    /**
+     * @var string|null A private key for authentication, or a secret for HS256 keys
+     *
+     * @Groups({"write"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $privateKey = null;
 
     /**
      * @var string Uri of user object.
@@ -134,12 +142,6 @@ class Application
      * @ORM\JoinColumn(nullable=false)
      */
     private ?Organization $organization;
-
-    /**
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="application", fetch="EXTRA_LAZY", cascade={"remove"})
-     */
-    private Collection $requestLogs;
 
     /**
      * @MaxDepth(1)
@@ -196,7 +198,6 @@ class Application
 
     public function __construct()
     {
-        $this->requestLogs = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->endpoints = new ArrayCollection();
         $this->collections = new ArrayCollection();
@@ -301,36 +302,6 @@ class Application
     public function setOrganization(Organization $organization): self
     {
         $this->organization = $organization;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|RequestLog[]
-     */
-    public function getRequestLogs(): Collection
-    {
-        return $this->requestLogs;
-    }
-
-    public function addRequestLog(RequestLog $requestLog): self
-    {
-        if (!$this->requestLogs->contains($requestLog)) {
-            $this->requestLogs[] = $requestLog;
-            $requestLog->setApplication($this);
-        }
-
-        return $this;
-    }
-
-    public function removeRequestLog(RequestLog $requestLog): self
-    {
-        if ($this->requestLogs->removeElement($requestLog)) {
-            // set the owning side to null (unless already changed)
-            if ($requestLog->getApplication() === $this) {
-                $requestLog->setApplication(null);
-            }
-        }
 
         return $this;
     }
@@ -524,5 +495,23 @@ class Application
             $secret = Uuid::uuid4()->toString();
             $this->setPublic($secret);
         }
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPrivateKey(): ?string
+    {
+        return $this->privateKey;
+    }
+
+    /**
+     * @param string|null $privateKey
+     */
+    public function setPrivateKey(?string $privateKey): self
+    {
+        $this->privateKey = $privateKey;
+
+        return $this;
     }
 }

@@ -13,14 +13,12 @@ class EavDocumentationService
 {
     private EntityManagerInterface $em;
     private CommonGroundService $commonGroundService;
-    private ValidationService $validationService;
     private array $supportedValidators;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService, ValidationService $validationService)
+    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService)
     {
         $this->em = $em;
         $this->commonGroundService = $commonGroundService;
-        $this->validationService = $validationService;
 
         // Lets define the validator that we support for docummentation right now
         $this->supportedValidators = $this->supportedValidators();

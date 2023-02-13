@@ -2,16 +2,13 @@
 
 namespace App\Controller;
 
-use App\Entity\Document;
 use App\Exception\GatewayException;
 use App\Service\DocumentService;
 use App\Service\HandlerService;
 use App\Service\LogService;
 use App\Service\ProcessingLogService;
-use App\Service\ValidationService;
 use CommonGateway\CoreBundle\Service\RequestService;
 use Doctrine\ORM\NonUniqueResultException;
-use Ramsey\Uuid\Uuid;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -60,7 +57,6 @@ class ZZController extends AbstractController
      * @param string|null          $path
      * @param Request              $request
      * @param DocumentService      $documentService
-     * @param ValidationService    $validationService
      * @param HandlerService       $handlerService
      * @param SerializerInterface  $serializer
      * @param LogService           $logService
@@ -75,7 +71,6 @@ class ZZController extends AbstractController
         ?string $path,
         Request $request,
         DocumentService $documentService,
-        ValidationService $validationService,
         HandlerService $handlerService,
         SerializerInterface $serializer,
         LogService $logService,
@@ -85,20 +80,6 @@ class ZZController extends AbstractController
         // Below is hacky tacky
         // @todo refactor
         $id = substr($path, strrpos($path, '/') + 1);
-
-        /*
-        if (Uuid::isValid($id)) {
-            $document = $this->getDoctrine()->getRepository('App:Document')->findOneBy(['route' => str_replace('/'.$id, '', $path)]);
-            if ($document instanceof Document) {
-                return $documentService->handleDocument($document, $id);
-            }
-        }
-        // postalCodes list for bisc/taalhuizen
-        if ($path === 'postalCodes') {
-            return $validationService->dutchPC4ToJson();
-        }
-        */
-        // End of hacky tacky
 
         // default acceptType for if we throw an error response.
         $acceptType = $handlerService->getRequestType('accept');
@@ -177,7 +158,7 @@ class ZZController extends AbstractController
 
             return $response->prepare($request);
         }
-    }
+    }//end dynamicAction()
 
     /**
      * Builds a parameter array from the request.

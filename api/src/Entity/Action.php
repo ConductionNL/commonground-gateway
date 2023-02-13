@@ -12,8 +12,6 @@ use App\Exception\GatewayException;
 use App\Repository\ActionRepository;
 use DateTime;
 use DateTimeInterface;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
@@ -199,11 +197,6 @@ class Action
     private ?bool $isEnabled = true;
 
     /**
-     * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="action", orphanRemoval=true, fetch="EXTRA_LAZY")
-     */
-    private $actionLogs;
-
-    /**
      * @var array|null The configuration of the action handler
      *
      * @Groups({"read","write"})
@@ -233,8 +226,6 @@ class Action
     public function __construct(
         $actionHandler = false
     ) {
-        $this->actionLogs = new ArrayCollection();
-
         if ($actionHandler) {
             if (!$schema = $actionHandler->getConfiguration()) {
                 return;
@@ -269,7 +260,8 @@ class Action
         (isset($schema['conditions']) ? $this->setConditions($schema['conditions']) : '');
         (isset($schema['configuration']) ? $this->setConfiguration($schema['configuration']) : '');
         (isset($schema['isLockable']) ? $this->setIsLockable($schema['isLockable']) : '');
-        (isset($schema['isEnabled']) ? $this->getIsEnabled($schema['isEnabled']) : '');
+        (isset($schema['isEnabled']) ? $this->setIsEnabled($schema['isEnabled']) : '');
+        (isset($schema['class']) ? $this->setClass($schema['class']) : '');
 
         return  $this;
     }
@@ -530,36 +522,6 @@ class Action
     public function setIsEnabled(?bool $isEnabled): self
     {
         $this->isEnabled = $isEnabled;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|ActionLog[]
-     */
-    public function getActionLogs(): Collection
-    {
-        return $this->actionLogs;
-    }
-
-    public function addActionLog(ActionLog $actionLog): self
-    {
-        if (!$this->actionLogs->contains($actionLog)) {
-            $this->actionLogs[] = $actionLog;
-            $actionLog->setAction($this);
-        }
-
-        return $this;
-    }
-
-    public function removeActionLog(ActionLog $actionLog): self
-    {
-        if ($this->actionLogs->removeElement($actionLog)) {
-            // set the owning side to null (unless already changed)
-            if ($actionLog->getAction() === $this) {
-                $actionLog->setAction(null);
-            }
-        }
 
         return $this;
     }
