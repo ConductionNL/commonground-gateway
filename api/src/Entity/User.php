@@ -150,7 +150,6 @@ class User implements PasswordAuthenticatedUserInterface
      * @var string RS512 token
      * @Groups({"read"})
      */
-
     private string $jwtToken = '';
 
     public function __construct()
