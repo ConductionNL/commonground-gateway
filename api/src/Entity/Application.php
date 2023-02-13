@@ -117,6 +117,14 @@ class Application
     private ?string $publicKey = null;
 
     /**
+     * @var string|null A private key for authentication, or a secret for HS256 keys
+     *
+     * @Groups({"write"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $privateKey = null;
+
+    /**
      * @var string Uri of user object.
      *
      * @Groups({"read", "write"})
@@ -487,5 +495,23 @@ class Application
             $secret = Uuid::uuid4()->toString();
             $this->setPublic($secret);
         }
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPrivateKey(): ?string
+    {
+        return $this->privateKey;
+    }
+
+    /**
+     * @param string|null $privateKey
+     */
+    public function setPrivateKey(?string $privateKey): self
+    {
+        $this->privateKey = $privateKey;
+
+        return $this;
     }
 }

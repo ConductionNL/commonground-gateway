@@ -5,6 +5,7 @@
 namespace App\Controller;
 
 use App\Entity\Application;
+use App\Entity\User;
 use App\Service\AuthenticationService;
 use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
@@ -15,7 +16,9 @@ use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * Class LoginController.
@@ -47,51 +50,38 @@ class UserController extends AbstractController
     /**
      * @Route("api/users/login", methods={"POST"})
      */
-    public function apiLoginAction(Request $request, CommonGroundService $commonGroundService, FunctionService $functionService)
+    public function apiLoginAction(Request $request, UserPasswordHasherInterface $hasher, SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService)
     {
         $status = 200;
         $data = json_decode($request->getContent(), true);
-        $userLogin = $commonGroundService->createResource(['username' => $data['username'], 'password' => $data['password']], ['component' => 'uc', 'type' => 'login'], false, false, false, false);
 
-        if (!$userLogin) {
-            $userLogin = [
+        $user = $this->getDoctrine()->getRepository('App:User')->findOneBy(['email' => $data['username']]);
+        if ($user instanceof User === false || $hasher->isPasswordValid($user, $data['password']) === false) {
+            $response = [
                 'message' => 'Invalid credentials',
                 'type'    => 'error',
                 'path'    => 'users/login',
                 'data'    => ['username'=>$data['username']],
             ];
 
-            return new Response(json_encode($userLogin), 403, ['Content-type' => 'application/json']);
+            return new Response(json_encode($response), 401, ['Content-type' => 'application/json']);
         }
 
-        // Set orgs in session for multitenancy
-        // Get user object with userGroups (login only returns a user with userGroups as: /groups/uuid)
-        $user = $commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $userLogin['id']], [], false);
-        $organizations = [];
-        if (isset($user['organization'])) {
-            $organizations[] = $user['organization'];
+        if ($user->getOrganisation() !== null) {
+            $organizations[] = $user->getOrganisation();
         }
-        foreach ($user['userGroups'] as $userGroup) {
-            if (isset($userGroup['organization']) && !in_array($userGroup['organization'], $organizations)) {
-                $organizations[] = $userGroup['organization'];
+        foreach ($user->getApplications() as $application) {
+            if ($application->getOrganization() !== null) {
+                $organizations[] = $application->getOrganization();
             }
         }
-        // Add all the sub organisations
-        // Add all the parent organisations
-        $parentOrganizations = [];
-        foreach ($organizations as $organization) {
-            $organizations = $this->getSubOrganizations($organizations, $organization, $commonGroundService, $functionService);
-            $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $commonGroundService, $functionService);
-        }
 
-        $organizations[] = 'localhostOrganization';
-        $parentOrganizations[] = 'localhostOrganization';
-        $this->session->set('organizations', $organizations);
-        $this->session->set('parentOrganizations', $parentOrganizations);
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
-        $this->session->set('activeOrganization', $this->getActiveOrganization($user, $organizations));
+        $this->session->set('activeOrganization', $user->getOrganisation()->getId()->toString());
 
-        return new Response(json_encode($userLogin), $status, ['Content-type' => 'application/json']);
+        $user->setJwtToken($authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session)));
+
+        return new Response($serializer->serialize($user, 'json'), $status, ['Content-type' => 'application/json']);
     }
 
     private function getActiveOrganization(array $user, array $organizations): ?string
