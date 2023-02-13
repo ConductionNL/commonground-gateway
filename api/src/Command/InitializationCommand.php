@@ -241,7 +241,7 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
             $user->setName('Default User');
             $user->setDescription('Created during auto configuration');
             $user->setEmail('no-reply@test.com');
-            $user->setPassword($this->hasher->hashPassword($user,'!ChangeMe!'));
+            $user->setPassword($this->hasher->hashPassword($user, '!ChangeMe!'));
             $user->addSecurityGroup($securityGroupAdmin);
             $user->addApplication($application);
             $user->setOrganisation($organization);
