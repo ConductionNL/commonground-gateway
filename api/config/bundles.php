@@ -20,5 +20,5 @@ return [
     CommonGateway\CoreBundle\CoreBundle::class                                 => ['all' => true],
     Endroid\QrCodeBundle\EndroidQrCodeBundle::class                            => ['all' => true],
     Symfony\Bundle\MonologBundle\MonologBundle::class                          => ['all' => true],
-    LarpingBase\LarpingBundle\LarpingBundle::class                             => ['all' => true],
+    OpenCatalogi\OpenCatalogiBundle\OpenCatalogiBundle::class                  => ['all' => true],
 ];

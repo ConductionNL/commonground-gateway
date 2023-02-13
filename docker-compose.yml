@@ -22,7 +22,7 @@ services:
     depends_on:
       - api
     ports:
-      - "81:80"
+      - "81:8080"
     volumes:
       - ./ui/oc.js:/usr/share/nginx/html/env.js:rw,cached
   

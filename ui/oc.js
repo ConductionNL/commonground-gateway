@@ -14,3 +14,4 @@ window.sessionStorage.setItem(
   "http://webresourcecatalogus.conduction.svc.cluster.local/organizations/b2d3176e-f1c6-4365-ab86-dd253c65fc43"
 );
 window.sessionStorage.setItem("GATSBY_LOGIN_REDIRECT", "vault");
+window.sessionStorage.setItem("GATSBY_SEARCH_URL", "http://localhost:80/api/search");
