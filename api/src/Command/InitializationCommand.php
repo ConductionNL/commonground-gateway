@@ -20,6 +20,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class InitializationCommand extends Command
 {
@@ -33,19 +34,22 @@ class InitializationCommand extends Command
     private ParameterBagInterface $parameterBag;
     private InstallationService $installationService;
     private Logger $logger;
+    private UserPasswordHasherInterface $hasher;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         EventDispatcherInterface $eventDispatcher,
         SessionInterface $session,
         InstallationService $installationService,
-        ParameterBagInterface $parameterBag
+        ParameterBagInterface $parameterBag,
+        UserPasswordHasherInterface $hasher
     ) {
         $this->entityManager = $entityManager;
         $this->eventDispatcher = $eventDispatcher;
         $this->session = $session;
         $this->installationService = $installationService;
         $this->parameterBag = $parameterBag;
+        $this->hasher = $hasher;
 
         parent::__construct();
     }
@@ -155,6 +159,36 @@ Zb+YLpOzEHbceKwjHBqOMzVRSg/wmol7NUXAybFT6S0iNDAiUIBzClTd8OCFeapz
 gpbdNh0=
 -----END CERTIFICATE-----');
 
+            $application->setPrivateKey('-----BEGIN PRIVATE KEY-----
+MIIEwAIBADANBgkqhkiG9w0BAQEFAASCBKowggSmAgEAAoIBAQDSPSYZqK7pwLMd
+wEjI8dy06iU3ALDHqN2ponbDoKH7OJpUikHdOOMUXMaHF9l2oFABeuVy+22eTvSC
+wHgEyIdNPD8xgig+QQe/0DfSHilF+MY4bXo0Tum0l0u0TC03jIC/PwbZbdwp2s7f
+Z9MXuw7YvzKKgsI7WYheHlFk9dAw89H8J5TnF67NtbGVFGXMI9zJRz6z7rQS2F21
+rb2jsa1N2ZIbenknakB7fLI6UMfVNCMpUdwDECzMsSQ48/go37Ib8slIFgcSQg+6
+xSRexmAOIAP21J+gV6nlhb0d6WeBqIbCXhbHhcDFssbTirNk9PIBrmEvKFSZkuUv
+K8gHsN+nAgMBAAECggEBAIEgRZJk5Gl1jY2sWAfzZRdI6GqL5gf7U4mo20D0HAjs
+jv11nVZ+ZhpPkS/QGiSd+gWusdaZTo549/yGsjBd6ZwqcLW7t3PlBRlujZpkI/1x
++m0V8ITIIwpkEn8+elcv2LOdxlss+phKZ90XK7PblBbT9/rSrPE+4F7OSDe2MpSd
+ToV/WB+5H/txS5MZHDs7907DZKzgduFrTpOEFPyJw2z1mcQo8g+fSnotCVgqAEDW
+qqR4zf+NVMGHwp7X/Ksy5ygdfvwAzZTEZRasTug7RCtxrUJtwiD2Okvch33Wc05U
+2Vujvi988ncXVyVN8o0nu8iCQWnoyC9JrCFySSM4r2ECgYEA+ibIoa6hyF6CHpV1
+Onbb0OfeyXLKMoNCC7aXuqGQPlLnv+qWPRjEwVGs/oskKhEEhlHGojg5vHRCX6Op
+I9IJ+8Sm5wO1JREPQMvgskFVGseeQyQsXj2fFjyp6xDhG2Qs6QidtndCz/XNelAA
+06edlyt/B7gWuukhad5J8kOu3yUCgYEA1yd6fbHm4T22i1AvXa0ZHo+0MheEFa84
+ZZeumJcJi7w6qcGMzz906z9WIOOvoNOVegU8s/oiZmFb1vwna6JrQejbwFIrCtNR
+bQwJk+VB+cDIrLmN8nrPZqS4Lv4cxN9iLakU2ZbwRkoSPJWeiC6IkyIcDc5qMZBg
+nm2qIYqAn9sCgYEAlFp59EFQGzfJbX/v1St2c+9/lfMo7Uog2jeAxqNYm02puYzT
+awqMbaYVtaQpX3VWPJ608bHss9IzJus1vVOsrg7TeQAe5wu2AxSmfrD2Wvp15pXG
+ZmGfPp3dm9YX2pnPdKiyd+tEyXaaVOarhtrKQEQAg0Bu4oyuT04QhsgTJq0CgYEA
+nZdSFi0vgn3UblhuSTwXsRXrE+G7orJ0KZ2fii7fFBXsFhkpzUeamREMQgzjwHYZ
+/4VEgENP3ROk1GRfb2xJCb7I7yaAVm6QLsJpZYW//HKjyjgja59euL0gF3OTmPRS
+EkXNes8e8S0iDHQ+6VrEOJj8WXR+vg0VaBXFTsoHCo8CgYEA9hiEYUMvE57P3+fJ
+mffR3+pjbzX1tuf6+AjpakN3ht1aYBfirsE9CLzYuPjIn3uMCEfouQd0g7sMTpbg
+lAUydicO0Sot3fHpKWAyGyZ9TVbXHhe+oQIaCuUaZjyPHQOYhGO6pWFCjoZWMIeL
+f0FqX4PQ1dBOwwk49vVmza2HcTs=
+-----END PRIVATE KEY-----
+');
+
             $this->entityManager->persist($application);
         } else {
             $io->info('Application found, continuing....');
@@ -185,6 +219,8 @@ gpbdNh0=
             $securityGroupAdmin->setParent($securityGroupUser);
             $securityGroupAdmin->setScopes(
                 [
+                    'user',
+                    'group.admin',
                     'admin.GET',
                     'admin.POST',
                     'admin.PUT',
@@ -205,7 +241,7 @@ gpbdNh0=
             $user->setName('Default User');
             $user->setDescription('Created during auto configuration');
             $user->setEmail('no-reply@test.com');
-            $user->setPassword('!ChangeMe!');
+            $user->setPassword($this->hasher->hashPassword($user, '!ChangeMe!'));
             $user->addSecurityGroup($securityGroupAdmin);
             $user->addApplication($application);
             $user->setOrganisation($organization);
