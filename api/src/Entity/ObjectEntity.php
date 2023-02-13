@@ -14,6 +14,7 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
+use function Symfony\Component\Translation\t;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -140,11 +141,6 @@ class ObjectEntity
     private ?array $externalResult = [];
 
     /**
-     * @ORM\ManyToMany(targetEntity=GatewayResponseLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
-     */
-    private $responseLogs;
-
-    /**
      * @Groups({"read"})
      * @MaxDepth(1)
      * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"})
@@ -163,12 +159,6 @@ class ObjectEntity
 
     /**
      * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY", cascade={"remove"})
-     */
-    private Collection $requestLogs;
-
-    /**
-     * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="object", fetch="EXTRA_LAZY", cascade={"remove"})
      */
     private Collection $synchronizations;
@@ -178,6 +168,13 @@ class ObjectEntity
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="object", fetch="EXTRA_LAZY", cascade={"remove","persist"})
      */
     private Collection $usedIn;
+
+    /**
+     * Used to check if the object has been hydrated.
+     *
+     * @var bool
+     */
+    private bool $hydrated = false;
 
     /**
      * @var Datetime The moment this resource was created
@@ -197,18 +194,27 @@ class ObjectEntity
      */
     private $dateModified;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="sourceObject")
+     */
+    private $sourceOfSynchronizations;
+
+    public function __toString()
+    {
+        return $this->getName().' ('.$this->getId().')';
+    }
+
     public function __construct(?Entity $entity = null)
     {
         $this->objectValues = new ArrayCollection();
-        $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
-        $this->requestLogs = new ArrayCollection();
         $this->synchronizations = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
 
         if ($entity) {
             $this->setEntity($entity);
         }
+        $this->sourceOfSynchronizations = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -238,8 +244,9 @@ class ObjectEntity
     public function getSelf(): ?string
     {
         // If self not set we generate a uri with linked endpoints
-        if (!isset($this->self) && isset($this->id)) {
+        if (!isset($this->self) || empty($this->self) || $this->self == '') {
             $pathString = '/api';
+
             if ($this->getEntity() !== null) {
                 $endpoints = $this->getEntity()->getEndpoints();
                 foreach ($endpoints as $endpoint) {
@@ -247,28 +254,35 @@ class ObjectEntity
                     if (!in_array('get', $endpoint->getMethods()) && !in_array('GET', $endpoint->getMethods())) {
                         continue;
                     }
+
                     $pathArray = $endpoint->getPath() ?? [];
-                    $pathString = '/api';
                     $idSet = false;
+                    $tempPath = '';
+
                     // Add path item to self uri
                     foreach ($pathArray as $pathItem) {
                         if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
                             $idSet = true;
-                            $pathString .= '/'.$this->getId()->toString();
+                            $tempPath .= '/'.$this->getId()->toString();
                         } else {
-                            $pathString .= '/'.$pathItem;
+                            $tempPath .= '/'.$pathItem;
                         }
                     }
                     // If id is set we found a correct endpoint and we can stop the foreach
                     if ($idSet == true) {
+                        $pathString = $pathString.$tempPath;
                         break;
                     }
                 }
             }
-            // If setting uri failed with endpoints do it the old way
-            if (!isset($idSet) || $idSet == false) {
-                $pathString = $this->getId()->toString();
+
+            // Fallback for valid url
+            if ($pathString == '/api' && $this->getId()) {
+                $pathString = $pathString.'/objects/'.$this->getId()->toString();
+            } elseif (!$this->getId()) {
+                $pathString = '';
             }
+
             $this->self = $pathString;
         }
 
@@ -315,8 +329,8 @@ class ObjectEntity
     {
         $this->application = $application;
 
-        // If we dont have a organization pull one from the application
-        if (!$this->organization && isset($this->application) && $this->application->getOrganization()) {
+        // If we don't have an organization we can pull one from the application
+        if (!isset($this->organization) && isset($this->application) && $this->application->getOrganization()) {
             $this->setOrganization($this->application->getOrganization());
         }
 
@@ -325,7 +339,7 @@ class ObjectEntity
 
     public function getOrganization(): ?Organization
     {
-        return $this->organization;
+        return $this->organization ?? null;
     }
 
     public function setOrganization(?Organization $organization): self
@@ -360,11 +374,39 @@ class ObjectEntity
     }
 
     /**
+     * Get all the object values.
+     *
      * @return Collection|Value[]
      */
     public function getObjectValues(): Collection
     {
         return $this->objectValues;
+    }
+
+    /**
+     * Sets an entire collection of object values (used in the setid subscriber).
+     *
+     * @return $this
+     */
+    public function setObjectValues(Collection $objectValues): self
+    {
+        $this->objectValues = $objectValues;
+
+        return $this;
+    }
+
+    /**
+     * Removes all the values from this object.
+     *
+     * @return $this
+     */
+    public function clearAllValues(): self
+    {
+        foreach ($this->objectValues as $value) {
+            $this->removeObjectValue($value);
+        }
+
+        return $this;
     }
 
     public function addObjectValue(Value $objectValue): self
@@ -708,10 +750,23 @@ class ObjectEntity
     }
 
     /**
+     * All entities should incoprate a from schema function.
+     *
+     * @param array $schema The object as an array
+     *
+     * @return $this
+     */
+    public function fromSchema(array $schema): self
+    {
+        return $this;
+    }
+
+    /**
      * Populate this object with an array of values, where attributes are diffined by key.
      *
-     * @param array $array  the data to set
-     * @param bool  $unsafe unset atributes that are not inlcuded in the hydrator array
+     * @param array                  $array        the data to set
+     * @param bool                   $unsafe       unset atributes that are not inlcuded in the hydrator array
+     * @param DateTimeInterface|null $dateModified
      *
      * @throws Exception
      *
@@ -733,6 +788,9 @@ class ObjectEntity
             $this->changeCascade($dateModified);
         }
 
+        // Note down that the object has been hydrated
+        $this->hydrated = true;
+
         foreach ($array as $key => $value) {
             $this->setValue($key, $value, $unsafe, $dateModified);
             $hydratedValues[] = $key;
@@ -740,6 +798,9 @@ class ObjectEntity
 
         if ($unsafe) {
             foreach ($this->getObjectValues() as $value) {
+                // Drop values from values
+                $value->removeNonHydratedObjects();
+                // Drop the value itself
                 if (!in_array($value->getAttribute()->getName(), $hydratedValues)) {
                     $this->removeObjectValue($value);
                 }
@@ -859,36 +920,6 @@ class ObjectEntity
         }
 
         return $subresources;
-    }
-
-    /**
-     * @return Collection|GatewayResponseLog[]
-     */
-    public function getResponseLogs(): Collection
-    {
-        return $this->responseLogs;
-    }
-
-    public function addResponseLog(GatewayResponseLog $responseLog): self
-    {
-        if (!$this->responseLogs->contains($responseLog)) {
-            $this->responseLogs->add($responseLog);
-            $responseLog->setObjectEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeResponseLog(GatewayResponseLog $responseLog): self
-    {
-        if ($this->responseLogs->removeElement($responseLog)) {
-            // set the owning side to null (unless already changed)
-            if ($responseLog->getObjectEntity() === $this) {
-                $responseLog->setObjectEntity(null);
-            }
-        }
-
-        return $this;
     }
 
     /**
@@ -1196,36 +1227,6 @@ class ObjectEntity
     }
 
     /**
-     * @return Collection|RequestLog[]
-     */
-    public function getRequestLogs(): Collection
-    {
-        return $this->requestLogs;
-    }
-
-    public function addRequestLog(RequestLog $requestLog): self
-    {
-        if (!$this->requestLogs->contains($requestLog)) {
-            $this->requestLogs[] = $requestLog;
-            $requestLog->setObjectEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeRequestLog(RequestLog $requestLog): self
-    {
-        if ($this->requestLogs->removeElement($requestLog)) {
-            // set the owning side to null (unless already changed)
-            if ($requestLog->getObjectEntity() === $this) {
-                $requestLog->setObjectEntity(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
      * @return Collection|Synchronization[]
      */
     public function getSynchronizations(): Collection
@@ -1284,6 +1285,11 @@ class ObjectEntity
         }
 
         return $this;
+    }
+
+    public function getHydrated(): bool
+    {
+        return $this->hydrated;
     }
 
     public function getDateCreated(): ?DateTimeInterface
@@ -1346,38 +1352,57 @@ class ObjectEntity
             return;
         }
 
-        // Lets see if the name is congigured
-        if ($this->entity->getNameProperties()) {
-            $name = null;
-            foreach ($this->entity->getNameProperties() as $nameProperty) {
-                if ($nameProperty && $namePart = $this->getValue($nameProperty)) {
-                    $name = "$name $namePart";
-                }
-            }
-            $this->setName(trim($name));
-
-            return;
-        }
-
-        // Lets check agains common names
-        $nameProperties = ['name', 'title', 'naam', 'titel'];
-        foreach ($nameProperties as $nameProperty) {
-            if ($name = $this->getValue($nameProperty)) {
-                if (!is_string($name)) {
-                    continue;
-                }
-                $this->setName($name);
-
-                return;
+        // Lets see if the name is configured
+        $nameProperties = array_merge(['name', 'title', 'naam', 'titel'], $this->entity->getNameProperties());
+        $nameArray = [];
+        foreach ($this->getObjectValues() as $value) {
+            if (in_array($value->getAttribute()->getName(), $nameProperties)) {
+                $nameArray[] = $value->getStringValue();
             }
         }
 
-        $this->setName($this->getId());
+        if (count($nameArray) > 0 && $name = implode(' ', $nameArray)) {
+            $this->setName($name);
+        }
+
+        if (!$this->getName() && $this->getId()) {
+            $this->setName($this->getId()->toString());
+        }
 
         // Todo: this is an ugly fix, in actuallity we should run a postUpdate subscriber that checks this and repersists the enitity if thsi happens (it can anly happen if we dont have an id on pre persist e.g. new objects)
         // Just in case we endup here
         if (!$this->getName()) {
             $this->setName('No name could be established for this entity');
         }
+    }
+
+    /**
+     * @return Collection|Synchronization[]
+     */
+    public function getSourceOfSynchronizations(): Collection
+    {
+        return $this->sourceOfSynchronizations;
+    }
+
+    public function addSourceOfSynchronization(Synchronization $sourceOfSynchronization): self
+    {
+        if (!$this->sourceOfSynchronizations->contains($sourceOfSynchronization)) {
+            $this->sourceOfSynchronizations[] = $sourceOfSynchronization;
+            $sourceOfSynchronization->setSourceObject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSourceOfSynchronization(Synchronization $sourceOfSynchronization): self
+    {
+        if ($this->sourceOfSynchronizations->removeElement($sourceOfSynchronization)) {
+            // set the owning side to null (unless already changed)
+            if ($sourceOfSynchronization->getSourceObject() === $this) {
+                $sourceOfSynchronization->setSourceObject(null);
+            }
+        }
+
+        return $this;
     }
 }

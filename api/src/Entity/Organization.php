@@ -110,14 +110,19 @@ class Organization
         $this->users = new ArrayCollection();
     }
 
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
     public function getId(): ?UuidInterface
     {
         return $this->id;
     }
 
-    public function setId(UuidInterface $id): self
+    public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
@@ -158,7 +163,7 @@ class Organization
     {
         if (!$this->applications->contains($application)) {
             $this->applications[] = $application;
-            $application->setOrganisation($this);
+            $application->setOrganization($this);
         }
 
         return $this;
@@ -168,8 +173,8 @@ class Organization
     {
         if ($this->applications->removeElement($application)) {
             // set the owning side to null (unless already changed)
-            if ($application->getOrganisation() === $this) {
-                $application->setOrganisation(null);
+            if ($application->getOrganization() === $this) {
+                $application->setOrganization(null);
             }
         }
 
