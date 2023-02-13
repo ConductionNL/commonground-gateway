@@ -158,7 +158,7 @@ class ZZController extends AbstractController
 
             return $response->prepare($request);
         }
-    }
+    }//end dynamicAction()
 
     /**
      * Builds a parameter array from the request.
