@@ -11,6 +11,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -36,7 +37,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Entity(repositoryClass=App\Repository\UserRepository::class)
  * @ORM\Table(name="`user`")
  */
-class User
+class User implements PasswordAuthenticatedUserInterface
 {
     /**
      * @var UuidInterface The UUID identifier of this resource
@@ -147,9 +148,10 @@ class User
 
     /**
      * @var string RS512 token
+     * @Groups({"read"})
      */
 
-    private string $token;
+    private string $jwtToken = '';
 
     public function __construct()
     {
@@ -340,15 +342,15 @@ class User
         return $this;
     }
 
-    public function setToken(string $token): self
+    public function setJwtToken(string $jwtToken): self
     {
-        $this->token = $token;
+        $this->jwtToken = $jwtToken;
 
         return $this;
     }
 
-    public function getToken(): string
+    public function getJwtToken(): string
     {
-        return $this->token;
+        return $this->jwtToken;
     }
 }

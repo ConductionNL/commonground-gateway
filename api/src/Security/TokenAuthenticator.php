@@ -3,12 +3,12 @@
 namespace App\Security;
 
 use App\Entity\Application;
+use App\Entity\User;
 use App\Exception\GatewayException;
 use App\Security\User\AuthenticationUser;
 use App\Service\ApplicationService;
 use App\Service\FunctionService;
-use Conduction\CommonGroundBundle\Service\AuthenticationService;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
+use CommonGateway\CoreBundle\Service\AuthenticationService;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -26,27 +26,21 @@ use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 
 class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator
 {
-    private CommonGroundService $commonGroundService;
-    private ParameterBagInterface $parameterBag;
     private AuthenticationService $authenticationService;
     private SessionInterface $session;
-    private FunctionService $functionService;
+    private ParameterBagInterface $parameterBag;
     private ApplicationService $applicationService;
 
     public function __construct(
-        CommonGroundService $commonGroundService,
         AuthenticationService $authenticationService,
         ParameterBagInterface $parameterBag,
         SessionInterface $session,
-        FunctionService $functionService,
         ApplicationService $applicationService
     ) {
-        $this->commonGroundService = $commonGroundService;
-        $this->parameterBag = $parameterBag;
         $this->authenticationService = $authenticationService;
         $this->session = $session;
-        $this->functionService = $functionService;
         $this->applicationService = $applicationService;
+        $this->parameterBag = $parameterBag;
     }
 
     /**
@@ -108,84 +102,6 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
         return $payload;
     }
 
-    /**
-     * Get all the child organisations for an organisation.
-     *
-     * @param array               $organizations
-     * @param string              $organization
-     * @param CommonGroundService $commonGroundService
-     * @param FunctionService     $functionService
-     *
-     * @throws CacheException
-     * @throws InvalidArgumentException
-     *
-     * @return array
-     */
-    private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
-    {
-        if ($organization = $functionService->getOrganizationFromCache($organization)) {
-            if (!empty($organization['subOrganizations']) && count($organization['subOrganizations']) > 0) {
-                foreach ($organization['subOrganizations'] as $subOrganization) {
-                    if (!in_array($subOrganization['@id'], $organizations)) {
-                        $organizations[] = $subOrganization['@id'];
-                        $this->getSubOrganizations($organizations, $subOrganization['@id'], $commonGroundService, $functionService);
-                    }
-                }
-            }
-        }
-
-        return $organizations;
-    }
-
-    /**
-     * Get al the parent organizations for an organisation.
-     *
-     * @param array               $organizations
-     * @param string              $organization
-     * @param CommonGroundService $commonGroundService
-     * @param FunctionService     $functionService
-     *
-     * @throws CacheException
-     * @throws InvalidArgumentException
-     *
-     * @return array
-     */
-    private function getParentOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
-    {
-        if ($organization = $functionService->getOrganizationFromCache($organization)) {
-            if (array_key_exists('parentOrganization', $organization) && $organization['parentOrganization'] != null
-                && !in_array($organization['parentOrganization']['@id'], $organizations)) {
-                $organizations[] = $organization['parentOrganization']['@id'];
-                $organizations = $this->getParentOrganizations($organizations, $organization['parentOrganization']['@id'], $commonGroundService, $functionService);
-            }
-        }
-
-        return $organizations;
-    }
-
-    /**
-     * @throws GatewayException
-     * @throws InvalidArgumentException
-     * @throws CacheException
-     */
-    private function setOrganizations(array $user): void
-    {
-        $organizations = $user['organizations'] ?? [];
-        $parentOrganizations = [];
-        foreach ($organizations as $organization) {
-            if ($organization === null) {
-                continue;
-            }
-            $organizations = $this->getSubOrganizations($organizations, $organization, $this->commonGroundService, $this->functionService);
-            $parentOrganizations = $this->getParentOrganizations($parentOrganizations, $organization, $this->commonGroundService, $this->functionService);
-        }
-        $organizations[] = 'localhostOrganization';
-        $parentOrganizations[] = 'localhostOrganization';
-        $this->session->set('organizations', $organizations);
-        $this->session->set('parentOrganizations', $parentOrganizations);
-        $this->session->set('ActiveOrganization', $user['organization'] ?? $this->applicationService->getApplication()->getOrganization());
-    }
-
     private function prefixRoles(array $roles): array
     {
         foreach ($roles as $key => $value) {
@@ -216,7 +132,7 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
         if (!isset($payload['client_id'])) {
             $user = $payload;
         } else {
-            $user = $this->commonGroundService->getResource($application->getResource(), [], false);
+            $user = $this->authenticationService->serializeUser($application->getUsers()[0], $this->session);
         }
 
         return new Passport(

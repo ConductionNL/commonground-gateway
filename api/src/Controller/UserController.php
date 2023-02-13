@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\PasswordHasher\PasswordHasherInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -50,13 +50,13 @@ class UserController extends AbstractController
     /**
      * @Route("api/users/login", methods={"POST"})
      */
-    public function apiLoginAction(Request $request, PasswordHasherInterface $hasher, SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService)
+    public function apiLoginAction(Request $request, UserPasswordHasherInterface $hasher, SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService)
     {
         $status = 200;
         $data = json_decode($request->getContent(), true);
 
-        $user = $this->getDoctrine()->getRepository('App:User')->findOneBy(['username' => $data['username']]);
-        if($user instanceof User === false || $hasher->verify($user->getPassword(), $data['password'])) {
+        $user = $this->getDoctrine()->getRepository('App:User')->findOneBy(['email' => $data['username']]);
+        if($user instanceof User === false || $hasher->isPasswordValid($user, $data['password']) === false) {
             $response = [
                 'message' => 'Invalid credentials',
                 'type'    => 'error',
@@ -79,7 +79,7 @@ class UserController extends AbstractController
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
         $this->session->set('activeOrganization', $user->getOrganisation()->getId()->toString());
 
-        $user->setToken($authenticationService->createJwtToken());
+        $user->setJwtToken($authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session)));
 
         return new Response($serializer->serialize($user, 'json'), $status, ['Content-type' => 'application/json']);
     }
