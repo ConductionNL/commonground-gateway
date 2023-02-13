@@ -56,7 +56,7 @@ class UserController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
         $user = $this->getDoctrine()->getRepository('App:User')->findOneBy(['email' => $data['username']]);
-        if($user instanceof User === false || $hasher->isPasswordValid($user, $data['password']) === false) {
+        if ($user instanceof User === false || $hasher->isPasswordValid($user, $data['password']) === false) {
             $response = [
                 'message' => 'Invalid credentials',
                 'type'    => 'error',
@@ -71,7 +71,7 @@ class UserController extends AbstractController
             $organizations[] = $user->getOrganisation();
         }
         foreach ($user->getApplications() as $application) {
-            if($application->getOrganization() !== null) {
+            if ($application->getOrganization() !== null) {
                 $organizations[] = $application->getOrganization();
             }
         }

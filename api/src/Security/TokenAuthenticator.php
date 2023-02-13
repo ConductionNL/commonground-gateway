@@ -7,7 +7,6 @@ use App\Entity\User;
 use App\Exception\GatewayException;
 use App\Security\User\AuthenticationUser;
 use App\Service\ApplicationService;
-use App\Service\FunctionService;
 use CommonGateway\CoreBundle\Service\AuthenticationService;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
