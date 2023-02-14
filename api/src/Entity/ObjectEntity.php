@@ -91,7 +91,7 @@ class ObjectEntity
      * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="objectEntities")
      */
-    private ?Organization $organization;
+    private ?Organization $organization = null;
 
     /**
      * @var string An uuid or uri of an owner of this object
@@ -244,7 +244,7 @@ class ObjectEntity
     public function getSelf(): ?string
     {
         // If self not set we generate a uri with linked endpoints
-        if (!isset($this->self) || empty($this->self) || $this->self == '') {
+        if ((!isset($this->self) || empty($this->self)) && isset($this->id)) {
             $pathString = '/api';
 
             if ($this->getEntity() !== null) {
