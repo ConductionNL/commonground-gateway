@@ -19,7 +19,7 @@ when@dev:
         handlers:
             main:
                 type: stream
-                path: php://stderr
+#                path: php://stderr
                 level: debug
                 channels: ["!event"]
             nested:

@@ -15,20 +15,17 @@ class ProcessingLogService
     private EntityManagerInterface $entityManager;
     private SessionInterface $session;
     private EavService $eavService;
-    private ValidationService $validationService;
     private Security $security;
 
     public function __construct(
         EntityManagerInterface $entityManager,
         SessionInterface $session,
         EavService $eavService,
-        ValidationService $validationService,
         Security $security
     ) {
         $this->entityManager = $entityManager;
         $this->session = $session;
         $this->eavService = $eavService;
-        $this->validationService = $validationService;
         $this->security = $security;
     }
 
@@ -110,11 +107,8 @@ class ProcessingLogService
 
         $mockRequest = new Request();
         $mockRequest->setMethod('POST');
-        $this->validationService->setRequest($mockRequest);
-        $this->validationService->setIgnoreErrors(true);
 
         $processingLogObject = $this->eavService->getObject(null, 'POST', $processingLogEntity);
-        $processingLogObject = $this->validationService->validateEntity($processingLogObject, $processingLog);
 //        var_dump($processingLogObject->getAllErrors()); // TODO: REMOVE VAR DUMP!!!
 
         $this->entityManager->persist($processingLogObject);

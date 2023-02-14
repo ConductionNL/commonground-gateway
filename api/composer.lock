@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "32f072fe308d711e48f9def64ccd2ee1",
+    "content-hash": "a0995c2684d176963c5e96492dde8c6f",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -659,124 +659,6 @@
             "time": "2020-10-24T20:01:03+00:00"
         },
         {
-            "name": "clean/phpatlas",
-            "version": "0.2.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/clean/phpatlas.git",
-                "reference": "4e74a8e646b289768e77500127389acf69bbeb71"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/clean/phpatlas/zipball/4e74a8e646b289768e77500127389acf69bbeb71",
-                "reference": "4e74a8e646b289768e77500127389acf69bbeb71",
-                "shasum": ""
-            },
-            "require-dev": {
-                "phpunit/phpunit": "5.7.27"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Clean\\PhpAtlas\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "support": {
-                "issues": "https://github.com/clean/phpatlas/issues",
-                "source": "https://github.com/clean/phpatlas/tree/0.2.0"
-            },
-            "time": "2019-12-06T08:40:56+00:00"
-        },
-        {
-            "name": "clean/phpdoc-md",
-            "version": "0.19.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/clean/phpdoc-md.git",
-                "reference": "46a07faa6cc69c8b02ddc1838acfeda6b811fc3f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/clean/phpdoc-md/zipball/46a07faa6cc69c8b02ddc1838acfeda6b811fc3f",
-                "reference": "46a07faa6cc69c8b02ddc1838acfeda6b811fc3f",
-                "shasum": ""
-            },
-            "require": {
-                "clean/phpatlas": "^0.2",
-                "clean/view": "^0.1",
-                "php": "^5.6|^7|^8",
-                "phpdocumentor/reflection-docblock": "^3|^4|^5"
-            },
-            "require-dev": {
-                "clean/mpr": "^1",
-                "phpunit/phpunit": ">5"
-            },
-            "bin": [
-                "bin/phpdoc-md"
-            ],
-            "type": "library",
-            "autoload": {
-                "files": [
-                    "src/snippets.php"
-                ],
-                "psr-4": {
-                    "Clean\\PhpDocMd\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Parse PHP classes and writes documentation to markdown files",
-            "keywords": [
-                "markdown",
-                "phpdoc"
-            ],
-            "support": {
-                "issues": "https://github.com/clean/phpdoc-md/issues",
-                "source": "https://github.com/clean/phpdoc-md/tree/0.19.3"
-            },
-            "time": "2022-11-19T11:59:34+00:00"
-        },
-        {
-            "name": "clean/view",
-            "version": "0.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/clean/view.git",
-                "reference": "34448b22810024781392d2c07564ded0e6e978ef"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/clean/view/zipball/34448b22810024781392d2c07564ded0e6e978ef",
-                "reference": "34448b22810024781392d2c07564ded0e6e978ef",
-                "shasum": ""
-            },
-            "require-dev": {
-                "phpunit/phpunit": "4.2.*",
-                "scrutinizer/ocular": "dev-master"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Clean\\View\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "support": {
-                "issues": "https://github.com/clean/view/issues",
-                "source": "https://github.com/clean/view/tree/master"
-            },
-            "time": "2015-08-04T00:09:23+00:00"
-        },
-        {
             "name": "common-gateway/formio-bundle",
             "version": "dev-main",
             "source": {
@@ -965,12 +847,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "1e58e54cc71924316fc092505a3c167a6caebab0"
+                "reference": "a96fb9c79baba322e957246584640201287feef7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/1e58e54cc71924316fc092505a3c167a6caebab0",
-                "reference": "1e58e54cc71924316fc092505a3c167a6caebab0",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/a96fb9c79baba322e957246584640201287feef7",
+                "reference": "a96fb9c79baba322e957246584640201287feef7",
                 "shasum": ""
             },
             "require": {
@@ -1029,7 +911,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-02-08T09:06:24+00:00"
+            "time": "2023-02-13T12:50:30+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -4690,16 +4572,16 @@
         },
         {
             "name": "larping-base/larping-bundle",
-            "version": "1.0.20",
+            "version": "1.0.53",
             "source": {
                 "type": "git",
                 "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "7e4a59b0232d3b62868ab9d0f6916e9ed8a915c0"
+                "reference": "9e0bbd30e6c60d11091329a1de655616a5415297"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/7e4a59b0232d3b62868ab9d0f6916e9ed8a915c0",
-                "reference": "7e4a59b0232d3b62868ab9d0f6916e9ed8a915c0",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/9e0bbd30e6c60d11091329a1de655616a5415297",
+                "reference": "9e0bbd30e6c60d11091329a1de655616a5415297",
                 "shasum": ""
             },
             "require": {
@@ -4732,9 +4614,9 @@
             ],
             "support": {
                 "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.20"
+                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.53"
             },
-            "time": "2023-01-14T11:07:03+00:00"
+            "time": "2023-02-03T14:07:20+00:00"
         },
         {
             "name": "league/html-to-markdown",

@@ -99,6 +99,15 @@ class SecurityGroup
     private $children;
 
     /**
+     * Wheter or not this is the user group that defines the rights for anonymous users.
+     *
+     * @var bool
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", options={"default"=false})
+     */
+    private bool $anonymous = false;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -115,13 +124,6 @@ class SecurityGroup
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
-
-    /**
-     * @var bool
-     * @Groups({"read", "write"})
-     * @ORM\Column(type="boolean", options={"default"=false})
-     */
-    private bool $anonymous = false;
 
     public function __construct()
     {
@@ -248,6 +250,18 @@ class SecurityGroup
         return $this;
     }
 
+    public function getAnonymous(): bool
+    {
+        return $this->anonymous;
+    }
+
+    public function setAnonymous(bool $anonymous): self
+    {
+        $this->anonymous = $anonymous;
+
+        return $this;
+    }
+
     public function getDateCreated(): ?DateTimeInterface
     {
         return $this->dateCreated;
@@ -268,24 +282,6 @@ class SecurityGroup
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
-
-        return $this;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isAnonymous(): bool
-    {
-        return $this->anonymous;
-    }
-
-    /**
-     * @param bool $anonymous
-     */
-    public function setAnonymous(bool $anonymous): self
-    {
-        $this->anonymous = $anonymous;
 
         return $this;
     }
