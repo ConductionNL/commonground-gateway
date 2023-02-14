@@ -3,16 +3,17 @@ name: Docker Image CI
 on:
   pull_request:
     branches:
-      - master
+      - main
       - development
 
   push:
     branches:
-      - master
-      - development
-      - feature-soap-extra
-      - feature-cleanup
-
+        - main
+        - development
+        - version-oc
+        - version-hp
+        - version-xxlnce
+        - version-maastricht
 jobs:
   build:
     runs-on: ubuntu-latest
