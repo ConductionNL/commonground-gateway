@@ -23,4 +23,5 @@ return [
     CommonGateway\ZGWBundle\ZGWBundle::class                                   => ['all' => true],
     CommonGateway\KlantenBundle\KlantenBundle::class                           => ['all' => true],
     CommonGateway\HuwelijksplannerBundle\HuwelijksplannerBundle::class         => ['all' => true],
+    CommonGateway\BRPBundle\BRPBundle::class                                   => ['all' => true],
 ];
