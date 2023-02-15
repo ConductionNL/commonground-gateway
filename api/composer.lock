@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a0995c2684d176963c5e96492dde8c6f",
+    "content-hash": "3aa59af5f75a64081c713ebcfb4d387a",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -659,6 +659,54 @@
             "time": "2020-10-24T20:01:03+00:00"
         },
         {
+            "name": "common-gateway/brp-bundle",
+            "version": "0.0.12",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/BRPBundle.git",
+                "reference": "7309f5bca00bbb3ed64563169b47bdbe176f4791"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/BRPBundle/zipball/7309f5bca00bbb3ed64563169b47bdbe176f4791",
+                "reference": "7309f5bca00bbb3ed64563169b47bdbe176f4791",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": ">=0.0.1",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\BRPBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An example package for creating symfony flex bundles as plugins",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "pet store",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/CommonGateway/BRPBundle/issues",
+                "source": "https://github.com/CommonGateway/BRPBundle/tree/0.0.12"
+            },
+            "time": "2023-02-03T14:55:20+00:00"
+        },
+        {
             "name": "common-gateway/formio-bundle",
             "version": "dev-main",
             "source": {
@@ -698,22 +746,23 @@
         },
         {
             "name": "common-gateway/huwelijksplanner-bundle",
-            "version": "0.0.25",
+            "version": "0.0.29",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/HuwelijksplannerBundle.git",
-                "reference": "f1683ecb1ff0418127d26698a461481363c2b2e9"
+                "reference": "bd471eb79c0eabc48c7eadd5863eb2649ea945eb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/HuwelijksplannerBundle/zipball/f1683ecb1ff0418127d26698a461481363c2b2e9",
-                "reference": "f1683ecb1ff0418127d26698a461481363c2b2e9",
+                "url": "https://api.github.com/repos/CommonGateway/HuwelijksplannerBundle/zipball/bd471eb79c0eabc48c7eadd5863eb2649ea945eb",
+                "reference": "bd471eb79c0eabc48c7eadd5863eb2649ea945eb",
                 "shasum": ""
             },
             "require": {
-                "common-gateway/klanten-bundle": "^0.0.8",
-                "common-gateway/zgw-bundle": "^0.0.6",
-                "commongateway/corebundle": "dev-master",
+                "common-gateway/brp-bundle": ">=0.0.12",
+                "common-gateway/klanten-bundle": ">=0.0.22",
+                "common-gateway/zgw-bundle": ">=0.0.19",
+                "commongateway/corebundle": ">=0.0.1",
                 "php": ">=7.4"
             },
             "require-dev": {
@@ -741,22 +790,22 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/HuwelijksplannerBundle/issues",
-                "source": "https://github.com/CommonGateway/HuwelijksplannerBundle/tree/0.0.25"
+                "source": "https://github.com/CommonGateway/HuwelijksplannerBundle/tree/0.0.29"
             },
-            "time": "2023-02-08T08:33:31+00:00"
+            "time": "2023-02-14T13:25:33+00:00"
         },
         {
             "name": "common-gateway/klanten-bundle",
-            "version": "0.0.8",
+            "version": "0.0.22",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/KlantenBundle.git",
-                "reference": "ef2560606b99c7ea7599396f5516bc4036c75c97"
+                "reference": "7afb244590fdc389226f8fb097a9d7aad597ca92"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/KlantenBundle/zipball/ef2560606b99c7ea7599396f5516bc4036c75c97",
-                "reference": "ef2560606b99c7ea7599396f5516bc4036c75c97",
+                "url": "https://api.github.com/repos/CommonGateway/KlantenBundle/zipball/7afb244590fdc389226f8fb097a9d7aad597ca92",
+                "reference": "7afb244590fdc389226f8fb097a9d7aad597ca92",
                 "shasum": ""
             },
             "require": {
@@ -789,22 +838,22 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/KlantenBundle/issues",
-                "source": "https://github.com/CommonGateway/KlantenBundle/tree/0.0.8"
+                "source": "https://github.com/CommonGateway/KlantenBundle/tree/0.0.22"
             },
-            "time": "2022-12-22T10:39:06+00:00"
+            "time": "2023-02-06T10:24:21+00:00"
         },
         {
             "name": "common-gateway/zgw-bundle",
-            "version": "0.0.6",
+            "version": "0.1.20",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/ZGWBundle.git",
-                "reference": "5a8eb420983ca34c62c2474c61c2c6a0ff731b22"
+                "reference": "dea6b5b06df4da0c0704df3ca17d764f41bf8de9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/5a8eb420983ca34c62c2474c61c2c6a0ff731b22",
-                "reference": "5a8eb420983ca34c62c2474c61c2c6a0ff731b22",
+                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/dea6b5b06df4da0c0704df3ca17d764f41bf8de9",
+                "reference": "dea6b5b06df4da0c0704df3ca17d764f41bf8de9",
                 "shasum": ""
             },
             "require": {
@@ -837,9 +886,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.0.6"
+                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.20"
             },
-            "time": "2022-12-22T05:34:07+00:00"
+            "time": "2023-02-09T09:01:05+00:00"
         },
         {
             "name": "commongateway/corebundle",
@@ -4571,54 +4620,6 @@
             "time": "2021-09-02T17:10:53+00:00"
         },
         {
-            "name": "larping-base/larping-bundle",
-            "version": "1.0.53",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "9e0bbd30e6c60d11091329a1de655616a5415297"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/9e0bbd30e6c60d11091329a1de655616a5415297",
-                "reference": "9e0bbd30e6c60d11091329a1de655616a5415297",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": ">=0.0.1",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "LarpingBase\\LarpingBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An Commong Gateay bundle for the larping application",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "larping",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.53"
-            },
-            "time": "2023-02-03T14:07:20+00:00"
-        },
-        {
             "name": "league/html-to-markdown",
             "version": "4.10.0",
             "source": {
@@ -4989,16 +4990,16 @@
         },
         {
             "name": "monolog/monolog",
-            "version": "2.8.0",
+            "version": "2.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Seldaek/monolog.git",
-                "reference": "720488632c590286b88b80e62aa3d3d551ad4a50"
+                "reference": "f259e2b15fb95494c83f52d3caad003bbf5ffaa1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/720488632c590286b88b80e62aa3d3d551ad4a50",
-                "reference": "720488632c590286b88b80e62aa3d3d551ad4a50",
+                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/f259e2b15fb95494c83f52d3caad003bbf5ffaa1",
+                "reference": "f259e2b15fb95494c83f52d3caad003bbf5ffaa1",
                 "shasum": ""
             },
             "require": {
@@ -5013,7 +5014,7 @@
                 "doctrine/couchdb": "~1.0@dev",
                 "elasticsearch/elasticsearch": "^7 || ^8",
                 "ext-json": "*",
-                "graylog2/gelf-php": "^1.4.2",
+                "graylog2/gelf-php": "^1.4.2 || ^2@dev",
                 "guzzlehttp/guzzle": "^7.4",
                 "guzzlehttp/psr7": "^2.2",
                 "mongodb/mongodb": "^1.8",
@@ -5075,7 +5076,7 @@
             ],
             "support": {
                 "issues": "https://github.com/Seldaek/monolog/issues",
-                "source": "https://github.com/Seldaek/monolog/tree/2.8.0"
+                "source": "https://github.com/Seldaek/monolog/tree/2.9.1"
             },
             "funding": [
                 {
@@ -5087,7 +5088,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-07-24T11:55:47+00:00"
+            "time": "2023-02-06T13:44:46+00:00"
         },
         {
             "name": "myclabs/deep-copy",
