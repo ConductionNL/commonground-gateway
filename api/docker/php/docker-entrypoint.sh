@@ -34,23 +34,21 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	echo "Creating the database"
 	bin/console doctrine:database:create --if-not-exists --no-interaction
 
-	if [ "$APP_ENV" == 'prod' ]; then
-		# Get the database inline with the newest version
-		echo "Migrating the database to the curently used version"
-		bin/console doctrine:migrations:migrate --no-interaction
-	fi
+	# Get the database inline with the newest version
+	echo "Migrating the database to the curently used version"
+	bin/console doctrine:migrations:migrate --no-interaction
 
 	if [ "$APP_ENV" != 'prod' ]; then
 
 		# If you want to retain data in your dev enviroment comment this command out
 		echo "Clearing the database"
-		#bin/console doctrine:schema:drop --full-database --force --no-interaction
+		bin/console doctrine:schema:drop --full-database --force --no-interaction
 
 		echo "Updating the database"
-		#bin/console doctrine:schema:update --force --no-interaction
+		bin/console doctrine:schema:update --force --no-interaction
 
 		echo "Initializing the gateway"
-		#bin/console commongateway:initialize -data
+		bin/console commongateway:initialize -data
 	fi
 
 fi
