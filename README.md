@@ -1,14 +1,15 @@
-# Commonground Gateway
+# Common Gateway
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/commonground-gateway)](https://artifacthub.io/packages/search?repo=commonground-gateway)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/b6de6f6071044e1783a145afa27f1829)](https://www.codacy.com/gh/CommonGateway/CoreBundle/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=CommonGateway/CoreBundle&amp;utm_campaign=Badge_Grade)
 
-The common gateway repositroy gives a quick kubertnetes wrapper of the [common gateway symfony bundle](https://github.com/CommonGateway/CoreBundle).
+The common gateway repositroy gives a quick kubertnetes wrapper of the [common gateway symfony bundle](https://github.com/CommonGateway/CoreBundle). In other words it doesn't aim to be its own code base but simply contains the files needed to create kubernetes images and helm installers for the core bundle.
+
+If you are looking for the common gateway code base please look at the core bundle repository instead, that is place where you will find al the appropriate documentation.
 
 ## Quick start (for local development)
 > **Dependencies**
 > - To clone the codebase to your locale machine you will need git
 > - To run the gateway your local machine you will need docker desktop.
-
 
 You can start up the commongatway locally by cloning the respository to you machine
 ````cli
@@ -50,10 +51,6 @@ $ helm upgrade [my-gateway] --kubeconfig=[path-to-your-kubeconfig] --set cronrun
 ````
 
 Alternativly you can just use kubernetes dashboard to change the helm values file.
-
-If you now surf to your gateway you will see a 500 error screen, simple explenation for that is that the database has not been initialized yet (anything the involves wipping the database is always a manual action).
-
-To fix this we will need to tell the gateway to initialize itsself. 
 
 For more information on installing the application trough helm read the [helm documentation](https://helm.sh/docs/helm/).
 
