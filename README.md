@@ -1,28 +1,23 @@
 # Commonground Gateway
-[![Documentation Status](https://readthedocs.org/projects/commonground-gateway/badge/?version=latest)](https://commonground-gateway.readthedocs.io/en/latest/?badge=latest)
-[![BCH compliance](https://bettercodehub.com/edge/badge/ConductionNL/commonground-gateway?branch=master)](https://bettercodehub.com/)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/commonground-gateway)](https://artifacthub.io/packages/search?repo=commonground-gateway)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/b6de6f6071044e1783a145afa27f1829)](https://www.codacy.com/gh/CommonGateway/CoreBundle/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=CommonGateway/CoreBundle&amp;utm_campaign=Badge_Grade)
 
-## Quick start
+The common gateway repositroy gives a quick kubertnetes wrapper of the [common gateway symfony bundle](https://github.com/CommonGateway/CoreBundle).
 
-## Documentation
-Full technical documentation is provided on [read the docs](https://commonground-gateway.readthedocs.io/) and is based on [MKDocs](https://www.mkdocs.org/). An more product owner focused (and lesd tehcnical) product page is hosted at [](). 
+## Quick start (for local development)
 
-If you want to run the technical documantation localy you van do so by using MKDocs build in server and the serve command. Just go to the local reposiroty and execute the fowwing command for the documenation to be available on post 8000 (make sure to [instal MKDocs](mkdocs.org/user-guide/installation/) first)
-```cli
-$ mkdocs serve
-```
+You can start up the commongatway locally by cloning the respository to you machine
+````cli
+$ git clone https://github.com/ConductionNL/commonground-gateway
+````
 
-The (non-)technical product page is based on gatsby and can als be published localy, jsut navigate to the repostory and then to de docs directory. (make sure to [install gatsby CLI](https://www.gatsbyjs.com/docs/tutorial/part-0/#gatsby-cli) on you machine first doh) 
-```cli
-$ cd /product-page
-$ gatsby develop
-```
+Afther that you need to spin upyour local docker setup 
 
-Its is also posible to update the product page dicetly from the reposotry by running the pre-configures deploy command for the product-page direcotry, or 
-```cli
-$ cd /product-page
-$ npm run deploy
-```
+````cli
+$ docker compose up --build
+````
 
-## Update
-      
+(the --build flag can be ignored the next time you want to run the application)
+
+
+## Quick start (for kubernetes)
