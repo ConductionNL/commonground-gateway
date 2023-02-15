@@ -8,12 +8,12 @@ on:
 
   push:
     branches:
-        - main
-        - development
-        - version-oc
-        - version-hp
-        - version-xxlnce
-        - version-maastricht
+      - main
+      - development
+      - version-oc
+      - version-hp
+      - version-xxlnce
+      - version-maastricht
 jobs:
   build:
     runs-on: ubuntu-latest
