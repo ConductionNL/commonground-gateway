@@ -254,7 +254,9 @@ class Endpoint
     private ?string $defaultContentType = 'application/json';
 
     /**
-     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="endpoints")
+     * @deprecated
+     *
+     * @ORM\ManyToOne(targetEntity=Entity::class)
      */
     private $entity;
 
