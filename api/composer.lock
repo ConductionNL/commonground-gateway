@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "60d77fa4c4b89e44a68e2b95480f5b8c",
+    "content-hash": "246a8c965fd0b6c3e8d8a8eab1f5c625",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -698,16 +698,16 @@
         },
         {
             "name": "common-gateway/geboorte-vrijbrp-bundle",
-            "version": "0.0.37",
+            "version": "0.0.38",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/GeboorteVrijBRPBundle.git",
-                "reference": "7d1fdc0fbbc60571e8dba61a77e21aa756393bc9"
+                "reference": "318b7ed99a6941bf038755e2c3966c80aa8ce98d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/GeboorteVrijBRPBundle/zipball/7d1fdc0fbbc60571e8dba61a77e21aa756393bc9",
-                "reference": "7d1fdc0fbbc60571e8dba61a77e21aa756393bc9",
+                "url": "https://api.github.com/repos/CommonGateway/GeboorteVrijBRPBundle/zipball/318b7ed99a6941bf038755e2c3966c80aa8ce98d",
+                "reference": "318b7ed99a6941bf038755e2c3966c80aa8ce98d",
                 "shasum": ""
             },
             "require": {
@@ -744,9 +744,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/GeboorteVrijBRPBundle/issues",
-                "source": "https://github.com/CommonGateway/GeboorteVrijBRPBundle/tree/0.0.37"
+                "source": "https://github.com/CommonGateway/GeboorteVrijBRPBundle/tree/0.0.38"
             },
-            "time": "2023-02-14T14:01:24+00:00"
+            "time": "2023-02-15T14:24:56+00:00"
         },
         {
             "name": "common-gateway/naamgebruik-vrijbrp-bundle",
