@@ -196,6 +196,15 @@ class Application
      */
     private $users;
 
+    /**
+     * @var array Certificates that can be used to verify with this application
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $certificates = [];
+
+
     public function __construct()
     {
         $this->objectEntities = new ArrayCollection();

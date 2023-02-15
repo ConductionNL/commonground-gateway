@@ -124,8 +124,10 @@ services:
       - php
     volumes:
       - ./api/public:/srv/api/public:ro
+      - ./api/var/certs:/var/certs:ro
     ports:
       - "80:8080"
+      - "443:443"
     environment:
       - NGINX_HOST=php
       - NGINX_ENV=${APP_ENV}

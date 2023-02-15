@@ -19,6 +19,7 @@ security:
                 - App\Security\OIDCAuthenticator
                 - App\Security\TokenAuthenticator
                 - App\Security\ApiKeyAuthenticator
+#                - App\Security\CertificateAuthenticator
 #            entry_point: App\Security\OIDCAuthenticator
 #            guard:
 #                authenticators:
