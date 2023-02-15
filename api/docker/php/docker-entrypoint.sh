@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-# first arg is `-f` or `--some-option`
+# First arg is `-f` or `--some-option`.
 if [ "${1#-}" != "$1" ]; then
 	set -- php-fpm "$@"
 fi
@@ -15,11 +15,6 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 
 	mkdir -p var/cache var/log
 
-#	chmod -R +rwx var
-
-#	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX var
-#	setfacl -dR -m u:www-data:rwX -m u:"$(whoami)":rwX var
-
 	if [ "$READ_ONLY" != 'true' ]; then
 		composer install --prefer-dist --no-progress --no-suggest --no-interaction
 	fi
@@ -29,9 +24,17 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		sleep 1
 	done
 
+	# Create the database if no databse exists.
+	echo "Creating the database"
+	bin/console doctrine:database:create --if-not-exists --no-interaction
+
+	# Get the database inline with the newest version.
+	echo "Migrating the database to the currently used version"
+	bin/console doctrine:migrations:migrate --no-interaction
+
 	if [ "$APP_ENV" != 'prod' ]; then
 
-		# If you want to retain data in your dev enviroment comment this command out
+		# If you want to retain data in your dev environment comment this command out.
 		echo "Clearing the database"
 		bin/console doctrine:schema:drop --full-database --force --no-interaction
 
@@ -40,27 +43,6 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 
 		echo "Initializing the gateway"
 		bin/console commongateway:initialize -data
-		# If you want to retain data in your dev enviroment comment this command out
-		#echo "Loading fixtures"
-		#bin/console hautelook:fixtures:load -n --no-bundles
-		#if [ "$APP_URL" == 'http://localhost' ]; then
-			# Lets update the docs to show the latest chages
-			#echo "Creating OAS documentation"
-			#bin/console api:openapi:export --output=/srv/api/public/schema/openapi.yaml --yaml --spec-version=3
-
-
-			# this should only be done in an build
-			#echo "Updating Helm charts"
-			#bin/console app:helm:update --location=/srv/api/helm --spec-version=3
-
-			# this should only be done in an build
-			#echo "Updating publiccode charts"
-			#bin/console app:publiccode:update --location=/srv/api/public/schema/ --spec-version=0.2
-		#fi
-
-    # Load PUBLICCODE from .env and create Collections
-	#	echo "Update commongateway plugins"
-	#	bin/console commongateway:composer:update
 	fi
 
 fi
