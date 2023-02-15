@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1fd4bb46477099e667bb080bb542b7aa",
+    "content-hash": "60d77fa4c4b89e44a68e2b95480f5b8c",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -750,16 +750,16 @@
         },
         {
             "name": "common-gateway/naamgebruik-vrijbrp-bundle",
-            "version": "0.0.14",
+            "version": "0.0.15",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/NaamgebruikVrijBRPBundle.git",
-                "reference": "323b7dde5a841d51896993c3192f15dc93fd9126"
+                "reference": "771586478d9810dee6ecc9322ee151319d05fd48"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/NaamgebruikVrijBRPBundle/zipball/323b7dde5a841d51896993c3192f15dc93fd9126",
-                "reference": "323b7dde5a841d51896993c3192f15dc93fd9126",
+                "url": "https://api.github.com/repos/CommonGateway/NaamgebruikVrijBRPBundle/zipball/771586478d9810dee6ecc9322ee151319d05fd48",
+                "reference": "771586478d9810dee6ecc9322ee151319d05fd48",
                 "shasum": ""
             },
             "require": {
@@ -795,9 +795,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/NaamgebruikVrijBRPBundle/issues",
-                "source": "https://github.com/CommonGateway/NaamgebruikVrijBRPBundle/tree/0.0.14"
+                "source": "https://github.com/CommonGateway/NaamgebruikVrijBRPBundle/tree/0.0.15"
             },
-            "time": "2023-02-14T14:03:05+00:00"
+            "time": "2023-02-15T12:33:39+00:00"
         },
         {
             "name": "common-gateway/zgw-bundle",
@@ -853,12 +853,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "a96fb9c79baba322e957246584640201287feef7"
+                "reference": "9ec4441960826210eb047f1d879d9531a8891a97"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/a96fb9c79baba322e957246584640201287feef7",
-                "reference": "a96fb9c79baba322e957246584640201287feef7",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/9ec4441960826210eb047f1d879d9531a8891a97",
+                "reference": "9ec4441960826210eb047f1d879d9531a8891a97",
                 "shasum": ""
             },
             "require": {
@@ -917,7 +917,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-02-13T12:50:30+00:00"
+            "time": "2023-02-15T12:41:56+00:00"
         },
         {
             "name": "composer/ca-bundle",
