@@ -96,7 +96,7 @@ jobs:
         run: docker-compose push
 
       - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/main')
-        name: Release latest
+        name: Push latest container to Container Registry
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
           for image in $images
