@@ -15,8 +15,6 @@ on:
 
 env:
     BRANCHE: ${GITHUB_BASE_REF#refs/heads/}
-    VERSION: $(grep APP_VERSION= .env | cut -d '=' -f2)
-    RELEASE: $VERSION.$(date --utc +%y%m%d)
 
 jobs:
   build:
@@ -27,8 +25,6 @@ jobs:
       - name: Environemental  vars
         run: 
           echo "BRANCHE is $BRANCHE"
-          echo "VERSION is $VERSION"
-          echo "RELEASE is $RELEASE"
       - name: Create vendor folder
         run: | 
           mkdir api/vendor
@@ -43,13 +39,11 @@ jobs:
       - name: Setting APP_ENV to dev
         run: |
           echo "APP_ENV=dev">> $GITHUB_ENV
-          echo "APP_BUILD=dev-$RELEASE">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
       - name: Setting APP_ENV to prod
         if: contains( github.ref, 'main' ) || contains( github.base_ref, 'main' )
         run: |
           echo "APP_ENV=prod">> $GITHUB_ENV
-          echo "APP_BUILD=$RELEASE">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
       - name: Print definitive APP_ENV
         run: echo "APP_ENV is now $APP_ENV and APP_BUILD is now $APP_BUILD"
