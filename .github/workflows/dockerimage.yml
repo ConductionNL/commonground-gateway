@@ -96,7 +96,7 @@ jobs:
             do
               docker push "${image}":"latest"
             done
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref, 'version-' ) || contains( github.base_ref, 'feature-')
+      - if: steps.containerregistry-login.outputs.success == 'true' && ((github.ref, 'version-' ) || contains( github.base_ref, 'feature-'))
         name: Push versioned containers to Container Registry
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
