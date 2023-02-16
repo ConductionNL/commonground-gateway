@@ -29,7 +29,6 @@ jobs:
           export VERSION=$(grep APP_VERSION= .env | cut -d '=' -f2)
           export RELEASE=$VERSION.$(date --utc +%y%m%d)
           echo "RELEASE=$RELEASE" >> $GITHUB_ENV
-          echo "##[set-output name=releasename]$RELEASE"
       - name: Create vendor folder
         run: | 
           mkdir api/vendor
@@ -78,7 +77,7 @@ jobs:
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
           for image in $images
           do
-            docker tag "${image}":${APP_ENV} "${image}":"${$GITHUB_REF_NAME}.$RELEASE"
+            docker tag "${image}":${APP_ENV} "${image}":"$GITHUB_REF_NAME.$RELEASE"
           done
           echo 'IMAGES=$images' >> $GITHUB_ENV
       - name: Show all images
@@ -110,7 +109,7 @@ jobs:
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
           for image in $images
           do
-            docker push "${image}":"${$GITHUB_REF_NAME}.$RELEASE"
+            docker push "${image}":"$GITHUB_REF_NAME.$RELEASE"
           done
       - name: Create kube config
         id: kubeconfig
