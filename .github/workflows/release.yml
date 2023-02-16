@@ -16,15 +16,15 @@ jobs:
       - uses: actions/setup-node@v1
       - name: Default Environment Variables
         run:
-          echo "https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables"
-          echo "GITHUB_WORKFLOW is $GITHUB_WORKFLOW"
-          echo "GITHUB_WORKFLOW_REF is $GITHUB_WORKFLOW_REF"
-          echo "GITHUB_RUN_ATTEMPT is $GITHUB_RUN_ATTEMPT"
-          echo "GITHUB_REPOSITORY is $GITHUB_REPOSITORY"
-          echo "GITHUB_REF is $GITHUB_REF"
-          echo "GITHUB_REF_NAME is $GITHUB_REF_NAME"
-          echo "GITHUB_REF_PROTECTED is $GITHUB_REF_PROTECTED"
-#          echo "GITHUB_ENV is $GITHUB_ENV"
+          printf "https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables"
+          printf "\nGITHUB_WORKFLOW is $GITHUB_WORKFLOW"
+          printf "\nGITHUB_WORKFLOW_REF is $GITHUB_WORKFLOW_REF"
+          printf "\nGITHUB_RUN_ATTEMPT is $GITHUB_RUN_ATTEMPT"
+          printf "\nGITHUB_REPOSITORY is $GITHUB_REPOSITORY"
+          printf "\nGITHUB_REF is $GITHUB_REF"
+          printf "\nGITHUB_REF_NAME is $GITHUB_REF_NAME"
+          printf "\nGITHUB_REF_PROTECTED is $GITHUB_REF_PROTECTED"
+#          printf "\nGITHUB_ENV is $GITHUB_ENV"
       - name: Create vendor folder
         run: | 
           mkdir api/vendor
