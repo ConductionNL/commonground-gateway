@@ -172,6 +172,14 @@ mongodb:
 
 gateway-ui:
     enabled: true
+#    TODO: Let these urls use the APP_URL / domain to keep it abstract
+    apiUrl: "https://gateway.local/api"
+    meUrl: "https://gateway.local/api/users/me"
+    baseUrl: "https://gateway.local"
+    frontendUrl: "https://pip.local"
+    organization: ""
+    redirectUrl: "vault"
+    adminUrl: "https://gateway.local/admin"
 
 
 podAnnotations: {}
