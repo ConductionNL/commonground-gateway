@@ -21,11 +21,11 @@ config:
   readOnly: "true"
   # todo move cronRunner to its own 'tab' so it isn't a subtab under config?
   cronRunner: 
-    enabled: false
-    activeDeadlineSeconds: 600 # activeDeadlineSeconds Specifies the duration in seconds relative to the startTime that the job may be active before the system tries to terminate it; value must be positive integer
-    concurrencyPolicy: Forbid # The cron job does not allow concurrent runs; if it is time for a new job run and the previous job run hasn’t finished yet, the cron job skips the new job run
-    crontab: '*/5 * * * *'
-    appAuth: false
+    enabled: true
+    activeDeadlineSeconds: 600 # activeDeadlineSeconds Specifies the duration in seconds relative to the startTime that the job may be active before the system tries to terminate it; value must be positive integer.
+    concurrencyPolicy: Forbid # The cron job does not allow concurrent runs; if it is time for a new job run and the previous job run hasn’t finished yet, the cron job skips the new job run.
+    crontab: '*/5 * * * *' # https://crontab.guru/
+    appAuth: false # If we should check and care about authorization in the cronRunner pods.
   defaultRedirectUrl: http://localhost/login/oidc/dex
   defaultBackUrl: http://localhost
   documentation_description: "This documentation contains the endpoints on your commonground gateway.
@@ -169,7 +169,9 @@ mongodb:
         enabled: true
         rootUser: api-platform
         rootPassword: "!ChangeMe!"
-        
+
+gateway-ui:
+    enabled: true
 
 
 podAnnotations: {}
@@ -208,7 +210,7 @@ service:
   port: 80
 
 ingress:
-  enabled: false
+  enabled: true
   className: "nginx"
   hostname: gateway.local
   path: /

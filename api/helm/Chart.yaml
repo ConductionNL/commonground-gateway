@@ -39,3 +39,7 @@ dependencies:
       repository: https://charts.bitnami.com/bitnami
       version: 13.4.4
       condition: mongodb.enabled
+  -   name: gateway-ui
+      repository: https://raw.githubusercontent.com/ConductionNL/gateway-ui/tree/refinement-demo-branch/helm/
+      version: 0.1.4
+      condition: gateway-ui.enabled
