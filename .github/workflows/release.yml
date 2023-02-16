@@ -53,7 +53,8 @@ jobs:
         if: contains( github.ref, 'version-' ) || contains( github.ref, 'feature-')
         run: |
           GENERAL_TAG=$GITHUB_REF_NAME
-          echo "APP_ENV=${GENERAL_TAG//-/}">> $GITHUB_ENV
+          export GENERAL_TAG={GENERAL_TAG//-/}
+          echo "APP_ENV=$GENERAL_TAG">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
       - name: Print definitive APP_ENV
         run: echo "APP_ENV is now $APP_ENV"
