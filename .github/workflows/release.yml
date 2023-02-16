@@ -16,15 +16,17 @@ jobs:
       - uses: actions/setup-node@v1
       - name: Default Environment Variables
         run:
-          echo "https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables"
-          echo -e "\nGITHUB_WORKFLOW is $GITHUB_WORKFLOW"
-          echo -e "\nGITHUB_WORKFLOW_REF is $GITHUB_WORKFLOW_REF"
-          echo -e "\nGITHUB_RUN_ATTEMPT is $GITHUB_RUN_ATTEMPT"
-          echo -e "\nGITHUB_REPOSITORY is $GITHUB_REPOSITORY"
-          echo -e "\nGITHUB_REF is $GITHUB_REF"
-          echo -e "\nGITHUB_REF_NAME is $GITHUB_REF_NAME"
-          echo -e "\nGITHUB_REF_PROTECTED is $GITHUB_REF_PROTECTED"
-#          echo -e "\nGITHUB_ENV is $GITHUB_ENV"
+          echo "https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables";
+          echo "GITHUB_WORKFLOW is $GITHUB_WORKFLOW";
+          echo "GITHUB_WORKFLOW_REF is $GITHUB_WORKFLOW_REF";
+          echo "GITHUB_RUN_ATTEMPT is $GITHUB_RUN_ATTEMPT";
+          echo "GITHUB_REPOSITORY is $GITHUB_REPOSITORY";
+          echo "$\nGITHUB_REF is $GITHUB_REF"
+          echo "GITHUB_REF_NAME is $GITHUB_REF_NAME";
+          echo "GITHUB_REF_PROTECTED is $GITHUB_REF_PROTECTED"
+#          echo "GITHUB_ENV is $GITHUB_ENV"
+          printf "https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables\nGITHUB_WORKFLOW is $GITHUB_WORKFLOW\nGITHUB_WORKFLOW_REF is $GITHUB_WORKFLOW_REF"
+          echo -e "https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables\nGITHUB_WORKFLOW is $GITHUB_WORKFLOW\nGITHUB_WORKFLOW_REF is $GITHUB_WORKFLOW_REF"
       - name: Create vendor folder
         run: | 
           mkdir api/vendor
@@ -41,30 +43,39 @@ jobs:
           echo "APP_ENV=dev">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
       - name: Setting APP_ENV to prod
-        if: contains( github.ref, 'main' ) || contains( github.base_ref, 'main' )
+        if: contains( github.ref, 'main' )
         run: |
           echo "APP_ENV=prod">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
       - name: Print definitive APP_ENV
-        run: echo "APP_ENV is now $APP_ENV and APP_BUILD is now $APP_BUILD"
+        run: echo "APP_ENV is now $APP_ENV"
       - name: Build the Docker image
-        run: docker-compose build --build-arg APP_ENV=$APP_ENV --build-arg APP_BUILD=$APP_BUILD --build-arg APP_BUILD_ALL_FIXTURES=true
+        run: docker-compose build --build-arg APP_ENV=$APP_ENV --build-arg APP_BUILD_ALL_FIXTURES=true
       - name: Run the docker image
         run: docker-compose up -d
       - name: Taking some sleep (for containers to come up)
-        run: sleep 240
+        run: sleep 180
       - name: Check if all containers are running
         run: docker ps
       - name: Dumping the logs
         run: docker-compose logs
       - name: Database Update
         run: docker-compose exec -T php bin/console doctrine:schema:update --force
+      - if: (github.ref == 'refs/heads/main')
+        name: Add docker tag latest
+        run: |
+          images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
+          for image in $images
+          do
+            docker tag "${image}":"latest"
+          done
+          echo 'IMAGES=$images' >> $GITHUB_ENV
       - name: Add docker tags
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
           for image in $images
           do
-            docker tag "${image}":${APP_ENV} "${image}":"${APP_BUILD}"
+            docker tag "${image}":"${$GITHUB_REF_NAME}"
           done
           echo 'IMAGES=$images' >> $GITHUB_ENV
       - name: Show all images
@@ -85,11 +96,11 @@ jobs:
       - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/main')
         name: Release latest
         run: |
-            images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
-            for image in $images
-            do
-              docker push "${image}":"latest"
-            done
+          images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
+          for image in $images
+          do
+            docker push "${image}":"latest"
+          done
       - if: steps.containerregistry-login.outputs.success == 'true' && (contains(github.ref, 'version-' ) || contains( github.base_ref, 'feature-'))
         name: Push versioned containers to Container Registry
         run: |
