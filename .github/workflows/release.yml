@@ -1,11 +1,6 @@
-name: Docker Image CI
+name: Docker Image CI Release
 
 on:
-  pull_request:
-    branches:
-      - main
-      - development
-
   push:
     branches:
       - main
@@ -13,22 +8,23 @@ on:
       - version-*
       - feature-*
 
-env:
-    BRANCHE: ${GITHUB_BASE_REF#refs/heads/}
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
-      - name: Environemental  vars
-        run: 
-          echo "BRANCHE is $BRANCHE"
-          echo "GITHUB_BASE_REF is $GITHUB_BASE_REF"
-          echo "GITHUB_HEAD_REF is $GITHUB_HEAD_REF"
-          echo "GITHUB_REF is $GITHUB_REF"
-          echo "GITHUB_REF_NAME is $GITHUB_REF_NAME"
+      - name: Default Environment Variables
+        run:
+            echo "https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables"
+            echo "GITHUB_WORKFLOW is $GITHUB_WORKFLOW"
+            echo "GITHUB_WORKFLOW_REF is $GITHUB_WORKFLOW_REF"
+            echo "GITHUB_REF is $GITHUB_REF"
+            echo "GITHUB_REF_NAME is $GITHUB_REF_NAME"
+            echo "GITHUB_REF_PROTECTED is $GITHUB_REF_PROTECTED"
+            echo "GITHUB_REPOSITORY is $GITHUB_REPOSITORY"
+            echo "GITHUB_RUN_ATTEMPT is $GITHUB_RUN_ATTEMPT"
+            echo "GITHUB_ENV is $GITHUB_ENV"
       - name: Create vendor folder
         run: | 
           mkdir api/vendor
@@ -100,7 +96,7 @@ jobs:
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
           for image in $images
           do
-            docker push "${image}":"${BRANCHE}"
+            docker push "${image}":"${$GITHUB_REF_NAME}"
           done
       - name: Create kube config
         id: kubeconfig
