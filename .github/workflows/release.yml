@@ -16,15 +16,15 @@ jobs:
       - uses: actions/setup-node@v1
       - name: Default Environment Variables
         run:
-          printf "https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables"
-          printf "\nGITHUB_WORKFLOW is $GITHUB_WORKFLOW"
-          printf "\nGITHUB_WORKFLOW_REF is $GITHUB_WORKFLOW_REF"
-          printf "\nGITHUB_RUN_ATTEMPT is $GITHUB_RUN_ATTEMPT"
-          printf "\nGITHUB_REPOSITORY is $GITHUB_REPOSITORY"
-          printf "\nGITHUB_REF is $GITHUB_REF"
-          printf "\nGITHUB_REF_NAME is $GITHUB_REF_NAME"
-          printf "\nGITHUB_REF_PROTECTED is $GITHUB_REF_PROTECTED"
-#          printf "\nGITHUB_ENV is $GITHUB_ENV"
+          echo "https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables"
+          echo -e "\nGITHUB_WORKFLOW is $GITHUB_WORKFLOW"
+          echo -e "\nGITHUB_WORKFLOW_REF is $GITHUB_WORKFLOW_REF"
+          echo -e "\nGITHUB_RUN_ATTEMPT is $GITHUB_RUN_ATTEMPT"
+          echo -e "\nGITHUB_REPOSITORY is $GITHUB_REPOSITORY"
+          echo -e "\nGITHUB_REF is $GITHUB_REF"
+          echo -e "\nGITHUB_REF_NAME is $GITHUB_REF_NAME"
+          echo -e "\nGITHUB_REF_PROTECTED is $GITHUB_REF_PROTECTED"
+#          echo -e "\nGITHUB_ENV is $GITHUB_ENV"
       - name: Create vendor folder
         run: | 
           mkdir api/vendor
