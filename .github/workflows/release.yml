@@ -16,15 +16,15 @@ jobs:
       - uses: actions/setup-node@v1
       - name: Default Environment Variables
         run:
-            echo "https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables"
-            echo "GITHUB_WORKFLOW is $GITHUB_WORKFLOW"
-            echo "GITHUB_WORKFLOW_REF is $GITHUB_WORKFLOW_REF"
-            echo "GITHUB_REF is $GITHUB_REF"
-            echo "GITHUB_REF_NAME is $GITHUB_REF_NAME"
-            echo "GITHUB_REF_PROTECTED is $GITHUB_REF_PROTECTED"
-            echo "GITHUB_REPOSITORY is $GITHUB_REPOSITORY"
-            echo "GITHUB_RUN_ATTEMPT is $GITHUB_RUN_ATTEMPT"
-            echo "GITHUB_ENV is $GITHUB_ENV"
+          echo "https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables"
+          echo "GITHUB_WORKFLOW is $GITHUB_WORKFLOW"
+          echo "GITHUB_WORKFLOW_REF is $GITHUB_WORKFLOW_REF"
+          echo "GITHUB_RUN_ATTEMPT is $GITHUB_RUN_ATTEMPT"
+          echo "GITHUB_REPOSITORY is $GITHUB_REPOSITORY"
+          echo "GITHUB_REF is $GITHUB_REF"
+          echo "GITHUB_REF_NAME is $GITHUB_REF_NAME"
+          echo "GITHUB_REF_PROTECTED is $GITHUB_REF_PROTECTED"
+#          echo "GITHUB_ENV is $GITHUB_ENV"
       - name: Create vendor folder
         run: | 
           mkdir api/vendor
@@ -52,7 +52,7 @@ jobs:
       - name: Run the docker image
         run: docker-compose up -d
       - name: Taking some sleep (for containers to come up)
-        run: sleep 60
+        run: sleep 240
       - name: Check if all containers are running
         run: docker ps
       - name: Dumping the logs
