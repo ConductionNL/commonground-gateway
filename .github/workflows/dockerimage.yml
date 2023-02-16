@@ -62,6 +62,12 @@ jobs:
           echo "APP_ENV=soapextensions">> $GITHUB_ENV
           echo "APP_BUILD=soapextensions-$RELEASE">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
+      - name: Setting APP_ENV to version-hp
+        if: contains( github.ref, 'version-hp' ) || contains( github.base_ref, 'version-hp' )
+        run: |
+            echo "APP_ENV=version-hp">> $GITHUB_ENV
+            echo "APP_BUILD=version-hp-$RELEASE">> $GITHUB_ENV
+            echo "set APP_ENV to $APP_ENV"
       - name: Print definitive APP_ENV
         run: echo "APP_ENV is now $APP_ENV and APP_BUILD is now $APP_BUILD"
       - name: Build the Docker image
@@ -115,11 +121,11 @@ jobs:
          else
            echo "##[set-output name=success;]false"
          fi
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup')
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup'|| github.ref == 'refs/heads/version-hp')
         name: Push to Container Registry
         run: docker-compose push
 
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup')
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' || github.ref == 'refs/heads/feature-soap-extra' || github.ref == 'refs/heads/feature-cleanup'|| github.ref == 'refs/heads/version-hp')
         name: Push versioned containers to Container Registry
         run: |
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
