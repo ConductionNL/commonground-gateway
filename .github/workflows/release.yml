@@ -22,6 +22,14 @@ jobs:
           echo "GITHUB_REF is $GITHUB_REF";
           echo "GITHUB_REF_NAME is $GITHUB_REF_NAME";
           echo "GITHUB_REF_PROTECTED is $GITHUB_REF_PROTECTED";
+      - name: Export release code
+        if: (success() || failure())
+        id: releasecode #version number in a more comprehensible format: 0.1.YearMonthDay in UTC
+        run: |
+          export VERSION=$(grep APP_VERSION= .env | cut -d '=' -f2)
+          export RELEASE=$VERSION.$(date --utc +%y%m%d)
+          echo "RELEASE=$RELEASE" >> $GITHUB_ENV
+          echo "##[set-output name=releasename]$RELEASE"
       - name: Create vendor folder
         run: | 
           mkdir api/vendor
@@ -70,7 +78,7 @@ jobs:
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
           for image in $images
           do
-            docker tag "${image}":${APP_ENV} "${image}":"${$GITHUB_REF_NAME}"
+            docker tag "${image}":${APP_ENV} "${image}":"${$GITHUB_REF_NAME}.$RELEASE"
           done
           echo 'IMAGES=$images' >> $GITHUB_ENV
       - name: Show all images
@@ -102,7 +110,7 @@ jobs:
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
           for image in $images
           do
-            docker push "${image}":"${$GITHUB_REF_NAME}"
+            docker push "${image}":"${$GITHUB_REF_NAME}.$RELEASE"
           done
       - name: Create kube config
         id: kubeconfig
