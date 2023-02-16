@@ -15,6 +15,9 @@ on:
 
 env:
     BRANCHE: ${GITHUB_BASE_REF#refs/heads/}
+    CI_COMMIT_REF_NAME: $CI_COMMIT_REF_NAME
+    CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME: $CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME
+    CI_MERGE_REQUEST_SOURCE_BRANCH_NAME: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME
 
 jobs:
   build:
@@ -25,6 +28,9 @@ jobs:
       - name: Environemental  vars
         run: 
           echo "BRANCHE is $BRANCHE"
+          echo "CI_COMMIT_REF_NAME is $CI_COMMIT_REF_NAME"
+          echo "CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME is $CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME"
+          echo "CI_MERGE_REQUEST_SOURCE_BRANCH_NAME is $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
       - name: Create vendor folder
         run: | 
           mkdir api/vendor
