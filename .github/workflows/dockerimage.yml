@@ -10,16 +10,18 @@ on:
     branches:
       - main
       - development
-      - version-oc
-      - version-hp
-      - version-xxlnce
-      - version-maastricht
+      - version-*
+      - feature-*
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_BASE_REF#refs/heads/})"
       - name: Export release code
         if: (success() || failure())
         id: releasecode #version number in a more comprehensible format: 0.1.YearMonthDay in UTC
@@ -47,27 +49,9 @@ jobs:
       - name: Setting APP_ENV to prod
         if: contains( github.ref, 'main' ) || contains( github.base_ref, 'main' )
         run: |
-          echo "APP_ENV=latest">> $GITHUB_ENV
+          echo "APP_ENV=prod">> $GITHUB_ENV
           echo "APP_BUILD=$RELEASE">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
-      - name: Setting APP_ENV to feature-cleanup
-        if: contains( github.ref, 'feature-cleanup' ) || contains( github.base_ref, 'feature-cleanup' )
-        run: |
-          echo "APP_ENV=cleanup">> $GITHUB_ENV
-          echo "APP_BUILD=cleanup-$RELEASE">> $GITHUB_ENV
-          echo "set APP_ENV to $APP_ENV"
-      - name: Setting APP_ENV to soap-extensions
-        if: contains( github.ref, 'feature-soap-extra' ) || contains( github.base_ref, 'feature-soap-extra' )
-        run: |
-          echo "APP_ENV=soapextensions">> $GITHUB_ENV
-          echo "APP_BUILD=soapextensions-$RELEASE">> $GITHUB_ENV
-          echo "set APP_ENV to $APP_ENV"
-      - name: Setting APP_ENV to version-hp
-        if: contains( github.ref, 'version-hp' ) || contains( github.base_ref, 'version-hp' )
-        run: |
-            echo "APP_ENV=version-hp">> $GITHUB_ENV
-            echo "APP_BUILD=version-hp-$RELEASE">> $GITHUB_ENV
-            echo "set APP_ENV to $APP_ENV"
       - name: Print definitive APP_ENV
         run: echo "APP_ENV is now $APP_ENV and APP_BUILD is now $APP_BUILD"
       - name: Build the Docker image
@@ -131,7 +115,7 @@ jobs:
           images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
           for image in $images
           do
-            docker push "${image}":"${APP_BUILD}"
+            docker push "${image}":"${branch}"
           done
       - name: Create kube config
         id: kubeconfig
