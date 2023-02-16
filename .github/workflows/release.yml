@@ -52,7 +52,8 @@ jobs:
       - name: Setting APP_ENV to version or feature
         if: contains( github.ref, 'version-' ) || contains( github.ref, 'feature-')
         run: |
-          echo ${$GITHUB_REF_NAME//-/}
+          test=$GITHUB_REF_NAME
+          echo ${test//-/}
           echo "APP_ENV=$GITHUB_REF_NAME">> $GITHUB_ENV
           echo "set APP_ENV to $APP_ENV"
       - name: Print definitive APP_ENV
