@@ -52,7 +52,8 @@ jobs:
       - name: Setting APP_ENV to version or feature
         if: contains( github.ref, 'version-' ) || contains( github.ref, 'feature-')
         run: |
-          GENERAL_TAG=$GITHUB_REF_NAME -replace '(?<=-).', { "$_".ToUpper() }
+          GENERAL_TAG=$GITHUB_REF_NAME
+          GENERAL_TAG=[regex]::replace(GENERAL_TAG, '(?<=-).', {param($m) "$m".ToUpper()})
           export GENERAL_TAG=${GENERAL_TAG//-/}
           echo "APP_ENV=$GENERAL_TAG">> $GITHUB_ENV
           echo "setting APP_ENV to $GENERAL_TAG, see Print definitive APP_ENV"
