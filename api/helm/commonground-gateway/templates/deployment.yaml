@@ -233,7 +233,6 @@ spec:
                         key: cron-runner-appAuth
                         name: {{ include "commonground-gateway.fullname" . }}
             {{- end}}
-                      
             - name: APP_DEFAULT_REDIRECT_URL
               {{- if contains "useDomain" .Values.config.defaultRedirectUrl }}
               value: {{ printf "https://%s/login/oidc/dex" .Values.global.domain | quote }}
@@ -242,7 +241,7 @@ spec:
               {{- end}}
             - name: APP_DEFAULT_BACK_URL
               {{- if contains "useDomain" .Values.config.defaultBackUrl }}
-              value: "https://"{{ .Values.global.domain }}
+              value: {{ printf "https://%s" .Values.global.domain | quote }}
               {{ else }}
               value: {{ .Values.config.defaultBackUrl }}
               {{- end}}
