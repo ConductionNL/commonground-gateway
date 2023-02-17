@@ -43,7 +43,7 @@ spec:
   {{- end }}
   {{- end }}
   rules:
-    - host: {{ $.Values.ingress.hostname }}
+    - host: {{ $.Values.global.domain }}
       http:
         paths:
           - path: {{ $.Values.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}{{ if not (eq .Values.ingress.path "/") }}(/|$){{ end }}(.*){{ end }}

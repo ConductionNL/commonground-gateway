@@ -4,6 +4,9 @@
 
 replicaCount: 2
 
+global:
+    domain: localhost
+
 config:
   env: prod
   trustedHosts: '^.+$'
@@ -26,8 +29,8 @@ config:
     concurrencyPolicy: Forbid # The cron job does not allow concurrent runs; if it is time for a new job run and the previous job run hasn’t finished yet, the cron job skips the new job run.
     crontab: '*/5 * * * *' # https://crontab.guru/
     appAuth: false # If we should check and care about authorization in the cronRunner pods.
-  defaultRedirectUrl: http://localhost/login/oidc/dex
-  defaultBackUrl: http://localhost
+  defaultRedirectUrl: useDomain
+  defaultBackUrl: useDomain
   documentation_description: "This documentation contains the endpoints on your commonground gateway.
 
 # Authentication
@@ -71,15 +74,6 @@ security:
   jwt:
     id:
     privateKey:
-  dependencies:
-    brp:
-      auth: apikey
-      location: https://digispoof.common-ground.dev/api/v1/brp
-      apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
-    uc:
-      apikey: 45c1a4b6-59d3-4a6e-86bf-88a872f35845
-      auth: apikey
-      location: http://user-component
 
 php:
   repository: ghcr.io/conductionnl/commonground-gateway-php
@@ -172,14 +166,6 @@ mongodb:
 
 gateway-ui:
     enabled: true
-#    TODO: Let these urls use the APP_URL / domain to keep it abstract
-    apiUrl: "https://gateway.local/api"
-    meUrl: "https://gateway.local/api/users/me"
-    baseUrl: "https://gateway.local"
-    frontendUrl: "https://pip.local"
-    organization: ""
-    redirectUrl: "vault"
-    adminUrl: "https://gateway.local/admin"
 
 
 podAnnotations: {}
@@ -220,7 +206,6 @@ service:
 ingress:
   enabled: true
   className: "nginx"
-  hostname: gateway.local
   path: /
   pathType: ImplementationSpecific
   annotations: {}

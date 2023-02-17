@@ -235,9 +235,21 @@ spec:
             {{- end}}
                       
             - name: APP_DEFAULT_REDIRECT_URL
+              {{- if and (contains "useDomain" .Values.config.defaultRedirectUrl) (eq "localhost" .Values.global.domain) }}
+              value: "http://localhost/login/oidc/dex"
+              {{ else if contains "useDomain" .Values.config.defaultRedirectUrl }}
+              value: {{ printf "https://%s/login/oidc/dex" .Values.global.domain | quote }}
+              {{ else }}
               value: {{ .Values.config.defaultRedirectUrl }}
+              {{- end}}
             - name: APP_DEFAULT_BACK_URL
+              {{- if and (contains "useDomain" .Values.config.defaultBackUrl) (eq "localhost" .Values.global.domain) }}
+              value: "http://localhost"
+              {{ else if contains "useDomain" .Values.config.defaultBackUrl }}
+              value: "https://"{{ .Values.global.domain }}
+              {{ else }}
               value: {{ .Values.config.defaultBackUrl }}
+              {{- end}}
           #RabbitMQ
             - name: RABBITMQ_HOST
               valueFrom:
