@@ -21,9 +21,9 @@ entries:
       repository: https://charts.bitnami.com/bitnami
       version: 13.4.4
     - condition: gateway-ui.enabled
-      name: skeleton-app
+      name: gateway-ui
       repository: https://raw.githubusercontent.com/ConductionNL/gateway-ui/refinement-demo-branch/helm/
-      version: 0.1.4
+      version: 0.1.0
     description: A Helm chart for Kubernetes
     digest: 78dc85c1f4de10133de305fa43c712ef3f9c1706d52c2719e788f7e79b3cdf3a
     name: commonground-gateway

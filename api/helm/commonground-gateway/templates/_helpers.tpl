@@ -77,6 +77,6 @@ Create the name of the service account to use
 {{- printf "%s-%s" .Release.Name "mongodb" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "skeleton-app.fullname" -}}
-{{- printf "%s-%s" .Release.Name "skeleton-app" | trunc 63 | trimSuffix "-" -}}
+{{- define "gateway-ui.fullname" -}}
+{{- printf "%s-%s" .Release.Name "gateway-ui" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}

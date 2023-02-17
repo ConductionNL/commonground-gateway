@@ -39,7 +39,7 @@ dependencies:
       repository: https://charts.bitnami.com/bitnami
       version: 13.4.4
       condition: mongodb.enabled
-  -   name: skeleton-app
+  -   name: gateway-ui
       repository: https://raw.githubusercontent.com/ConductionNL/gateway-ui/refinement-demo-branch/helm/
-      version: 0.1.4
+      version: 0.1.0
       condition: gateway-ui.enabled
