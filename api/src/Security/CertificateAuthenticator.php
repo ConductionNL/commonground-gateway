@@ -64,6 +64,7 @@ class CertificateAuthenticator extends AbstractAuthenticator
      */
     public function authenticate(Request $request): PassportInterface
     {
+        var_dump('certificate authenticator');
         $certificate = $request->server->get('SSL_CLIENT_CERT');
 
         $application = $this->findApplicationByCertificate($certificate);

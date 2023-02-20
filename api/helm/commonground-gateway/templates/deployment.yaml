@@ -77,6 +77,15 @@ spec:
           emptyDir: {}
         - name: tmpfsphp
           emptyDir: {}
+        {{-  if .Values.security.rootCA }}
+        - name: certificates
+          projected:
+            sources:
+            - secret:  
+                name: {{ include "commonground-gateway.fullname" . }}-rootca
+            - secret:
+                name: {{ include "commonground-gateway.fullname" . }}-tls
+        {{- end }}
 {{/*      initContainers:*/}}
 {{/*          - name: {{ include "commonground-gateway.fullname" . }}-init          */}}
 {{/*            securityContext:*/}}
@@ -376,6 +385,11 @@ spec:
                 name: tmpfsnginx
               - mountPath: /var/run
                 name: tmpfsnginx2
+              - mountPath: /var/certs
+                name: app-certificates
+                readOnly: true
+              - mountPath: /var/certs/rootCA.crt
+                name: certificates
           env:
             - name: PHP_SERVICE
               value: localhost
@@ -385,9 +399,14 @@ spec:
               value: localhost
             - name: NGINX_ENV
               value: {{ .Values.config.env }}
+            - name: DOMAIN
+              value: api.{{ .Values.global.domain }}
           ports:
             - name: http
               containerPort: 8080
+              protocol: TCP
+            - name: https
+              containerPort: 443
               protocol: TCP
           livenessProbe:
             httpGet:

@@ -11,5 +11,9 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    - port: {{ .Values.service.sslport }}
+      targetPort: https
+      protocol: TCP
+      name: https
   selector:
     {{- include "commonground-gateway.selectorLabels" . | nindent 4 }}
