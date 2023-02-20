@@ -13,80 +13,137 @@ monolog:
         - object
         - call
         - installation
+        - mapping
 
 when@dev:
     monolog:
         handlers:
             main:
                 type: stream
-#                path: php://stderr
+                #                path: php://stderr
                 level: debug
                 channels: ["!event"]
             nested:
-                type: stream
+                type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.log"
                 level: debug
-                formatter: monolog.formatter.json
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
             endpointLog:
-                type: stream
+                type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.endpoint.log"
                 level: debug
-                formatter: monolog.formatter.json
                 channels: ["endpoint"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
             requestLog:
-                type: stream
+                type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.request.log"
                 level: debug
-                formatter: monolog.formatter.json
                 channels: ["request"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
             schemaLog:
-                type: stream
+                type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.schema.log"
                 level: debug
-                formatter: monolog.formatter.json
                 channels: ["schema"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
             cronjobLog:
-                type: stream
+                type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.cronjob.log"
                 level: debug
-                formatter: monolog.formatter.json
                 channels: ["cronjob"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
             actionLog:
-                type: stream
-                path: "%kernel.logs_dir%/%kernel.environment%.action.log"
+                type: mongo
                 level: debug
-                formatter: monolog.formatter.json
                 channels: ["action"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
+            
+            
             objectLog:
-                type: stream
+                type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.object.log"
                 level: debug
                 formatter: monolog.formatter.json
                 channels: ["object"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
             synchronizationLog:
-                type: stream
+                type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.synchronization.log"
                 level: debug
-                formatter: monolog.formatter.json
                 channels: ["synchronization"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
             pluginLog:
-                type: stream
+                type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.synchronization.log"
                 level: debug
-                formatter: monolog.formatter.json
                 channels: ["plugin"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
             cacheLog:
-                type: stream
+                type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.cache.log"
                 level: debug
-                formatter: monolog.formatter.json
                 channels: ["cache"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
+            mappingLog:
+                type: mongo
+                path: "%kernel.logs_dir%/%kernel.environment%.cache.log"
+                level: debug
+                channels: ["mapping"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
             callLog:
-                type: stream
+                type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.call.log"
                 level: debug
-                formatter: monolog.formatter.json
                 channels: ["call"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
             # uncomment to get logging in your browser
             # you may have to allow bigger header sizes in your Web server configuration
             #firephp:
@@ -126,7 +183,7 @@ when@prod:
             nested:
                 type: stream
                 path: "%kernel.logs_dir%/%kernel.environment%.log"
-                level: debug
+                level: info
                 formatter: monolog.formatter.json
             console:
                 type: console
@@ -136,3 +193,115 @@ when@prod:
                 type: stream
                 channels: [deprecation]
                 path: php://stderr
+            endpointLog:
+                type: mongo
+                path: "%kernel.logs_dir%/%kernel.environment%.endpoint.log"
+                level: info
+                channels: ["endpoint"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
+            requestLog:
+                type: mongo
+                path: "%kernel.logs_dir%/%kernel.environment%.request.log"
+                level: info
+                channels: ["request"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
+            schemaLog:
+                type: mongo
+                path: "%kernel.logs_dir%/%kernel.environment%.schema.log"
+                level: info
+                channels: ["schema"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
+            cronjobLog:
+                type: mongo
+                path: "%kernel.logs_dir%/%kernel.environment%.cronjob.log"
+                level: info
+                channels: ["cronjob"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
+            actionLog:
+                type: mongo
+                level: info
+                channels: ["action"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
+
+
+            objectLog:
+                type: mongo
+                path: "%kernel.logs_dir%/%kernel.environment%.object.log"
+                level: info
+                formatter: monolog.formatter.json
+                channels: ["object"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
+            synchronizationLog:
+                type: mongo
+                path: "%kernel.logs_dir%/%kernel.environment%.synchronization.log"
+                level: info
+                channels: ["synchronization"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
+            pluginLog:
+                type: mongo
+                path: "%kernel.logs_dir%/%kernel.environment%.synchronization.log"
+                level: info
+                channels: ["plugin"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
+            cacheLog:
+                type: mongo
+                path: "%kernel.logs_dir%/%kernel.environment%.cache.log"
+                level: info
+                channels: ["cache"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
+            mappingLog:
+                type: mongo
+                path: "%kernel.logs_dir%/%kernel.environment%.cache.log"
+                level: info
+                channels: ["mapping"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
+            callLog:
+                type: mongo
+                path: "%kernel.logs_dir%/%kernel.environment%.call.log"
+                level: info
+                channels: ["call"]
+                mongo:
+                    host: "%cache_url%"
+                    database: logs
+                    collection: logs
+                    id: monolog.logger.mongo
