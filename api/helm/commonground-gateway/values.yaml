@@ -6,6 +6,7 @@ replicaCount: 2
 
 global:
   domain: localhost
+  tls: true
 
 config:
   env: prod

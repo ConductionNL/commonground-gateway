@@ -41,5 +41,5 @@ dependencies:
       condition: mongodb.enabled
   -   name: gateway-ui
       repository: https://raw.githubusercontent.com/ConductionNL/gateway-ui/refinement-demo-branch/helm/
-      version: 0.1.2
+      version: 0.1.6
       condition: gateway-ui.enabled
