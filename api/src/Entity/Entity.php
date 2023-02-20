@@ -995,7 +995,7 @@ class Entity
             foreach ($schema['required'] as $required) {
                 $attribute = $this->getAttributeByName($required);
                 //We can only set the atribute on required if it exisits so.
-                if ($attribute === true) {
+                if ($attribute instanceof Attribute === true) {
                     $attribute->setRequired(true);
                 }
             }
@@ -1060,7 +1060,7 @@ class Entity
             $attribute->getExample() && $property['example'] = $attribute->getExample();
 
             // What if we have an $object entity.
-            if ($objectEntity === true) {
+            if ($objectEntity instanceof ObjectEntity === true) {
                 if ($attribute->getType() != 'object') {
                     $property['value'] = $objectEntity->getValue($attribute);
                 } elseif ($attribute->getMultiple()) {
