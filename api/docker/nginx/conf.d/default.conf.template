@@ -12,12 +12,12 @@ server {
     server_name localhost;
     ssl_certificate /var/certs/localhost.crt;
     ssl_certificate_key /var/certs/localhost.key;
+    if(-f /var/certs/rootCA.crt) {
+        ssl_client_certificate /var/certs/rootCA.crt;
 
-    ssl_client_certificate /var/certs/rootCA.crt;
-
-    ssl_verify_client optional;
-    ssl_verify_depth 2;
-
+        ssl_verify_client optional;
+        ssl_verify_depth 4;
+    }
     root /srv/api/public;
 
     add_header Content-Security-Policy $csp;

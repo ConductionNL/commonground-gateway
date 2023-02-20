@@ -523,4 +523,23 @@ class Application
 
         return $this;
     }
+
+    /**
+     * @return array
+     */
+    public function getCertificates(): array
+    {
+        return $this->certificates;
+    }
+
+    /**
+     * @param array|null $certificates
+     * @return Application
+     */
+    public function setCertificates(?array $certificates): self
+    {
+        $this->certificates = $certificates;
+
+        return $this;
+    }
 }
