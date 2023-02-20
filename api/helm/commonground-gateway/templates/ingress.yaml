@@ -44,7 +44,7 @@ spec:
   {{- end }}
   {{- end }}
   rules:
-    - host: {{ $.Values.global.domain }}
+    - host: api.{{ $.Values.global.domain }}
       http:
         paths:
           - path: {{ $.Values.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}{{ if not (eq .Values.ingress.path "/") }}(/|$){{ end }}(.*){{ end }}
@@ -59,20 +59,6 @@ spec:
                   number: {{ $svcPort }}
               {{- else }}
               serviceName: {{ $fullName }}
-              servicePort: {{ $svcPort }}
-              {{- end }}
-          - path: {{ .Values.ingress.path }}/admin
-            {{- if and .Values.ingress.pathType (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.GitVersion) }}
-            pathType: {{ .Values.ingress.pathType }}
-            {{- end }}
-            backend:
-              {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
-              service:
-                name: {{ $gatewayUi }}
-                port:
-                  number: {{ $svcPort }}
-              {{- else }}
-              serviceName: {{ $gatewayUi }}
               servicePort: {{ $svcPort }}
               {{- end }}
     {{- range .Values.ingress.hosts }}

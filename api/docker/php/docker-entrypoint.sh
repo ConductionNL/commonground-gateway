@@ -44,7 +44,7 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 
 	# Lets check if we have al the data that we need
 	echo "Initializing the gateway"
-	bin/console commongateway:initialize -data
+	bin/console commongateway:initialize
 
 fi
 exec docker-php-entrypoint "$@"
