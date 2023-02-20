@@ -7,9 +7,12 @@ dependencies:
   version: 17.3.11
 - name: rabbitmq
   repository: https://charts.bitnami.com/bitnami
-  version: 9.0.1
+  version: 11.9.1
 - name: mongodb
   repository: https://charts.bitnami.com/bitnami
   version: 13.4.4
-digest: sha256:8e66adc76879f1ec10a3d96b869d28f8cf34274e3fe602df2fc4553e2f611d59
-generated: "2022-11-30T09:43:43.423630559+01:00"
+- name: gateway-ui
+  repository: https://raw.githubusercontent.com/ConductionNL/gateway-ui/refinement-demo-branch/helm/
+  version: 0.1.6
+digest: sha256:9f8d5ea18657ea18c6d4827f8c91a91dc4e7dd7436678641d4ddf1b94e5dd14f
+generated: "2023-02-20T11:53:07.521640388+01:00"

@@ -254,7 +254,9 @@ class Endpoint
     private ?string $defaultContentType = 'application/json';
 
     /**
-     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="endpoints")
+     * @deprecated
+     *
+     * @ORM\ManyToOne(targetEntity=Entity::class)
      */
     private $entity;
 
@@ -498,6 +500,18 @@ class Endpoint
     public function setPath(array $path): self
     {
         $this->path = $path;
+
+        return $this;
+    }
+
+    public function getParameters(): ?array
+    {
+        return $this->parameters;
+    }
+
+    public function setParameters(array $parameters): self
+    {
+        $this->parameters = $parameters;
 
         return $this;
     }

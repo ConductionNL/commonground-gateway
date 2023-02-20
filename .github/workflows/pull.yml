@@ -1,0 +1,72 @@
+name: Docker Image CI Pull
+
+on:
+  pull_request:
+    branches:
+      - main
+      - development
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+      - name: Default Environment Variables
+        run:
+          echo "https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables";
+          echo "GITHUB_WORKFLOW is $GITHUB_WORKFLOW";
+          echo "GITHUB_WORKFLOW_REF is $GITHUB_WORKFLOW_REF";
+          echo "GITHUB_RUN_ATTEMPT is $GITHUB_RUN_ATTEMPT";
+          echo "GITHUB_REF is $GITHUB_REF";
+          echo "GITHUB_REF_NAME is $GITHUB_REF_NAME";
+          echo "GITHUB_REF_PROTECTED is $GITHUB_REF_PROTECTED";
+          echo "GITHUB_HEAD_REF is $GITHUB_HEAD_REF";
+          echo "GITHUB_BASE_REF is $GITHUB_BASE_REF";
+      - name: Create vendor folder
+        run: | 
+          mkdir api/vendor
+          chmod +777 api/vendor
+          chmod +777 -R api/public
+      - name: Setting APP_NAME
+        run: |
+          export NAME=$(grep APP_NAME= .env | cut -d '=' -f2)
+          echo "APP_NAME=$NAME" >> $GITHUB_ENV
+      - name: Print app name
+        run: echo "APP_NAME = $APP_NAME"
+      - name: Setting APP_ENV to dev
+        run: |
+          echo "APP_ENV=dev">> $GITHUB_ENV
+          echo "set APP_ENV to $APP_ENV"
+      - name: Setting APP_ENV to prod
+        if: contains( github.ref, 'main' ) || contains( github.base_ref, 'main' )
+        run: |
+          echo "APP_ENV=prod">> $GITHUB_ENV
+          echo "set APP_ENV to $APP_ENV"
+      - name: Print definitive APP_ENV
+        run: echo "APP_ENV is now $APP_ENV and APP_BUILD is now $APP_BUILD"
+      - name: Build the Docker image
+        run: docker-compose build --build-arg APP_ENV=$APP_ENV --build-arg APP_BUILD=$APP_BUILD --build-arg APP_BUILD_ALL_FIXTURES=true
+      - name: Run the docker image
+        run: docker-compose up -d
+      - name: Taking some sleep (for containers to come up)
+        run: sleep 120
+      - name: Check if all containers are running
+        run: docker ps
+      - name: Dumping the logs
+        run: docker-compose logs
+      - name: Database Update
+        run: docker-compose exec -T php bin/console doctrine:schema:update --force
+      - name: Create kube config
+        id: kubeconfig
+        if: contains( github.ref, 'development' )
+        run: |
+          if [ "${{ secrets.KUBECONFIG }}" != "" ]; then
+            printf "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+            echo "##[set-output name=success]true"
+          else
+            echo "##[set-output name=success]false"
+          fi
+      - name: Chores
+        if: (success() || failure())
+        run: docker-compose down
