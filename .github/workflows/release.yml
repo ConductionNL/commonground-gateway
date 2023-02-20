@@ -1,0 +1,133 @@
+name: Docker Image CI Release
+on:
+  push:
+    branches:
+      - main
+      - development
+      - version-*
+      - feature-*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+      - name: Default Environment Variables
+        run:
+          echo "https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables";
+          echo "GITHUB_WORKFLOW is $GITHUB_WORKFLOW";
+          echo "GITHUB_WORKFLOW_REF is $GITHUB_WORKFLOW_REF";
+          echo "GITHUB_RUN_ATTEMPT is $GITHUB_RUN_ATTEMPT";
+          echo "GITHUB_REF is $GITHUB_REF";
+          echo "GITHUB_REF_NAME is $GITHUB_REF_NAME";
+          echo "GITHUB_REF_PROTECTED is $GITHUB_REF_PROTECTED";
+      - name: Export release code
+        if: (success() || failure())
+        id: releasecode #version number in a more comprehensible format: 0.1.YearMonthDay in UTC
+        run: |
+          export VERSION=$(grep APP_VERSION= .env | cut -d '=' -f2)
+          export RELEASE=$VERSION.$(date --utc +%y%m%d)
+          echo "RELEASE=$RELEASE" >> $GITHUB_ENV
+      - name: Create vendor folder
+        run: | 
+          mkdir api/vendor
+          chmod +777 api/vendor
+          chmod +777 -R api/public
+      - name: Setting APP_NAME
+        run: |
+          export NAME=$(grep APP_NAME= .env | cut -d '=' -f2)
+          echo "APP_NAME=$NAME" >> $GITHUB_ENV
+      - name: Print app name
+        run: echo "APP_NAME = $APP_NAME"
+      - name: Setting APP_ENV to dev
+        run: |
+          echo "APP_ENV=dev">> $GITHUB_ENV
+          echo "set APP_ENV to dev, see Print definitive APP_ENV"
+      - name: Setting APP_ENV to prod
+        if: contains( github.ref, 'main' )
+        run: |
+          echo "APP_ENV=prod">> $GITHUB_ENV
+          echo "settin APP_ENV to prod, see Print definitive APP_ENV"
+      - name: Setting APP_ENV to version or feature
+        if: contains( github.ref, 'version-' ) || contains( github.ref, 'feature-')
+        run: |
+          GENERAL_TAG=$GITHUB_REF_NAME
+          export GENERAL_TAG=${GENERAL_TAG//-/}
+          echo "APP_ENV=$GENERAL_TAG">> $GITHUB_ENV
+          echo "setting APP_ENV to $GENERAL_TAG, see Print definitive APP_ENV"
+      - name: Print definitive APP_ENV
+        run: echo "APP_ENV is now $APP_ENV"
+      - name: Build the Docker image
+        run: docker-compose build --build-arg APP_ENV=$APP_ENV --build-arg APP_BUILD_ALL_FIXTURES=true
+      - name: Run the docker image
+        run: docker-compose up -d
+      - name: Taking some sleep (for containers to come up)
+        run: sleep 120
+      - name: Check if all containers are running
+        run: docker ps
+      - name: Dumping the logs
+        run: docker-compose logs
+      - name: Database Update
+        run: docker-compose exec -T php bin/console doctrine:schema:update --force
+      - if: (github.ref == 'refs/heads/main')
+        name: Add docker tag latest
+        run: |
+          images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
+          for image in $images
+          do
+            docker tag "${image}":${APP_ENV} "${image}":"latest"
+          done
+          echo 'IMAGES=$images' >> $GITHUB_ENV
+      - name: Add docker tags
+        run: |
+          images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
+          for image in $images
+          do
+            docker tag "${image}":${APP_ENV} "${image}":"$GITHUB_REF_NAME.$RELEASE"
+          done
+          echo 'IMAGES=$images' >> $GITHUB_ENV
+      - name: Show all images
+        run: docker images
+      - name: Login to Container Registry
+        id: containerregistry-login
+        run: |
+         if [ "${{ secrets.GITHUB_TOKEN }}" != "" ]; then
+           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $(cut -d'/' -f1 <<< $GITHUB_REPOSITORY) --password-stdin
+           echo "##[set-output name=success;]true"
+         else
+           echo "##[set-output name=success;]false"
+         fi
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' || contains(github.ref, 'version-' ) || contains( github.ref, 'feature-'))
+        name: Push to Container Registry
+        run: docker-compose push
+
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/main')
+        name: Push latest container to Container Registry
+        run: |
+          images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
+          for image in $images
+          do
+            docker push "${image}":"latest"
+          done
+      - if: steps.containerregistry-login.outputs.success == 'true' && (contains(github.ref, 'version-' ) || contains( github.ref, 'feature-'))
+        name: Push versioned containers to Container Registry
+        run: |
+          images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
+          for image in $images
+          do
+            docker push "${image}":"$GITHUB_REF_NAME.$RELEASE"
+          done
+      - name: Create kube config
+        id: kubeconfig
+        if: contains( github.ref, 'development' )
+        run: |
+          if [ "${{ secrets.KUBECONFIG }}" != "" ]; then
+            printf "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+            echo "##[set-output name=success]true"
+          else
+            echo "##[set-output name=success]false"
+          fi
+      - name: Chores
+        if: (success() || failure())
+        run: docker-compose down

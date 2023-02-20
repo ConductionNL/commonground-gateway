@@ -994,7 +994,10 @@ class Entity
         if (array_key_exists('required', $schema)) {
             foreach ($schema['required'] as $required) {
                 $attribute = $this->getAttributeByName($required);
-                $attribute->setRequired(true);
+                //We can only set the atribute on required if it exisits so.
+                if ($attribute instanceof Attribute === true) {
+                    $attribute->setRequired(true);
+                }
             }
         }
 
@@ -1056,8 +1059,8 @@ class Entity
             $attribute->getDescription() && $property['description'] = $attribute->getDescription();
             $attribute->getExample() && $property['example'] = $attribute->getExample();
 
-            // What if we have an $object entity
-            if ($objectEntity) {
+            // What if we have an $object entity.
+            if ($objectEntity instanceof ObjectEntity === true) {
                 if ($attribute->getType() != 'object') {
                     $property['value'] = $objectEntity->getValue($attribute);
                 } elseif ($attribute->getMultiple()) {
@@ -1066,7 +1069,12 @@ class Entity
                 $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
             }
 
-            // Zetten van de property
+            // What if the atribute is hooked to an object.
+            if ($attribute->getType() === 'object' && $attribute->getObject() === true) {
+                $property['$ref'] = '#/components/schemas/'.$attribute->getObject()->getName();
+            }
+
+            // Zetten van de property.
             $schema['properties'][$attribute->getName()] = $property;
 
             // Add the validators

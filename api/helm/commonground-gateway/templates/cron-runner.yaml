@@ -156,6 +156,11 @@ spec:
                               secretKeyRef:
                                   key: mongodb-url
                                   name: {{ include "commonground-gateway.fullname" . }}
+                        - name: GLOBAL_DOMAIN
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: global-domain
+                                  name: {{ include "commonground-gateway.fullname" . }}
                         - name: APP_URL
                           valueFrom:
                               configMapKeyRef:

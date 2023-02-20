@@ -504,6 +504,18 @@ class Endpoint
         return $this;
     }
 
+    public function getParameters(): ?array
+    {
+        return $this->parameters;
+    }
+
+    public function setParameters(array $parameters): self
+    {
+        $this->parameters = $parameters;
+
+        return $this;
+    }
+
     public function getMethods(): ?array
     {
         return $this->methods;

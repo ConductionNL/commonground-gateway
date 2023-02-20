@@ -26,8 +26,6 @@ security:
 #                    - Conduction\SamlBundle\Security\CommongroundSamlAdfsAuthenticator
 #                    - App\Security\DigispoofAuthenticator
 #                    - App\Security\OauthAuthenticator
-#                    - App\Security\BasicAuthAuthenticator
-#                    - App\Security\UserTokenAuthenticator
 #                entry_point: App\Security\UserTokenAuthenticator
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication

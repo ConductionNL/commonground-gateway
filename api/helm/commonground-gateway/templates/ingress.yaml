@@ -1,6 +1,7 @@
 {{- if .Values.ingress.enabled -}}
 {{- $fullName := include "commonground-gateway.fullname" . -}}
 {{- $svcPort := .Values.service.port -}}
+{{- $gatewayUi := include "commonground-gateway.fullname" . -}} 
 {{- if and .Values.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.Version)) }}
 {{- if not (hasKey .Values.ingress.annotations "kubernetes.io/ingress.class") }}
 {{- $_ := set .Values.ingress.annotations "kubernetes.io/ingress.class" .Values.ingress.className}}
@@ -19,6 +20,9 @@ metadata:
   labels:
   {{- include "commonground-gateway.labels" . | nindent 4 }}
   annotations:
+    {{- if .Values.global.tls }}
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+      {{- end }}
     {{ if eq .Values.ingress.className "nginx" }}
     nginx.ingress.kubernetes.io/rewrite-target: {{ if eq .Values.ingress.path "/" }}/$1{{ else }}/$2{{ end }}
     {{ end }}
@@ -42,8 +46,14 @@ spec:
       secretName: {{ .secretName }}
   {{- end }}
   {{- end }}
+    {{- if .Values.global.tls }}
+  tls:
+    - hosts:
+          - api.{{ .Values.global.domain }}
+      secretName: {{ $fullName }}-tls
+      {{- end }}
   rules:
-    - host: {{ $.Values.ingress.hostname }}
+    - host: api.{{ $.Values.global.domain }}
       http:
         paths:
           - path: {{ $.Values.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}{{ if not (eq .Values.ingress.path "/") }}(/|$){{ end }}(.*){{ end }}
