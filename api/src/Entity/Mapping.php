@@ -63,13 +63,13 @@ class Mapping
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $reference;
+    private ?string $reference;
 
     /**
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $version;
+    private ?string $version;
 
     /**
      * @var string The name of the mapping
@@ -221,7 +221,7 @@ class Mapping
         return $this->version;
     }
 
-    public function setversion(string $version): self
+    public function setversion(?string $version): self
     {
         $this->version = $version;
 
