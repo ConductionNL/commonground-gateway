@@ -39,6 +39,8 @@ class CertificateAuthenticator extends AbstractAuthenticator
      */
     public function supports(Request $request): ?bool
     {
+        var_dump($request->headers->all());
+
         return $request->server->get('SSL_CLIENT_VERIFY') !== ""
             && $request->server->get('SSL_CLIENT_CERT') !== ""
             && $request->server->get('SSL_CLIENT_S_DN') !== ""
