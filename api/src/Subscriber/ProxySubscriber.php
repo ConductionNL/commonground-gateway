@@ -66,7 +66,8 @@ class ProxySubscriber implements EventSubscriberInterface
             $result = $this->callService->call(
                 $source,
                 $endpoint,
-                $method,[
+                $method,
+                [
                     'query'   => $event->getRequest()->query->all(),
                     'body'    => $event->getRequest()->getContent(),
                 ]
