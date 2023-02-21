@@ -6,6 +6,7 @@ on:
       - development
       - version-*
       - feature-*
+      - feature/*
 
 jobs:
   build:
@@ -98,7 +99,7 @@ jobs:
          else
            echo "##[set-output name=success;]false"
          fi
-      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' || contains(github.ref, 'version-' ) || contains( github.ref, 'feature-'))
+      - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' || contains(github.ref, 'version-' ) || contains( github.ref, 'feature-' ) || contains( github.ref, 'feature/'))
         name: Push to Container Registry
         run: docker-compose push
 
