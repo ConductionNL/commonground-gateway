@@ -2,23 +2,16 @@
 
 namespace App\Controller;
 
-use App\Service\AuthorizationService;
-use App\Service\EavService;
 use App\Service\OasDocumentationService;
-use Conduction\CommonGroundBundle\Service\SerializerService;
-use Doctrine\ORM\EntityManagerInterface;
+use CommonGateway\CoreBundle\Service\OasService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Contracts\Cache\CacheInterface;
-use CommonGateway\CoreBundle\Service\OasService;
-
 
 class EavController extends AbstractController
 {
@@ -34,7 +27,7 @@ class EavController extends AbstractController
 
     /**
      * @param SerializerInterface $serializer The serializer
-     * @param OasService $oasService The OAS service
+     * @param OasService          $oasService The OAS service
      */
     public function __construct(
         SerializerInterface $serializer,

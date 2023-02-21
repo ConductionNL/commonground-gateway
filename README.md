@@ -54,13 +54,13 @@ $ helm install [my-gateway] common-gateway/gateway-ui --kubeconfig=[path-to-your
 This will install the gateway in a barebone and production setup on the latest version (you can log versions trough the version flag e.g. `--version 2.2`. To further configure the gateway we need to set somme envirenmental values. A full option list can be found [here](). Lets for now assume that you want to swith your gateway from prod to devmode, enable cronrunners for asynchronus resource handling, add a domain name to make the gateway publicly accable and last but not least use lets encryped to provide an ssl/https connection.  In helm we use the `--set` flag to set values. So the total upgrade command would look like: 
 
 ````helm
-$ helm upgrade [my-gateway] --kubeconfig=[path-to-your-kubeconfig] --set  gateway.enabled=true, pwa.apiUrl=https://[your-domain]/api, pwa.meUrl=https://[your-domain]/me, pwa.baseUrl=https://[your-domain], pwa.frontendUrl=https://[your-domain], pwa.adminUrl=https://[your-domain], ingress.enabled=true, ingress.hostname=[your-domain], ingress.hostname=[your-domain], ingress.annotations.cert-manager\.io/cluster-manager=letsencrypt-prod, ingress.tls.0.hosts.0=[your-domain], ingress.tls.0.secretName=[your-domain but replace . with -]-tls, gateway.cronrunner.enabled=true
+$ helm upgrade [my-gateway] --kubeconfig=[path-to-your-kubeconfig] --set  gateway.enabled=true, pwa.apiUrl=https://[your-domain]/api, pwa.meUrl=https://[your-domain]/me, pwa.baseUrl=https://[your-domain], pwa.frontendUrl=https://[your-domain], pwa.adminUrl=https://[your-domain], ingress.enabled=true, global.domain=[your-domain], ingress.hostname=[your-domain], ingress.annotations.cert-manager\.io/cluster-manager=letsencrypt-prod, ingress.tls.0.hosts.0=[your-domain], ingress.tls.0.secretName=[your-domain but replace . with -]-tls, gateway.cronrunner.enabled=true
 ````
 
 Or for the headles version
 
 ````helm
-$ helm upgrade [my-gateway] --kubeconfig=[path-to-your-kubeconfig] --set cronrunner.enabled=true,php.tag=dev,nginx.tag=dev,ingress.enabled=true,ingress.hostname=[my-domain.com],tls.0.hosts.0=[my-domain.com],tls.0.secretName=[my-domain]-tls,ingress.annotations.cert-manager\.io/cluster-manager=letsencrypt-prod
+$ helm upgrade [my-gateway] --kubeconfig=[path-to-your-kubeconfig] --set cronrunner.enabled=true,php.tag=dev,nginx.tag=dev,ingress.enabled=true,global.domain=[my-domain.com],tls.0.hosts.0=[my-domain.com],tls.0.secretName=[my-domain]-tls,ingress.annotations.cert-manager\.io/cluster-manager=letsencrypt-prod
 ````
 
 Alternativly you can just use kubernetes dashboard to change the helm values file.

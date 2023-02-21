@@ -20,8 +20,5 @@ return [
     CommonGateway\CoreBundle\CoreBundle::class                                 => ['all' => true],
     Endroid\QrCodeBundle\EndroidQrCodeBundle::class                            => ['all' => true],
     Symfony\Bundle\MonologBundle\MonologBundle::class                          => ['all' => true],
-    CommonGateway\ZGWBundle\ZGWBundle::class                                   => ['all' => true],
-    CommonGateway\KlantenBundle\KlantenBundle::class                           => ['all' => true],
-    CommonGateway\HuwelijksplannerBundle\HuwelijksplannerBundle::class         => ['all' => true],
-    CommonGateway\BRPBundle\BRPBundle::class                                   => ['all' => true],
+    LarpingBase\LarpingBundle\LarpingBundle::class                             => ['all' => true],
 ];

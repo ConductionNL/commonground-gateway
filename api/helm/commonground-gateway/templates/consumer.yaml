@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "commonground-gateway.fullname" . }}
+  name: {{ include "commonground-gateway.fullname" . }}-worker
   labels:
     {{- include "commonground-gateway.labels" . | nindent 4 }}
 spec:
@@ -50,48 +50,12 @@ spec:
             {{ end }}
             defaultMode: 420
         {{- end }}
-        {{- if .Values.fixtures }}
-        - name: fixtures
-          configMap:
-            name: {{ include "commonground-gateway.fullname" . }}-fixtures
-            defaultMode: 420
-        {{- end }}
-        {{- if .Values.config.samesiteCookie}}
-        - name: framework
-          configMap:
-            name: {{ include "commonground-gateway.fullname" . }}-framework
-            defaultMode: 420
-        {{- end }}
-        {{- if eq .Values.databaseType "mssql" }}
-        - name: doctrine
-          configMap:
-            name: {{ include "commonground-gateway.fullname" . }}-doctrineconfig
-            defaultMode: 420
-        {{- end }}
-{{/*        - name: vendor*/}}
-{{/*          persistentVolumeClaim:*/}}
-{{/*              claimName: {{ include "commonground-gateway.fullname" . }}-vendor*/}}
-        - name: tmpfsnginx
-          emptyDir: {}
-        - name: tmpfsnginx2
-          emptyDir: {}
-        - name: tmpfsphp
-          emptyDir: {}
-{{/*      initContainers:*/}}
-{{/*          - name: {{ include "commonground-gateway.fullname" . }}-init          */}}
-{{/*            securityContext:*/}}
-{{/*              {{- toYaml .Values.securityContextPhp | nindent 14 }}*/}}
-{{/*            image: "{{ .Values.php.repository }}:{{ .Values.php.tag | default .Chart.AppVersion }}"*/}}
-{{/*            imagePullPolicy: {{ .Values.php.pullPolicy }}*/}}
-{{/*            volumeMounts:*/}}
-{{/*              - mountPath: /tmp/vendor*/}}
-{{/*                name: vendor*/}}
-{{/*                readOnly: false*/}}
-{{/*            command:*/}}
-{{/*              - bash*/}}
-{{/*              - /srv/api/docker/php/online-copy-vendor.sh*/}}
+        - name: vendor
+          persistentVolumeClaim:
+              claimName: {{ include "commonground-gateway.fullname" . }}-vendor
+
       containers:
-        - name: {{ include "commonground-gateway.fullname" . }}-php
+        - name: {{ include "commonground-gateway.fullname" . }}-worker
           securityContext:
             {{- toYaml .Values.securityContextPhp | nindent 12 }}
           image: "{{ .Values.php.repository }}:{{ .Values.php.tag | default .Chart.AppVersion }}"
@@ -103,9 +67,6 @@ spec:
               subPath: dependencies.yaml
               name: dependencies
               readOnly: true
-            - mountPath: /srv/api/var
-              name: tmpfsphp
-              readOnly: false
             - mountPath: /var/run/certs
               name: app-certificates
               readOnly: true
@@ -113,24 +74,7 @@ spec:
             - mountPath: /var/run/idp
               name: idp-certificate
               readOnly: true
-            {{- end }}
-            {{- if .Values.fixtures }}
-            - mountPath: /srv/api/fixtures
-              name: fixtures
-              readOnly: true
-            {{- end }}
-            {{- if .Values.config.samesiteCookie}}
-            - mountPath: /srv/api/config/packages/prod/framework.additions.yaml
-              subPath: framework.yaml
-              name: framework
-              readOnly: true
-            {{- end }}
-            {{- if eq .Values.databaseType "mssql" }}
-            - mountPath: /srv/api/config/packages/prod/doctrine.yaml
-              subPath: doctrine.yaml
-              name: doctrine
-              readOnly: true
-            {{- end }}
+            {{- end }}            
 {{/*            - mountPath: /srv/api/vendor*/}}
 {{/*              subPath: vendor*/}}
 {{/*              name: vendor*/}}
@@ -147,6 +91,11 @@ spec:
 {{/*              subPath: symfony.lock*/}}
 {{/*              name: vendor*/}}
 {{/*              readOnly: false*/}}
+          args:
+              - bin/console
+              - messenger:consume
+              - async
+              - -vvv
           env:
             - name: APP_ENV
               value: {{ .Values.config.env }}
@@ -194,11 +143,11 @@ spec:
                 secretKeyRef:
                   key: database-url
                   name: {{ include "commonground-gateway.fullname" . }}
-            - name: CACHE_URL
+            - name: GLOBAL_DOMAIN
               valueFrom:
-                  secretKeyRef:
-                      key: mongodb-url
-                      name: {{ include "commonground-gateway.fullname" . }}
+                configMapKeyRef:
+                  key: global-domain
+                  name: {{ include "commonground-gateway.fullname" . }}
             - name: APP_URL
               valueFrom:
                 configMapKeyRef:
@@ -206,39 +155,33 @@ spec:
                   name: {{ include "commonground-gateway.fullname" . }}
             - name: READ_ONLY
               value: {{ .Values.config.readOnly | quote }}
-            -   name: CRON_RUNNER_ENABLED
-                valueFrom:
-                    configMapKeyRef:
-                        key: cron-runner-enabled
-                        name: {{ include "commonground-gateway.fullname" . }}
+            - name: CRON_RUNNER_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  key: cron-runner-enabled
+                  name: {{ include "commonground-gateway.fullname" . }}
             {{- if .Values.config.cronRunner.enabled }}
-            -   name: CRON_RUNNER_CRONTAB
-                valueFrom:
-                    configMapKeyRef:
-                        key: cron-runner-crontab
-                        name: {{ include "commonground-gateway.fullname" . }}
-            -   name: CRON_RUNNER_CONCURRENCY_POLICY
-                valueFrom:
-                    configMapKeyRef:
-                        key: cron-runner-concurrencyPolicy
-                        name: {{ include "commonground-gateway.fullname" . }}
-            -   name: CRON_RUNNER_ACTIVE_DEADLINE_SECONDS
-                valueFrom:
-                    configMapKeyRef:
-                        key: cron-runner-activeDeadlineSeconds
-                        name: {{ include "commonground-gateway.fullname" . }}
-            -   name: CRON_RUNNER_APP_AUTH
-                valueFrom:
-                    configMapKeyRef:
-                        key: cron-runner-appAuth
-                        name: {{ include "commonground-gateway.fullname" . }}
-            {{- end}}
-                      
-            - name: APP_DEFAULT_REDIRECT_URL
-              value: {{ .Values.config.defaultRedirectUrl }}
-            - name: APP_DEFAULT_BACK_URL
-              value: {{ .Values.config.defaultBackUrl }}
-          #RabbitMQ
+            - name: CRON_RUNNER_CRONTAB
+              valueFrom:
+                configMapKeyRef:
+                  key: cron-runner-crontab
+                  name: {{ include "commonground-gateway.fullname" . }}
+            - name: CRON_RUNNER_CONCURRENCY_POLICY
+              valueFrom:
+                configMapKeyRef:
+                  key: cron-runner-concurrencyPolicy
+                  name: {{ include "commonground-gateway.fullname" . }}
+            - name: CRON_RUNNER_ACTIVE_DEADLINE_SECONDS
+              valueFrom:
+                configMapKeyRef:
+                  key: cron-runner-activeDeadlineSeconds
+                  name: {{ include "commonground-gateway.fullname" . }}
+            - name: CRON_RUNNER_APP_AUTH
+              valueFrom:
+                configMapKeyRef:
+                  key: cron-runner-appAuth
+                  name: {{ include "commonground-gateway.fullname" . }}
+            {{- end }}
             - name: RABBITMQ_HOST
               valueFrom:
                   configMapKeyRef:
@@ -348,47 +291,12 @@ spec:
             {{- end }}
             {{- end }}
             {{- if .Values.config.httpsProxy }}
-            - name: HTTPS_PROXY
-              value: {{ .Values.config.httpsProxy }}
+            -   name: HTTPS_PROXY
+                value: {{ .Values.config.httpsProxy }}
             {{- end }}
 
           resources:
             {{- toYaml .Values.php.resources | nindent 12 }}
-        - name: {{ include "commonground-gateway.fullname" . }}-nginx
-          securityContext:
-          {{- toYaml .Values.securityContextNginx | nindent 12 }}
-          image: "{{ .Values.nginx.repository }}:{{ .Values.nginx.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.nginx.pullPolicy }}
-          volumeMounts:
-              - mountPath: /var/cache/nginx
-                name: tmpfsnginx
-              - mountPath: /var/run
-                name: tmpfsnginx2
-          env:
-            - name: PHP_SERVICE
-              value: localhost
-            - name: NGINX_HOST
-              value: localhost
-            - name: BACKENDS
-              value: localhost
-            - name: NGINX_ENV
-              value: {{ .Values.config.env }}
-          ports:
-            - name: http
-              containerPort: 8080
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-            initialDelaySeconds: 30
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-            initialDelaySeconds: 30
-          resources:
-            {{- toYaml .Values.nginx.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -401,4 +309,3 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      
