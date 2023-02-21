@@ -13,6 +13,6 @@ dependencies:
   version: 13.4.4
 - name: gateway-ui
   repository: https://raw.githubusercontent.com/ConductionNL/gateway-ui/refinement-demo-branch/helm/
-  version: 0.1.7
-digest: sha256:26a99dce811f80ca30c88b2d61abd148bae9666e859657bf9bcf932154f9a91c
-generated: "2023-02-20T14:53:19.441438753+01:00"
+  version: 0.1.6
+digest: sha256:9f8d5ea18657ea18c6d4827f8c91a91dc4e7dd7436678641d4ddf1b94e5dd14f
+generated: "2023-02-20T11:53:07.521640388+01:00"
