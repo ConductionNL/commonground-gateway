@@ -9,15 +9,15 @@ server {
 
     error_log /var/log/nginx/error.log debug;
 
-    server_name $domain;
+    server_name localhost;
     ssl_certificate /var/certs/tls.crt;
     ssl_certificate_key /var/certs/tls.key;
-    if (-f "/var/certs/rootCA.crt") {
-        ssl_client_certificate /var/certs/rootCA.crt;
 
-        ssl_verify_client optional;
-        ssl_verify_depth 4;
-    }
+    ssl_client_certificate /var/certs/rootCA.crt;
+
+    ssl_verify_client optional;
+    ssl_verify_depth 4;
+
     root /srv/api/public;
 
     add_header Content-Security-Policy $csp;
