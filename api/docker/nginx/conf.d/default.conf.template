@@ -13,11 +13,6 @@ server {
     ssl_certificate /var/certs/tls.crt;
     ssl_certificate_key /var/certs/tls.key;
 
-    ssl_client_certificate /var/certs/rootCA.crt;
-
-    ssl_verify_client optional;
-    ssl_verify_depth 4;
-
     root /srv/api/public;
 
     add_header Content-Security-Policy $csp;
@@ -57,15 +52,6 @@ server {
 
         fastcgi_buffer_size          128k;
         fastcgi_buffers              4 256k;
-
-        fastcgi_param SSL_CIPHER            $ssl_cipher;
-        fastcgi_param SSL_PROTOCOL          $ssl_protocol;
-        fastcgi_param SSL_CLIENT_VERIFY     $ssl_client_verify;
-        fastcgi_param SSL_CLIENT_CERT       $ssl_client_cert;
-        fastcgi_param SSL_CLIENT_FPRINT     $ssl_client_fingerprint;
-        fastcgi_param SSL_CLIENT_SERIAL     $ssl_client_serial;
-        fastcgi_param SSL_CLIENT_S_DN       $ssl_client_s_dn;
-        fastcgi_param SSL_CLIENT_I_DN       $ssl_client_i_dn;
 
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
         include fastcgi_params;

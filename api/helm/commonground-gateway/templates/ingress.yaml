@@ -25,6 +25,11 @@ metadata:
       {{- end }}
     {{ if eq .Values.ingress.className "nginx" }}
     nginx.ingress.kubernetes.io/rewrite-target: {{ if eq .Values.ingress.path "/" }}/$1{{ else }}/$2{{ end }}
+    nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: 'true'
+    nginx.ingress.kubernetes.io/auth-tls-secret: test/commonground-gateway-rootca
+    nginx.ingress.kubernetes.io/auth-tls-verify: optional_no_ca
+    nginx.ingress.kubernetes.io/auth-tls-verify-depth: '4'
+    nginx.ingress.kubernetes.io/backend-protocol: HTTPS
     {{ end }}
     {{ if eq .Values.ingress.className "traefik"}}
     traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ .Release.Name }}-middleware@kubernetescrd
