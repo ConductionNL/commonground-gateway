@@ -27,7 +27,7 @@ class UserSubscriber implements EventSubscriberInterface
     }//end __construct()
 
     /**
-     * this method can only return the event names; you cannot define a custom method name to execute when each event triggers
+     * this method can only return the event names; you cannot define a custom method name to execute when each event triggers.
      *
      * @return array The events to listen to
      */
@@ -42,7 +42,7 @@ class UserSubscriber implements EventSubscriberInterface
     /**
      * Callback methods must be called exactly like the events they listen to;
      * they receive an argument of type LifecycleEventArgs,
-     * which gives you access to both the entity object of the event and the entity manager itself
+     * which gives you access to both the entity object of the event and the entity manager itself.
      *
      * @param LifecycleEventArgs $args The lifecycleEvents to listen to
      */
@@ -54,7 +54,7 @@ class UserSubscriber implements EventSubscriberInterface
     /**
      * Callback methods must be called exactly like the events they listen to;
      * they receive an argument of type LifecycleEventArgs,
-     * which gives you access to both the entity object of the event and the entity manager itself
+     * which gives you access to both the entity object of the event and the entity manager itself.
      *
      * @param LifecycleEventArgs $args The lifecycleEvents to listen to
      */
@@ -64,7 +64,7 @@ class UserSubscriber implements EventSubscriberInterface
     }//end preUpdate()
 
     /**
-     * Hashes an unhashed password before writing a user to the database
+     * Hashes an unhashed password before writing a user to the database.
      *
      * @param LifecycleEventArgs $args The arguments containing the user to update
      */
