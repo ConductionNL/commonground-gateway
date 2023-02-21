@@ -41,7 +41,10 @@ class CertificateAuthenticator extends AbstractAuthenticator
     {
         return $request->server->get('SSL_CLIENT_VERIFY') !== ""
             && $request->server->get('SSL_CLIENT_CERT') !== ""
-            && $request->server->get('SSL_CLIENT_S_DN') !== "";
+            && $request->server->get('SSL_CLIENT_S_DN') !== ""
+            && $request->server->get('SSL_CLIENT_VERIFY') !== null
+            && $request->server->get('SSL_CLIENT_CERT') !== null
+            && $request->server->get('SSL_CLIENT_S_DN') !== null;
     }
 
     private function findApplicationByCertificate(string $certificate): ?Application
