@@ -5,7 +5,7 @@ map $NGINX_ENV  $csp {
 
 server {
     listen 8080;
-    listen 443 ssl;
+    listen 8443 ssl;
 
     error_log /var/log/nginx/error.log debug;
 

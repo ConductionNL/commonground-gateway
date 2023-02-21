@@ -386,9 +386,6 @@ spec:
               - mountPath: /var/run
                 name: tmpfsnginx2
               - mountPath: /var/certs
-                name: app-certificates
-                readOnly: true
-              - mountPath: /var/certs/rootCA.crt
                 name: certificates
           env:
             - name: PHP_SERVICE
@@ -406,7 +403,7 @@ spec:
               containerPort: 8080
               protocol: TCP
             - name: https
-              containerPort: 443
+              containerPort: 8443
               protocol: TCP
           livenessProbe:
             httpGet:

@@ -236,7 +236,7 @@ securityContextNginx:
 service:
   type: ClusterIP
   port: 80
-  sslport: 443
+  sslport: 8443
 
 ingress:
   enabled: true
