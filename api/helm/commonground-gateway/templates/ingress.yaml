@@ -24,9 +24,8 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
       {{- end }}
     {{ if eq .Values.ingress.className "nginx" }}
-    nginx.ingress.kubernetes.io/rewrite-target: {{ if eq .Values.ingress.path "/" }}/$1{{ else }}/$2{{ end }}
     nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: 'true'
-    nginx.ingress.kubernetes.io/auth-tls-secret: test/commonground-gateway-rootca
+    nginx.ingress.kubernetes.io/auth-tls-secret: {{ .Release.Namespace }}/{{ $fullName }}-rootca
     nginx.ingress.kubernetes.io/auth-tls-verify: optional_no_ca
     nginx.ingress.kubernetes.io/auth-tls-verify-depth: '4'
     nginx.ingress.kubernetes.io/backend-protocol: HTTPS
@@ -61,7 +60,7 @@ spec:
     - host: api.{{ $.Values.global.domain }}
       http:
         paths:
-          - path: {{ $.Values.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}{{ if not (eq .Values.ingress.path "/") }}(/|$){{ end }}(.*){{ end }}
+          - path: {{ $.Values.ingress.path }}
             {{- if and .Values.ingress.pathType (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.Version) }}
             pathType: {{ .Values.ingress.pathType }}
             {{- end }}
