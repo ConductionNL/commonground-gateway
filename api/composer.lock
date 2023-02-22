@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "96ff1661bee678a5929f0528f7cab16d",
+    "content-hash": "e39ad0ce840af3d54f77f7c38039c8df",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -746,16 +746,16 @@
         },
         {
             "name": "common-gateway/huwelijksplanner-bundle",
-            "version": "0.0.29",
+            "version": "0.0.33",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/HuwelijksplannerBundle.git",
-                "reference": "bd471eb79c0eabc48c7eadd5863eb2649ea945eb"
+                "reference": "3d7d460cd855846e9903cfd209a26fba89bfebe4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/HuwelijksplannerBundle/zipball/bd471eb79c0eabc48c7eadd5863eb2649ea945eb",
-                "reference": "bd471eb79c0eabc48c7eadd5863eb2649ea945eb",
+                "url": "https://api.github.com/repos/CommonGateway/HuwelijksplannerBundle/zipball/3d7d460cd855846e9903cfd209a26fba89bfebe4",
+                "reference": "3d7d460cd855846e9903cfd209a26fba89bfebe4",
                 "shasum": ""
             },
             "require": {
@@ -790,9 +790,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/HuwelijksplannerBundle/issues",
-                "source": "https://github.com/CommonGateway/HuwelijksplannerBundle/tree/0.0.29"
+                "source": "https://github.com/CommonGateway/HuwelijksplannerBundle/tree/0.0.33"
             },
-            "time": "2023-02-14T13:25:33+00:00"
+            "time": "2023-02-22T09:28:45+00:00"
         },
         {
             "name": "common-gateway/klanten-bundle",
