@@ -40,6 +40,18 @@
     "brick/reflection": {
         "version": "0.4.1"
     },
+    "common-gateway/brp-bundle": {
+        "version": "0.0.12"
+    },
+    "common-gateway/huwelijksplanner-bundle": {
+        "version": "0.0.29"
+    },
+    "common-gateway/klanten-bundle": {
+        "version": "0.0.22"
+    },
+    "common-gateway/zgw-bundle": {
+        "version": "0.1.20"
+    },
     "commongateway/corebundle": {
         "version": "dev-master"
     },
@@ -195,6 +207,9 @@
     "fig/link-util": {
         "version": "1.1.2"
     },
+    "firebase/php-jwt": {
+        "version": "v6.4.0"
+    },
     "friendsofphp/php-cs-fixer": {
         "version": "2.19",
         "recipe": {
@@ -248,20 +263,23 @@
     "knplabs/knp-markdown-bundle": {
         "version": "1.9.0"
     },
-    "larping-base/larping-bundle": {
-        "version": "1.0.53"
-    },
     "laminas/laminas-code": {
         "version": "4.4.2"
     },
     "laminas/laminas-escaper": {
         "version": "2.9.0"
     },
+    "larping-base/larping-bundle": {
+        "version": "1.0.53"
+    },
     "league/html-to-markdown": {
         "version": "4.10.0"
     },
     "masterminds/html5": {
         "version": "2.7.5"
+    },
+    "messagebird/php-rest-api": {
+        "version": "v3.1.4"
     },
     "michelf/php-markdown": {
         "version": "1.9.0"
