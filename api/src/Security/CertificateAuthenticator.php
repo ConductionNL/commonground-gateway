@@ -52,9 +52,10 @@ class CertificateAuthenticator extends AbstractAuthenticator
     /**
      * Searches an application in the database that contains the certificate.
      *
-     * @throws \Doctrine\ORM\NonUniqueResultException Thrown when more then 1 application contains the certificate.
      *
      * @param string $certificate The certificate to look for.
+     *
+     * @throws \Doctrine\ORM\NonUniqueResultException Thrown when more then 1 application contains the certificate.
      *
      * @return Application|null The resulting application.
      */
