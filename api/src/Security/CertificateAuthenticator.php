@@ -19,7 +19,6 @@ use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 
 class CertificateAuthenticator extends AbstractAuthenticator
 {
-
     /**
      * @var EntityManagerInterface
      */
@@ -39,16 +38,15 @@ class CertificateAuthenticator extends AbstractAuthenticator
      */
     public function supports(Request $request): ?bool
     {
-
         return ($request->server->get('SSL_CLIENT_VERIFY') !== null
             && $request->server->get('SSL_CLIENT_CERT') !== null
             && $request->server->get('SSL_CLIENT_S_DN') !== null)
             || ($request->headers->has('SSL_CLIENT_VERIFY') !== false
             && $request->headers->has('SSL_CLIENT_CERT') !== false
             && $request->headers->has('SSL_CLIENT_SUBJECT_DN') !== false
-            && $request->headers->get('SSL_CLIENT_VERIFY') !== ""
-            && $request->headers->get('SSL_CLIENT_CERT') !== ""
-            && $request->headers->get('SSL_CLIENT_SUBJECT_DN') !== "");
+            && $request->headers->get('SSL_CLIENT_VERIFY') !== ''
+            && $request->headers->get('SSL_CLIENT_CERT') !== ''
+            && $request->headers->get('SSL_CLIENT_SUBJECT_DN') !== '');
     }
 
     private function findApplicationByCertificate(string $certificate): ?Application
@@ -62,9 +60,10 @@ class CertificateAuthenticator extends AbstractAuthenticator
 
         $application = $qb->getQuery()->disableResultCache()->getOneOrNullResult();
 
-        if($application instanceof Application === true) {
+        if ($application instanceof Application === true) {
             return $application;
         }
+
         throw new AuthenticationException('No application found for certificate');
     }
 
@@ -79,7 +78,7 @@ class CertificateAuthenticator extends AbstractAuthenticator
             $certificate = $request->headers->get('SSL_CLIENT_CERT');
         }
 
-        if(!isset($certificate)) {
+        if (!isset($certificate)) {
             throw new AuthenticationException('No certificate passed.');
         }
 
@@ -94,11 +93,11 @@ class CertificateAuthenticator extends AbstractAuthenticator
 
         $user = [
             'organization' => $application->getOrganization()->getId()->toString(),
-            'roles' => $roles
+            'roles'        => $roles,
         ];
 
         return new Passport(
-            new UserBadge($request->server->has('SSL_CLIENT_S_DN') ? $request->server->get('SSL_CLIENT_S_DN') : $request->headers->get('SSL_CLIENT_SUBJECT_DN'), function($userIdentifier) use ($user) {
+            new UserBadge($request->server->has('SSL_CLIENT_S_DN') ? $request->server->get('SSL_CLIENT_S_DN') : $request->headers->get('SSL_CLIENT_SUBJECT_DN'), function ($userIdentifier) use ($user) {
                 return new AuthenticationUser(
                     $userIdentifier,
                     $userIdentifier,
@@ -115,9 +114,10 @@ class CertificateAuthenticator extends AbstractAuthenticator
                 );
             }),
             new CustomCredentials(
-                function(array $credentials, UserInterface $user) {
+                function (array $credentials, UserInterface $user) {
                     return $user->getUserIdentifier() == $credentials['id'];
-                }, ['id' => $request->server->has('SSL_CLIENT_S_DN') ? $request->server->get('SSL_CLIENT_S_DN') : $request->headers->get('SSL_CLIENT_SUBJECT_DN')]
+                },
+                ['id' => $request->server->has('SSL_CLIENT_S_DN') ? $request->server->get('SSL_CLIENT_S_DN') : $request->headers->get('SSL_CLIENT_SUBJECT_DN')]
             )
         );
     }
