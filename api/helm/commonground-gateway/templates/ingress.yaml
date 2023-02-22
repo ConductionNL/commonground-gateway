@@ -1,7 +1,7 @@
 {{- if .Values.ingress.enabled -}}
 {{- $fullName := include "commonground-gateway.fullname" . -}}
-{{- $svcPort := .Values.service.port -}}
-{{- $gatewayUi := include "commonground-gateway.fullname" . -}} 
+{{- $svcPort := .Values.service.sslport -}}
+{{- $gatewayUi := include "commonground-gateway.fullname" . -}}
 {{- if and .Values.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.Version)) }}
 {{- if not (hasKey .Values.ingress.annotations "kubernetes.io/ingress.class") }}
 {{- $_ := set .Values.ingress.annotations "kubernetes.io/ingress.class" .Values.ingress.className}}
@@ -16,78 +16,81 @@ apiVersion: extensions/v1beta1
 {{- end }}
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
-  labels:
+    name: {{ $fullName }}
+    labels:
   {{- include "commonground-gateway.labels" . | nindent 4 }}
-  annotations:
+    annotations:
     {{- if .Values.global.tls }}
-    cert-manager.io/cluster-issuer: letsencrypt-prod
+        cert-manager.io/cluster-issuer: letsencrypt-prod
       {{- end }}
     {{ if eq .Values.ingress.className "nginx" }}
-    nginx.ingress.kubernetes.io/rewrite-target: {{ if eq .Values.ingress.path "/" }}/$1{{ else }}/$2{{ end }}
+        nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: 'true'
+        nginx.ingress.kubernetes.io/auth-tls-secret: {{ .Release.Namespace }}/{{ $fullName }}-rootca
+        nginx.ingress.kubernetes.io/auth-tls-verify: optional_no_ca
+        nginx.ingress.kubernetes.io/auth-tls-verify-depth: '4'
     {{ end }}
     {{ if eq .Values.ingress.className "traefik"}}
-    traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ .Release.Name }}-middleware@kubernetescrd
+        traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ .Release.Name }}-middleware@kubernetescrd
   {{ end }}
   {{- with .Values.ingress.annotations }}
   {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
   {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.Version) }}
-  ingressClassName: {{ .Values.ingress.className }}
+    ingressClassName: {{ .Values.ingress.className }}
   {{- end }}
   {{- if .Values.ingress.tls }}
-  tls:
+    tls:
     {{- range .Values.ingress.tls }}
-    - hosts:
+        - hosts:
         {{- range .hosts }}
-        - {{ . | quote }}
+              - {{ . | quote }}
       {{- end }}
-      secretName: {{ .secretName }}
+          secretName: {{ .secretName }}
   {{- end }}
   {{- end }}
     {{- if .Values.global.tls }}
-  tls:
-    - hosts:
-          - api.{{ .Values.global.domain }}
-      secretName: {{ $fullName }}-tls
+    tls:
+        - hosts:
+              - api.{{ .Values.global.domain }}
+          secretName: {{ $fullName }}-tls
       {{- end }}
-  rules:
-    - host: api.{{ $.Values.global.domain }}
-      http:
-        paths:
-          - path: {{ $.Values.ingress.path }}{{ if eq .Values.ingress.className "nginx" }}{{ if not (eq .Values.ingress.path "/") }}(/|$){{ end }}(.*){{ end }}
+    rules:
+        - host: api.{{ $.Values.global.domain }}
+          http:
+              paths:
+                  - path: {{ $.Values.ingress.path }}
             {{- if and .Values.ingress.pathType (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.Version) }}
-            pathType: {{ .Values.ingress.pathType }}
+                    pathType: {{ .Values.ingress.pathType }}
             {{- end }}
-            backend:
+                    backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.Version }}
-              service:
-                name: {{ $fullName }}
-                port:
-                  number: {{ $svcPort }}
+                        service:
+                            name: {{ $fullName }}
+                            port:
+                                number: {{ $svcPort }}
               {{- else }}
-              serviceName: {{ $fullName }}
-              servicePort: {{ $svcPort }}
+                        serviceName: {{ $fullName }}
+                        servicePort: {{ $svcPort }}
               {{- end }}
     {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
-      http:
-        paths:
+        - host: {{ .host | quote }}
+          http:
+              paths:
           {{- range .paths }}
-          - path: {{ .path }}
+                  - path: {{ .path }}
             {{- if and .pathType (semverCompare ">=1.18-0" $.Capabilities.KubeVersion.Version) }}
-            pathType: {{ .pathType }}
+                    pathType: {{ .pathType }}
             {{- end }}
-            backend:
+                    backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.Version }}
-              service:
-                name: {{ $fullName }}
-                port:
-                  number: {{ $svcPort }}
+                        service:
+                            name: {{ $fullName }}
+                            port:
+                                number: {{ $svcPort }}
               {{- else }}
-              serviceName: {{ $fullName }}
-              servicePort: {{ $svcPort }}
+                        serviceName: {{ $fullName }}
+                        servicePort: {{ $svcPort }}
               {{- end }}
         {{- end }}
     {{- end }}
@@ -97,15 +100,15 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
-  name: {{ .Release.Name }}-middleware
-  labels:
-    app.kubernetes.io/name: {{ .Release.Name }}-middleware
-    app.kubernetes.io/part-of: {{ .Release.Name }}
-    helm.sh/chart: {{ include "chart" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    name: {{ .Release.Name }}-middleware
+    labels:
+        app.kubernetes.io/name: {{ .Release.Name }}-middleware
+        app.kubernetes.io/part-of: {{ .Release.Name }}
+        helm.sh/chart: {{ include "chart" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
-  stripPrefix:
-    prefixes:
-      - {{ .Values.ingress.path }}
+    stripPrefix:
+        prefixes:
+            - {{ .Values.ingress.path }}
   {{ end }}
