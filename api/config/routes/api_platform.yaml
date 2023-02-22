@@ -1,3 +1,7 @@
 api_platform:
     resource: .
     type: api_platform
+
+commongateway_entity:
+    resource: ../../vendor/commongateway/corebundle/Entity/
+    type: api_platform  

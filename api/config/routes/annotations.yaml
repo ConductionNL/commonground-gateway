@@ -1,6 +1,10 @@
 controllers:
     resource: ../../src/Controller/
     type: annotation
+    
+commongateway_controller:
+    resource: ../../vendor/commongateway/corebundle/Controller/
+    type: annotation  
 
 kernel:
     resource: ../../src/Kernel.php

@@ -55,7 +55,7 @@ class EavController extends AbstractController
         $application = $request->query->get('application');
         $useCache = !($request->query->has('noCache') || $request->query->has('nocache'));
 
-//         Let's check the cache
+        // Let's check the cache
         $item = $customThingCache->getItem('oas_'.base64_encode($application).'_'.$extension);
 
         if ($item->isHit() && $useCache) {
