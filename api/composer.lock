@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "535636a17277b9c3051743bf25018d00",
+    "content-hash": "17c8c834fde0a14f708ffe93915c2c43",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -801,16 +801,16 @@
         },
         {
             "name": "common-gateway/zgw-bundle",
-            "version": "0.1.20",
+            "version": "0.1.21",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/ZGWBundle.git",
-                "reference": "dea6b5b06df4da0c0704df3ca17d764f41bf8de9"
+                "reference": "2fbccf3d9eac40d5a04371d8ac95160cfdfefec2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/dea6b5b06df4da0c0704df3ca17d764f41bf8de9",
-                "reference": "dea6b5b06df4da0c0704df3ca17d764f41bf8de9",
+                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/2fbccf3d9eac40d5a04371d8ac95160cfdfefec2",
+                "reference": "2fbccf3d9eac40d5a04371d8ac95160cfdfefec2",
                 "shasum": ""
             },
             "require": {
@@ -843,9 +843,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.20"
+                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.21"
             },
-            "time": "2023-02-09T09:01:05+00:00"
+            "time": "2023-02-22T07:47:50+00:00"
         },
         {
             "name": "commongateway/corebundle",
