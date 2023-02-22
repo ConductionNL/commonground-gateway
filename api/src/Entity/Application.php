@@ -196,6 +196,15 @@ class Application
      */
     private $users;
 
+    /**
+     * @var array Certificates that can be used to verify with this application
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $certificates = [];
+
+
     public function __construct()
     {
         $this->objectEntities = new ArrayCollection();
@@ -511,6 +520,25 @@ class Application
     public function setPrivateKey(?string $privateKey): self
     {
         $this->privateKey = $privateKey;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCertificates(): array
+    {
+        return $this->certificates;
+    }
+
+    /**
+     * @param array|null $certificates
+     * @return Application
+     */
+    public function setCertificates(?array $certificates): self
+    {
+        $this->certificates = $certificates;
 
         return $this;
     }
