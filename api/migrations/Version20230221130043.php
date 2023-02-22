@@ -21,6 +21,7 @@ final class Version20230221130043 extends AbstractMigration
     {
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql('ALTER TABLE application ADD certificates TEXT DEFAULT NULL');
+        $this->addSql('COMMENT ON COLUMN application.certificates IS \'(DC2Type:array)\'');
     }
 
     public function down(Schema $schema): void
