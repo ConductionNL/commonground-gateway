@@ -39,17 +39,16 @@ class CertificateAuthenticator extends AbstractAuthenticator
      */
     public function supports(Request $request): ?bool
     {
-        var_dump($request->headers->all());
 
-        return ($request->server->get('SSL_CLIENT_VERIFY') !== ""
-            && $request->server->get('SSL_CLIENT_CERT') !== ""
-            && $request->server->get('SSL_CLIENT_S_DN') !== "")
-            || ($request->headers->get('SSL_CLIENT_VERIFY') !== ""
+        return ($request->server->get('SSL_CLIENT_VERIFY') !== null
+            && $request->server->get('SSL_CLIENT_CERT') !== null
+            && $request->server->get('SSL_CLIENT_S_DN') !== null)
+            || ($request->headers->has('SSL_CLIENT_VERIFY') !== false
+            && $request->headers->has('SSL_CLIENT_CERT') !== false
+            && $request->headers->has('SSL_CLIENT_SUBJECT_DN') !== false
+            && $request->headers->get('SSL_CLIENT_VERIFY') !== ""
             && $request->headers->get('SSL_CLIENT_CERT') !== ""
-            && $request->headers->get('SSL_CLIENT_SUBJECT_DN') !== "")
-            || ($request->headers->get('SSL_CLIENT_VERIFY') !== null
-            && $request->headers->get('SSL_CLIENT_CERT') !== null
-            && $request->headers->get('SSL_CLIENT_SUBJECT_DN') !== null);
+            && $request->headers->get('SSL_CLIENT_SUBJECT_DN') !== "");
     }
 
     private function findApplicationByCertificate(string $certificate): ?Application
@@ -60,6 +59,7 @@ class CertificateAuthenticator extends AbstractAuthenticator
         $qb = $this->entityManager->getRepository('App:Application')->createQueryBuilder('a');
         $qb->select('a')
             ->where($qb->expr()->like('a.certificates', $qb->expr()->literal("%$certificate%")));
+
         $application = $qb->getQuery()->disableResultCache()->getOneOrNullResult();
 
         if($application instanceof Application === true) {
@@ -73,7 +73,6 @@ class CertificateAuthenticator extends AbstractAuthenticator
      */
     public function authenticate(Request $request): PassportInterface
     {
-        var_dump('certificate authenticator');
         if ($request->server->has('SSL_CLIENT_CERT')) {
             $certificate = $request->server->get('SSL_CLIENT_CERT');
         } elseif ($request->headers->has('SSL_CLIENT_CERT')) {
