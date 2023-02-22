@@ -31,7 +31,7 @@ class CertificateAuthenticator extends AbstractAuthenticator
         EntityManagerInterface $entityManager
     ) {
         $this->entityManager = $entityManager;
-    }
+    }//end __construct()
 
     /**
      * @inheritDoc
