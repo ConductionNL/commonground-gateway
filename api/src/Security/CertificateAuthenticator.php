@@ -54,6 +54,7 @@ class CertificateAuthenticator extends AbstractAuthenticator
 
     private function findApplicationByCertificate(string $certificate): ?Application
     {
+        $certificate = urldecode($certificate);
         $certificate = str_replace(["\n", "\r", "\t"], '', $certificate, $count);
 
         $qb = $this->entityManager->getRepository('App:Application')->createQueryBuilder('a');
