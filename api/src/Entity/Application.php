@@ -204,7 +204,6 @@ class Application
      */
     private array $certificates = [];
 
-
     public function __construct()
     {
         $this->objectEntities = new ArrayCollection();
@@ -534,6 +533,7 @@ class Application
 
     /**
      * @param array|null $certificates
+     *
      * @return Application
      */
     public function setCertificates(?array $certificates): self
