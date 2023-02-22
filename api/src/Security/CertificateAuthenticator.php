@@ -41,15 +41,15 @@ class CertificateAuthenticator extends AbstractAuthenticator
     {
         var_dump($request->headers->all());
 
-        return $request->server->get('SSL_CLIENT_VERIFY') !== ""
+        return ($request->server->get('SSL_CLIENT_VERIFY') !== ""
             && $request->server->get('SSL_CLIENT_CERT') !== ""
-            && $request->server->get('SSL_CLIENT_S_DN') !== ""
-            && $request->headers->get('SSL_CLIENT_VERIFY') !== ""
+            && $request->server->get('SSL_CLIENT_S_DN') !== "")
+            || ($request->headers->get('SSL_CLIENT_VERIFY') !== ""
             && $request->headers->get('SSL_CLIENT_CERT') !== ""
-            && $request->headers->get('SSL_CLIENT_S_DN') !== ""
-            && $request->headers->get('SSL_CLIENT_VERIFY') !== null
+            && $request->headers->get('SSL_CLIENT_SUBJECT_DN') !== "")
+            || ($request->headers->get('SSL_CLIENT_VERIFY') !== null
             && $request->headers->get('SSL_CLIENT_CERT') !== null
-            && $request->headers->get('SSL_CLIENT_S_DN') !== null;
+            && $request->headers->get('SSL_CLIENT_SUBJECT_DN') !== null);
     }
 
     private function findApplicationByCertificate(string $certificate): ?Application
@@ -73,7 +73,15 @@ class CertificateAuthenticator extends AbstractAuthenticator
     public function authenticate(Request $request): PassportInterface
     {
         var_dump('certificate authenticator');
-        $certificate = $request->server->get('SSL_CLIENT_CERT');
+        if ($request->server->has('SSL_CLIENT_CERT')) {
+            $certificate = $request->server->get('SSL_CLIENT_CERT');
+        } elseif ($request->headers->has('SSL_CLIENT_CERT')) {
+            $certificate = $request->headers->get('SSL_CLIENT_CERT');
+        }
+
+        if(!isset($certificate)) {
+            throw new AuthenticationException('No certificate passed.');
+        }
 
         $application = $this->findApplicationByCertificate($certificate);
 
@@ -90,7 +98,7 @@ class CertificateAuthenticator extends AbstractAuthenticator
         ];
 
         return new Passport(
-            new UserBadge($request->server->get('SSL_CLIENT_S_DN'), function($userIdentifier) use ($user) {
+            new UserBadge($request->server->has('SSL_CLIENT_S_DN') ? $request->server->get('SSL_CLIENT_S_DN') : $request->headers->get('SSL_CLIENT_SUBJECT_DN'), function($userIdentifier) use ($user) {
                 return new AuthenticationUser(
                     $userIdentifier,
                     $userIdentifier,
@@ -109,7 +117,7 @@ class CertificateAuthenticator extends AbstractAuthenticator
             new CustomCredentials(
                 function(array $credentials, UserInterface $user) {
                     return $user->getUserIdentifier() == $credentials['id'];
-                }, ['id' => $request->server->get('SSL_CLIENT_S_DN')]
+                }, ['id' => $request->server->has('SSL_CLIENT_S_DN') ? $request->server->get('SSL_CLIENT_S_DN') : $request->headers->get('SSL_CLIENT_SUBJECT_DN')]
             )
         );
     }
