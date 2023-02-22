@@ -47,7 +47,7 @@ class CertificateAuthenticator extends AbstractAuthenticator
             && $request->headers->get('SSL_CLIENT_VERIFY') !== ''
             && $request->headers->get('SSL_CLIENT_CERT') !== ''
             && $request->headers->get('SSL_CLIENT_SUBJECT_DN') !== '');
-    }
+    }//end supports()
 
     private function findApplicationByCertificate(string $certificate): ?Application
     {
@@ -65,7 +65,7 @@ class CertificateAuthenticator extends AbstractAuthenticator
         }
 
         throw new AuthenticationException('No application found for certificate');
-    }
+    }//end findApplicationByCertificate()
 
     /**
      * @inheritDoc
@@ -120,7 +120,7 @@ class CertificateAuthenticator extends AbstractAuthenticator
                 ['id' => $request->server->has('SSL_CLIENT_S_DN') ? $request->server->get('SSL_CLIENT_S_DN') : $request->headers->get('SSL_CLIENT_SUBJECT_DN')]
             )
         );
-    }
+    }//end authenticate()
 
     /**
      * @inheritDoc
@@ -128,7 +128,7 @@ class CertificateAuthenticator extends AbstractAuthenticator
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
         return null;
-    }
+    }//end onAuthenticationSuccess
 
     /**
      * @inheritDoc
@@ -144,5 +144,5 @@ class CertificateAuthenticator extends AbstractAuthenticator
         ];
 
         return new JsonResponse($data, Response::HTTP_UNAUTHORIZED);
-    }
-}
+    }//end onAuthenticationFailure()
+}//end class
