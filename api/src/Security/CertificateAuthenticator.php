@@ -49,6 +49,15 @@ class CertificateAuthenticator extends AbstractAuthenticator
             && $request->headers->get('SSL_CLIENT_SUBJECT_DN') !== '');
     }//end supports()
 
+    /**
+     * Searches an application in the database that contains the certificate.
+     *
+     * @throws \Doctrine\ORM\NonUniqueResultException Thrown when more then 1 application contains the certificate.
+     *
+     * @param string $certificate The certificate to look for.
+     *
+     * @return Application|null The resulting application.
+     */
     private function findApplicationByCertificate(string $certificate): ?Application
     {
         $certificate = urldecode($certificate);
