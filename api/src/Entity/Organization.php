@@ -88,6 +88,14 @@ class Organization
     private $applications;
 
     /**
+     * @Groups({"read", "write"})
+     *
+     * @MaxDepth(1)
+     * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="organization", orphanRemoval=true)
+     */
+    private $objectEntities;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
