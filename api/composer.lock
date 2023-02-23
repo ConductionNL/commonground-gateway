@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6b188b98e8328145e9ee3ff9ede4dc7d",
+    "content-hash": "df97316d4dc435a9aacea731bc6733ed",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -698,16 +698,16 @@
         },
         {
             "name": "common-gateway/geboorte-vrijbrp-bundle",
-            "version": "0.0.42",
+            "version": "0.0.43",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/GeboorteVrijBRPBundle.git",
-                "reference": "b8933b4e92c9cb938e86d2c464584701a417a5da"
+                "reference": "1599b4a270ef315ab9abede17076c0fb945face7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/GeboorteVrijBRPBundle/zipball/b8933b4e92c9cb938e86d2c464584701a417a5da",
-                "reference": "b8933b4e92c9cb938e86d2c464584701a417a5da",
+                "url": "https://api.github.com/repos/CommonGateway/GeboorteVrijBRPBundle/zipball/1599b4a270ef315ab9abede17076c0fb945face7",
+                "reference": "1599b4a270ef315ab9abede17076c0fb945face7",
                 "shasum": ""
             },
             "require": {
@@ -744,22 +744,22 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/GeboorteVrijBRPBundle/issues",
-                "source": "https://github.com/CommonGateway/GeboorteVrijBRPBundle/tree/0.0.42"
+                "source": "https://github.com/CommonGateway/GeboorteVrijBRPBundle/tree/0.0.43"
             },
-            "time": "2023-02-17T13:00:05+00:00"
+            "time": "2023-02-22T15:51:12+00:00"
         },
         {
             "name": "common-gateway/naamgebruik-vrijbrp-bundle",
-            "version": "0.0.17",
+            "version": "0.0.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/NaamgebruikVrijBRPBundle.git",
-                "reference": "28663a8f53830af2750ad0a1d11e4897c63c4e55"
+                "reference": "efb14b1976ded4bbb4f5741bf6204b3291082db0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/NaamgebruikVrijBRPBundle/zipball/28663a8f53830af2750ad0a1d11e4897c63c4e55",
-                "reference": "28663a8f53830af2750ad0a1d11e4897c63c4e55",
+                "url": "https://api.github.com/repos/CommonGateway/NaamgebruikVrijBRPBundle/zipball/efb14b1976ded4bbb4f5741bf6204b3291082db0",
+                "reference": "efb14b1976ded4bbb4f5741bf6204b3291082db0",
                 "shasum": ""
             },
             "require": {
@@ -795,22 +795,22 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/NaamgebruikVrijBRPBundle/issues",
-                "source": "https://github.com/CommonGateway/NaamgebruikVrijBRPBundle/tree/0.0.17"
+                "source": "https://github.com/CommonGateway/NaamgebruikVrijBRPBundle/tree/0.0.19"
             },
-            "time": "2023-02-16T15:54:55+00:00"
+            "time": "2023-02-23T09:50:21+00:00"
         },
         {
             "name": "common-gateway/zgw-bundle",
-            "version": "0.1.20",
+            "version": "0.1.21",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/ZGWBundle.git",
-                "reference": "dea6b5b06df4da0c0704df3ca17d764f41bf8de9"
+                "reference": "2fbccf3d9eac40d5a04371d8ac95160cfdfefec2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/dea6b5b06df4da0c0704df3ca17d764f41bf8de9",
-                "reference": "dea6b5b06df4da0c0704df3ca17d764f41bf8de9",
+                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/2fbccf3d9eac40d5a04371d8ac95160cfdfefec2",
+                "reference": "2fbccf3d9eac40d5a04371d8ac95160cfdfefec2",
                 "shasum": ""
             },
             "require": {
@@ -843,9 +843,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.20"
+                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.21"
             },
-            "time": "2023-02-09T09:01:05+00:00"
+            "time": "2023-02-22T07:47:50+00:00"
         },
         {
             "name": "commongateway/corebundle",
@@ -853,12 +853,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "9ec4441960826210eb047f1d879d9531a8891a97"
+                "reference": "a097456492ebe41c0bf843ebce21e8fbb8909841"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/9ec4441960826210eb047f1d879d9531a8891a97",
-                "reference": "9ec4441960826210eb047f1d879d9531a8891a97",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/a097456492ebe41c0bf843ebce21e8fbb8909841",
+                "reference": "a097456492ebe41c0bf843ebce21e8fbb8909841",
                 "shasum": ""
             },
             "require": {
@@ -917,7 +917,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-02-15T12:41:56+00:00"
+            "time": "2023-02-22T13:06:45+00:00"
         },
         {
             "name": "composer/ca-bundle",
