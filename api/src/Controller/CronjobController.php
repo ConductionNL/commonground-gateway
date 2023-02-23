@@ -24,12 +24,12 @@ class CronjobController extends AbstractController
      *
      * @Route("/", methods={"GET"})
      */
-    public function installedAction(Request $request)
+    public function crontabAction(Request $request)
     {
         $status = 200;
 
         // Start the procces
-        $process = new Process(['bin/console','cronjob:command']);
+        $process = new Process(['bin/console', 'cronjob:command']);
         $process->setWorkingDirectory('/srv/api');
         $process->setTimeout(3600);
         $process->run();

@@ -11,6 +11,7 @@ use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -26,6 +27,7 @@ class ActionSubscriber implements EventSubscriberInterface
     private SessionInterface $session;
     private SymfonyStyle $io;
     private MessageBusInterface $messageBus;
+    private LoggerInterface $logger;
 
     /**
      * @inheritDoc
@@ -51,6 +53,7 @@ class ActionSubscriber implements EventSubscriberInterface
         ContainerInterface $container,
         ObjectEntityService $objectEntityService,
         SessionInterface $session,
+        LoggerInterface $actionLogger,
         MessageBusInterface $messageBus
     ) {
         $this->entityManager = $entityManager;
@@ -58,6 +61,7 @@ class ActionSubscriber implements EventSubscriberInterface
         $this->objectEntityService = $objectEntityService;
         $this->session = $session;
         $this->messageBus = $messageBus;
+        $this->logger = $actionLogger;
     }
 
     public function runFunction(Action $action, array $data, string $currentThrow): array
@@ -275,11 +279,14 @@ class ActionSubscriber implements EventSubscriberInterface
 
         // Normal behaviour is using the $event->getType(), but if $event->getSubType() is set, use that one instead.
         $listeningToThrow = !$event->getSubType() ? $event->getType() : $event->getSubType();
-        $actions = $this->entityManager->getRepository('App:Action')->findByListens($listeningToThrow);
 
+        $actions = $this->entityManager->getRepository('App:Action')->findByListens($listeningToThrow);
+        $totalActions = is_countable($actions) ? count($actions) : 0;
+
+        $this->logger->info('Handling actions for event: '.$listeningToThrow.', found '.$totalActions.' listening actions');
+
+        $ioMessage = "Found $totalActions Action".($totalActions !== 1 ? 's' : '')." listening to \"$listeningToThrow\"";
         if (isset($this->io)) {
-            $totalActions = is_countable($actions) ? count($actions) : 0;
-            $ioMessage = "Found $totalActions Action".($totalActions !== 1 ? 's' : '')." listening to \"$listeningToThrow\"";
             $currentCronJobThrow ? $this->io->block($ioMessage) : $this->io->text($ioMessage);
             if ($totalActions !== 0) {
                 $extraDashesStr = $currentCronJobThrow ? '--' : '';
@@ -289,23 +296,30 @@ class ActionSubscriber implements EventSubscriberInterface
                 $currentCronJobThrow ?: $this->io->newLine();
             }
         }
+        $this->logger->debug($ioMessage);
+
         foreach ($actions as $key => $action) {
             // Handle Action
+            $this->session->set('action', $action->getId()->toString());
+            $this->logger->debug('Handling action : '.$action->getName().'('.$action->getId().')');
             $this->handleAction($action, $event);
 
             if (isset($this->io) && isset($totalActions) && isset($extraDashesStr)) {
                 if ($key !== array_key_last($actions)) {
                     $keyStr = $key + 1;
                     $this->io->text("$keyStr/$totalActions --$extraDashesStr Looping through all Actions listening to \"$listeningToThrow\"...");
+                    $this->logger->debug("$keyStr/$totalActions -- Looping through all Actions listening to \"$listeningToThrow\"...");
                     !$currentCronJobThrow ?: $this->io->newLine();
                 }
             }
+            $this->session->remove('action');
         }
 
         if (isset($this->io) && isset($totalActions) && $totalActions !== 0 && isset($extraDashesStr)) {
-            $this->io->text("$totalActions/$totalActions --$extraDashesStr Finished looping all Actions listening to \"$listeningToThrow\"");
+            $this->io->text("$totalActions/$totalActions -- Finished looping all Actions listening to \"$listeningToThrow\"");
             $this->io->newLine();
         }
+        $this->logger->info("$totalActions/$totalActions -- Finished looping all Actions listening to \"$listeningToThrow\"");
 
         return $event;
     }
@@ -325,10 +339,12 @@ class ActionSubscriber implements EventSubscriberInterface
                 $this->session->get('currentCronJobThrow') == $event->getType() &&
                 $this->session->get('currentCronJobSubThrow') == $event->getSubType()) {
                 $this->io->section("Handle ActionEvent \"{$event->getType()}\"".($event->getSubType() ? " With SubType: \"{$event->getSubType()}\"" : ''));
+                $this->logger->info("Handle ActionEvent \"{$event->getType()}\"".($event->getSubType() ? " With SubType: \"{$event->getSubType()}\"" : ''));
 
                 return true;
             } else {
                 $this->io->text("Handle 'sub'-ActionEvent \"{$event->getType()}\"".($event->getSubType() ? " With SubType: \"{$event->getSubType()}\"" : ''));
+                $this->logger->info("Handle 'sub'-ActionEvent \"{$event->getType()}\"".($event->getSubType() ? " With SubType: \"{$event->getSubType()}\"" : ''));
             }
         }
 

@@ -27,47 +27,19 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * An entity that functions a an object template for objects that might be stored in the EAV database.
+ * An schema that functions a an object template for objects that might be stored in the EAV database.
  *
  * @ApiResource(
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *     "get"={"path"="/admin/entities/{id}"},
- *     "get_sync"={
- *          "method"="GET",
- *          "path"="/admin/entities/{id}/sync"
- *      },
- *     "get_object"={
- *          "method"="GET",
- *          "path"="/admin/schemas/{id}/objects/{objectId}"
- *      },
  *     "put"={"path"="/admin/entities/{id}"},
- *     "put_object"={
- *          "method"="PUT",
- *          "read"=false,
- *          "validate"=false,
- *          "path"="/admin/schemas/{id}/objects/{objectId}"
- *      },
- *     "delete"={"path"="/admin/entities/{id}"},
- *     "delete_object"={
- *          "method"="DELETE",
- *          "path"="/admin/schemas/{id}/objects/{objectId}"
- *      }
+ *     "delete"={"path"="/admin/entities/{id}"}
  *  },
  *  collectionOperations={
  *     "get"={"path"="/admin/entities"},
- *     "get_objects"={
- *          "method"="GET",
- *          "path"="/admin/schemas/{id}/objects"
- *      },
- *     "post"={"path"="/admin/entities"},
- *     "post_objects"={
- *          "method"="POST",
- *          "read"=false,
- *          "validate"=false,
- *          "path"="/admin/schemas/{id}/objects"
- *      },
+ *     "post"={"path"="/admin/entities"}
  *  })
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
@@ -97,6 +69,8 @@ class Entity
      * @ORM\ManyToOne(targetEntity=Gateway::class, fetch="EAGER")
      * @ORM\JoinColumn(nullable=true)
      * @MaxDepth(1)
+     *
+     * @deprecated
      */
     private ?Source $gateway = null;
 
@@ -109,18 +83,24 @@ class Entity
      * )
      * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255, nullable=true)
+     *
+     * @deprecated
      */
-    private $endpoint;
+    private $endpoint = '';
 
     /**
      * @Groups({"read","write"})
      * @ORM\OneToOne(targetEntity=Soap::class, fetch="EAGER", mappedBy="fromEntity")
      * @MaxDepth(1)
+     *
+     * @deprecated
      */
-    private ?soap $toSoap;
+    private ?Soap $toSoap = null;
 
     /**
      * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="toEntity", orphanRemoval=true)
+     *
+     * @deprecated
      */
     private $fromSoap;
 
@@ -144,7 +124,7 @@ class Entity
      * @Groups({"read","write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $description;
+    private $description = '';
 
     /**
      * @var string The function of this Entity. This is used for making specific entity types/functions work differently
@@ -153,7 +133,9 @@ class Entity
      *
      * @Assert\Choice({"noFunction","organization", "person", "user", "userGroup", "processingLog"})
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", options={"default":"noFunction"})
+     * @ORM\Column(type="string", options={"default":"noFunction"}, name="function_column")
+     *
+     * @deprecated
      */
     private string $function = 'noFunction';
 
@@ -177,7 +159,7 @@ class Entity
      * The attributes of this Entity.
      *
      * @Groups({"read","write"})
-     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist", "remove"}, fetch="EAGER")
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist"}, orphanRemoval=true, fetch="EAGER")
      * @MaxDepth(1)
      */
     private Collection $attributes;
@@ -188,6 +170,8 @@ class Entity
      * @Groups({"read","write"})
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="searchPartial", fetch="EAGER")
      * @MaxDepth(1)
+     *
+     * @deprecated
      */
     private ?Collection $searchPartial;
 
@@ -209,6 +193,8 @@ class Entity
     /**
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
+     * @deprecated
      */
     private ?array $transformations = [];
 
@@ -217,6 +203,8 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
+     *
+     * @deprecated
      */
     private ?string $route = null;
 
@@ -225,33 +213,28 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
+     * @deprecated
      */
-    private ?array $availableProperties;
+    private ?array $availableProperties = [];
 
     /**
      * @var array|null The properties used for this entity (for all CRUD calls) if null all properties will be used. This affects which properties will be written / shown.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
+     * @deprecated
      */
-    private ?array $usedProperties;
-
-    /**
-     * @ORM\OneToMany(targetEntity=GatewayResponseLog::class, mappedBy="entity", fetch="EXTRA_LAZY")
-     */
-    private $responseLogs;
-
-    /**
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="entity", fetch="EXTRA_LAZY", cascade={"remove"})
-     */
-    private Collection $requestLogs;
+    private ?array $usedProperties = [];
 
     /**
      * @var array Used for ConvertToGatewayService. Config to translate specific calls to a different method or endpoint. When changing the endpoint, if you want, you can use {id} to specify the location of the id in the endpoint.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
+     * @deprecated
      */
     private array $translationConfig = [];
 
@@ -260,6 +243,8 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
+     * @deprecated
      */
     private array $collectionConfig = ['results' => 'hydra:member', 'id' => 'id', 'paginationPages' => 'hydra:view.hydra:last'];
 
@@ -268,6 +253,8 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
+     * @deprecated
      */
     private array $itemConfig = [];
 
@@ -276,6 +263,8 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
+     * @deprecated
      */
     private ?array $externMappingIn = [];
 
@@ -284,6 +273,8 @@ class Entity
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
+     *
+     * @deprecated
      */
     private ?array $externMappingOut = [];
 
@@ -293,31 +284,18 @@ class Entity
      * @MaxDepth(1)
      * @Groups({"write"})
      * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="entity", fetch="EXTRA_LAZY")
+     *
+     * @deprecated
      */
     private Collection $handlers;
 
     /**
-     * @var array|null The subscribers used for this entity.
-     *
-     * @MaxDepth(1)
-     * @Groups({"write"})
-     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entity", fetch="EXTRA_LAZY")
-     */
-    private Collection $subscribers;
-
-    /**
-     * @Groups({"write"})
-     * @ORM\OneToMany(targetEntity=Subscriber::class, mappedBy="entityOut", fetch="EXTRA_LAZY")
-     * @MaxDepth(1)
-     */
-    private Collection $subscriberOut;
-
-    /**
      * @var ?Collection The collections of this Entity
      *
-     * @Groups({"write"})
+     * @Groups({"write", "read"})
      * @MaxDepth(1)
-     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="entities", fetch="EXTRA_LAZY")
+     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="entities")
+     * @ORM\OrderBy({"dateCreated" = "DESC"})
      */
     private ?Collection $collections;
 
@@ -325,7 +303,9 @@ class Entity
      * @var ?string The uri to a schema.org object
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null}, name="schema_column")
+     *
+     * @deprecated Replaced by reference
      */
     private ?string $schema = null;
 
@@ -353,7 +333,15 @@ class Entity
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", length=255, nullable=true, options={"default": null})
      */
-    private ?array $nameProperties = null;
+    private ?array $nameProperties = [];
+
+    /**
+     * @var int The maximum depth that should be used when casting objects of this entity to array
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="integer", length=1, options={"default": 3})
+     */
+    private int $maxDepth = 3;
 
     /**
      * @Groups({"read", "write"})
@@ -373,18 +361,27 @@ class Entity
      */
     private $endpoints;
 
+    /**
+     * @var bool Whether the entity should be excluded from rendering as sub object
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="boolean", options={"default": false}, nullable=true)
+     */
+    private bool $exclude = false;
+
+    public function __toString()
+    {
+        return $this->getName().' ('.$this->getId().')';
+    }
+
     public function __construct()
     {
         $this->attributes = new ArrayCollection();
         $this->searchPartial = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
-        $this->responseLogs = new ArrayCollection();
-        $this->requestLogs = new ArrayCollection();
         $this->soap = new ArrayCollection();
         $this->handlers = new ArrayCollection();
-        $this->subscribers = new ArrayCollection();
-        $this->subscriberOut = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->endpoints = new ArrayCollection();
     }
@@ -458,7 +455,7 @@ class Entity
         return $this->endpoint;
     }
 
-    public function setEndpoint(string $endpoint): self
+    public function setEndpoint(?string $endpoint): self
     {
         $this->endpoint = $endpoint;
 
@@ -759,36 +756,6 @@ class Entity
         return $this;
     }
 
-    /**
-     * @return Collection|GatewayResponseLog[]
-     */
-    public function getResponseLogs(): Collection
-    {
-        return $this->responseLogs;
-    }
-
-    public function addResponseLog(GatewayResponseLog $responseLog): self
-    {
-        if (!$this->responseLogs->contains($responseLog)) {
-            $this->responseLogs[] = $responseLog;
-            $responseLog->setEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeResponseLog(GatewayResponseLog $responseLog): self
-    {
-        if ($this->responseLogs->removeElement($responseLog)) {
-            // set the owning side to null (unless already changed)
-            if ($responseLog->getEntity() === $this) {
-                $responseLog->setEntity(null);
-            }
-        }
-
-        return $this;
-    }
-
     public function getExtend(): ?bool
     {
         return $this->extend;
@@ -797,36 +764,6 @@ class Entity
     public function setExtend(?bool $extend): self
     {
         $this->extend = $extend;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|RequestLog[]
-     */
-    public function getRequestLogs(): Collection
-    {
-        return $this->requestLogs;
-    }
-
-    public function addRequestLog(RequestLog $requestLog): self
-    {
-        if (!$this->requestLogs->contains($requestLog)) {
-            $this->requestLogs[] = $requestLog;
-            $requestLog->setEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeRequestLog(RequestLog $requestLog): self
-    {
-        if ($this->requestLogs->removeElement($requestLog)) {
-            // set the owning side to null (unless already changed)
-            if ($requestLog->getEntity() === $this) {
-                $requestLog->setEntity(null);
-            }
-        }
 
         return $this;
     }
@@ -891,36 +828,6 @@ class Entity
         return $this;
     }
 
-    /**
-     * @return Collection|Soap[]
-     */
-    public function getSoap(): Collection
-    {
-        return $this->soap;
-    }
-
-    public function addSoap(Soap $soap): self
-    {
-        if (!$this->soap->contains($soap)) {
-            $this->soap[] = $soap;
-            $soap->setEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeSoap(Soap $soap): self
-    {
-        if ($this->soap->removeElement($soap)) {
-            // set the owning side to null (unless already changed)
-            if ($soap->getEntity() === $this) {
-                $soap->setEntity(null);
-            }
-        }
-
-        return $this;
-    }
-
     public function getInherited(): ?bool
     {
         return $this->inherited;
@@ -959,83 +866,6 @@ class Entity
                 $handler->setEntity(null);
             }
         }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Subscriber[]
-     */
-    public function getSubscribers(): Collection
-    {
-        return $this->subscribers;
-    }
-
-    public function addSubscribers(Subscriber $subscriber): self
-    {
-        if (!$this->subscribers->contains($subscriber)) {
-            $this->subscribers[] = $subscriber;
-            $subscriber->setEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeSubscribers(Subscriber $subscriber): self
-    {
-        if ($this->subscribers->removeElement($subscriber)) {
-            // set the owning side to null (unless already changed)
-            if ($subscriber->getEntity() === $this) {
-                $subscriber->setEntity(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Subscriber[]
-     */
-    public function getSubscriberOut(): Collection
-    {
-        return $this->subscriberOut;
-    }
-
-    public function addSubscriberOut(Subscriber $subscriberOut): self
-    {
-        if (!$this->subscriberOut->contains($subscriberOut)) {
-            $this->subscriberOut[] = $subscriberOut;
-            $subscriberOut->setEntityOut($this);
-        }
-
-        return $this;
-    }
-
-    public function removeSubscriberOut(Subscriber $subscriberOut): self
-    {
-        if ($this->subscriberOut->removeElement($subscriberOut)) {
-            // set the owning side to null (unless already changed)
-            if ($subscriberOut->getEntityOut() === $this) {
-                $subscriberOut->setEntityOut(null);
-            }
-        }
-
-        return $this;
-    }
-
-    public function setSubscriberOut(?Subscriber $subscriberOut): self
-    {
-        // unset the owning side of the relation if necessary
-        if ($subscriberOut === null && $this->subscriberOut !== null) {
-            $this->subscriberOut->setEntityOut(null);
-        }
-
-        // set the owning side of the relation if necessary
-        if ($subscriberOut !== null && $subscriberOut->getEntityOut() !== $this) {
-            $subscriberOut->setEntityOut($this);
-        }
-
-        $this->subscriberOut = $subscriberOut;
 
         return $this;
     }
@@ -1096,6 +926,11 @@ class Entity
         return $this->schema;
     }
 
+    /**
+     * @param string|null $schema
+     *
+     * @return $this This schema
+     */
     public function setSchema(?string $schema): self
     {
         $this->schema = $schema;
@@ -1104,9 +939,17 @@ class Entity
     }
 
     /**
+     * Create or update this schema from an external schema array.
+     *
+     * This function is ussed to update and create schema's form schema.json objects
+     *
+     * @param array $schema the schema to load
+     *
      * @throws GatewayException
+     *
+     * @return $this This schema
      */
-    public function fromSchema(array $schema): Entity
+    public function fromSchema(array $schema): self
     {
         // Basic stuff
         if (array_key_exists('$id', $schema)) {
@@ -1122,15 +965,28 @@ class Entity
         if (array_key_exists('version', $schema)) {
             $this->setVersion($schema['version']);
         }
+        if (array_key_exists('exclude', $schema)) {
+            $this->setExclude($schema['exclude']);
+        }
+        if (array_key_exists('maxDepth', $schema)) {
+            $this->setMaxDepth($schema['maxDepth']);
+        }
+        if (array_key_exists('nameProperties', $schema)) {
+            $this->setNameProperties($schema['nameProperties']);
+        }
 
         // Properties
         foreach ($schema['properties'] as $name => $property) {
+            // Some properties are considerd forbidden
+            if (in_array($name, ['id']) || str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
+                continue;
+            }
+
             // Let see if the attribute exists
             if (!$attribute = $this->getAttributeByName($name)) {
                 $attribute = new Attribute();
                 $attribute->setName($name);
             }
-
             $this->addAttribute($attribute->fromSchema($property));
         }
 
@@ -1138,7 +994,10 @@ class Entity
         if (array_key_exists('required', $schema)) {
             foreach ($schema['required'] as $required) {
                 $attribute = $this->getAttributeByName($required);
-                $attribute->setRequired(true);
+                //We can only set the atribute on required if it exisits so.
+                if ($attribute instanceof Attribute === true) {
+                    $attribute->setRequired(true);
+                }
             }
         }
 
@@ -1163,13 +1022,16 @@ class Entity
     public function toSchema(?ObjectEntity $objectEntity): array
     {
         $schema = [
-            '$id'            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema'        => 'https://json-schema.org/draft/2020-12/schema',
-            'title'          => $this->getName(),
-            'description'    => $this->getDescription(),
-            'version'        => $this->getVersion(),
-            'required'       => [],
-            'properties'     => [],
+            '$id'               => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'           => 'https://json-schema.org/draft/2020-12/schema',
+            'title'             => $this->getName(),
+            'description'       => $this->getDescription(),
+            'version'           => $this->getVersion(),
+            'exclude'           => $this->isExcluded(),
+            'maxDepth'          => $this->getMaxDepth(),
+            'nameProperties'    => $this->getNameProperties(),
+            'required'          => [],
+            'properties'        => [],
         ];
 
         if ($objectEntity && $objectEntity->getEntity() !== $this) {
@@ -1187,17 +1049,32 @@ class Entity
             // Aanmaken property
             // @todo ik laad dit nu in als array maar eigenlijk wil je testen en alleen zetten als er waardes in zitten
 
+            // Create a url to fetch the objects from the schema this property refers to
+            if ($attribute->getType() == 'object' && $attribute->getObject() !== null) {
+                $property['_list'] = '/admin/objects?_self.schema.id='.$attribute->getObject()->getId()->toString();
+            }
+
             $attribute->getType() && $property['type'] = $attribute->getType();
             $attribute->getFormat() && $property['format'] = $attribute->getFormat();
             $attribute->getDescription() && $property['description'] = $attribute->getDescription();
             $attribute->getExample() && $property['example'] = $attribute->getExample();
 
-            // What if we have an $object entity
-            if ($objectEntity) {
-                $property['value'] = $objectEntity->getValue($attribute);
+            // What if we have an $object entity.
+            if ($objectEntity instanceof ObjectEntity === true) {
+                if ($attribute->getType() != 'object') {
+                    $property['value'] = $objectEntity->getValue($attribute);
+                } elseif ($attribute->getMultiple()) {
+                    $property['value'] = $objectEntity->getValueObject($attribute)->getSimpleArrayValue();
+                }
+                $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
             }
 
-            // Zetten van de property
+            // What if the atribute is hooked to an object.
+            if ($attribute->getType() === 'object' && $attribute->getObject() === true) {
+                $property['$ref'] = '#/components/schemas/'.$attribute->getObject()->getName();
+            }
+
+            // Zetten van de property.
             $schema['properties'][$attribute->getName()] = $property;
 
             // Add the validators
@@ -1247,6 +1124,18 @@ class Entity
         return $this;
     }
 
+    public function getMaxDepth(): int
+    {
+        return $this->maxDepth;
+    }
+
+    public function setMaxDepth(int $maxDepth): self
+    {
+        $this->maxDepth = $maxDepth;
+
+        return $this;
+    }
+
     /**
      * @return Collection|Endpoint[]
      */
@@ -1270,6 +1159,26 @@ class Entity
         if ($this->endpoints->removeElement($endpoint)) {
             $endpoint->removeEntity($this);
         }
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExcluded(): bool
+    {
+        return $this->exclude;
+    }
+
+    /**
+     * @param bool $exclude
+     *
+     * @return Entity
+     */
+    public function setExclude(bool $exclude): self
+    {
+        $this->exclude = $exclude;
 
         return $this;
     }

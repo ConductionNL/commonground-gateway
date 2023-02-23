@@ -54,9 +54,8 @@ class EavSyncSubscriber implements EventSubscriberInterface
 
         $status = 202;
         if (!$synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['object' => $objectEntity->getId(), 'gateway' => $source])) {
-            $synchronization = new Synchronization();
+            $synchronization = new Synchronization($source);
             $synchronization->setObject($objectEntity);
-            $synchronization->setSource($source);
             $synchronization->setSourceId($sourceId);
             $synchronization->setEndpoint($endpoint);
             if ($actionId) {

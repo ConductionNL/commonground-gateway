@@ -7,7 +7,6 @@ use App\Entity\ObjectEntity;
 use App\Message\SyncPageMessage;
 use App\Repository\EntityRepository;
 use App\Repository\ObjectEntityRepository;
-use App\Service\ConvertToGatewayService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Exception;
@@ -16,14 +15,12 @@ use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 class SyncPageMessageHandler implements MessageHandlerInterface
 {
     private CommonGroundService $commonGroundService;
-    private ConvertToGatewayService $convertToGatewayService;
     private ObjectEntityRepository $objectEntityRepository;
     private EntityRepository $entityRepository;
 
-    public function __construct(CommonGroundService $commonGroundService, ConvertToGatewayService $convertToGatewayService, ObjectEntityRepository $objectEntityRepository, EntityRepository $entityRepository)
+    public function __construct(CommonGroundService $commonGroundService, ObjectEntityRepository $objectEntityRepository, EntityRepository $entityRepository)
     {
         $this->commonGroundService = $commonGroundService;
-        $this->convertToGatewayService = $convertToGatewayService;
         $this->objectEntityRepository = $objectEntityRepository;
         $this->entityRepository = $entityRepository;
     }
@@ -145,7 +142,6 @@ class SyncPageMessageHandler implements MessageHandlerInterface
         // We want to update all objects, unless specified not to, needs config option:
 //        if (!$this->objectEntityRepository->findOneBy(['entity' => $messageData['entity'], 'externalId' => $id])) {
         // Convert this object to a gateway object
-        $object = $this->convertToGatewayService->convertToGatewayObject($messageData['entity'], $externObject, $id, null, null, null, $messageData['message']->getSessionData());
         // todo: We could use the handleOwner function here to set the owner of this object, but should we set the owner to the person/user that uses the /sync api-call?
 //        }
 

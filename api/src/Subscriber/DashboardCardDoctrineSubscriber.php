@@ -37,7 +37,7 @@ class DashboardCardDoctrineSubscriber implements EventSubscriberInterface
             return null;
         }
 
-        if (strpos($entity, "App\\Entity")) {
+        if (strpos($entity, 'App\\Entity')) {
             $entity = 'App:'.$entity;
         }
 

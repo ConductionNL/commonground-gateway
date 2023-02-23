@@ -1,0 +1,32 @@
+{{- $redisServiceName := include "redis.fullname" . -}}
+{{- $rabbitmqServiceName := include "rabbitmq.fullname" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "commonground-gateway.fullname" . }}
+  labels:
+  {{- include "commonground-gateway.labels" . | nindent 4 }}
+data:
+  auth-enabled: {{ .Values.security.authEnabled | default "true" | quote }}
+  app-version: {{ .Values.config.version | quote }}
+  app-cors-allow-origin: {{ .Values.config.corsAllowOrigin | quote }}
+  cache: {{ .Values.config.cache | quote }}
+  debug: {{ .Values.config.debug | quote }}
+  trusted-proxies: {{ join "," .Values.config.trustedProxies }}
+  trusted-hosts: {{ .Values.config.trustedHosts | quote }}
+  global-domain: {{ .Values.global.domain | quote }}
+  url: {{ printf "https://api.%s%s" .Values.global.domain .Values.ingress.path | quote }}
+  {{- if .Values.redis.enabled }}
+  redis-host: {{ printf "%s-headless" $redisServiceName | quote }}
+  redis-port: {{ .Values.redis.redisPort | toString | quote }}
+  {{- end }}
+  cron-runner-enabled: {{ .Values.config.cronRunner.enabled | default "false" | quote }}
+  {{- if .Values.config.cronRunner.enabled }}
+  cron-runner-crontab: {{ .Values.config.cronRunner.crontab | default "*/5 * * * *" | quote }}
+  cron-runner-concurrencyPolicy: {{ .Values.config.cronRunner.concurrencyPolicy | default "Forbid" | quote }}
+  cron-runner-activeDeadlineSeconds: {{ .Values.config.cronRunner.activeDeadlineSeconds | default "600" | quote }}
+  cron-runner-appAuth: {{ .Values.config.cronRunner.appAuth | default "false" | quote }}
+  {{- end }}
+
+  rabbitmq-host: {{ printf "%s" $rabbitmqServiceName | quote }}
+  rabbitmq-port: {{ .Values.rabbitmq.service.port | quote }}

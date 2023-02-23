@@ -8,13 +8,13 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Exception\GatewayException;
 use App\Repository\ActionRepository;
 use DateTime;
 use DateTimeInterface;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -60,6 +60,18 @@ class Action
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private UuidInterface $id;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $reference;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $version;
 
     /**
      * @var string The name of the action
@@ -185,11 +197,6 @@ class Action
     private ?bool $isEnabled = true;
 
     /**
-     * @ORM\OneToMany(targetEntity=ActionLog::class, mappedBy="action", orphanRemoval=true, fetch="EXTRA_LAZY")
-     */
-    private $actionLogs;
-
-    /**
      * @var array|null The configuration of the action handler
      *
      * @Groups({"read","write"})
@@ -219,8 +226,6 @@ class Action
     public function __construct(
         $actionHandler = false
     ) {
-        $this->actionLogs = new ArrayCollection();
-
         if ($actionHandler) {
             if (!$schema = $actionHandler->getConfiguration()) {
                 return;
@@ -229,12 +234,116 @@ class Action
             (isset($schema['title']) ? $this->setName($schema['title']) : '');
             (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
             $this->setClass(get_class($actionHandler));
+            $this->setConditions(['==' => [1, 1]]);
+            $this->setConfiguration($this->getDefaultConfigFromSchema($schema));
         }
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
+    public function fromSchema(array $schema): self
+    {
+        if (!isset($schema['$schema']) || $schema['$schema'] != 'https://json-schema.org/draft/2020-12/action') {
+            // todo: throw exception on wron schema (requieres design desigin on referencese
+            // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://json-schema.org/draft/2020-12/mapping is required');
+        }
+
+        (isset($schema['$id']) ? $this->setReference($schema['$id']) : '');
+        (isset($schema['title']) ? $this->setName($schema['title']) : '');
+        (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
+        (isset($schema['version']) ? $this->setVersion($schema['version']) : '');
+        (isset($schema['listens']) ? $this->setListens($schema['listens']) : '');
+        (isset($schema['throws']) ? $this->setThrows($schema['throws']) : '');
+        (isset($schema['conditions']) ? $this->setConditions($schema['conditions']) : '');
+        (isset($schema['configuration']) ? $this->setConfiguration($schema['configuration']) : '');
+        (isset($schema['isLockable']) ? $this->setIsLockable($schema['isLockable']) : '');
+        (isset($schema['isEnabled']) ? $this->setIsEnabled($schema['isEnabled']) : '');
+        (isset($schema['class']) ? $this->setClass($schema['class']) : '');
+
+        return  $this;
+    }
+
+    public function toSchema(): array
+    {
+        $schema = [
+            '$id'                    => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'                => 'https://json-schema.org/draft/2020-12/action',
+            'title'                  => $this->getName(),
+            'description'            => $this->getDescription(),
+            'version'                => $this->getVersion(),
+            'listens'                => $this->getListens(),
+            'throws'                 => $this->getThrows(),
+            'conditions'             => $this->getConditions(),
+            'configuration'          => $this->getConfiguration(),
+            'isLockable'             => $this->getIsLockable(),
+            'isEnabled'              => $this->getIsEnabled(),
+        ];
+
+        return $schema;
+    }
+
+    /**
+     * Gets the default config from a json schema definition of an ActionHandler.
+     *
+     * @param array $schema
+     *
+     * @return array
+     */
+    private function getDefaultConfigFromSchema(array $schema): array
+    {
+        $config = [];
+
+        if (!isset($schema['properties'])) {
+            return $config;
+        }
+
+        // Lets grap al the default values
+        foreach ($schema['properties'] as $key => $property) {
+            if (isset($property['default'])) {
+                $config[$key] = $property['default'];
+            }
+        }
+
+        return $config;
     }
 
     public function getId(): ?UuidInterface
     {
         return $this->id;
+    }
+
+    public function setId(string $id): self
+    {
+        $this->id = Uuid::fromString($id);
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getversion(): ?string
+    {
+        return $this->version;
+    }
+
+    public function setversion(string $version): self
+    {
+        $this->version = $version;
+
+        return $this;
     }
 
     public function getName(): ?string
@@ -413,36 +522,6 @@ class Action
     public function setIsEnabled(?bool $isEnabled): self
     {
         $this->isEnabled = $isEnabled;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|ActionLog[]
-     */
-    public function getActionLogs(): Collection
-    {
-        return $this->actionLogs;
-    }
-
-    public function addActionLog(ActionLog $actionLog): self
-    {
-        if (!$this->actionLogs->contains($actionLog)) {
-            $this->actionLogs[] = $actionLog;
-            $actionLog->setAction($this);
-        }
-
-        return $this;
-    }
-
-    public function removeActionLog(ActionLog $actionLog): self
-    {
-        if ($this->actionLogs->removeElement($actionLog)) {
-            // set the owning side to null (unless already changed)
-            if ($actionLog->getAction() === $this) {
-                $actionLog->setAction(null);
-            }
-        }
 
         return $this;
     }

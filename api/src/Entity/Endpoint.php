@@ -8,12 +8,15 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Entity\Gateway as Source;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
@@ -129,13 +132,7 @@ class Endpoint
      * @Groups({"read", "write"})
      * @ORM\Column(type="array")
      */
-    private ?array $path;
-
-    /**
-     * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="endpoint", fetch="EXTRA_LAZY", cascade={"remove"})
-     */
-    private Collection $requestLogs;
+    private ?array $path = [];
 
     /**
      * @var array Everything we do *not* want to log when logging errors on this endpoint, defaults to only the authorization header. See the entity RequestLog for the possible options. For headers an array of headers can be given, if you only want to filter out specific headers.
@@ -155,29 +152,22 @@ class Endpoint
     private $applications;
 
     /**
-     * @Groups({"read", "write"})
-     * @ORM\OneToOne(targetEntity=Subscriber::class, mappedBy="endpoint", cascade={"persist", "remove"})
-     * @MaxDepth(1)
-     */
-    private ?Subscriber $subscriber;
-
-    /**
      * @var ?Collection The collections of this Endpoint
      *
      * @Groups({"read", "write"})
      * @MaxDepth(1)
      * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="endpoints")
+     * @ORM\OrderBy({"dateCreated" = "DESC"})
      */
     private ?Collection $collections;
 
     /**
      * @var ?string The operation type calls must be that are requested through this Endpoint
      *
-     * @Assert\Choice({"item", "collection"})
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private string $operationType;
+    private ?string $operationType = null;
 
     /**
      * @var ?array (OAS) tags to identify this Endpoint
@@ -264,9 +254,11 @@ class Endpoint
     private ?string $defaultContentType = 'application/json';
 
     /**
-     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="endpoints")
+     * @deprecated
+     *
+     * @ORM\ManyToOne(targetEntity=Entity::class)
      */
-    private $Entity;
+    private $entity;
 
     /**
      * The Entities of this Endpoint.
@@ -276,34 +268,144 @@ class Endpoint
      */
     private $entities;
 
-    public function __construct(?Entity $entity = null)
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="proxies")
+     */
+    private $proxy;
+
+    /**
+     * Constructor for creating an Endpoint. Use $entity to create an Endpoint for an Entity or
+     * use $source to create an Endpoint for a source, a proxy Endpoint.
+     *
+     * @param Entity|null  $entity        An entity to create an Endpoint for.
+     * @param Gateway|null $source        A source to create an Endpoint for. Will only work if $entity = null.
+     * @param array|null   $configuration A configuration array used to correctly create an Endpoint. The following keys are supported:
+     *                                    'path' => a path can be used to set the Path and PathRegex for this Endpoint. Default = $entity->getName() or $source->getName().
+     *                                    'methods' => the allowed methods for this Endpoint, default = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+     */
+    public function __construct(?Entity $entity = null, ?Source $source = null, ?array $configuration = [])
     {
-        $this->requestLogs = new ArrayCollection();
         $this->handlers = new ArrayCollection();
         $this->applications = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->properties = new ArrayCollection();
         $this->entities = new ArrayCollection();
 
-        // Create simple endpoints for entities
-        if ($entity) {
-            $this->setEntity($entity);
-            $this->setName($entity->getName());
-            $this->setDescription($entity->getDescription());
-            $this->setMethods(['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
-            $this->setPath([1=>'id']);
-
-            // Lets make a path
-            $path = mb_strtolower(str_replace(' ', '_', $entity->getName()));
-            if (!$entity->getCollections()->isEmpty() && $entity->getCollections()->first()->getPrefix()) {
-                $path = $entity->getCollections()->first()->getPrefix().$path;
-            }
-            $pathRegEx = '^'.$path.'/?([a-z0-9-]+)?$';
-            $this->setPathRegex($pathRegEx);
-
-            /*@depricated kept here for lagacy */
-            $this->setOperationType('GET');
+        if (!$entity && !$source) {
+            return;
         }
+
+        // Create simple endpoint(s) for entity
+        if ($entity) {
+            $default = $this->constructEntityEndpoint($entity);
+        }
+        // Create simple endpoint(s) for source (proxy)
+        else {
+            $default = $this->constructProxyEndpoint($source);
+        }
+
+        if ($configuration) {
+            $this->fromArray($configuration, $default);
+        }
+    }
+
+    /**
+     * Uses given $configuration array to set the properties of this Endpoint.
+     * $configuration or $default array must contain the key 'path'!
+     * And either $configuration array must contain the key 'pathRegex' or the $default array must contain the key 'pathRegexEnd'.
+     *
+     * @param array $configuration An array with data.
+     * @param array $default       An array with data. The default values used for setting properties. Can contain the following keys:
+     *                             'path' => If $configuration array has no key 'path' this value is used to set the Path. (and pathRegex if $configuration has no 'pathRegex' key)
+     *                             'pathRegexEnd' => A string added to the end of the pathRegex.
+     *                             'pathArrayEnd' => The final item in the path array, 'id' for an Entity Endpoint and {route} for a proxy Endpoint.
+     *
+     * @return void
+     */
+    public function fromArray(array $configuration, array $default)
+    {
+        // Lets make a path & add prefix to this path if it is needed.
+        $path = array_key_exists('path', $configuration) ? $configuration['path'] : $default['path'];
+
+        // Make sure we never have a starting / for PathRegex.
+        // todo: make sure all bundles create endpoints with a path that does not start with a slash!
+        $path = ltrim($path, '/');
+
+        $entity = (array_key_exists('entities', $configuration) && is_array($configuration['entities']) && !empty($configuration['entities']))
+            ? $configuration['entities'][0] : ($this->entities->first() ?? $this->entity);
+
+        $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
+        if ($entity instanceof Entity && !$entity->getCollections()->isEmpty() &&
+            $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
+            $path = $entity->getCollections()->matching($criteria)->first()->getPrefix().'/'.$path;
+        }
+
+        // Set the pathRegex
+        $pathRegex = array_key_exists('pathRegex', $configuration) ? $configuration['pathRegex'] : "^$path/{$default['pathRegexEnd']}$";
+        $this->setPathRegex($pathRegex);
+
+        // Create Path array (add default pathArrayEnd to this, different depending on if we create en Endpoint for $entity or $source.)
+        $explodedPath = explode('/', $path);
+        array_key_exists('pathArrayEnd', $default) && $explodedPath[] = $default['pathArrayEnd'];
+        $this->setPath($explodedPath);
+        $this->setMethods(array_key_exists('methods', $configuration) && $configuration['methods'] ? $configuration['methods'] : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+
+        array_key_exists('name', $configuration) ? $this->setName($configuration['name']) : '';
+        array_key_exists('description', $configuration) ? $this->setDescription($configuration['description']) : '';
+        // etc^...
+
+        /*@depricated kept here for lagacy */
+        $this->setMethod(array_key_exists('method', $configuration) ? $configuration['method'] : 'GET');
+        $this->setOperationType(array_key_exists('operationType', $configuration) ? $configuration['operationType'] : 'GET');
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
+    /**
+     * Use the given Entity data to set some values during constructor when creating an Endpoint for an Entity.
+     *
+     * @param Entity $entity The Entity
+     *
+     * @return array Returns default values for path and pathRegex if we are creating and Endpoint for an Entity.
+     */
+    private function constructEntityEndpoint(Entity $entity): array
+    {
+        $this->addEntity($entity);
+        $this->setEntity($entity);
+        $this->setName($entity->getName());
+        $this->setDescription($entity->getDescription());
+
+        // Default path, pathArray(end) & pathRegex(end) for $entity
+        return [
+            'path'         => mb_strtolower(str_replace(' ', '_', $entity->getName())),
+            'pathArrayEnd' => 'id',
+            'pathRegexEnd' => '?([a-z0-9-]+)?',
+        ];
+    }
+
+    /**
+     * Use the given Source data to set some values during constructor when creating an Endpoint for a Source (a proxy Endpoint).
+     *
+     * @param Source $source The Source
+     *
+     * @return array Returns default values for path and pathRegex if we are creating and Endpoint for a Source.
+     */
+    private function constructProxyEndpoint(Source $source): array
+    {
+        $this->setProxy($source);
+        $this->setName("{$source->getName()} proxy endpoint");
+        $this->setDescription($source->getDescription());
+
+        // Default path, pathArray(end) & pathRegex(end) for $source
+        return [
+            'path'         => mb_strtolower(str_replace(' ', '_', $source->getName())),
+            'pathArrayEnd' => '{route}',
+            'pathRegexEnd' => '[^.*]*',
+        ];
     }
 
     public function getId(): ?UuidInterface
@@ -311,9 +413,9 @@ class Endpoint
         return $this->id;
     }
 
-    public function setId(UuidInterface $id): self
+    public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
@@ -402,6 +504,18 @@ class Endpoint
         return $this;
     }
 
+    public function getParameters(): ?array
+    {
+        return $this->parameters;
+    }
+
+    public function setParameters(array $parameters): self
+    {
+        $this->parameters = $parameters;
+
+        return $this;
+    }
+
     public function getMethods(): ?array
     {
         return $this->methods;
@@ -434,36 +548,6 @@ class Endpoint
     public function setStatus(?bool $status): self
     {
         $this->status = $status;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|RequestLog[]
-     */
-    public function getRequestLogs(): Collection
-    {
-        return $this->requestLogs;
-    }
-
-    public function addRequestLog(RequestLog $requestLog): self
-    {
-        if (!$this->requestLogs->contains($requestLog)) {
-            $this->requestLogs[] = $requestLog;
-            $requestLog->setEndpoint($this);
-        }
-
-        return $this;
-    }
-
-    public function removeRequestLog(RequestLog $requestLog): self
-    {
-        if ($this->requestLogs->removeElement($requestLog)) {
-            // set the owning side to null (unless already changed)
-            if ($requestLog->getEndpoint() === $this) {
-                $requestLog->setEndpoint(null);
-            }
-        }
 
         return $this;
     }
@@ -507,28 +591,6 @@ class Endpoint
         return $this;
     }
 
-    public function getSubscriber(): ?Subscriber
-    {
-        return $this->subscriber;
-    }
-
-    public function setSubscriber(?Subscriber $subscriber): self
-    {
-        // unset the owning side of the relation if necessary
-        if ($subscriber === null && $this->subscriber !== null) {
-            $this->subscriber->setEndpoint(null);
-        }
-
-        // set the owning side of the relation if necessary
-        if ($subscriber !== null && $subscriber->getEndpoint() !== $this) {
-            $subscriber->setEndpoint($this);
-        }
-
-        $this->subscriber = $subscriber;
-
-        return $this;
-    }
-
     /**
      * @return Collection|CollectionEntity[]
      */
@@ -561,7 +623,7 @@ class Endpoint
         return $this->operationType;
     }
 
-    public function setOperationType(string $operationType): self
+    public function setOperationType(?string $operationType): self
     {
         $this->operationType = $operationType;
 
@@ -720,6 +782,18 @@ class Endpoint
     public function removeEntity(Entity $entity): self
     {
         $this->entities->removeElement($entity);
+
+        return $this;
+    }
+
+    public function getProxy(): ?Gateway
+    {
+        return $this->proxy;
+    }
+
+    public function setProxy(?Gateway $proxy): self
+    {
+        $this->proxy = $proxy;
 
         return $this;
     }

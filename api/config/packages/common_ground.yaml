@@ -40,6 +40,7 @@ parameters:
   env(APP_WEB):
   env(APP_INTERNAL): "false"
   env(APP_BUILD_ALL_FIXTURES):
+  env(GLOBAL_DOMAIN): "localhost"
   env(APP_URL): "http://localhost"
   env(PUBLICCODE): ""
   env(FACEBOOK_ID): ""
@@ -104,7 +105,8 @@ parameters:
   app_subdomain: "%env(APP_SUBDOMAIN)%"
   app_subpath: "%env(APP_SUBPATH)%"
   app_subpath_routing: "%env(APP_SUBPATH_ROUTING)%"
-  app_url: "%env(trimtrailingslash:APP_URL)%"
+  global_domain: "%env(GLOBAL_DOMAIN)%"
+  app_url: "%env(APP_URL)%"
   PUBLICCODE: "%env(PUBLICCODE)%"
   app_demo: "%env(APP_DEMO)%"
   app_web: "%env(APP_WEB)%"
@@ -137,10 +139,6 @@ parameters:
   documentation_licence_name: "%env(DOCUMENTATION_LICENCE_NAME)%"
   documentation_licence_url: "%env(DOCUMENTATION_LICENCE_URL)%"
   documentation_version: "%env(DOCUMENTATION_VERSION)%"
-
-  app_certificate: "%env(APP_CERT)%"
-  app_ssl_key: "%env(APP_KEY)%"
-
   app_shasign: "%env(APP_SHASIGN)%"
 
   mode: "%env(APP_MODE)%"
@@ -299,6 +297,7 @@ twig:
     app_web: "%env(APP_WEB)%"
     app_internal: "%env(APP_INTERNAL)%"
     app_build_all_fixtures: "%env(APP_BUILD_ALL_FIXTURES)%"
+    global_domain: "%env(GLOBAL_DOMAIN)%"
     app_url: "%env(APP_URL)%"
     PUBLICCODE: "%env(PUBLICCODE)%"
     app_build: "%env(APP_BUILD)%"

@@ -83,7 +83,9 @@ class Application
     private ?string $description;
 
     /**
-     * @var array An array of domains of this Application.
+     * The hosts that this applications uses, keep in ind that a host is exluding a trailing slach / and https:// ot http://.
+     *
+     * @var array An array of hosts of this Application.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="array")
@@ -91,20 +93,36 @@ class Application
     private array $domains = [];
 
     /**
-     * @var string A public uuid of this Application.
+     * @var string A public key of this Application.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="text", nullable=true, name="public_column")
      */
     private ?string $public = null;
 
     /**
-     * @var string A secret uuid of this Application.
+     * @var string A secret key of this Application.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", nullable=true)
+     * @ORM\Column(type="text", nullable=true)
      */
     private ?string $secret = null;
+
+    /**
+     * @var string|null A public key for authentication, or a secret for HS256 keys
+     *
+     * @Groups({"write"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $publicKey = null;
+
+    /**
+     * @var string|null A private key for authentication, or a secret for HS256 keys
+     *
+     * @Groups({"write"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $privateKey = null;
 
     /**
      * @var string Uri of user object.
@@ -114,41 +132,20 @@ class Application
      */
     private ?string $resource = null;
 
-    /**
-     *  @ORM\PrePersist
-     *  @ORM\PreUpdate
-     */
-    public function prePersist()
-    {
-        if (!$this->getSecret()) {
-            $secret = Uuid::uuid4()->toString();
-            $this->setSecret($secret);
-        }
-
-        if (!$this->getPublic()) {
-            $secret = Uuid::uuid4()->toString();
-            $this->setPublic($secret);
-        }
-    }
-
     // TODO: make this required?
     /**
-     * @var string An uuid or uri of an organization for this Application.
+     * @var Organization An uuid or uri of an organization for this Application.
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @MaxDepth(1)
+     * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="applications")
+     * @ORM\JoinColumn(nullable=false)
      */
-    private ?string $organization;
+    private ?Organization $organization;
 
     /**
      * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="application", fetch="EXTRA_LAZY", cascade={"remove"})
-     */
-    private Collection $requestLogs;
-
-    /**
      * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="application", fetch="EXTRA_LAZY", cascade={"remove"})
-     * @MaxDepth(1)
      */
     private Collection $objectEntities;
 
@@ -194,20 +191,31 @@ class Application
     private $dateModified;
 
     /**
-     * @var string|null A public key for authentication, or a secret for HS256 keys
-     *
-     * @Groups({"write"})
-     * @ORM\Column(type="text", nullable=true)
+     * @MaxDepth(1)
+     * @ORM\ManyToMany(targetEntity=User::class, mappedBy="applications")
      */
-    private ?string $publicKey = null;
+    private $users;
+
+    /**
+     * @var array Certificates that can be used to verify with this application
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private array $certificates = [];
 
     public function __construct()
     {
-        $this->requestLogs = new ArrayCollection();
         $this->objectEntities = new ArrayCollection();
         $this->endpoints = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->contracts = new ArrayCollection();
+        $this->users = new ArrayCollection();
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
     }
 
     public function getId(): ?UuidInterface
@@ -215,9 +223,9 @@ class Application
         return $this->id;
     }
 
-    public function setId(UuidInterface $id): self
+    public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
@@ -294,44 +302,14 @@ class Application
         return $this;
     }
 
-    public function getOrganization(): ?string
+    public function getOrganization(): ?Organization
     {
         return $this->organization;
     }
 
-    public function setOrganization(string $organization): self
+    public function setOrganization(Organization $organization): self
     {
         $this->organization = $organization;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|RequestLog[]
-     */
-    public function getRequestLogs(): Collection
-    {
-        return $this->requestLogs;
-    }
-
-    public function addRequestLog(RequestLog $requestLog): self
-    {
-        if (!$this->requestLogs->contains($requestLog)) {
-            $this->requestLogs[] = $requestLog;
-            $requestLog->setApplication($this);
-        }
-
-        return $this;
-    }
-
-    public function removeRequestLog(RequestLog $requestLog): self
-    {
-        if ($this->requestLogs->removeElement($requestLog)) {
-            // set the owning side to null (unless already changed)
-            if ($requestLog->getApplication() === $this) {
-                $requestLog->setApplication(null);
-            }
-        }
 
         return $this;
     }
@@ -479,6 +457,88 @@ class Application
     public function setPublicKey(string $publicKey): self
     {
         $this->publicKey = $publicKey;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|User[]
+     */
+    public function getUsers(): Collection
+    {
+        return $this->users;
+    }
+
+    public function addUser(User $user): self
+    {
+        if (!$this->users->contains($user)) {
+            $this->users[] = $user;
+            $user->addApplication($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUser(User $user): self
+    {
+        if ($this->users->removeElement($user)) {
+            $user->removeApplication($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     *  @ORM\PrePersist
+     *  @ORM\PreUpdate
+     */
+    public function prePersist()
+    {
+        if (!$this->getSecret()) {
+            $secret = Uuid::uuid4()->toString();
+            $this->setSecret($secret);
+        }
+
+        if (!$this->getPublic()) {
+            $secret = Uuid::uuid4()->toString();
+            $this->setPublic($secret);
+        }
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getPrivateKey(): ?string
+    {
+        return $this->privateKey;
+    }
+
+    /**
+     * @param string|null $privateKey
+     */
+    public function setPrivateKey(?string $privateKey): self
+    {
+        $this->privateKey = $privateKey;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCertificates(): array
+    {
+        return $this->certificates;
+    }
+
+    /**
+     * @param array|null $certificates
+     *
+     * @return Application
+     */
+    public function setCertificates(?array $certificates): self
+    {
+        $this->certificates = $certificates;
 
         return $this;
     }

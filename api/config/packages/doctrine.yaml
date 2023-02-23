@@ -3,7 +3,11 @@ doctrine:
         # IMPORTANT: You MUST configure your server version,
         # either here or in the DATABASE_URL env var (see .env file)
         #server_version: '13'
+        charset: UTF-8
         url: '%env(resolve:DATABASE_URL)%'
+        options:
+            TrustServerCertificate: true
+            Encrypt: false
         types:
             uuid:  Ramsey\Uuid\Doctrine\UuidType
             datetime:  Conduction\CommonGroundBundle\Types\UTCDateTimeType  #We override the default doctrine datetime with a UTC based version

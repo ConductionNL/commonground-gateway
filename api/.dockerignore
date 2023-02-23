@@ -16,5 +16,4 @@
 bin/*
 !bin/console
 docker/db/data/
-var/
-vendor/
+var/*
