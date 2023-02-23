@@ -1453,6 +1453,16 @@ class Attribute
         return $this;
     }
 
+    public function getValidation(string $key): ?array
+    {
+        $validations = getValidations();
+        if(isset($validations[$key]) === false){
+            return false;
+        }
+
+        return $validations[$key];
+    }
+
     public function getValidations(): ?array
     {
         //TODO: this list of validations is not complete!
