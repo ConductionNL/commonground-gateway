@@ -682,20 +682,23 @@ class Gateway
     public function fromArray(array $configuration)
     {
         // Do not set jwt, secret, password or apikey this way!
-        array_key_exists('name', $configuration) ? $this->setName($configuration['name']) : '';
-        array_key_exists('location', $configuration) ? $this->setLocation($configuration['location']) : '';
-        array_key_exists('authorizationHeader', $configuration) ? $this->setAuthorizationHeader($configuration['authorizationHeader']) : '';
-        array_key_exists('auth', $configuration) ? $this->setAuth($configuration['auth']) : '';
-        array_key_exists('authorizationPassthroughMethod', $configuration) ? $this->setAuthorizationPassthroughMethod($configuration['authorizationPassthroughMethod']) : '';
-        array_key_exists('locale', $configuration) ? $this->setLocale($configuration['locale']) : '';
-        array_key_exists('accept', $configuration) ? $this->setAccept($configuration['accept']) : '';
-        array_key_exists('jwtId', $configuration) ? $this->setJwtId($configuration['jwtId']) : '';
-        array_key_exists('username', $configuration) ? $this->setUsername($configuration['username']) : '';
-        array_key_exists('documentation', $configuration) ? $this->setDocumentation($configuration['documentation']) : '';
-        array_key_exists('headers', $configuration) ? $this->setHeaders($configuration['headers']) : '';
-        array_key_exists('translationConfig', $configuration) ? $this->setTranslationConfig($configuration['translationConfig']) : '';
-        array_key_exists('type', $configuration) ? $this->setType($configuration['type']) : '';
-        array_key_exists('configuration', $configuration) ? $this->setConfiguration($configuration['configuration']) : '';
+        array_key_exists('name', $configuration) && $this->setName($configuration['name']);
+        array_key_exists('location', $configuration) && $this->setLocation($configuration['location']);
+        array_key_exists('authorizationHeader', $configuration) && $this->setAuthorizationHeader($configuration['authorizationHeader']);
+        array_key_exists('auth', $configuration) && $this->setAuth($configuration['auth']);
+        array_key_exists('authorizationPassthroughMethod', $configuration) && $this->setAuthorizationPassthroughMethod($configuration['authorizationPassthroughMethod']);
+        array_key_exists('locale', $configuration) && $this->setLocale($configuration['locale']);
+        array_key_exists('accept', $configuration) && $this->setAccept($configuration['accept']);
+        array_key_exists('jwtId', $configuration) && $this->setJwtId($configuration['jwtId']);
+        array_key_exists('secret', $configuration) && $this->setSecret($configuration['secret']);
+        array_key_exists('username', $configuration) && $this->setUsername($configuration['username']);
+        array_key_exists('password', $configuration) && $this->setPassword($configuration['password']);
+        array_key_exists('documentation', $configuration) && $this->setDocumentation($configuration['documentation']);
+        array_key_exists('headers', $configuration) && $this->setHeaders($configuration['headers']);
+        array_key_exists('translationConfig', $configuration) && $this->setTranslationConfig($configuration['translationConfig']);
+        array_key_exists('type', $configuration) && $this->setType($configuration['type']);
+        array_key_exists('configuration', $configuration) && $this->setConfiguration($configuration['configuration']);
+        array_key_exists('isEnabled', $configuration) && $this->setIsEnabled($configuration['isEnabled']);
     }
 
     public function export(): ?array
