@@ -1,2 +1,3 @@
-* * * * * root bash date-script.sh
+*/1 * * * * bash /date-script.sh
+*/1 * * * * echo 'crontab triggered'
 # Single container cron example

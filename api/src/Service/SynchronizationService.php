@@ -8,19 +8,24 @@ use App\Entity\Entity;
 use App\Entity\Gateway as Source;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
+use App\Event\ActionEvent;
 use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
+use CommonGateway\CoreBundle\Service\MappingService;
+use DateInterval;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use Monolog\Logger;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
@@ -45,6 +50,11 @@ class SynchronizationService
     private array $data;
     private SymfonyStyle $io;
     private Environment $twig;
+    private MappingService $mappingService;
+
+    private ActionEvent $event;
+    private EventDispatcherInterface $eventDispatcher;
+    private Logger $logger;
 
     private bool $asyncError = false;
 
@@ -61,8 +71,9 @@ class SynchronizationService
      * @param ValidatorService       $validatorService
      * @param EavService             $eavService
      * @param Environment            $twig
+     * @param MappingService         $mappingService
      */
-    public function __construct(CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig)
+    public function __construct(CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig, EventDispatcherInterface $eventDispatcher, MappingService $mappingService)
     {
         $this->callService = $callService;
         $this->entityManager = $entityManager;
@@ -79,6 +90,24 @@ class SynchronizationService
         $this->configuration = [];
         $this->data = [];
         $this->twig = $twig;
+        $this->event = new ActionEvent('', []);
+        $this->eventDispatcher = $eventDispatcher;
+        $this->logger = new Logger('installation');
+        $this->mappingService = $mappingService;
+    }
+
+    /**
+     * Set symfony style in order to output to the console.
+     *
+     * @param SymfonyStyle $io
+     *
+     * @return self
+     */
+    public function setStyle(SymfonyStyle $io): self
+    {
+        $this->io = $io;
+
+        return $this;
     }
 
     /**
@@ -93,10 +122,12 @@ class SynchronizationService
     {
         $this->configuration = $configuration;
         $this->data = $data;
+
         if ($this->session->get('io')) {
             $this->io = $this->session->get('io');
             $this->io->note('SynchronizationService->SynchronizationItemHandler()');
         }
+        $this->logger->debug('SynchronizationService->SynchronizationItemHandler()');
 
         return $data;
     }
@@ -115,10 +146,12 @@ class SynchronizationService
     {
         $this->configuration = $configuration;
         $this->data = $data;
+
         if ($this->session->get('io')) {
             $this->io = $this->session->get('io');
             $this->io->note('SynchronizationService->synchronizationPushHandler()');
         }
+        $this->logger->debug('SynchronizationService->synchronizationPushHandler()');
 
         $source = $this->getSourceFromConfig();
         $entity = $this->getEntityFromConfig();
@@ -162,10 +195,12 @@ class SynchronizationService
     {
         $this->configuration = $configuration;
         $this->data = $data;
+
         if ($this->session->get('io')) {
             $this->io = $this->session->get('io');
             $this->io->note('SynchronizationService->SynchronizationWebhookHandler()');
         }
+        $this->logger->debug('SynchronizationService->SynchronizationWebhookHandler()');
 
         $source = $this->getSourceFromConfig();
         $entity = $this->getEntityFromConfig();
@@ -221,6 +256,7 @@ class SynchronizationService
             $this->io = $this->session->get('io');
             $this->io->note('SynchronizationService->SynchronizationCollectionHandler()');
         }
+        $this->logger->debug('SynchronizationService->SynchronizationCollectionHandler()');
 
         $source = $this->getSourceFromConfig();
         $entity = $this->getEntityFromConfig();
@@ -320,6 +356,7 @@ class SynchronizationService
                 $this->io->text('totalResultsSynced +1 = '.++$config['totalResultsSynced']);
                 $this->io->newLine();
             }
+            $this->logger->debug('totalResultsSynced +1 = '.++$config['totalResultsSynced']);
         }
 
         return [
@@ -346,6 +383,7 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->text("Deleting Object with id: {$object->getId()->toString()} & Synchronization with id: {$synchronization->getId()->toString()}");
             }
+            $this->logger->info("Deleting Object with id: {$object->getId()->toString()} & Synchronization with id: {$synchronization->getId()->toString()}");
 
             // Delete object (this will remove this object result from the cache)
             // This will also delete the sync because of cascade delete
@@ -357,6 +395,8 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->warning("{$exception->getMessage()}");
             }
+
+            $this->logger->error("{$exception->getMessage()}");
 
             return false;
         }
@@ -384,6 +424,11 @@ class SynchronizationService
                 $this->io->error("Could not get a Source with current Action->Configuration['$configKey']");
             }
         }
+        if (isset($source) && $source instanceof Source && !$source->getIsEnabled()) {
+            $this->logger->warning("This source is not enabled: {$source->getName()}");
+        } else {
+            $this->logger->error("Could not get a Source with current Action->Configuration['$configKey']");
+        }
 
         return null;
     }
@@ -406,6 +451,8 @@ class SynchronizationService
         if (isset($this->io)) {
             $this->io->error("Could not get an Entity with current Action->Configuration['$configKey']");
         }
+
+        $this->logger->error("Could not get an Entity with current Action->Configuration['$configKey']");
 
         return null;
     }
@@ -572,12 +619,13 @@ class SynchronizationService
      *
      * @param array $callServiceConfig The configuration for the source
      * @param int   $page              The current page to be requested
+     * @param ?int  $errorsInARowCount The amount of failed fetches in a row
      *
      * @throws GuzzleException
      *
      * @return array
      */
-    private function fetchObjectsFromSource(array $callServiceConfig, int $page = 1): array
+    private function fetchObjectsFromSource(array $callServiceConfig, int $page = 1, ?int $errorsInARowCount = 0): array
     {
         // Get a single page
         if (is_array($callServiceConfig['query'])) {
@@ -602,13 +650,25 @@ class SynchronizationService
             );
         } catch (Exception|GuzzleException $exception) {
             // If no next page with this $page exists...
-            $this->ioCatchException($exception, ['line', 'file', 'message' => [
-                'preMessage' => '(This might just be the final page!) - Error while doing fetchObjectsFromSource: ',
-            ]]);
+            if ($errorsInARowCount == 3) {
+                $this->ioCatchException($exception, ['line', 'file', 'message' => [
+                    'preMessage' => '(This might just be the final page!) -  Error while doing fetchObjectsFromSource, tried to fetch page 3 times: ',
+                ]]);
+
+                return [];
+            }
 
             //todo: error, log this
-            return [];
+
+            $this->ioCatchException($exception, ['line', 'file', 'message' => [
+                'preMessage' => "Failed fetching page $page ",
+            ]]);
+
+            $errorsInARowCount++;
+
+            return $this->fetchObjectsFromSource($callServiceConfig, $page + 1, $errorsInARowCount);
         }
+
         $pageResult = $this->callService->decodeResponse($callServiceConfig['source'], $response);
 
         $dot = new Dot($pageResult);
@@ -691,9 +751,7 @@ class SynchronizationService
             return $synchronization;
         }
 
-        $synchronization = new Synchronization();
-        $synchronization->setSource($source);
-        $synchronization->setEntity($entity);
+        $synchronization = new Synchronization($source, $entity);
         $synchronization->setSourceId($sourceId);
         $this->entityManager->persist($synchronization);
         // We flush later
@@ -714,7 +772,7 @@ class SynchronizationService
      *
      * @return Synchronization|null A synchronization object related to the object in the gateway
      */
-    private function findSyncByObject(ObjectEntity $objectEntity, Source $source, Entity $entity): ?Synchronization
+    public function findSyncByObject(ObjectEntity $objectEntity, Source $source, Entity $entity): ?Synchronization
     {
         $synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['object' => $objectEntity->getId(), 'gateway' => $source, 'entity' => $entity]);
         if ($synchronization instanceof Synchronization) {
@@ -725,10 +783,8 @@ class SynchronizationService
             return $synchronization;
         }
 
-        $synchronization = new Synchronization();
+        $synchronization = new Synchronization($source, $entity);
         $synchronization->setObject($objectEntity);
-        $synchronization->setSource($source);
-        $synchronization->setEntity($entity);
         $synchronization->setSourceId($objectEntity->getId());
         $synchronization->setBlocked(false);
         $this->entityManager->persist($synchronization);
@@ -752,17 +808,20 @@ class SynchronizationService
     {
         if (!$synchronization->getObject()) {
             $object = new ObjectEntity();
-            Uuid::isValid($synchronization->getSourceId()) && $object->setExternalId($synchronization->getSourceId());
+            $synchronization->getSourceId() && $object->setExternalId($synchronization->getSourceId());
             $object->setEntity($synchronization->getEntity());
             $object = $this->setApplicationAndOrganization($object);
-            $synchronization->setObject($object);
+            $object->addSynchronization($synchronization);
             $this->entityManager->persist($object);
             if (isset($this->io)) {
                 $this->io->text("Created new ObjectEntity for Synchronization with id = {$synchronization->getId()->toString()}");
             }
+            $this->event = new ActionEvent('commongateway.object.create', []);
 
             return 'POST';
         }
+
+        $this->event = new ActionEvent('commongateway.object.update', []);
 
         return 'PUT';
     }
@@ -787,8 +846,14 @@ class SynchronizationService
         $dot = new Dot($sourceObject);
         if (isset($this->configuration['apiSource']['location']['dateChangedField'])) {
             $lastChanged = $dot->get($this->configuration['apiSource']['location']['dateChangedField']);
-            $synchronization->setSourcelastChanged(new DateTime($lastChanged));
-        } elseif ($synchronization->getHash() != $hash) {
+            if (!empty($lastChanged)) {
+                $synchronization->setSourcelastChanged(new DateTime($lastChanged));
+                $synchronization->setHash($hash);
+
+                return $synchronization;
+            }
+        }
+        if ($synchronization->getHash() != $hash) {
             $lastChanged = new DateTime();
             $synchronization->setSourcelastChanged($lastChanged);
         }
@@ -803,19 +868,105 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronization object before synchronization
      * @param array           $sourceObject    The object in the source
      *
-     * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError
+     * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError|Exception
      *
      * @return Synchronization The updated synchronization object
      */
-    public function handleSync(Synchronization $synchronization, array $sourceObject = []): Synchronization
+    public function handleSync(Synchronization $synchronization, array $sourceObject = [], ?array $customConfig = null): Synchronization
     {
+        isset($customConfig) && $this->configuration = $customConfig;
+
         if (isset($this->io)) {
             $this->io->text("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
         }
+        $this->logger->info("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
         $method = $this->checkObjectEntity($synchronization);
 
         // If we don't have an sourced object, we need to get one
         $sourceObject = $sourceObject ?: $this->getSingleFromSource($synchronization);
+
+        if ($sourceObject === null) {
+            if (isset($this->io)) {
+                $this->io->warning("Can not handleSync for Synchronization with id = {$synchronization->getId()->toString()} if \$sourceObject === null");
+            }
+            //todo: error, user feedback and log this? (see getSingleFromSource function)
+            return $synchronization;
+        }
+
+        // Let check
+        $now = new DateTime();
+        $synchronization->setLastChecked($now);
+
+        $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
+
+        //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
+        // todo: this if, elseif, else needs fixing, conditions aren't correct for if we ever want to syncToSource with this handleSync function
+        if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() >= $synchronization->getObject()->getDateModified())) {
+            // Counter
+            $counter = $synchronization->getTryCounter() + 1;
+            $synchronization->setTryCounter($counter);
+
+            // Set dont try before, expensional so in minutes  1,8,27,64,125,216,343,512,729,1000
+            $addMinutes = pow($counter, 3);
+            if ($synchronization->getDontSyncBefore()) {
+                $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT'.$addMinutes.'M'));
+            } else {
+                $dontTryBefore = new DateTime();
+            }
+            $synchronization->setDontSyncBefore($dontTryBefore);
+
+            $synchronization = $this->syncToGateway($synchronization, $sourceObject, $method);
+        }
+
+        // todo: we currently never use handleSync to do syncToSource, so let's make sure we aren't trying to by accident
+//        elseif ((!$synchronization->getLastSynced() || $synchronization->getLastSynced() < $synchronization->getObject()->getDateModified()) && $synchronization->getSourceLastChanged() < $synchronization->getObject()->getDateModified()) {
+//            $synchronization = $this->syncToSource($synchronization, true);
+//        }
+        else {
+            if (isset($this->io)) {
+                //todo: temp, maybe put something else here later
+                $this->io->text("Nothing to sync because source and gateway haven't changed");
+            }
+            $this->logger->info("Nothing to sync because source and gateway haven't changed");
+            $synchronization = $this->syncThroughComparing($synchronization);
+        }
+
+        return $synchronization;
+    }
+
+    /**
+     * Executes the synchronization between source and gateway.
+     *
+     * @param Synchronization $synchronization The synchronization to update
+     * @param array           $sourceObject    The object in the source
+     *
+     * @throws GuzzleException
+     * @throws LoaderError
+     * @throws SyntaxError
+     *
+     * @return Synchronization The updated synchronization
+     */
+    public function synchronize(Synchronization $synchronization, array $sourceObject = []): Synchronization
+    {
+        if (isset($this->io)) {
+            $this->io->text("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
+        }
+        $this->logger->info("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
+
+        //create new object if no object exists
+        if (!$synchronization->getObject()) {
+            isset($this->io) && $this->io->text('creating new objectEntity');
+            $object = new ObjectEntity($synchronization->getEntity());
+            $object->addSynchronization($synchronization);
+            $this->entityManager->persist($object);
+            $this->entityManager->persist($synchronization);
+            $oldDateModified = null;
+        } else {
+            $oldDateModified = $synchronization->getObject()->getDateModified()->getTimestamp();
+        }
+
+        $sourceObject = $sourceObject ?: $this->getSingleFromSource($synchronization);
+
         if ($sourceObject === null) {
             if (isset($this->io)) {
                 $this->io->warning("Can not handleSync for Synchronization with id = {$synchronization->getId()->toString()} if \$sourceObject === null");
@@ -834,27 +985,28 @@ class SynchronizationService
 
         // Set dont try before, expensional so in minutes  1,8,27,64,125,216,343,512,729,1000
         $addMinutes = pow($counter, 3);
-        $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT'.$addMinutes.'M'));
-        $synchronization->getDontSyncBefore($dontTryBefore);
-
-        $synchronization = $this->setLastChangedDate($synchronization, $sourceObject);
-
-        //Checks which is newer, the object in the gateway or in the source, and synchronise accordingly
-        // todo: this if, elseif, else needs fixing, conditions aren't correct for if we ever want to syncToSource with this handleSync function
-        if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() > $synchronization->getObject()->getDateModified())) {
-            $synchronization = $this->syncToGateway($synchronization, $sourceObject, $method);
+        if ($synchronization->getDontSyncBefore()) {
+            $dontTryBefore = $synchronization->getDontSyncBefore()->add(new DateInterval('PT'.$addMinutes.'M'));
+        } else {
+            $dontTryBefore = new DateTime();
         }
-        // todo: we currently never use handleSync to do syncToSource, so let's make sure we aren't trying to by accident
-//        elseif ((!$synchronization->getLastSynced() || $synchronization->getLastSynced() < $synchronization->getObject()->getDateModified()) && $synchronization->getSourceLastChanged() < $synchronization->getObject()->getDateModified()) {
-//            $synchronization = $this->syncToSource($synchronization, true);
-//        }
-        else {
-            if (isset($this->io)) {
-                //todo: temp, maybe put something else here later
-                $this->io->text("Nothing to sync because source and gateway haven't changed");
-            }
-            $synchronization = $this->syncThroughComparing($synchronization);
+        $synchronization->setDontSyncBefore($dontTryBefore);
+
+        if ($synchronization->getMapping()) {
+            $sourceObject = $this->mappingService->mapping($synchronization->getMapping(), $sourceObject);
         }
+        $synchronization->getObject()->hydrate($sourceObject);
+        $this->entityManager->persist($synchronization);
+
+        if ($oldDateModified !== $synchronization->getObject()->getDateModified()->getTimestamp()) {
+            $date = new DateTime();
+            isset($this->io) ?? $this->io->text("set new dateLastChanged to {$date->format('d-m-YTH:i:s')}");
+            $synchronization->setLastSynced(new DateTime());
+            $synchronization->setTryCounter(0);
+        } else {
+            isset($this->io) ?? $this->io->text("lastSynced is still {$synchronization->getObject()->getDateModified()->format('d-m-YTH:i:s')}");
+        }
+        //@TODO: write to source if internal timestamp > external timestamp & sourceobject is new
 
         return $synchronization;
     }
@@ -874,35 +1026,12 @@ class SynchronizationService
     {
         // todo: move this function to ObjectEntityService to prevent duplicate code...
 
-        if (isset($this->io)) {
-            $this->io->text("populateObject $method ObjectEntity with id = {$objectEntity->getId()->toString()}");
-        }
+        $objectEntity->hydrate($data);
 
-        $this->setApplicationAndOrganization($objectEntity);
+        $this->entityManager->persist($objectEntity);
 
-        $owner = $this->objectEntityService->checkAndUnsetOwner($data);
-        if (array_key_exists('owner', $this->configuration)) {
-            $owner = $this->configuration['owner'];
-        }
-
-        if ($validationErrors = $this->validatorService->validateData($data, $objectEntity->getEntity(), $method)) {
-            if (isset($this->io)) {
-                $this->io->warning("ValidationErrors: [{$this->objectEntityService->implodeMultiArray($validationErrors)}]");
-            }
-            //@TODO: Write errors to logs
-
-            foreach ($validationErrors as $error) {
-                if (!is_array($error) && strpos($error, 'must be present') !== false) {
-                    return $objectEntity;
-                }
-            }
-        }
-
-        $data = $this->objectEntityService->createOrUpdateCase($data, $objectEntity, $owner, $method, 'jsonld');
-        // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
-        if (!$this->checkActionConditionsEntity($objectEntity->getEntity()->getId()->toString())) {
-            $this->objectEntityService->dispatchEvent($method == 'POST' ? 'commongateway.object.create' : 'commongateway.object.update', ['response' => $data, 'entity' => $objectEntity->getEntity()->getId()->toString()]);
-        }
+        $this->event->setData(['response' => $objectEntity->toArray(), 'entity' => $objectEntity->getEntity()->getId()->toString()]);
+        $this->eventDispatcher->dispatch($this->event, $this->event->getType());
 
         return $objectEntity;
     }
@@ -941,7 +1070,10 @@ class SynchronizationService
             $objectEntity->setApplication($application);
             $objectEntity->setOrganization($application->getOrganization());
         } elseif (
-            ($application = $this->entityManager->getRepository('App:Application')->findAll()[0]) && $application instanceof Application
+            ($applications = $this->entityManager->getRepository('App:Application')->findAll()
+                && !empty($applications)
+                && $application = $applications[0])
+                && $application instanceof Application
         ) {
             $objectEntity->setApplication($application);
             $objectEntity->setOrganization($application->getOrganization());
@@ -1166,11 +1298,13 @@ class SynchronizationService
         if (isset($this->io)) {
             $this->io->text("syncToSource for Synchronization with id = {$synchronization->getId()->toString()}");
         }
+        $this->logger->info("syncToSource for Synchronization with id = {$synchronization->getId()->toString()}");
+
         if ($synchronization->isBlocked()) {
             return $synchronization;
         }
         $object = $synchronization->getObject();
-        $objectArray = $object->toArray(1, $this->configuration['apiSource']['extend'] ?? ['id']);
+        $objectArray = $object->toArray();
 
         //        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
         // todo: maybe move this to foreach in getAllFromSource() (nice to have)
@@ -1217,11 +1351,17 @@ class SynchronizationService
      */
     private function mapInput(array $sourceObject): array
     {
+        // What if we do not have a cnnfiguration?
+        if (!isset($this->configuration) || empty($this->configuration)) {
+            return  $sourceObject;
+        }
+
         if (array_key_exists('mappingIn', $this->configuration['apiSource']) && array_key_exists('skeletonIn', $this->configuration['apiSource'])) {
             $sourceObject = $this->translationService->dotHydrator(array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']), $sourceObject, $this->configuration['apiSource']['mappingIn']);
         } elseif (array_key_exists('mappingIn', $this->configuration['apiSource'])) {
             $sourceObject = $this->translationService->dotHydrator($sourceObject, $sourceObject, $this->configuration['apiSource']['mappingIn']);
         } elseif (array_key_exists('skeletonOut', $this->configuration['apiSource'])) {
+            // todo: this^ should be skeletonIn ?
             $sourceObject = $this->translationService->dotHydrator(array_merge($sourceObject, $this->configuration['apiSource']['skeletonIn']), $sourceObject, $sourceObject);
         }
 
@@ -1263,14 +1403,19 @@ class SynchronizationService
         if (isset($this->io)) {
             $this->io->text("syncToGateway for Synchronization with id = {$synchronization->getId()->toString()}");
         }
+        $this->logger->info("syncToGateway for Synchronization with id = {$synchronization->getId()->toString()}");
+
         $object = $synchronization->getObject();
 
-        $sourceObject = $this->mapInput($sourceObject);
+        if ($synchronization->getMapping()) {
+            $sourceObject = $this->mappingService->mapping($synchronization->getMapping(), $sourceObject);
+        }
 
         $sourceObjectDot = new Dot($sourceObject);
 
         $object = $this->populateObject($sourceObject, $object, $method);
         $object->setUri($synchronization->getSource()->getLocation().$this->getCallServiceEndpoint($synchronization->getSourceId()));
+
         if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
             $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
         }
@@ -1280,6 +1425,7 @@ class SynchronizationService
 
         $now = new DateTime();
         $synchronization->setLastSynced($now);
+        $synchronization->setTryCounter(0);
 
         return $synchronization->setObject($object);
     }

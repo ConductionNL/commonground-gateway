@@ -1,0 +1,58 @@
+{{- if .Values.config.samesiteCookie }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "commonground-gateway.fullname" . }}-framework
+  labels:
+    {{- include "commonground-gateway.labels" . | nindent 4 }}
+data:
+    framework.yaml: |
+        # see https://symfony.com/doc/current/reference/configuration/framework.html
+        framework:
+            session:
+                handler_id: Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler
+                cookie_secure: true
+                cookie_samesite: {{ .Values.config.samesiteCookie }}
+                storage_factory_id: session.storage.factory.native
+        parameters:
+            samesite: {{ .Values.config.samesiteCookie }}
+{{- end }}
+---
+    {{- if eq .Values.databaseType "mssql" }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "commonground-gateway.fullname" . }}-doctrineconfig
+  labels:
+    {{- include "commonground-gateway.labels" . | nindent 4 }}
+data:
+    doctrine.yaml: |
+        doctrine:
+            dbal:
+                # IMPORTANT: You MUST configure your server version,
+                # either here or in the DATABASE_URL env var (see .env file)
+                #server_version: '13'
+                charset: UTF-8
+                url: '%env(resolve:DATABASE_URL)%'
+                options:
+                    TrustServerCertificate: true
+                    Encrypt: false
+                types:
+                    uuid:  Ramsey\Uuid\Doctrine\UuidType
+                    datetime:  Conduction\CommonGroundBundle\Types\UTCDateTimeType  #We override the default doctrine datetime with a UTC based version
+            orm:
+                auto_generate_proxy_classes: true
+                naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+                auto_mapping: true
+                mappings:
+                    App:
+                        is_bundle: false
+                        type: annotation
+                        dir: '%kernel.project_dir%/src/Entity'
+                        prefix: 'App\Entity'
+                        alias: App
+                dql:
+                    string_functions:
+                        regexp_replace: DoctrineExtensions\Query\Postgresql\RegexpReplace
+
+{{- end }}

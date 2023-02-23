@@ -1,0 +1,18 @@
+dependencies:
+- name: postgresql
+  repository: https://charts.bitnami.com/bitnami
+  version: 12.1.2
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 17.3.11
+- name: rabbitmq
+  repository: https://charts.bitnami.com/bitnami
+  version: 11.9.1
+- name: mongodb
+  repository: https://charts.bitnami.com/bitnami
+  version: 13.4.4
+- name: gateway-ui
+  repository: https://raw.githubusercontent.com/ConductionNL/gateway-ui/refinement-demo-branch/helm/
+  version: 0.1.7
+digest: sha256:26a99dce811f80ca30c88b2d61abd148bae9666e859657bf9bcf932154f9a91c
+generated: "2023-02-20T14:53:19.441438753+01:00"

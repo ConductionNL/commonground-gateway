@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Application;
 use App\Entity\Endpoint;
 use App\Entity\Entity;
+use CommonGateway\CoreBundle\Service\CacheService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\ManagerRegistry;
@@ -18,9 +19,12 @@ use Exception;
  */
 class EndpointRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    private CacheService $cacheService;
+
+    public function __construct(ManagerRegistry $registry, CacheService $cacheService)
     {
         parent::__construct($registry, Endpoint::class);
+        $this->cacheService = $cacheService;
     }
 
     /**
@@ -35,6 +39,10 @@ class EndpointRepository extends ServiceEntityRepository
      */
     public function findByMethodRegex(string $method, string $path): ?Endpoint
     {
+        if ($endpoint = $this->cacheService->getEndpoints(['path' => $path, 'method' => $method])) {
+            return $endpoint;
+        }
+
         try {
             $query = $this->createQueryBuilder('e')
                 ->andWhere('LOWER(e.method) = :method')
@@ -66,21 +74,9 @@ class EndpointRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
 
-        // Match path to regex of Endpoints
-        foreach ($allEndpoints as $currentEndpoint) {
-            try {
-                $updatedPathRegex = str_replace('/', '\/', $currentEndpoint->getPathRegex());
-                if ($currentEndpoint->getPathRegex() !== null && preg_match("/$updatedPathRegex/", $path)) {
-                    $endpoint = $currentEndpoint;
-                    break;
-                }
-            } catch (Exception $exception) {
-                // failsafe for preg_match
-                continue;
-            }
-        }
-
-        return $endpoint;
+        return $allEndpoints
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 
     /**

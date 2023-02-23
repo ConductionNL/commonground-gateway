@@ -126,7 +126,7 @@ class Attribute
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="attributes")
      * @MaxDepth(1)
      */
-    private Entity $entity;
+    private ?Entity $entity;
 
     /**
      * @var string The function of this Attribute. This is used for making specific attribute types/functions work differently.
@@ -137,7 +137,7 @@ class Attribute
      *
      * @Assert\Choice({"noFunction", "id", "self", "uri", "externalId", "dateCreated", "dateModified", "userName"})
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", options={"default":"noFunction"}, name="functionColumn")
+     * @ORM\Column(type="string", options={"default":"noFunction"}, name="function_column")
      */
     private string $function = 'noFunction';
 
@@ -187,7 +187,7 @@ class Attribute
      *
      * @Assert\Length(max = 255)
      */
-    private $ref;
+    private $ref = '';
 
     /**
      * @var string *Can only be used in combination with type integer* Specifies a number where the value should be a multiple of, e.g. a multiple of 2 would validate 2,4 and 6 but would prevent 5
@@ -276,7 +276,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $maxItems;
+    private ?int $maxItems = null;
 
     /**
      * @var ?int *Can only be used in combination with type array* The minimum array length
@@ -287,7 +287,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private ?int $minItems;
+    private ?int $minItems = null;
 
     /**
      * @var bool *Can only be used in combination with type array* Define whether or not values in an array should be unique
@@ -298,7 +298,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $uniqueItems;
+    private $uniqueItems = null;
 
     /**
      * @var string *Can only be used in combination with type object* The maximum amount of properties an object should contain
@@ -309,7 +309,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $maxProperties;
+    private $maxProperties = null;
 
     /**
      * @var int *Can only be used in combination with type object* The minimum amount of properties an object should contain
@@ -320,7 +320,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $minProperties;
+    private $minProperties = null;
 
     /**
      * @var Attribute If the attribute targets an object that object might have an inversedBy field allowing a two-way connection
@@ -329,7 +329,7 @@ class Attribute
      * @ORM\OneToOne(targetEntity=Attribute::class)
      * @MaxDepth(1)
      */
-    private $inversedBy;
+    private $inversedBy = null;
 
     /**
      * @var bool Only whether or not this property is required
@@ -340,7 +340,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $required;
+    private $required = null;
 
     /**
      * @var array conditional requiremends for field
@@ -409,7 +409,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $description;
+    private $description = null;
 
     /**
      * @var string An default value for this value that will be used if a user doesn't supply a value
@@ -420,7 +420,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $defaultValue;
+    private $defaultValue = null;
 
     /**
      * @var bool Whether or not this property can be left empty
@@ -442,7 +442,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $mustBeUnique;
+    private $mustBeUnique = null;
 
     /**
      * @var bool Whether or not the mustBeUnique check is case sensitive
@@ -464,7 +464,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $readOnly;
+    private $readOnly = null;
 
     /**
      * @var bool Whether or not this property is write only
@@ -475,7 +475,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $writeOnly;
+    private $writeOnly = null;
 
     /**
      * @var string An example of the value that should be supplied
@@ -486,7 +486,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $example;
+    private $example = null;
 
     /**
      * @var string Pattern which value should suffice to (Ecma-262 Edition 5.1 regular expression dialect)
@@ -496,7 +496,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $pattern;
+    private $pattern = null;
 
     /**
      * @var bool Whether or not this property has been deprecated and wil be removed in the future
@@ -507,7 +507,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", nullable=true)
      */
-    private $deprecated;
+    private $deprecated = null;
 
     /**
      * @var string The minimal date for value, either a date, datetime or duration (ISO_8601)
@@ -517,7 +517,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $minDate;
+    private $minDate = null;
 
     /**
      * @var string The maximum date for value, either a date, datetime or duration (ISO_8601)
@@ -527,7 +527,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $maxDate;
+    private $maxDate = null;
 
     /**
      * @var string *Can only be used in combination with type file* The maximum allowed file size in bytes
@@ -538,7 +538,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $maxFileSize;
+    private $maxFileSize = null;
 
     /**
      * @var string *Can only be used in combination with type file* The minimum allowed file size in bytes
@@ -549,7 +549,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="integer", nullable=true)
      */
-    private $minFileSize;
+    private $minFileSize = null;
 
     /**
      * @var array *Can only be used in combination with type file* The type of the file
@@ -560,7 +560,7 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private $fileTypes;
+    private $fileTypes = null;
 
     /**
      * @Groups({"read", "write"})
@@ -665,9 +665,16 @@ class Attribute
      * @var ?string The uri to a schema.org property
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null}, name="schemaColumn")
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null}, name="schema_column")
      */
     private ?string $schema = null;
+
+    /**
+     * @var string|null The property name that inverses the value of the property
+     *
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+     */
+    private ?string $inversedByPropertyName = null;
 
     /**
      * @var Datetime The moment this resource was created
@@ -676,7 +683,7 @@ class Attribute
      * @Gedmo\Timestampable(on="create")
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private $dateCreated;
+    private $dateCreated = null;
 
     /**
      * @var Datetime The moment this resource was last Modified
@@ -685,7 +692,7 @@ class Attribute
      * @Gedmo\Timestampable(on="update")
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private $dateModified;
+    private $dateModified = null;
 
     /**
      * @todo
@@ -693,11 +700,16 @@ class Attribute
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $reference;
+    private $reference = null;
 
     public function __construct()
     {
         $this->attributeValues = new ArrayCollection();
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
     }
 
     /**
@@ -726,7 +738,9 @@ class Attribute
         if (array_key_exists('$ref', $property)) {
             $this->setSchema($property['$ref']);
         }
-        if (array_key_exists('items', $property)) {
+        if (array_key_exists('items', $property) && array_key_exists('$ref', $property['items'])) {
+            $this->setSchema($property['items']['$ref']);
+            $this->setMultiple(true);
         }
         if (array_key_exists('maxLength', $property)) {
             $this->setMaxLength($property['maxLength']);
@@ -737,6 +751,11 @@ class Attribute
         if (array_key_exists('default', $property)) {
             $this->setDefaultValue($property['default']);
         }
+        if (array_key_exists('inversedBy', $property)) {
+            $this->setInversedByPropertyName($property['inversedBy']);
+        }
+
+        $this->setDateModified(new DateTime());
 
         return $this;
     }
@@ -952,6 +971,9 @@ class Attribute
 
     public function setObject(?Entity $object): self
     {
+        if (!$object) {
+            return $this;
+        }
         $this->type = 'object';
         $this->object = $object;
 
@@ -1197,7 +1219,7 @@ class Attribute
 
         // If the attribute type is changes away from an object we need to drop the object
         if ($type != 'object' and $this->object) {
-            unset($this->object);
+            $this->object = null;
         }
 
         return $this;
@@ -1304,7 +1326,7 @@ class Attribute
         return $this->mustBeUnique;
     }
 
-    public function setMustBeUnique(bool $mustBeUnique): self
+    public function setMustBeUnique(?bool $mustBeUnique): self
     {
         $this->mustBeUnique = $mustBeUnique;
 
@@ -1742,6 +1764,24 @@ class Attribute
     public function setReference(?string $reference): self
     {
         $this->reference = $reference;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getInversedByPropertyName(): ?string
+    {
+        return $this->inversedByPropertyName;
+    }
+
+    /**
+     * @param string|null $inversedByPropertyName
+     */
+    public function setInversedByPropertyName(?string $inversedByPropertyName): self
+    {
+        $this->inversedByPropertyName = $inversedByPropertyName;
 
         return $this;
     }

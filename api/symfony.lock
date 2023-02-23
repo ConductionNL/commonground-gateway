@@ -40,9 +40,6 @@
     "brick/reflection": {
         "version": "0.4.1"
     },
-    "common-gateway/formio-bundle": {
-        "version": "dev-main"
-    },
     "commongateway/corebundle": {
         "version": "dev-master"
     },
@@ -251,6 +248,9 @@
     "knplabs/knp-markdown-bundle": {
         "version": "1.9.0"
     },
+    "larping-base/larping-bundle": {
+        "version": "1.0.53"
+    },
     "laminas/laminas-code": {
         "version": "4.4.2"
     },
@@ -271,6 +271,9 @@
     },
     "mongodb/mongodb": {
         "version": "1.15.0"
+    },
+    "monolog/monolog": {
+        "version": "2.8.0"
     },
     "myclabs/deep-copy": {
         "version": "1.10.2"
@@ -308,9 +311,6 @@
     },
     "onelogin/php-saml": {
         "version": "4.0.0"
-    },
-    "open-catalogi/open-catalogi-bundle": {
-        "version": "dev-main"
     },
     "paragonie/random_compat": {
         "version": "v9.99.100"
@@ -644,6 +644,21 @@
     },
     "symfony/mime": {
         "version": "v5.3.14"
+    },
+    "symfony/monolog-bridge": {
+        "version": "v5.3.14"
+    },
+    "symfony/monolog-bundle": {
+        "version": "3.8",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "3.7",
+            "ref": "213676c4ec929f046dfde5ea8e97625b81bc0578"
+        },
+        "files": [
+            "config/packages/monolog.yaml"
+        ]
     },
     "symfony/options-resolver": {
         "version": "v5.3.4"

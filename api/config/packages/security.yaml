@@ -1,4 +1,8 @@
 security:
+    password_hashers:
+        App\Entity\User:
+            algorithm: auto
+    
     # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
     enable_authenticator_manager: true
     providers:
@@ -15,6 +19,7 @@ security:
                 - App\Security\OIDCAuthenticator
                 - App\Security\TokenAuthenticator
                 - App\Security\ApiKeyAuthenticator
+                - App\Security\CertificateAuthenticator
 #            entry_point: App\Security\OIDCAuthenticator
 #            guard:
 #                authenticators:
@@ -22,8 +27,6 @@ security:
 #                    - Conduction\SamlBundle\Security\CommongroundSamlAdfsAuthenticator
 #                    - App\Security\DigispoofAuthenticator
 #                    - App\Security\OauthAuthenticator
-#                    - App\Security\BasicAuthAuthenticator
-#                    - App\Security\UserTokenAuthenticator
 #                entry_point: App\Security\UserTokenAuthenticator
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#firewalls-authentication

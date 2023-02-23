@@ -122,11 +122,28 @@ class DashboardCard
             case 'App\Entity\Entity':
                 $this->setType('schema');
                 break;
-            default:
+           case 'App\Entity\Gateway':
+               $this->setType('gateway');
+               break;
+           case 'App\Entity\Endpoint':
+               $this->setType('endpoint');
+               break;
+           case 'App\Entity\Action':
+               $this->setType('action');
+               break;
+           case 'App\Entity\Cronjob':
+               $this->setType('cronjob');
+               break;
+               default:
                 echo 'i equals 2';
                 break;
             }
         }
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
     }
 
     public function getId()

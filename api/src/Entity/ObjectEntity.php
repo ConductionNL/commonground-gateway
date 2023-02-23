@@ -2,12 +2,6 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -20,78 +14,17 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
+use function Symfony\Component\Translation\t;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * Description.
+ * An (data) object that resides within the datalayer of the gateway.
  *
  * @category Entity
  *
- * @ApiResource(
- *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *     "get"={"path"="/admin/object_entities/{id}"},
- *     "get_sync"={
- *          "method"="GET",
- *          "path"="/admin/object_entities/{id}/sync"
- *      },
- *     "get_object"={
- *          "method"="GET",
- *          "path"="/admin/objects/{id}"
- *      },
- *     "put"={"path"="/admin/object_entities/{id}"},
- *     "put_object"={
- *          "method"="PUT",
- *          "read"=false,
- *          "validate"=false,
- *          "path"="/admin/objects/{id}"
- *      },
- *     "delete"={"path"="/admin/object_entities/{id}"},
- *     "delete_object"={
- *          "method"="DELETE",
- *          "path"="/admin/objects/{id}"
- *      }
- *  },
- *  collectionOperations={
- *     "get"={"path"="/admin/object_entities"},
- *     "get_objects"={
- *          "method"="GET",
- *          "path"="/admin/objects"
- *      },
- *     "get_objects_schema"={
- *          "method"="GET",
- *          "path"="/admin/objects/schema/{schemaId}"
- *      },
- *     "post"={"path"="/admin/object_entities"},
- *     "post_objects_schema"={
- *          "method"="POST",
- *          "read"=false,
- *          "validate"=false,
- *          "path"="/admin/objects/schema/{schemaId}"
- *      },
- *     "create_sync"={
- *          "method"="POST",
- *          "read"=false,
- *          "validate"=false,
- *          "deserialize"=false,
- *          "write"=false,
- *          "serialize"=false,
- *          "query_parameter_validate"=false,
- *          "path"="/admin/object_entities/{id}/sync/{sourceId}"
- *      },
- *  })
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
  * @ORM\HasLifecycleCallbacks
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class, properties={
- *     "uri": "ipartial",
- *     "entity.id": "exact"
- * })
  */
 class ObjectEntity
 {
@@ -115,10 +48,10 @@ class ObjectEntity
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $name;
+    private ?string $name = null;
 
     /**
-     * @var string The {at sign}id or self->href of this Object.
+     * @var string The {at sign} id or self->href of this Object.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -135,7 +68,7 @@ class ObjectEntity
     private $externalId;
 
     /**
-     * @var string An uri
+     * @var string An uri (or url identifier) for this object
      *
      * @Assert\Url
      * @Groups({"read", "write"})
@@ -144,6 +77,8 @@ class ObjectEntity
     private $uri;
 
     /**
+     * The application that this object belongs to.
+     *
      * @Groups({"read", "write"})
      * @ORM\ManyToOne(targetEntity=Application::class, inversedBy="objectEntities")
      * @MaxDepth(1)
@@ -154,12 +89,12 @@ class ObjectEntity
      * @var string An uuid or uri of an organization
      *
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="objectEntities")
      */
-    private $organization;
+    private ?Organization $organization = null;
 
     /**
-     * @var string An uuid or uri of an owner
+     * @var string An uuid or uri of an owner of this object
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
@@ -206,18 +141,6 @@ class ObjectEntity
     private ?array $externalResult = [];
 
     /**
-     * @ORM\ManyToMany(targetEntity=GatewayResponseLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY")
-     */
-    private $responseLogs;
-
-    /*
-     * recursion stack
-     *
-     * the point of the recursion stack is to prevent the loadinf of objects that are already loaded
-     */
-    private Collection $recursionStack;
-
-    /**
      * @Groups({"read"})
      * @MaxDepth(1)
      * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"})
@@ -236,12 +159,6 @@ class ObjectEntity
 
     /**
      * @MaxDepth(1)
-     * @ORM\OneToMany(targetEntity=RequestLog::class, mappedBy="objectEntity", fetch="EXTRA_LAZY", cascade={"remove"})
-     */
-    private Collection $requestLogs;
-
-    /**
-     * @MaxDepth(1)
      * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="object", fetch="EXTRA_LAZY", cascade={"remove"})
      */
     private Collection $synchronizations;
@@ -251,6 +168,13 @@ class ObjectEntity
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="object", fetch="EXTRA_LAZY", cascade={"remove","persist"})
      */
     private Collection $usedIn;
+
+    /**
+     * Used to check if the object has been hydrated.
+     *
+     * @var bool
+     */
+    private bool $hydrated = false;
 
     /**
      * @var Datetime The moment this resource was created
@@ -270,18 +194,27 @@ class ObjectEntity
      */
     private $dateModified;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="sourceObject")
+     */
+    private $sourceOfSynchronizations;
+
+    public function __toString()
+    {
+        return $this->getName().' ('.$this->getId().')';
+    }
+
     public function __construct(?Entity $entity = null)
     {
         $this->objectValues = new ArrayCollection();
-        $this->responseLogs = new ArrayCollection();
         $this->subresourceOf = new ArrayCollection();
-        $this->requestLogs = new ArrayCollection();
         $this->synchronizations = new ArrayCollection();
         $this->usedIn = new ArrayCollection();
 
         if ($entity) {
             $this->setEntity($entity);
         }
+        $this->sourceOfSynchronizations = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -310,6 +243,49 @@ class ObjectEntity
 
     public function getSelf(): ?string
     {
+        // If self not set we generate a uri with linked endpoints
+        if (!isset($this->self) || empty($this->self) || $this->self == '') {
+            $pathString = '/api';
+
+            if ($this->getEntity() !== null) {
+                $endpoints = $this->getEntity()->getEndpoints();
+                foreach ($endpoints as $endpoint) {
+                    // We need a GET endpoint
+                    if (!in_array('get', $endpoint->getMethods()) && !in_array('GET', $endpoint->getMethods())) {
+                        continue;
+                    }
+
+                    $pathArray = $endpoint->getPath() ?? [];
+                    $idSet = false;
+                    $tempPath = '';
+
+                    // Add path item to self uri
+                    foreach ($pathArray as $pathItem) {
+                        if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
+                            $idSet = true;
+                            $tempPath .= '/'.$this->getId()->toString();
+                        } else {
+                            $tempPath .= '/'.$pathItem;
+                        }
+                    }
+                    // If id is set we found a correct endpoint and we can stop the foreach
+                    if ($idSet == true) {
+                        $pathString = $pathString.$tempPath;
+                        break;
+                    }
+                }
+            }
+
+            // Fallback for valid url
+            if ($pathString == '/api' && $this->getId()) {
+                $pathString = $pathString.'/objects/'.$this->getId()->toString();
+            } elseif (!$this->getId()) {
+                $pathString = '';
+            }
+
+            $this->self = $pathString;
+        }
+
         return $this->self;
     }
 
@@ -353,15 +329,20 @@ class ObjectEntity
     {
         $this->application = $application;
 
+        // If we don't have an organization we can pull one from the application
+        if (!isset($this->organization) && isset($this->application) && $this->application->getOrganization()) {
+            $this->setOrganization($this->application->getOrganization());
+        }
+
         return $this;
     }
 
-    public function getOrganization(): ?string
+    public function getOrganization(): ?Organization
     {
-        return $this->organization;
+        return $this->organization ?? null;
     }
 
-    public function setOrganization(?string $organization): self
+    public function setOrganization(?Organization $organization): self
     {
         $this->organization = $organization;
 
@@ -393,11 +374,39 @@ class ObjectEntity
     }
 
     /**
+     * Get all the object values.
+     *
      * @return Collection|Value[]
      */
     public function getObjectValues(): Collection
     {
         return $this->objectValues;
+    }
+
+    /**
+     * Sets an entire collection of object values (used in the setid subscriber).
+     *
+     * @return $this
+     */
+    public function setObjectValues(Collection $objectValues): self
+    {
+        $this->objectValues = $objectValues;
+
+        return $this;
+    }
+
+    /**
+     * Removes all the values from this object.
+     *
+     * @return $this
+     */
+    public function clearAllValues(): self
+    {
+        foreach ($this->objectValues as $value) {
+            $this->removeObjectValue($value);
+        }
+
+        return $this;
     }
 
     public function addObjectValue(Value $objectValue): self
@@ -661,6 +670,9 @@ class ObjectEntity
      */
     public function getAttributeObject(string $attributeName)
     {
+        if (!$this->getEntity()) {
+            return false;
+        }
         $attribute = $this->getEntity()->getAttributeByName($attributeName);
 
         // If we have a valid Attribute object
@@ -712,45 +724,90 @@ class ObjectEntity
      *
      * @return false|Value
      */
-    public function setValue($attribute, $value, bool $unsafe = false)
+    public function setValue($attribute, $value, bool $unsafe = false, ?DateTimeInterface $dateModified = null)
     {
         $valueObject = $this->getValueObject($attribute);
         // If we find the Value object we set the value
         if ($valueObject instanceof Value) {
-            return $valueObject->setValue($value, $unsafe);
+            return $valueObject->setValue($value, $unsafe, $dateModified);
         }
 
         // If not return false
         return false;
     }
 
+    public function setDefaultValues(bool $unsafe = false, ?DateTimeInterface $dateModified = null): self
+    {
+        foreach ($this->getEntity()->getAttributes() as $attribute) {
+            $criteria = Criteria::create()->andWhere(Criteria::expr()->eq('attribute', $attribute))->setMaxResults(1);
+            $values = $this->getObjectValues()->matching($criteria);
+            if ($values->isEmpty() && $attribute->getDefaultValue()) {
+                $this->setValue($attribute, $attribute->getDefaultValue(), $unsafe, $dateModified);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * All entities should incoprate a from schema function.
+     *
+     * @param array $schema The object as an array
+     *
+     * @return $this
+     */
+    public function fromSchema(array $schema): self
+    {
+        return $this;
+    }
+
     /**
      * Populate this object with an array of values, where attributes are diffined by key.
      *
-     * @param array $array  the data to set
-     * @param bool  $unsafe unset atributes that are not inlcuded in the hydrator array
+     * @param array                  $array        the data to set
+     * @param bool                   $unsafe       unset atributes that are not inlcuded in the hydrator array
+     * @param DateTimeInterface|null $dateModified
      *
      * @throws Exception
      *
      * @return ObjectEntity
      */
-    public function hydrate(array $array, bool $unsafe = false): ObjectEntity
+    public function hydrate(array $array, bool $unsafe = false, ?DateTimeInterface $dateModified = null): ObjectEntity
     {
+        // Failsafe: we should never continue if an ObjectEntity has no Entity
+        if (!$this->entity) {
+            throw new Exception("Can't hydrate an ObjectEntity ({$this->id->toString()}) with no Entity");
+        }
+
         $array = $this->includeEmbeddedArray($array);
         $hydratedValues = [];
 
+        // Change Cascade
+        if (!$dateModified) {
+            $dateModified = new DateTime();
+            $this->changeCascade($dateModified);
+        }
+
+        // Note down that the object has been hydrated
+        $this->hydrated = true;
+
         foreach ($array as $key => $value) {
-            $this->setValue($key, $value, $unsafe);
+            $this->setValue($key, $value, $unsafe, $dateModified);
             $hydratedValues[] = $key;
         }
 
         if ($unsafe) {
             foreach ($this->getObjectValues() as $value) {
+                // Drop values from values
+                $value->removeNonHydratedObjects();
+                // Drop the value itself
                 if (!in_array($value->getAttribute()->getName(), $hydratedValues)) {
                     $this->removeObjectValue($value);
                 }
             }
         }
+
+        $this->setDefaultValues($unsafe, $dateModified);
 
         return $this;
     }
@@ -866,36 +923,6 @@ class ObjectEntity
     }
 
     /**
-     * @return Collection|GatewayResponseLog[]
-     */
-    public function getResponseLogs(): Collection
-    {
-        return $this->responseLogs;
-    }
-
-    public function addResponseLog(GatewayResponseLog $responseLog): self
-    {
-        if (!$this->responseLogs->contains($responseLog)) {
-            $this->responseLogs->add($responseLog);
-            $responseLog->setObjectEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeResponseLog(GatewayResponseLog $responseLog): self
-    {
-        if ($this->responseLogs->removeElement($responseLog)) {
-            // set the owning side to null (unless already changed)
-            if ($responseLog->getObjectEntity() === $this) {
-                $responseLog->setObjectEntity(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
      * Checks conditional logic on values.
      *
      * @return $this
@@ -988,50 +1015,116 @@ class ObjectEntity
     /**
      * Convienance API for throwing an data object and is children into an array.
      *
+     * @param array $configuration The configuration for this function
+     *
      * @return array the array holding all the data     *
      */
-    public function toArray(int $level = 1, array $extend = ['id'], bool $onlyMetadata = false, bool $embedded = false): array
+    public function toArray(array $configuration = []): array
     {
+        // Let's default the config array
+        (!isset($configuration['level']) ? $configuration['level'] = 1 : '');
+        (!isset($configuration['maxdepth']) ? $configuration['maxdepth'] = $this->getEntity()->getMaxDepth() : '');
+        (!isset($configuration['renderedObjects']) ? $configuration['renderedObjects'] = [] : '');
+        (!isset($configuration['embedded']) ? $configuration['embedded'] = false : '');
+        (!isset($configuration['onlyMetadata']) ? $configuration['onlyMetadata'] = false : '');
+
+        // Working arrays
         $array = [];
-        in_array('id', $extend) && $array['id'] = (string) $this->getId();
-        //in_array('id', $extend) && $array['_id'] = (string) $this->getId();
-        in_array('self', $extend) && $array['x-commongateway-metadata']['self'] = $this->getSelf(); //todo? $this->getSelf() ?? $this->setSelf(???->createSelf($this))->getSelf()
-        in_array('synchronizations', $extend) && $array['x-commongateway-metadata']['synchronizations'] = $this->getReadableSyncDataArray();
-        in_array('schema', $extend) && $array['_schema'] = $this->getEntity()->toSchema($this);
-        if ($onlyMetadata) {
+        $currentObjects = [];
+        $embedded = [];
+
+        // The new metadata
+        $array['_self'] = [
+            'id'               => $this->getId() ? $this->getId()->toString() : null,
+            'name'             => $this->getName(),
+            'self'             => $this->getSelf(),
+            'owner'            => $this->getOwner(),
+            // ToDo: Ugly fix, we should make sure that organisatin and application are set on object creation
+            //'organization'     => $this->getOrganization() ? $this->getOrganization()->getId()->toString() : null,
+            'application'      => $this->getApplication() ? $this->getApplication()->getId()->toString() : null,
+            'dateCreated'      => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
+            'dateModified'     => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
+            'level'            => $configuration['level'],
+            'schema'           => [
+                'id'  => $this->getEntity()->getId()->toString(),
+                'ref' => $this->getEntity()->getReference(),
+            ],
+            'synchronizations' => $this->getReadableSyncDataArray(),
+        ];
+
+        // If we dont need the actual object data we can exit here
+        if ($configuration['onlyMetadata']) {
             return $array;
         }
+
+        // Let loop trough al the values
         foreach ($this->getEntity()->getAttributes() as $attribute) {
             $valueObject = $this->getValueObject($attribute);
+            // Subobjects are a bit complicated
             if ($attribute->getType() == 'object') {
                 if ($valueObject->getValue() == null) {
                     $array[$attribute->getName()] = null;
-                } elseif (!$attribute->getMultiple() && $level < 5) {
-                    $value = $valueObject->getObjects()->first()->toArray($level + 1, $extend, $onlyMetadata, $embedded);
-                    if ($embedded) {
-                        $array[$attribute->getName()] = $value;
-                        //todo: should be this instead:
-//                        $array[$attribute->getName()] = $valueObject->getObjects()->first()->getSelf();
-                        $array['embedded'][$attribute->getName()] = $value;
-                        continue;
-                    }
-                    $array[$attribute->getName()] = $value;
-                } elseif ($level < 5) {
-                    foreach ($valueObject->getObjects() as $object) {
-                        $value = $object->toArray($level + 1, $extend, $onlyMetadata, $embedded);
-                        if ($embedded) {
-                            $array[$attribute->getName()][] = $value;
-                            //todo: should be this instead:
-//                            $array[$attribute->getName()][] = $object->getSelf();
-                            $array['embedded'][$attribute->getName()][] = $value;
+                } elseif (!$attribute->getMultiple() && $configuration['level'] < $configuration['maxdepth']) {
+                    $object = $valueObject->getObjects()->first();
+                    $currentObjects[] = $object;
+                    // Only add an object if it hasn't bean added yet
+                    if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
+                        $config = $configuration;
+                        $config['renderedObjects'][] = $object;
+                        $config['level'] = $config['level'] + 1;
+                        $objectToArray = $object->toArray($config);
+
+                        // Check if we want an embedded array
+                        if ($configuration['embedded']) {
+                            // todo: put this line back later, with the continue below.
+                            // $array[$attribute->getName()] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
+                            $array[$attribute->getName()] = $object->getSelf();
+                            $embedded[$attribute->getName()] = $objectToArray;
                             continue;
                         }
-                        $array[$attribute->getName()][] = $value; // getValue will return a single ObjectEntity
+                        $array[$attribute->getName()] = $objectToArray; // getValue will return a single ObjectEntity
+                    }
+                    // If we don't set the full object then we want to set self
+                    else {
+                        // $array[$attribute->getName()] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
+                        $array[$attribute->getName()] = $object->getSelf();
+                    }
+                } elseif ($configuration['level'] < $configuration['maxdepth']) {
+                    $currentObjects[] = $valueObject->getObjects()->toArray();
+                    foreach ($valueObject->getObjects() as $object) {
+                        // Only add an object if it hasn't bean added yet
+                        if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
+                            $config = $configuration;
+                            $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
+                            $config['level'] = $config['level'] + 1;
+                            $objectToArray = $object->toArray($config);
+
+                            // Check if we want an embedded array
+                            if ($configuration['embedded']) {
+                                // todo: put this line back later, with the continue below.
+                                // $array[$attribute->getName()][] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
+                                $array[$attribute->getName()][] = $object->getSelf();
+                                $embedded[$attribute->getName()][] = $objectToArray;
+                                continue; // todo: put this continue back later!
+                            }
+                            $array[$attribute->getName()][] = $objectToArray;
+                        }
+                        // If we don't set the full object then we want to set self
+                        else {
+                            // $array[$attribute->getName()][] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
+                            $array[$attribute->getName()][] = $object->getSelf();
+                        }
                     }
                 }
+                // But normal values are simple
             } else {
                 $array[$attribute->getName()] = $valueObject->getValue();
             }
+        }
+
+        if (!empty($embedded)) {
+            // todo: this should be _embedded
+            $array['embedded'] = $embedded;
         }
 
         return $array;
@@ -1056,11 +1149,11 @@ class ObjectEntity
                     ],
                     'endpoint'          => $synchronization->getEndpoint(),
                     'sourceId'          => $synchronization->getSourceId(),
-                    'dateCreated'       => $synchronization->getDateCreated(),
-                    'dateModified'      => $synchronization->getDateModified(),
-                    'lastChecked'       => $synchronization->getLastChecked(),
-                    'lastSynced'        => $synchronization->getLastSynced(),
-                    'sourceLastChanged' => $synchronization->getSourceLastChanged(),
+                    'dateCreated'       => $synchronization->getDateCreated() ? $synchronization->getDateCreated()->format('c') : null,
+                    'dateModified'      => $synchronization->getDateModified() ? $synchronization->getDateModified()->format('c') : null,
+                    'lastChecked'       => $synchronization->getLastChecked() ? $synchronization->getLastChecked()->format('c') : null,
+                    'lastSynced'        => $synchronization->getLastSynced() ? $synchronization->getLastSynced()->format('c') : null,
+                    'sourceLastChanged' => $synchronization->getSourceLastChanged() ? $synchronization->getSourceLastChanged()->format('c') : null,
                 ];
             }
 
@@ -1134,36 +1227,6 @@ class ObjectEntity
     }
 
     /**
-     * @return Collection|RequestLog[]
-     */
-    public function getRequestLogs(): Collection
-    {
-        return $this->requestLogs;
-    }
-
-    public function addRequestLog(RequestLog $requestLog): self
-    {
-        if (!$this->requestLogs->contains($requestLog)) {
-            $this->requestLogs[] = $requestLog;
-            $requestLog->setObjectEntity($this);
-        }
-
-        return $this;
-    }
-
-    public function removeRequestLog(RequestLog $requestLog): self
-    {
-        if ($this->requestLogs->removeElement($requestLog)) {
-            // set the owning side to null (unless already changed)
-            if ($requestLog->getObjectEntity() === $this) {
-                $requestLog->setObjectEntity(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
      * @return Collection|Synchronization[]
      */
     public function getSynchronizations(): Collection
@@ -1224,6 +1287,11 @@ class ObjectEntity
         return $this;
     }
 
+    public function getHydrated(): bool
+    {
+        return $this->hydrated;
+    }
+
     public function getDateCreated(): ?DateTimeInterface
     {
         return $this->dateCreated;
@@ -1249,35 +1317,92 @@ class ObjectEntity
     }
 
     /**
+     * Cascades a 'is changed' upwards, with other words notifies objects that us this object has changed so that they to ara changes.
+     *
+     * @param DateTimeInterface $dateModified
+     *
+     * @return $this
+     */
+    public function changeCascade(DateTimeInterface $dateModified): self
+    {
+        $this->setDateCreated($dateModified);
+
+        // Lets update the date created of parent resources
+        foreach ($this->subresourceOf as $mainResourceValue) {
+            $mainresource = $mainResourceValue->getObjectEntity();
+            if ($mainresource->getDateModified() < $this->getDateModified()) {
+                $mainresource->changeCascade($dateModified);
+            }
+        }
+
+        return  $this;
+    }
+
+    /**
      * Set name on pre persist.
      *
      * This function makes sure that each and every oject alwys has a name when saved
      *
      * @ORM\PrePersist
+     * @ORM\PreUpdate
      */
     public function prePersist(): void
     {
-        // Lets see if the name is congigured
-        if ($this->entity->getNameProperties()) {
-            $name = null;
-            foreach ($this->entity->getNameProperties() as $nameProperty) {
-                if ($nameProperty && $namePart = $this->getValue($nameProperty)) {
-                    $name = "$name $namePart";
-                }
-            }
-            $this->setName(trim($name));
-
+        if (!$this->entity) {
             return;
         }
-        // Lets check agains common names
-        $nameProperties = ['name', 'title', 'naam', 'titel'];
-        foreach ($nameProperties as $nameProperty) {
-            if ($name = $this->getValue($nameProperty)) {
-                $this->setName($name);
 
-                return;
+        // Lets see if the name is configured
+        $nameProperties = array_merge(['name', 'title', 'naam', 'titel'], $this->entity->getNameProperties());
+        $nameArray = [];
+        foreach ($this->getObjectValues() as $value) {
+            if (in_array($value->getAttribute()->getName(), $nameProperties)) {
+                $nameArray[] = $value->getStringValue();
             }
         }
-        $this->setName($this->getId());
+
+        if (count($nameArray) > 0 && $name = implode(' ', $nameArray)) {
+            $this->setName($name);
+        }
+
+        if (!$this->getName() && $this->getId()) {
+            $this->setName($this->getId()->toString());
+        }
+
+        // Todo: this is an ugly fix, in actuallity we should run a postUpdate subscriber that checks this and repersists the enitity if thsi happens (it can anly happen if we dont have an id on pre persist e.g. new objects)
+        // Just in case we endup here
+        if (!$this->getName()) {
+            $this->setName('No name could be established for this entity');
+        }
+    }
+
+    /**
+     * @return Collection|Synchronization[]
+     */
+    public function getSourceOfSynchronizations(): Collection
+    {
+        return $this->sourceOfSynchronizations;
+    }
+
+    public function addSourceOfSynchronization(Synchronization $sourceOfSynchronization): self
+    {
+        if (!$this->sourceOfSynchronizations->contains($sourceOfSynchronization)) {
+            $this->sourceOfSynchronizations[] = $sourceOfSynchronization;
+            $sourceOfSynchronization->setSourceObject($this);
+        }
+
+        return $this;
+    }
+
+    public function removeSourceOfSynchronization(Synchronization $sourceOfSynchronization): self
+    {
+        if ($this->sourceOfSynchronizations->removeElement($sourceOfSynchronization)) {
+            // set the owning side to null (unless already changed)
+            if ($sourceOfSynchronization->getSourceObject() === $this) {
+                $sourceOfSynchronization->setSourceObject(null);
+            }
+        }
+
+        return $this;
     }
 }

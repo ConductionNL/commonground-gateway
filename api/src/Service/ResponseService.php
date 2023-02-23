@@ -8,7 +8,6 @@ use App\Entity\Entity;
 use App\Entity\File;
 use App\Entity\Log;
 use App\Entity\ObjectEntity;
-use App\Entity\RequestLog;
 use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
@@ -16,10 +15,7 @@ use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
-use Ramsey\Uuid\Uuid;
-use ReflectionClass;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
@@ -132,20 +128,21 @@ class ResponseService
      */
     public function filterResult(array $response, ObjectEntity $result, bool $skipAuthCheck): array
     {
-        return array_filter($response, function ($value, $key) use ($result, $skipAuthCheck) {
+        return array_filter($response, function ($value, $key) use ($result) {
             if (str_starts_with($key, '@') || $key == 'id') {
                 return true;
             }
             $attribute = $this->em->getRepository('App:Attribute')->findOneBy(['name' => $key, 'entity' => $result->getEntity()]);
-            if (!$skipAuthCheck && !empty($attribute)) {
-                try {
-                    if (!$this->checkOwner($result)) {
-                        $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $value]);
-                    }
-                } catch (AccessDeniedException $exception) {
-                    return false;
-                }
-            }
+            // todo: this breaks SynchronizationService
+//            if (!$skipAuthCheck && !empty($attribute)) {
+//                try {
+//                    if (!$this->checkOwner($result)) {
+//                        $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'value' => $value]);
+//                    }
+//                } catch (AccessDeniedException $exception) {
+//                    return false;
+//                }
+//            }
 
             return true;
         }, ARRAY_FILTER_USE_BOTH);
@@ -549,13 +546,14 @@ class ResponseService
             }
 
             // Check if user is allowed to see this
-            try {
-                if (!$skipAuthCheck && !$this->checkOwner($result)) {
-                    $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'object' => $result]);
-                }
-            } catch (AccessDeniedException $exception) {
-                continue;
-            }
+            // todo: this breaks SynchronizationService
+//            try {
+//                if (!$skipAuthCheck && !$this->checkOwner($result)) {
+//                    $this->authorizationService->checkAuthorization(['attribute' => $attribute, 'object' => $result]);
+//                }
+//            } catch (AccessDeniedException $exception) {
+//                continue;
+//            }
 
             $valueObject = $result->getValueObject($attribute);
             if ($attribute->getType() == 'object') {
@@ -741,10 +739,11 @@ class ResponseService
         // If we have only one Object (because multiple = false)
         if (!$attribute->getMultiple()) {
             try {
-                // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
-                if (!$skipAuthCheck && !$this->checkOwner($result)) {
-                    $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $value->getValue()]);
-                }
+                // todo: this breaks SynchronizationService
+//                // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
+//                if (!$skipAuthCheck && !$this->checkOwner($result)) {
+//                    $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $value->getValue()]);
+//                }
 
                 if ($attribute->getInclude()) {
                     return $this->renderResult($value->getValue(), $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
@@ -768,10 +767,11 @@ class ResponseService
         $objectsArray = [];
         foreach ($objects as $object) {
             try {
-                // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
-                if (!$skipAuthCheck && !$this->checkOwner($result)) {
-                    $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $object]);
-                }
+                // todo: this breaks SynchronizationService
+//                // if you have permission to see the entire parent object, you are allowed to see it's attributes, but you might not have permission to see that property if it is an object
+//                if (!$skipAuthCheck && !$this->checkOwner($result)) {
+//                    $this->authorizationService->checkAuthorization(['entity' => $attribute->getObject(), 'object' => $object]);
+//                }
                 if ($attribute->getInclude()) {
                     $objectsArray[] = $this->renderResult($object, $fields, $extend, $acceptType, $skipAuthCheck, $flat, $level);
                     continue;
@@ -834,146 +834,5 @@ class ResponseService
             'size'      => $file->getSize(),
             'base64'    => $file->getBase64(),
         ];
-    }
-
-    /**
-     * @TODO
-     *
-     * @param array $result
-     * @param int   $responseType
-     *
-     * @return bool
-     */
-    public function checkForErrorResponse(array $result, int $responseType = Response::HTTP_BAD_REQUEST): bool
-    {
-        if (
-            $responseType != Response::HTTP_OK && $responseType != Response::HTTP_CREATED && $responseType != Response::HTTP_NO_CONTENT
-            && array_key_exists('message', $result) && array_key_exists('type', $result)
-            && array_key_exists('path', $result)
-        ) { //We also have key data, but this one is not always required and can be empty as well
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * @TODO
-     *
-     * @param Request           $request
-     * @param Entity|null       $entity
-     * @param array             $result
-     * @param Response          $response
-     * @param ObjectEntity|null $object
-     *
-     * @return RequestLog
-     */
-    public function createRequestLog(Request $request, ?Entity $entity, array $result, Response $response, ?ObjectEntity $object = null): RequestLog
-    {
-        // TODO: REMOVE THIS WHEN ENDPOINTS BL IS ADDED
-        $endpoint = $this->em->getRepository('App:Endpoint')->findOneBy(['name' => 'TempRequestLogEndpointWIP']);
-        if (empty($endpoint)) {
-            $endpoint = new Endpoint();
-            $endpoint->setName('TempRequestLogEndpointWIP');
-//            $endpoint->setType('gateway-endpoint');
-//            $endpoint->setPath('not a real endpoint');
-            $endpoint->setDescription('This is a endpoint added to use the default loggingConfig of endpoints');
-            $this->em->persist($endpoint);
-            $this->em->flush();
-        }
-
-        //TODO: Find a clean and nice way to not set properties on RequestLog if they are present in the $endpoint->getLoggingConfig() array!
-        $requestLog = new RequestLog();
-        //        $requestLog->setEndpoint($entity ? $entity->getEndpoint());
-        $requestLog->setEndpoint($endpoint); // todo this^ make Entity Endpoint an object instead of string
-
-//        if ($request->getMethod() == 'POST' && $object) {
-//            $this->em->persist($object);
-//        }
-//        $requestLog->setObjectEntity($object);
-        if ($entity) {
-            $entity = $this->em->getRepository('App:Entity')->findOneBy(['id' => $entity->getId()->toString()]);
-        }
-        $requestLog->setEntity($entity ?? null);
-        $requestLog->setDocument(null); // todo
-        $requestLog->setFile(null); // todo
-        $requestLog->setSource($requestLog->getEntity() ? $requestLog->getEntity()->getSource() : null);
-
-        if ($this->session->has('application') && Uuid::isValid($this->session->get('application'))) {
-            $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
-        } else {
-            $application = null;
-        }
-        $requestLog->setApplication($application);
-        $requestLog->setOrganization($this->session->get('activeOrganization'));
-        $requestLog->setUser($this->security->getUser() ? $this->security->getUser()->getUserIdentifier() : 'anonymousUser');
-
-        $requestLog->setStatusCode($response->getStatusCode());
-        $requestLog->setStatus($this->getStatusWithCode($response->getStatusCode()) ?? $result['type']);
-        $requestLog->setRequestBody($request->getContent() ? $request->toArray() : null);
-        $requestLog->setResponseBody($result);
-
-        $requestLog->setMethod($request->getMethod());
-        $requestLog->setHeaders($this->filterRequestLogHeaders($requestLog->getEndpoint(), $request->headers->all()));
-        //todo use eavService->realRequestQueryAll(), maybe replace this function to another service than eavService?
-        $requestLog->setQueryParams($request->query->all());
-
-        $this->em->persist($requestLog);
-        $this->em->flush();
-
-        return $requestLog;
-    }
-
-    /**
-     * @TODO
-     *
-     * @param int $statusCode
-     *
-     * @return string|null
-     */
-    private function getStatusWithCode(int $statusCode): ?string
-    {
-        $reflectionClass = new ReflectionClass(Response::class);
-        $constants = $reflectionClass->getConstants();
-
-        foreach ($constants as $status => $value) {
-            if ($value == $statusCode) {
-                return $status;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * @TODO
-     *
-     * @param Endpoint $endpoint
-     * @param array    $headers
-     * @param int      $level
-     *
-     * @return array
-     */
-    private function filterRequestLogHeaders(Endpoint $endpoint, array $headers, int $level = 1): array
-    {
-        foreach ($headers as $header => &$headerValue) {
-            // Filter out headers we do not want to log on this endpoint
-            if (
-                $level == 1 && $endpoint->getLoggingConfig() && array_key_exists('headers', $endpoint->getLoggingConfig()) &&
-                in_array($header, $endpoint->getLoggingConfig()['headers'])
-            ) {
-                unset($headers[$header]);
-            }
-            if (is_string($headerValue) && strlen($headerValue) > 250) {
-                $headers[$header] = substr($headerValue, 0, 250).'...';
-            } elseif (is_array($headerValue)) {
-                $headerValue = $this->filterRequestLogHeaders($endpoint, $headerValue, $level + 1);
-            } elseif (!is_string($headerValue)) {
-                //todo?
-                $headers[$header] = 'Couldn\'t log this headers value because it is of type '.gettype($headerValue);
-            }
-        }
-
-        return $headers;
     }
 }

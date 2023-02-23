@@ -34,8 +34,6 @@ class HandlerService
     private ProcessingLogService $processingLogService;
     private TemplateService $templateService;
     private ObjectEntityService $objectEntityService;
-    private FormIOService $formIOService;
-    private SubscriberService $subscriberService;
     private CacheInterface $cache;
     private GatewayService $gatewayService;
     private Stopwatch $stopwatch;
@@ -65,7 +63,6 @@ class HandlerService
     public function __construct(
         EntityManagerInterface $entityManager,
         RequestStack $requestStack,
-        ValidationService $validationService,
         TranslationService $translationService,
         EavService $eavService,
         SerializerInterface $serializer,
@@ -74,8 +71,6 @@ class HandlerService
         Environment $twig,
         TemplateService $templateService,
         ObjectEntityService $objectEntityService,
-        FormIOService $formIOService,
-        SubscriberService $subscriberService,
         CacheInterface $cache,
         GatewayService $gatewayService,
         Stopwatch $stopwatch,
@@ -84,7 +79,6 @@ class HandlerService
     ) {
         $this->entityManager = $entityManager;
         $this->request = $requestStack->getCurrentRequest();
-        $this->validationService = $validationService;
         $this->translationService = $translationService;
         $this->eavService = $eavService;
         $this->serializer = $serializer;
@@ -93,8 +87,6 @@ class HandlerService
         $this->templating = $twig;
         $this->templateService = $templateService;
         $this->objectEntityService = $objectEntityService->addServices($eavService); // todo: temp fix untill we no longer need these services here
-        $this->formIOService = $formIOService;
-        $this->subscriberService = $subscriberService;
         $this->cache = $cache;
         $this->gatewayService = $gatewayService;
         $this->stopwatch = $stopwatch;
@@ -115,9 +107,11 @@ class HandlerService
         $this->stopwatch->start('newSession', 'handleEndpoint');
         $session = new Session();
         $this->stopwatch->stop('newSession');
+
         $this->stopwatch->start('saveEndpointInSession', 'handleEndpoint');
         $session->set('endpoint', $endpoint->getId()->toString());
         $this->stopwatch->stop('saveEndpointInSession');
+
         $this->stopwatch->start('saveParametersInSession', 'handleEndpoint');
         $session->set('parameters', $parameters);
         $this->stopwatch->stop('saveParametersInSession');
@@ -150,6 +144,30 @@ class HandlerService
 
                 return $result;
             }
+        }
+
+        // If no handlers are found check if endpoint throws events
+        // Throw event if set
+        if ($endpoint->getThrows() !== null || !empty($endpoint->getThrows())) {
+            if (count($endpoint->getThrows()) == 0) {
+                return $this->requestService->requestHandler($parameters, []);
+            }
+
+            // Will use the first throw in array
+            foreach ($endpoint->getThrows() as $throw) {
+                if ($this->request->getMethod() == 'POST' || $this->request->getMethod() == 'PUT') {
+                    $response = json_decode($this->requestService->requestHandler($parameters, [])->getContent(), true);
+                    $event = new ActionEvent('commongateway.action.event', ['request' => $this->getDataFromRequest(), 'response' => $response, 'parameters' => $this->request], $throw);
+                    $this->eventDispatcher->dispatch($event, 'commongateway.action.event');
+                } else {
+                    $event = new ActionEvent('commongateway.action.event', ['request' => $this->getDataFromRequest(), 'response' => [], 'parameters' => $this->request], $throw);
+                    $this->eventDispatcher->dispatch($event, 'commongateway.action.event');
+
+                    return $this->requestService->requestHandler($parameters, []);
+                }
+            }
+
+            return $this->createResponse($event->getData()['response'], $endpoint);
         }
 
         // Let default
@@ -275,13 +293,10 @@ class HandlerService
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
 
-            // Check if we need to trigger subscribers for this entity
-            $this->subscriberService->handleSubscribers($handler->getEntity(), $data, $method);
-
             // Update current Log
             $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 2, json_encode($data));
 
-            $event = new ActionEvent('commongateway.response.pre', ['entity' => $handler->getEntity()->getId()->toString(), 'httpRequest' => $this->request, 'request' => $originalData, 'response' => $data, 'queryParameters' => $this->request->query->all()]);
+            $event = new ActionEvent('commongateway.response.pre', ['entity' => $handler->getEntity()->getReference() ?? $handler->getEntity()->getReference(), 'httpRequest' => $this->request, 'request' => $originalData, 'response' => $data, 'queryParameters' => $this->request->query->all()]);
             $this->eventDispatcher->dispatch($event, 'commongateway.response.pre');
             $data = $event->getData()['response'];
 

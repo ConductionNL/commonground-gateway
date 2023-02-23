@@ -13,6 +13,7 @@ use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -88,13 +89,26 @@ class Synchronization
     private ?Action $action = null;
 
     /**
+     * The source of this synchronization might be an external source (gateway).
+     *
      * @var Source The Source of this resource
      *
      * @Groups({"read","write"})
      * @ORM\ManyToOne(targetEntity=Gateway::class, cascade={"persist"}, inversedBy="synchronizations")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
-    private Source $gateway;
+    private ?Source $gateway = null;
+
+    /**
+     * The source of this synchronization might be an internal object.
+     *
+     * @var Source The Source of this resource
+     *
+     * @Groups({"read","write"})
+     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="sourceOfSynchronizations")
+     * @ORM\JoinColumn(nullable=true)
+     */
+    private ?ObjectEntity $sourceObject = null;
 
     /**
      * @var string|null
@@ -108,9 +122,9 @@ class Synchronization
      * @var string The id of object in the related source
      *
      * @Groups({"read","write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private string $sourceId;
+    private ?string $sourceId = null;
 
     /**
      * @var ?string The hash of this resource
@@ -180,13 +194,35 @@ class Synchronization
     /**
      * An updated timer that tels the sync service to wait a specific increment beofre trying again.
      *
-     * @ORM\Column(type="datetime", options={"default" : "CURRENT_TIMESTAMP"})
+     * @ORM\Column(type="datetime", nullable=true, options={"default" : "CURRENT_TIMESTAMP"})
      */
     private $dontSyncBefore;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Mapping::class, inversedBy="synchronizations")
+     */
+    private $mapping;
+
+    public function __construct(?Source $source = null, ?Entity $entity = null)
+    {
+        if (isset($source)) {
+            $this->gateway = $source;
+        }
+        if (isset($entity)) {
+            $this->entity = $entity;
+        }
+    }
 
     public function getId(): ?UuidInterface
     {
         return $this->id;
+    }
+
+    public function setId(string $id): self
+    {
+        $this->id = Uuid::fromString($id);
+
+        return $this;
     }
 
     public function getEntity(): ?Entity
@@ -227,9 +263,19 @@ class Synchronization
         return $this;
     }
 
+    public function getGateway(): ?Source
+    {
+        return $this->getSource();
+    }
+
     public function getSource(): ?Source
     {
         return $this->gateway;
+    }
+
+    public function setGateway(?Source $source): self
+    {
+        return $this->setSource($source);
     }
 
     public function setSource(?Source $source): self
@@ -391,5 +437,29 @@ class Synchronization
         if ($this->tryCounter >= 10) {
             $this->blocked = true;
         }
+    }
+
+    public function getMapping(): ?Mapping
+    {
+        return $this->mapping;
+    }
+
+    public function setMapping(?Mapping $mapping): self
+    {
+        $this->mapping = $mapping;
+
+        return $this;
+    }
+
+    public function getSourceObject(): ?ObjectEntity
+    {
+        return $this->sourceObject;
+    }
+
+    public function setSourceObject(?ObjectEntity $sourceObject): self
+    {
+        $this->sourceObject = $sourceObject;
+
+        return $this;
     }
 }

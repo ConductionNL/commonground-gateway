@@ -1,0 +1,324 @@
+{{- if .Values.config.cronRunner.enabled }}
+    {{- if semverCompare ">=1.21-0" .Capabilities.KubeVersion.Version }}
+apiVersion: batch/v1
+    {{- else }}
+apiVersion: batch/v1beta1
+    {{- end }}
+kind: CronJob
+metadata:
+  name: {{ include "commonground-gateway.fullname" . }}-runner
+  labels:
+    {{- include "commonground-gateway.labels" . | nindent 4 }}
+spec:
+  # concurrencyPolicy: Forbid: The cron job does not allow concurrent runs; if it is time for a new job run and the previous job run hasn’t finished yet, the cron job skips the new job run
+  concurrencyPolicy: "{{ .Values.config.cronRunner.concurrencyPolicy }}"
+  # this cronjob runs every 5 minutes https://crontab.guru/#*_*_*_*_*
+  schedule: "{{ .Values.config.cronRunner.crontab }}"
+  jobTemplate:
+    spec:
+      # activeDeadlineSeconds Specifies the duration in seconds relative to the startTime that the job may be active before the system tries to terminate it; value must be positive integer
+      activeDeadlineSeconds: {{ .Values.config.cronRunner.activeDeadlineSeconds | int }}
+      template:
+          spec:
+                {{- with .Values.imagePullSecrets }}
+              imagePullSecrets:
+                {{- toYaml . | nindent 8 }}
+                {{- end }}
+              serviceAccountName: {{ include "commonground-gateway.serviceAccountName" . }}
+              securityContext:
+                {{- toYaml .Values.podSecurityContext | nindent 16 }}
+              restartPolicy: Never
+              volumes:
+                  - name: dependencies
+                    secret:
+                        secretName: "{{ include "commonground-gateway.fullname" . }}-dependencies"
+                        defaultMode: 420
+                  - name: app-certificates
+                    secret:
+                        {{ if .Values.security.certificate.existingSecret }}
+                        secretName: {{ .Values.security.certificate.existingSecret }}
+                        {{ else }}
+                        secretName: {{ include "commonground-gateway.fullname" . }}-certificate
+                        {{ end }}
+                        defaultMode: 420
+                  {{- if .Values.security.saml.enabled }}
+                  - name: idp-certificate
+                    secret:
+                        {{ if .Values.security.saml.idp.certificate.existingSecret }}
+                        secretName: {{ .Values.security.saml.idp.certificate.existingSecret }}
+                        {{ else }}
+                        secretName: {{ include "commonground-gateway.fullname" . }}-idpcertificate
+                        {{ end }}
+                        defaultMode: 420
+                  {{- end }}
+                  {{- if .Values.fixtures }}
+                  - name: fixtures
+                    configMap:
+                        name: {{ include "commonground-gateway.fullname" . }}-fixtures
+                        defaultMode: 420
+                {{- end }}
+                  - name: vendor
+                    persistentVolumeClaim:
+                        claimName: {{ include "commonground-gateway.fullname" . }}-vendor
+                  
+        
+              containers:
+                  - name: {{ include "commonground-gateway.fullname" . }}-php
+                    securityContext:
+                      {{- toYaml .Values.securityContextPhp | nindent 22 }}
+                    image: "{{ .Values.php.repository }}:{{ .Values.php.tag | default .Chart.AppVersion }}"
+                    imagePullPolicy: {{ .Values.php.pullPolicy }}
+                    ports:
+                        - containerPort: 9000
+                    volumeMounts:
+                        - mountPath: /srv/api/config/packages/dependencies.yaml
+                          subPath: dependencies.yaml
+                          name: dependencies
+                          readOnly: true
+                        - mountPath: /var/run/certs
+                          name: app-certificates
+                          readOnly: true
+                        {{- if .Values.security.saml.enabled }}
+                        - mountPath: /var/run/idp
+                          name: idp-certificate
+                          readOnly: true
+                        {{- end }}
+                        {{- if .Values.fixtures }}
+                        - mountPath: /srv/api/fixtures
+                          name: fixtures
+                          readOnly: true
+                      {{- end }}
+{{/*                        - mountPath: /srv/api/vendor*/}}
+{{/*                          subPath: vendor*/}}
+{{/*                          name: vendor*/}}
+{{/*                          readOnly: false*/}}
+{{/*                        - mountPath: /srv/api/composer.json*/}}
+{{/*                          subPath: composer.json*/}}
+{{/*                          name: vendor*/}}
+{{/*                          readOnly: false*/}}
+{{/*                        - mountPath: /srv/api/composer.lock*/}}
+{{/*                          subPath: composer.lock*/}}
+{{/*                          name: vendor*/}}
+{{/*                          readOnly: false*/}}
+{{/*                        - mountPath: /srv/api/symfony.lock*/}}
+{{/*                          subPath: symfony.lock*/}}
+{{/*                          name: vendor*/}}
+{{/*                          readOnly: false*/}}
+                    args:
+                        - bin/console
+                        - cronjob:command
+                    env:
+                        - name: APP_ENV
+                          value: {{ .Values.config.env }}
+                        - name: APP_AUTH
+                          value: '{{ .Values.config.cronRunner.appAuth }}'
+                        - name: AUTH_ENABLED
+                          value: 'true'
+                        - name: APP_REPRO
+                          value: 'https://github.com/ConductionNL/commonground-gateway'
+                        - name: TRUSTED_HOSTS
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: trusted-hosts
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: TRUSTED_PROXIES
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: trusted-proxies
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: CORS_ALLOW_ORIGIN
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: app-cors-allow-origin
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: APP_VERSION
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: app-version
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: APP_DEBUG
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: debug
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: APP_CACHE
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: cache
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: DATABASE_URL
+                          valueFrom:
+                              secretKeyRef:
+                                  key: database-url
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: CACHE_URL
+                          valueFrom:
+                              secretKeyRef:
+                                  key: mongodb-url
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: GLOBAL_DOMAIN
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: global-domain
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: APP_URL
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: url
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: READ_ONLY
+                          value: {{ .Values.config.readOnly | quote }}
+                        - name: CRON_RUNNER_ENABLED
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: cron-runner-enabled
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        {{- if .Values.config.cronRunner.enabled }}
+                        - name: CRON_RUNNER_CRONTAB
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: cron-runner-crontab
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: CRON_RUNNER_CONCURRENCY_POLICY
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: cron-runner-concurrencyPolicy
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: CRON_RUNNER_ACTIVE_DEADLINE_SECONDS
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: cron-runner-activeDeadlineSeconds
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: CRON_RUNNER_APP_AUTH
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: cron-runner-appAuth
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        {{- end }}
+        
+                        #RabbitMQ
+                        - name: RABBITMQ_HOST
+                          valueFrom:
+                              configMapKeyRef:
+                                  name: {{ template "commonground-gateway.fullname" . }}
+                                  key: rabbitmq-host
+                        - name: RABBITMQ_PORT
+                          valueFrom:
+                              configMapKeyRef:
+                                  name: {{ template "commonground-gateway.fullname" . }}
+                                  key: rabbitmq-port
+                        - name: RABBITMQ_USERNAME
+                          valueFrom:
+                              secretKeyRef:
+                                  name: {{ template "commonground-gateway.fullname" . }}
+                                  key: rabbitmq-username
+                        - name: RABBITMQ_PASSWORD
+                          valueFrom:
+                              secretKeyRef:
+                                  name: {{ template "commonground-gateway.fullname" . }}
+                                  key: rabbitmq-password
+                        {{- if or (and .Values.security.certificate.certificate .Values.security.certificate.privateKey) .Values.security.certificate.existingSecret }}
+                        - name: APP_CERT
+                          value: '/var/run/certs/tls.crt'
+                        - name: APP_KEY
+                          value: '/var/run/certs/tls.key'
+                        {{- end }}
+                        {{- if .Values.redis.enabled }}
+                        - name: REDIS_HOST
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: redis-host
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: REDIS_PORT
+                          valueFrom:
+                              configMapKeyRef:
+                                  key: redis-port
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        {{- end }}
+                        - name: SAML_ENABLED
+                          valueFrom:
+                              secretKeyRef:
+                                  key: saml-enabled
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: DIGID_ENABLED
+                          valueFrom:
+                              secretKeyRef:
+                                  key: digid-enabled
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        {{- if .Values.security.saml.enabled }}
+                        - name: SAML_METADATA_LOCATION
+                          valueFrom:
+                              secretKeyRef:
+                                  key: saml-metadata-location
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: SAML_SIGN_ON_URL
+                          valueFrom:
+                              secretKeyRef:
+                                  key: saml-single-sign-on-url
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: SAML_LOGOUT_URL
+                          valueFrom:
+                              secretKeyRef:
+                                  key: saml-logout-url
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: SAML_IDP_CERT
+                          value: '/var/run/idp/idp.crt'
+                        {{- end }}
+                        - name: GITHUB_KEY
+                          valueFrom:
+                              secretKeyRef:
+                                  key: githubKey
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        {{- if .Values.security.digid.enabled }}
+                        - name: DIGID_METADATA_LOCATION
+                          valueFrom:
+                              secretKeyRef:
+                                  key: digid-metadata-location
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: DIGID_ARTIFACT_URL
+                          valueFrom:
+                              secretKeyRef:
+                                  key: digid-artifact-url
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: DIGID_SIGN_ON_URL
+                          valueFrom:
+                              secretKeyRef:
+                                  key: digid-single-sign-on-url
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: DIGID_LOGOUT_URL
+                          valueFrom:
+                              secretKeyRef:
+                                  key: digid-logout-url
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: DIGID_IDP_CERT
+                          value: '/var/run/idp/digid_idp.crt'
+                        {{-  if and .Values.security.digid.certificate .Values.security.digid.privateKey }}
+                        - name: DIGID_CERTIFICATE
+                          valueFrom:
+                              secretKeyRef:
+                                  key: digid-certificate
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        - name: DIGID_PRIVATEKEY
+                          valueFrom:
+                              secretKeyRef:
+                                  key: digid-privatekey
+                                  name: {{ include "commonground-gateway.fullname" . }}
+                        {{- end }}
+                        {{- end }}
+                        {{- if .Values.config.httpsProxy }}
+                        -   name: HTTPS_PROXY
+                            value: {{ .Values.config.httpsProxy }}
+                        {{- end }}
+                {{- with .Values.nodeSelector }}
+              nodeSelector:
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .Values.affinity }}
+              affinity:
+                {{- toYaml . | nindent 16 }}
+                {{- end }}
+                {{- with .Values.tolerations }}
+              tolerations:
+                {{- toYaml . | nindent 16 }}
+            {{- end }}
+{{- end }}
