@@ -347,13 +347,13 @@ class Entity
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $reference;
+    private ?string $reference;
 
     /**
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $version;
+    private ?string $version;
 
     //todo: do we want read/write groups here?
     /**
@@ -941,13 +941,11 @@ class Entity
     /**
      * Create or update this schema from an external schema array.
      *
-     * This function is ussed to update and create schema's form schema.json objects
+     * This function is used to update and create schema's form schema.json objects
      *
-     * @param array $schema the schema to load
+     * @param array $schema The schema to load.
      *
-     * @throws GatewayException
-     *
-     * @return $this This schema
+     * @return $this This schema.
      */
     public function fromSchema(array $schema): self
     {
