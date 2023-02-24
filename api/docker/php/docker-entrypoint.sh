@@ -29,8 +29,8 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	bin/console doctrine:database:create --if-not-exists --no-interaction
 
 	# Get the database inline with the newest version.
-	echo "Migrating the database to the currently used version"
-	bin/console doctrine:migrations:migrate --no-interaction
+#	echo "Migrating the database to the currently used version"
+#	bin/console doctrine:migrations:migrate --no-interaction
 
 	if [ "$APP_ENV" != 'prod' ]; then
 
