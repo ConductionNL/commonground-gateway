@@ -1019,7 +1019,7 @@ class Entity
     /**
      * @throws GatewayException
      */
-    public function toSchema(?ObjectEntity $objectEntity): array
+    public function toSchema(?ObjectEntity $objectEntity = null): array
     {
         $schema = [
             '$id'               => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet

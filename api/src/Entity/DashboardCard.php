@@ -117,26 +117,47 @@ class DashboardCard
             $class = get_class($object);
             $this->setEntity($class);
 
-            // Lets set the type
+            // Let's set the type
             switch ($class) {
-            case 'App\Entity\Entity':
-                $this->setType('schema');
-                break;
-           case 'App\Entity\Gateway':
-               $this->setType('gateway');
-               break;
-           case 'App\Entity\Endpoint':
-               $this->setType('endpoint');
-               break;
-           case 'App\Entity\Action':
-               $this->setType('action');
-               break;
-           case 'App\Entity\Cronjob':
-               $this->setType('cronjob');
-               break;
-               default:
-                echo 'i equals 2';
-                break;
+                case 'App\Entity\Action':
+                    $this->setType('action');
+                    break;
+                case 'App\Entity\Application':
+                    $this->setType('application');
+                    break;
+                case 'App\Entity\CollectionEntity':
+                    $this->setType('collection');
+                    break;
+                case 'App\Entity\Cronjob':
+                    $this->setType('cronjob');
+                    break;
+                case 'App\Entity\Endpoint':
+                    $this->setType('endpoint');
+                    break;
+                case 'App\Entity\Entity':
+                    $this->setType('schema');
+                    break;
+                case 'App\Entity\Gateway':
+                    $this->setType('gateway');
+                    break;
+                case 'App\Entity\Mapping':
+                    $this->setType('mapping');
+                    break;
+                case 'App\Entity\ObjectEntity':
+                    $this->setType('object');
+                    break;
+                case 'App\Entity\Organization':
+                    $this->setType('organization');
+                    break;
+//                case 'App\Entity\SecurityGroup':
+//                    $this->setType('securityGroup');
+//                    break;
+//                case 'App\Entity\User':
+//                    $this->setType('user');
+//                    break;
+                default:
+                    $this->setType('Unknown class type: '.$class);
+                    break;
             }
         }
     }
