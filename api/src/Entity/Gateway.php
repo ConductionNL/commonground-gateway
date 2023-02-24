@@ -9,6 +9,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Exception\GatewayException;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -198,15 +199,15 @@ class Gateway
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private ?string $reference;
+    private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private ?string $version;
+    private ?string $version = null;
 
     /**
      * @var string The location where the Gateway needs to be accessed
@@ -690,6 +691,34 @@ class Gateway
         array_key_exists('configuration', $schema) ? $this->setConfiguration($schema['configuration']) : '';
 
         return $this;
+    }
+
+    /**
+     * @throws GatewayException
+     */
+    public function toSchema(): array
+    {
+        return [
+            '$id' => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema' => 'https://docs.commongateway.nl/schemas/Gateway.schema.json',
+            'title' => $this->getName(),
+            'description' => $this->getDescription(),
+            'version' => $this->getVersion(),
+            'name' => $this->getName(),
+            'location' => $this->getLocation(),
+            'authorizationHeader' => $this->getAuthorizationHeader(),
+            'auth' => $this->getAuth(),
+            'authorizationPassthroughMethod' => $this->getAuthorizationPassthroughMethod(),
+            'locale' => $this->getLocale(),
+            'accept' => $this->getAccept(),
+            'jwtId' => $this->getJwtId(),
+            'username' => $this->getUsername(),
+            'documentation' => $this->getDocumentation(),
+            'headers' => $this->getHeaders(),
+            'translationConfig' => $this->getTranslationConfig(),
+            'type' => $this->getType(),
+            'configuration' => $this->getConfiguration(),
+        ];
     }
 
     public function __toString()

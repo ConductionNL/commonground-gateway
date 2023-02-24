@@ -246,9 +246,9 @@ class Action
 
     public function fromSchema(array $schema): self
     {
-        if (!isset($schema['$schema']) || $schema['$schema'] != 'https://json-schema.org/draft/2020-12/action') {
+        if (!isset($schema['$schema']) || $schema['$schema'] != 'https://docs.commongateway.nl/schemas/Action.schema.json') {
             // todo: throw exception on wron schema (requieres design desigin on referencese
-            // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://json-schema.org/draft/2020-12/mapping is required');
+            // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://docs.commongateway.nl/schemas/Mapping.schema.json is required');
         }
 
         (isset($schema['$id']) ? $this->setReference($schema['$id']) : '');
@@ -270,7 +270,7 @@ class Action
     {
         $schema = [
             '$id'                    => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema'                => 'https://json-schema.org/draft/2020-12/action',
+            '$schema'                => 'https://docs.commongateway.nl/schemas/Action.schema.json',
             'title'                  => $this->getName(),
             'description'            => $this->getDescription(),
             'version'                => $this->getVersion(),

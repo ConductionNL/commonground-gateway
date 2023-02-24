@@ -345,15 +345,15 @@ class Entity
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private ?string $reference;
+    private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private ?string $version;
+    private ?string $version = null;
 
     //todo: do we want read/write groups here?
     /**
@@ -1021,7 +1021,7 @@ class Entity
     {
         $schema = [
             '$id'               => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema'           => 'https://json-schema.org/draft/2020-12/schema',
+            '$schema'           => 'https://docs.commongateway.nl/schemas/Entity.schema.json',
             'title'             => $this->getName(),
             'description'       => $this->getDescription(),
             'version'           => $this->getVersion(),
