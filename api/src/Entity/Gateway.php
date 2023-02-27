@@ -694,7 +694,9 @@ class Gateway
     }
 
     /**
-     * @throws GatewayException
+     * Convert this Gateway to a schema.
+     *
+     * @return array Schema array.
      */
     public function toSchema(): array
     {

@@ -204,7 +204,9 @@ class Cronjob
     }
 
     /**
-     * @throws GatewayException
+     * Convert this Cronjob to a schema.
+     *
+     * @return array Schema array.
      */
     public function toSchema(): array
     {

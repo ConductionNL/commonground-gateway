@@ -295,13 +295,15 @@ class CollectionEntity
     }
 
     /**
-     * @throws GatewayException
+     * Convert this CollectionEntity to a schema.
+     *
+     * @return array Schema array.
      */
     public function toSchema(): array
     {
         return [
             '$id' => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema' => 'https://docs.commongateway.nl/schemas/Cronjob.schema.json',
+            '$schema' => 'https://docs.commongateway.nl/schemas/CollectionEntity.schema.json',
             'title' => $this->getName(),
             'description' => $this->getDescription(),
             'version' => $this->getVersion(),
