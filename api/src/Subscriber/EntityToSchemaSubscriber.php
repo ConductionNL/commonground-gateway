@@ -33,6 +33,7 @@ final class EntityToSchemaSubscriber implements EventSubscriberInterface
      * This function returns the schema of an objectEntity or entity.
      *
      * @param RequestEvent $event The event object
+     *
      * @throws GatewayException
      */
     public function toSchema(RequestEvent $event)
