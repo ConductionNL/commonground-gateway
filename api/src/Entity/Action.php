@@ -268,7 +268,7 @@ class Action
 
     public function toSchema(): array
     {
-        $schema = [
+        return [
             '$id'                    => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
             '$schema'                => 'https://docs.commongateway.nl/schemas/Action.schema.json',
             'title'                  => $this->getName(),
@@ -281,8 +281,6 @@ class Action
             'isLockable'             => $this->getIsLockable(),
             'isEnabled'              => $this->getIsEnabled(),
         ];
-
-        return $schema;
     }
 
     /**

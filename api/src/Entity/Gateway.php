@@ -675,7 +675,7 @@ class Gateway
         }
         // Do not set jwt, secret, password or apikey this way!
         array_key_exists('title', $schema) ? $this->setName($schema['title']) : '';
-        array_key_exists('name', $schema) ? $this->setName($schema['name']) : '';
+        array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
         array_key_exists('location', $schema) ? $this->setLocation($schema['location']) : '';
         array_key_exists('authorizationHeader', $schema) ? $this->setAuthorizationHeader($schema['authorizationHeader']) : '';
         array_key_exists('auth', $schema) ? $this->setAuth($schema['auth']) : '';
