@@ -90,7 +90,7 @@ class Entity
 
     /**
      * @Groups({"read","write"})
-     * @ORM\OneToOne(targetEntity=Soap::class, fetch="EAGER", mappedBy="fromEntity")
+     * @ORM\OneToOne(targetEntity=Soap::class, fetch="EXTRA_LAZY", mappedBy="fromEntity")
      * @MaxDepth(1)
      *
      * @deprecated
@@ -98,7 +98,7 @@ class Entity
     private ?Soap $toSoap = null;
 
     /**
-     * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="toEntity", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="toEntity", orphanRemoval=true, fetch="EXTRA_LAZY")
      *
      * @deprecated
      */
@@ -159,7 +159,7 @@ class Entity
      * The attributes of this Entity.
      *
      * @Groups({"read","write"})
-     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist"}, orphanRemoval=true, fetch="EAGER")
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist"}, orphanRemoval=true)
      * @MaxDepth(1)
      */
     private Collection $attributes;
@@ -168,7 +168,7 @@ class Entity
      * @var Collection|null The attributes allowed to partial search on using the search query parameter.
      *
      * @Groups({"read","write"})
-     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="searchPartial", fetch="EAGER")
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="searchPartial", fetch="EXTRA_LAZY")
      * @MaxDepth(1)
      *
      * @deprecated
