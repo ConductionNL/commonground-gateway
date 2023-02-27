@@ -534,7 +534,7 @@ class Gateway
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private ?array $configuration = ["verify" => false];
+    private ?array $configuration = [];
 
     /**
      * @var string The status from the last call made to this source
