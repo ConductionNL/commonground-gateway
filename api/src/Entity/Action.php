@@ -247,7 +247,7 @@ class Action
     public function fromSchema(array $schema): self
     {
         if (!isset($schema['$schema']) || $schema['$schema'] != 'https://docs.commongateway.nl/schemas/Action.schema.json') {
-            // todo: throw exception on wron schema (requieres design desigin on referencese
+            // todo: throw exception on wrong schema (requires design on references)
             // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://docs.commongateway.nl/schemas/Mapping.schema.json is required');
         }
 
@@ -262,6 +262,8 @@ class Action
         (isset($schema['isLockable']) ? $this->setIsLockable($schema['isLockable']) : '');
         (isset($schema['isEnabled']) ? $this->setIsEnabled($schema['isEnabled']) : '');
         (isset($schema['class']) ? $this->setClass($schema['class']) : '');
+        (isset($schema['async']) ? $this->setAsync($schema['async']) : '');
+        (isset($schema['priority']) ? $this->setPriority($schema['priority']) : '');
 
         return  $this;
     }
@@ -280,6 +282,8 @@ class Action
             'configuration'          => $this->getConfiguration(),
             'isLockable'             => $this->getIsLockable(),
             'isEnabled'              => $this->getIsEnabled(),
+            'async'                  => $this->getAsync(),
+            'priority'               => $this->getPriority(),
         ];
     }
 
