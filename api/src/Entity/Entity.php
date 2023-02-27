@@ -35,6 +35,14 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  itemOperations={
  *     "get"={"path"="/admin/entities/{id}"},
  *     "put"={"path"="/admin/entities/{id}"},
+ *      "delete_objects"={
+ *          "path"="/admin/entities/{id}/delete_objects",
+ *          "method"="put",
+ *          "openapi_context" = {
+ *              "summary"="Delete Objects",
+ *              "description"="Deletes all objects that belong to this schema"
+ *              }
+ *     },
  *     "delete"={"path"="/admin/entities/{id}"}
  *  },
  *  collectionOperations={
