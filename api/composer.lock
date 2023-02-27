@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "535636a17277b9c3051743bf25018d00",
+    "content-hash": "beeea6fdbe1283ef0a71c0110a34c857",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -698,16 +698,16 @@
         },
         {
             "name": "commongateway/corebundle",
-            "version": "dev-master",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "a96fb9c79baba322e957246584640201287feef7"
+                "reference": "0803475e774bb08685f4552ce817a46e782c267b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/a96fb9c79baba322e957246584640201287feef7",
-                "reference": "a96fb9c79baba322e957246584640201287feef7",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/0803475e774bb08685f4552ce817a46e782c267b",
+                "reference": "0803475e774bb08685f4552ce817a46e782c267b",
                 "shasum": ""
             },
             "require": {
@@ -728,7 +728,6 @@
                 "symfony/dependency-injection": "~3.4|~4.1|~5.0",
                 "symfony/var-dumper": "^4.1.1|^5.1"
             },
-            "default-branch": true,
             "type": "symfony-bundle",
             "autoload": {
                 "psr-4": {
@@ -766,7 +765,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-02-13T12:50:30+00:00"
+            "time": "2023-02-27T12:46:49+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -14782,7 +14781,6 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "common-gateway/formio-bundle": 20,
-        "commongateway/corebundle": 20,
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,
         "conduction/samlbundle": 20
