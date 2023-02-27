@@ -289,6 +289,7 @@ class CollectionEntity
         array_key_exists('title', $schema) ? $this->setName($schema['title']) : '';
         array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
         array_key_exists('prefix', $schema) ? $this->setPrefix($schema['prefix']) : '';
+        array_key_exists('plugin', $schema) ? $this->setPlugin($schema['plugin']) : '';
 
         return $this;
     }
@@ -306,6 +307,7 @@ class CollectionEntity
             'version' => $this->getVersion(),
             'name' => $this->getName(),
             'prefix' => $this->getPrefix(),
+            'plugin' => $this->getPlugin(),
         ];
     }
 
