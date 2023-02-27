@@ -175,13 +175,13 @@ class Cronjob
     }
 
     /**
-     * Create or update this Source from an external schema array.
+     * Create or update this Cronjob from an external schema array.
      *
-     * This function is used to update and create sources form source.json objects.
+     * This function is used to update and create cronjobs form cronjob.json objects.
      *
      * @param array $schema The schema to load.
      *
-     * @return $this This Source.
+     * @return $this This Cronjob.
      */
     public function fromSchema(array $schema): self
     {
