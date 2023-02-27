@@ -159,7 +159,7 @@ class Gateway
      * @ORM\GeneratedValue(strategy="CUSTOM")
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private UuidInterface $id;
+    private $id;
 
     /**
      * @var string The Name of the Gateway which is used in the commonGround service
@@ -225,9 +225,9 @@ class Gateway
      *     }
      * )
      * @Groups({"read","read_secure","write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, options={"default": ""})
      */
-    private string $location;
+    private string $location = '';
 
     /**
      * @var bool true if this Source is enabled and can be used.
@@ -534,7 +534,7 @@ class Gateway
      * @Groups({"read", "write"})
      * @ORM\Column(type="array", nullable=true)
      */
-    private ?array $configuration = [];
+    private ?array $configuration = ["verify" => false];
 
     /**
      * @var string The status from the last call made to this source
@@ -756,9 +756,9 @@ class Gateway
         return $this->id;
     }
 
-    public function setId(UuidInterface $id): self
+    public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
