@@ -278,13 +278,13 @@ class Endpoint
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $reference;
+    private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $version;
+    private ?string $version = null;
 
     /**
      * Constructor for creating an Endpoint. Use $entity to create an Endpoint for an Entity or
@@ -318,7 +318,7 @@ class Endpoint
         }
 
         if ($configuration) {
-            $this->fromArray($configuration, $default);
+            $this->fromSchema($configuration, $default);
         }
     }
 
@@ -335,7 +335,7 @@ class Endpoint
      *
      * @return void
      */
-    public function fromArray(array $configuration, array $default)
+    public function fromSchema(array $configuration, array $default = [])
     {
         // Lets make a path & add prefix to this path if it is needed.
         $path = array_key_exists('path', $configuration) ? $configuration['path'] : $default['path'];
@@ -370,6 +370,8 @@ class Endpoint
         /*@depricated kept here for lagacy */
         $this->setMethod(array_key_exists('method', $configuration) ? $configuration['method'] : 'GET');
         $this->setOperationType(array_key_exists('operationType', $configuration) ? $configuration['operationType'] : 'GET');
+
+        $this->setThrows($configuration['throws'] ?? []);
     }
 
     public function __toString()
