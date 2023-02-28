@@ -9,7 +9,6 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
-use App\Exception\GatewayException;
 use App\Repository\CollectionEntityRepository;
 use DateTime;
 use DateTimeInterface;
@@ -302,14 +301,14 @@ class CollectionEntity
     public function toSchema(): array
     {
         return [
-            '$id' => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema' => 'https://docs.commongateway.nl/schemas/CollectionEntity.schema.json',
-            'title' => $this->getName(),
+            '$id'         => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'     => 'https://docs.commongateway.nl/schemas/CollectionEntity.schema.json',
+            'title'       => $this->getName(),
             'description' => $this->getDescription(),
-            'version' => $this->getVersion(),
-            'name' => $this->getName(),
-            'prefix' => $this->getPrefix(),
-            'plugin' => $this->getPlugin(),
+            'version'     => $this->getVersion(),
+            'name'        => $this->getName(),
+            'prefix'      => $this->getPrefix(),
+            'plugin'      => $this->getPlugin(),
         ];
     }
 
