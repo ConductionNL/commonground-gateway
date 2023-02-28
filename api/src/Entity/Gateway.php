@@ -9,7 +9,6 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
-use App\Exception\GatewayException;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -701,25 +700,25 @@ class Gateway
     public function toSchema(): array
     {
         return [
-            '$id' => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema' => 'https://docs.commongateway.nl/schemas/Gateway.schema.json',
-            'title' => $this->getName(),
-            'description' => $this->getDescription(),
-            'version' => $this->getVersion(),
-            'name' => $this->getName(),
-            'location' => $this->getLocation(),
-            'authorizationHeader' => $this->getAuthorizationHeader(),
-            'auth' => $this->getAuth(),
+            '$id'                            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'                        => 'https://docs.commongateway.nl/schemas/Gateway.schema.json',
+            'title'                          => $this->getName(),
+            'description'                    => $this->getDescription(),
+            'version'                        => $this->getVersion(),
+            'name'                           => $this->getName(),
+            'location'                       => $this->getLocation(),
+            'authorizationHeader'            => $this->getAuthorizationHeader(),
+            'auth'                           => $this->getAuth(),
             'authorizationPassthroughMethod' => $this->getAuthorizationPassthroughMethod(),
-            'locale' => $this->getLocale(),
-            'accept' => $this->getAccept(),
-            'jwtId' => $this->getJwtId(),
-            'username' => $this->getUsername(),
-            'documentation' => $this->getDocumentation(),
-            'headers' => $this->getHeaders(),
-            'translationConfig' => $this->getTranslationConfig(),
-            'type' => $this->getType(),
-            'configuration' => $this->getConfiguration(),
+            'locale'                         => $this->getLocale(),
+            'accept'                         => $this->getAccept(),
+            'jwtId'                          => $this->getJwtId(),
+            'username'                       => $this->getUsername(),
+            'documentation'                  => $this->getDocumentation(),
+            'headers'                        => $this->getHeaders(),
+            'translationConfig'              => $this->getTranslationConfig(),
+            'type'                           => $this->getType(),
+            'configuration'                  => $this->getConfiguration(),
         ];
     }
 

@@ -9,7 +9,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
-use Exception;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 
@@ -48,24 +47,27 @@ class ValueSubscriber implements EventSubscriberInterface
                 $subObject = $this->entityManager->getRepository(ObjectEntity::class)->findByAnyId($uuid);
             } catch (NonUniqueResultException $exception) {
                 $this->logger->error("Found more than one ObjectEntity with uuid = '$uuid' or with a synchronization with sourceId = '$uuid'");
+
                 return null;
             }
         }
         if (!$subObject instanceof ObjectEntity) {
-            $this->logger->error("No subObjectEntity found with uuid ($uuid) or with a synchronization with sourceId = uuid for ParentObject",
+            $this->logger->error(
+                "No subObjectEntity found with uuid ($uuid) or with a synchronization with sourceId = uuid for ParentObject",
                 [
-                    "uuid" => $uuid,
-                    "ParentObject" => [
-                        "id" => $parentObject->getId()->toString(),
-                        "entity" => $parentObject->getEntity() ? [
-                            "id" => $parentObject->getEntity()->getId()->toString(),
-                            "name" => $parentObject->getEntity()->getName()
+                    'uuid'         => $uuid,
+                    'ParentObject' => [
+                        'id'     => $parentObject->getId()->toString(),
+                        'entity' => $parentObject->getEntity() ? [
+                            'id'   => $parentObject->getEntity()->getId()->toString(),
+                            'name' => $parentObject->getEntity()->getName(),
                         ] : null,
-                        "_self" => $parentObject->getSelf(),
-                        "name" => $parentObject->getName(),
-                    ]
+                        '_self' => $parentObject->getSelf(),
+                        'name'  => $parentObject->getName(),
+                    ],
                 ]
             );
+
             return null;
         }
 
