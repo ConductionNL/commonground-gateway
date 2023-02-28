@@ -40,9 +40,6 @@
     "brick/reflection": {
         "version": "0.4.1"
     },
-    "common-gateway/t-junction-bundle": {
-        "version": "0.0.4"
-    },
     "commongateway/corebundle": {
         "version": "dev-master"
     },

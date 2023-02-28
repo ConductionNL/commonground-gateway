@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "883d924fa3a081dd185e8fe68628cdd9",
+    "content-hash": "e2711adb4683cd023f35a6fac4785bd4",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -697,65 +697,17 @@
             "time": "2022-11-16T13:35:03+00:00"
         },
         {
-            "name": "common-gateway/t-junction-bundle",
-            "version": "0.0.7",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CommonGateway/TJunctionBundle.git",
-                "reference": "0e762f50f4807c73de9a02f442783904eeabd76f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/TJunctionBundle/zipball/0e762f50f4807c73de9a02f442783904eeabd76f",
-                "reference": "0e762f50f4807c73de9a02f442783904eeabd76f",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": "dev-feature/installation-from-json",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "CommonGateway\\TJunctionBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An example package for creating symfony flex bundles as plugins",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "pet store",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/CommonGateway/TJunctionBundle/issues",
-                "source": "https://github.com/CommonGateway/TJunctionBundle/tree/0.0.7"
-            },
-            "time": "2023-02-28T09:34:44+00:00"
-        },
-        {
             "name": "commongateway/corebundle",
             "version": "dev-feature/installation-from-json",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "fdb9c9b942d375b710f2692fc0112e478f0e3ed5"
+                "reference": "0958591c6800dc20f9bcfadbb1c12516b193b7bc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/fdb9c9b942d375b710f2692fc0112e478f0e3ed5",
-                "reference": "fdb9c9b942d375b710f2692fc0112e478f0e3ed5",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/0958591c6800dc20f9bcfadbb1c12516b193b7bc",
+                "reference": "0958591c6800dc20f9bcfadbb1c12516b193b7bc",
                 "shasum": ""
             },
             "require": {
@@ -813,7 +765,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-02-28T09:25:44+00:00"
+            "time": "2023-02-28T13:55:48+00:00"
         },
         {
             "name": "composer/ca-bundle",
