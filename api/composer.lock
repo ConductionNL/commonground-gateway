@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "535636a17277b9c3051743bf25018d00",
+    "content-hash": "883d924fa3a081dd185e8fe68628cdd9",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -697,17 +697,65 @@
             "time": "2022-11-16T13:35:03+00:00"
         },
         {
-            "name": "commongateway/corebundle",
-            "version": "dev-master",
+            "name": "common-gateway/t-junction-bundle",
+            "version": "0.0.7",
             "source": {
                 "type": "git",
-                "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "a96fb9c79baba322e957246584640201287feef7"
+                "url": "https://github.com/CommonGateway/TJunctionBundle.git",
+                "reference": "0e762f50f4807c73de9a02f442783904eeabd76f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/a96fb9c79baba322e957246584640201287feef7",
-                "reference": "a96fb9c79baba322e957246584640201287feef7",
+                "url": "https://api.github.com/repos/CommonGateway/TJunctionBundle/zipball/0e762f50f4807c73de9a02f442783904eeabd76f",
+                "reference": "0e762f50f4807c73de9a02f442783904eeabd76f",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": "dev-feature/installation-from-json",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "CommonGateway\\TJunctionBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An example package for creating symfony flex bundles as plugins",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "pet store",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/CommonGateway/TJunctionBundle/issues",
+                "source": "https://github.com/CommonGateway/TJunctionBundle/tree/0.0.7"
+            },
+            "time": "2023-02-28T09:34:44+00:00"
+        },
+        {
+            "name": "commongateway/corebundle",
+            "version": "dev-feature/installation-from-json",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CommonGateway/CoreBundle.git",
+                "reference": "fdb9c9b942d375b710f2692fc0112e478f0e3ed5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/fdb9c9b942d375b710f2692fc0112e478f0e3ed5",
+                "reference": "fdb9c9b942d375b710f2692fc0112e478f0e3ed5",
                 "shasum": ""
             },
             "require": {
@@ -728,7 +776,6 @@
                 "symfony/dependency-injection": "~3.4|~4.1|~5.0",
                 "symfony/var-dumper": "^4.1.1|^5.1"
             },
-            "default-branch": true,
             "type": "symfony-bundle",
             "autoload": {
                 "psr-4": {
@@ -766,7 +813,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-02-13T12:50:30+00:00"
+            "time": "2023-02-28T09:25:44+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -4424,54 +4471,6 @@
                 }
             ],
             "time": "2021-09-02T17:10:53+00:00"
-        },
-        {
-            "name": "larping-base/larping-bundle",
-            "version": "1.0.53",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "9e0bbd30e6c60d11091329a1de655616a5415297"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/9e0bbd30e6c60d11091329a1de655616a5415297",
-                "reference": "9e0bbd30e6c60d11091329a1de655616a5415297",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": ">=0.0.1",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "LarpingBase\\LarpingBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An Commong Gateay bundle for the larping application",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "larping",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.53"
-            },
-            "time": "2023-02-03T14:07:20+00:00"
         },
         {
             "name": "league/html-to-markdown",
@@ -14779,7 +14778,7 @@
         }
     ],
     "aliases": [],
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "stability-flags": {
         "common-gateway/formio-bundle": 20,
         "commongateway/corebundle": 20,

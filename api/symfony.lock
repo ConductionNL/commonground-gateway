@@ -40,6 +40,9 @@
     "brick/reflection": {
         "version": "0.4.1"
     },
+    "common-gateway/t-junction-bundle": {
+        "version": "0.0.4"
+    },
     "commongateway/corebundle": {
         "version": "dev-master"
     },
@@ -248,14 +251,14 @@
     "knplabs/knp-markdown-bundle": {
         "version": "1.9.0"
     },
-    "larping-base/larping-bundle": {
-        "version": "1.0.53"
-    },
     "laminas/laminas-code": {
         "version": "4.4.2"
     },
     "laminas/laminas-escaper": {
         "version": "2.9.0"
+    },
+    "larping-base/larping-bundle": {
+        "version": "1.0.53"
     },
     "league/html-to-markdown": {
         "version": "4.10.0"
