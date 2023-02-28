@@ -101,7 +101,7 @@ class Action
      *
      * @ORM\Column(type="simple_array")
      */
-    private array $listens;
+    private array $listens = [];
 
     /**
      * @var array|null The event names the action should trigger
