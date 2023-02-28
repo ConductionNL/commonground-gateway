@@ -44,8 +44,8 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	echo "Clearing doctrine caches"
 	bin/console cache:clear
 	# Lets check if we have al the data that we need
-#	echo "Initializing the gateway"
-#	bin/console commongateway:initialize
+	echo "Initializing the gateway"
+	bin/console commongateway:initialize
 
 fi
 exec docker-php-entrypoint "$@"
