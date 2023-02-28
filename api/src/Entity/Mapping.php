@@ -61,15 +61,15 @@ class Mapping
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private ?string $reference;
+    private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private ?string $version;
+    private ?string $version = null;
 
     /**
      * @var string The name of the mapping
@@ -216,12 +216,12 @@ class Mapping
         return $this;
     }
 
-    public function getversion(): ?string
+    public function getVersion(): ?string
     {
         return $this->version;
     }
 
-    public function setversion(?string $version): self
+    public function setVersion(?string $version): self
     {
         $this->version = $version;
 
