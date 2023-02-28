@@ -974,18 +974,20 @@ class Entity
         }
 
         // Properties
-        foreach ($schema['properties'] as $name => $property) {
-            // Some properties are considerd forbidden
-            if (in_array($name, ['id']) || str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
-                continue;
-            }
+        if (array_key_exists('properties', $schema)) {
+            foreach ($schema['properties'] as $name => $property) {
+                // Some properties are considerd forbidden
+                if (in_array($name, ['id']) || str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
+                    continue;
+                }
 
-            // Let see if the attribute exists
-            if (!$attribute = $this->getAttributeByName($name)) {
-                $attribute = new Attribute();
-                $attribute->setName($name);
+                // Let see if the attribute exists
+                if (!$attribute = $this->getAttributeByName($name)) {
+                    $attribute = new Attribute();
+                    $attribute->setName($name);
+                }
+                $this->addAttribute($attribute->fromSchema($property));
             }
-            $this->addAttribute($attribute->fromSchema($property));
         }
 
         // Required stuff
@@ -1067,8 +1069,9 @@ class Entity
                     $property['value'] = $objectEntity->getValue($attribute);
                 } elseif ($attribute->getMultiple()) {
                     $property['value'] = $objectEntity->getValueObject($attribute)->getSimpleArrayValue();
+                } else {
+                    $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
                 }
-                $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
             }
 
             // What if the atribute is hooked to an object.
