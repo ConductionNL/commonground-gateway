@@ -1017,8 +1017,9 @@ class Entity
     /**
      * Convert this Entity to a schema.
      *
-     * @return array Schema array.
      * @throws GatewayException
+     *
+     * @return array Schema array.
      */
     public function toSchema(?ObjectEntity $objectEntity = null): array
     {
