@@ -48,7 +48,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Action
 {
     /**
-     * @var UuidInterface The UUID identifier of this resource
+     * @var ?UuidInterface The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *

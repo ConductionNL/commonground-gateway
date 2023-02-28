@@ -275,6 +275,18 @@ class Endpoint
     private $proxy;
 
     /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $reference;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $version;
+
+    /**
      * Constructor for creating an Endpoint. Use $entity to create an Endpoint for an Entity or
      * use $source to create an Endpoint for a source, a proxy Endpoint.
      *
@@ -794,6 +806,32 @@ class Endpoint
     public function setProxy(?Gateway $proxy): self
     {
         $this->proxy = $proxy;
+
+        return $this;
+    }
+
+
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getVersion(): ?string
+    {
+        return $this->version;
+    }
+
+    public function setVersion(?string $version): self
+    {
+        $this->version = $version;
 
         return $this;
     }
