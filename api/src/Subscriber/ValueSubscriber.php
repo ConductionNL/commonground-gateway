@@ -58,7 +58,7 @@ class ValueSubscriber implements EventSubscriberInterface
                     "ParentObject" => [
                         "id" => $parentObject->getId()->toString(),
                         "entity" => $parentObject->getEntity() ? [
-                            "id" => $parentObject->getEntity()->getId(),
+                            "id" => $parentObject->getEntity()->getId()->toString(),
                             "name" => $parentObject->getEntity()->getName()
                         ] : null,
                         "_self" => $parentObject->getSelf(),
