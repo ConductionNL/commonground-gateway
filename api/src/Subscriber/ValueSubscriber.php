@@ -10,15 +10,25 @@ use Doctrine\ORM\Events;
 use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Exception;
+use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 
 class ValueSubscriber implements EventSubscriberInterface
 {
+    /**
+     * @var EntityManagerInterface
+     */
     private EntityManagerInterface $entityManager;
 
-    public function __construct(EntityManagerInterface $entityManager)
+    /**
+     * @var LoggerInterface
+     */
+    private LoggerInterface $logger;
+
+    public function __construct(EntityManagerInterface $entityManager, LoggerInterface $valueSubscriberLogger)
     {
         $this->entityManager = $entityManager;
+        $this->logger = $valueSubscriberLogger;
     }
 
     public function getSubscribedEvents(): array
@@ -30,17 +40,33 @@ class ValueSubscriber implements EventSubscriberInterface
         ];
     }
 
-    public function getSubObject(string $uuid): ?ObjectEntity
+    public function getSubObject(string $uuid, Value $valueObject): ?ObjectEntity
     {
+        $parentObject = $valueObject->getObjectEntity();
         if (!$subObject = $this->entityManager->find(ObjectEntity::class, $uuid)) {
             try {
                 $subObject = $this->entityManager->getRepository(ObjectEntity::class)->findByAnyId($uuid);
             } catch (NonUniqueResultException $exception) {
-                throw new Exception("Found more than one ObjectEntity with id = '$uuid' or with a source with sourceId = '$uuid'");
+                $this->logger->error("Found more than one ObjectEntity with uuid = '$uuid' or with a synchronization with sourceId = '$uuid'");
+                return null;
             }
         }
         if (!$subObject instanceof ObjectEntity) {
-            throw new Exception('No object found with uuid: '.$uuid);
+            $this->logger->error("No subObjectEntity found with uuid ($uuid) or with a synchronization with sourceId = uuid for ParentObject",
+                [
+                    "uuid" => $uuid,
+                    "ParentObject" => [
+                        "id" => $parentObject->getId()->toString(),
+                        "entity" => $parentObject->getEntity() ? [
+                            "id" => $parentObject->getEntity()->getId(),
+                            "name" => $parentObject->getEntity()->getName()
+                        ] : null,
+                        "_self" => $parentObject->getSelf(),
+                        "name" => $parentObject->getName(),
+                    ]
+                ]
+            );
+            return null;
         }
 
         return $subObject;
@@ -53,12 +79,12 @@ class ValueSubscriber implements EventSubscriberInterface
         if ($valueObject instanceof Value && $valueObject->getAttribute()->getType() == 'object') {
             if ($valueObject->getArrayValue()) {
                 foreach ($valueObject->getArrayValue() as $uuid) {
-                    $subObject = $this->getSubObject($uuid);
+                    $subObject = $this->getSubObject($uuid, $valueObject);
                     $subObject && $valueObject->addObject($subObject);
                 }
                 $valueObject->setArrayValue([]);
             } elseif (($uuid = $valueObject->getStringValue()) && Uuid::isValid($valueObject->getStringValue())) {
-                $subObject = $this->getSubObject($uuid);
+                $subObject = $this->getSubObject($uuid, $valueObject);
                 $subObject && $valueObject->addObject($subObject);
             }
         }
