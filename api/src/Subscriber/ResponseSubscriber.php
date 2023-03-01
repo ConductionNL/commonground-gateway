@@ -22,9 +22,9 @@ class ResponseSubscriber implements EventSubscriberInterface
 
     /**
      * @param EntityManagerInterface $entityManager The entity manager
-     * @param SessionInterface $session The sesion interface
+     * @param SessionInterface       $session       The sesion interface
      */
-    public function __construct(EntityManagerInterface $entityManager,SessionInterface $session)
+    public function __construct(EntityManagerInterface $entityManager, SessionInterface $session)
     {
         $this->entityManager = $entityManager;
         $this->session = $session;
@@ -50,7 +50,7 @@ class ResponseSubscriber implements EventSubscriberInterface
         // Set multiple headers simultaneously
         $response->headers->add([
             'Access-Control-Allow-Credentials' => 'true',
-            'Process-ID' => $this->session->get('process'),
+            'Process-ID'                       => $this->session->get('process'),
         ]);
 
         $response->headers->remove('Access-Control-Allow-Origin');
