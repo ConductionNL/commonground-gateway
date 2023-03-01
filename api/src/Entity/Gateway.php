@@ -158,7 +158,7 @@ class Gateway
      * @ORM\GeneratedValue(strategy="CUSTOM")
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private UuidInterface $id;
+    private $id;
 
     /**
      * @var string The Name of the Gateway which is used in the commonGround service
@@ -197,6 +197,18 @@ class Gateway
     private ?string $description = '';
 
     /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     */
+    private ?string $reference = null;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     */
+    private ?string $version = null;
+
+    /**
      * @var string The location where the Gateway needs to be accessed
      *
      * @Assert\NotNull
@@ -212,9 +224,9 @@ class Gateway
      *     }
      * )
      * @Groups({"read","read_secure","write"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, options={"default": ""})
      */
-    private string $location;
+    private string $location = '';
 
     /**
      * @var bool true if this Source is enabled and can be used.
@@ -638,34 +650,76 @@ class Gateway
         $this->proxies = new ArrayCollection();
 
         if ($configuration) {
-            $this->fromArray($configuration);
+            $this->fromSchema($configuration);
         }
     }
 
     /**
-     * Uses given $configuration array to set the properties of this Gateway.
+     * Create or update this Source from an external schema array.
      *
-     * @param array $configuration An array with data.
+     * This function is used to update and create sources form source.json objects.
      *
-     * @return void
+     * @param array $schema The schema to load.
+     *
+     * @return $this This Source.
      */
-    public function fromArray(array $configuration)
+    public function fromSchema(array $schema): self
     {
+        // Basic stuff
+        if (array_key_exists('$id', $schema)) {
+            $this->setReference($schema['$id']);
+        }
+        if (array_key_exists('version', $schema)) {
+            $this->setVersion($schema['version']);
+        }
         // Do not set jwt, secret, password or apikey this way!
-        array_key_exists('name', $configuration) ? $this->setName($configuration['name']) : '';
-        array_key_exists('location', $configuration) ? $this->setLocation($configuration['location']) : '';
-        array_key_exists('authorizationHeader', $configuration) ? $this->setAuthorizationHeader($configuration['authorizationHeader']) : '';
-        array_key_exists('auth', $configuration) ? $this->setAuth($configuration['auth']) : '';
-        array_key_exists('authorizationPassthroughMethod', $configuration) ? $this->setAuthorizationPassthroughMethod($configuration['authorizationPassthroughMethod']) : '';
-        array_key_exists('locale', $configuration) ? $this->setLocale($configuration['locale']) : '';
-        array_key_exists('accept', $configuration) ? $this->setAccept($configuration['accept']) : '';
-        array_key_exists('jwtId', $configuration) ? $this->setJwtId($configuration['jwtId']) : '';
-        array_key_exists('username', $configuration) ? $this->setUsername($configuration['username']) : '';
-        array_key_exists('documentation', $configuration) ? $this->setDocumentation($configuration['documentation']) : '';
-        array_key_exists('headers', $configuration) ? $this->setHeaders($configuration['headers']) : '';
-        array_key_exists('translationConfig', $configuration) ? $this->setTranslationConfig($configuration['translationConfig']) : '';
-        array_key_exists('type', $configuration) ? $this->setType($configuration['type']) : '';
-        array_key_exists('configuration', $configuration) ? $this->setConfiguration($configuration['configuration']) : '';
+        array_key_exists('title', $schema) ? $this->setName($schema['title']) : '';
+        array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
+        array_key_exists('location', $schema) ? $this->setLocation($schema['location']) : '';
+        array_key_exists('authorizationHeader', $schema) ? $this->setAuthorizationHeader($schema['authorizationHeader']) : '';
+        array_key_exists('auth', $schema) ? $this->setAuth($schema['auth']) : '';
+        array_key_exists('authorizationPassthroughMethod', $schema) ? $this->setAuthorizationPassthroughMethod($schema['authorizationPassthroughMethod']) : '';
+        array_key_exists('locale', $schema) ? $this->setLocale($schema['locale']) : '';
+        array_key_exists('accept', $schema) ? $this->setAccept($schema['accept']) : '';
+        array_key_exists('jwtId', $schema) ? $this->setJwtId($schema['jwtId']) : '';
+        array_key_exists('username', $schema) ? $this->setUsername($schema['username']) : '';
+        array_key_exists('documentation', $schema) ? $this->setDocumentation($schema['documentation']) : '';
+        array_key_exists('headers', $schema) ? $this->setHeaders($schema['headers']) : '';
+        array_key_exists('translationConfig', $schema) ? $this->setTranslationConfig($schema['translationConfig']) : '';
+        array_key_exists('type', $schema) ? $this->setType($schema['type']) : '';
+        array_key_exists('configuration', $schema) ? $this->setConfiguration($schema['configuration']) : '';
+
+        return $this;
+    }
+
+    /**
+     * Convert this Gateway to a schema.
+     *
+     * @return array Schema array.
+     */
+    public function toSchema(): array
+    {
+        return [
+            '$id'                            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'                        => 'https://docs.commongateway.nl/schemas/Gateway.schema.json',
+            'title'                          => $this->getName(),
+            'description'                    => $this->getDescription(),
+            'version'                        => $this->getVersion(),
+            'name'                           => $this->getName(),
+            'location'                       => $this->getLocation(),
+            'authorizationHeader'            => $this->getAuthorizationHeader(),
+            'auth'                           => $this->getAuth(),
+            'authorizationPassthroughMethod' => $this->getAuthorizationPassthroughMethod(),
+            'locale'                         => $this->getLocale(),
+            'accept'                         => $this->getAccept(),
+            'jwtId'                          => $this->getJwtId(),
+            'username'                       => $this->getUsername(),
+            'documentation'                  => $this->getDocumentation(),
+            'headers'                        => $this->getHeaders(),
+            'translationConfig'              => $this->getTranslationConfig(),
+            'type'                           => $this->getType(),
+            'configuration'                  => $this->getConfiguration(),
+        ];
     }
 
     public function __toString()
@@ -703,9 +757,9 @@ class Gateway
         return $this->id;
     }
 
-    public function setId(UuidInterface $id): self
+    public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
@@ -742,6 +796,30 @@ class Gateway
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getVersion(): ?string
+    {
+        return $this->version;
+    }
+
+    public function setVersion(?string $version): self
+    {
+        $this->version = $version;
 
         return $this;
     }

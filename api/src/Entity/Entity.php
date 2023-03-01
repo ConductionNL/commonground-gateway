@@ -353,15 +353,15 @@ class Entity
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private $reference;
+    private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private $version;
+    private ?string $version = null;
 
     //todo: do we want read/write groups here?
     /**
@@ -949,13 +949,11 @@ class Entity
     /**
      * Create or update this schema from an external schema array.
      *
-     * This function is ussed to update and create schema's form schema.json objects
+     * This function is used to update and create schema's form schema.json objects
      *
-     * @param array $schema the schema to load
+     * @param array $schema The schema to load.
      *
-     * @throws GatewayException
-     *
-     * @return $this This schema
+     * @return $this This schema.
      */
     public function fromSchema(array $schema): self
     {
@@ -984,18 +982,20 @@ class Entity
         }
 
         // Properties
-        foreach ($schema['properties'] as $name => $property) {
-            // Some properties are considerd forbidden
-            if (in_array($name, ['id']) || str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
-                continue;
-            }
+        if (array_key_exists('properties', $schema)) {
+            foreach ($schema['properties'] as $name => $property) {
+                // Some properties are considerd forbidden
+                if (in_array($name, ['id']) || str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
+                    continue;
+                }
 
-            // Let see if the attribute exists
-            if (!$attribute = $this->getAttributeByName($name)) {
-                $attribute = new Attribute();
-                $attribute->setName($name);
+                // Let see if the attribute exists
+                if (!$attribute = $this->getAttributeByName($name)) {
+                    $attribute = new Attribute();
+                    $attribute->setName($name);
+                }
+                $this->addAttribute($attribute->fromSchema($property));
             }
-            $this->addAttribute($attribute->fromSchema($property));
         }
 
         // Required stuff
@@ -1025,13 +1025,17 @@ class Entity
     }
 
     /**
+     * Convert this Entity to a schema.
+     *
      * @throws GatewayException
+     *
+     * @return array Schema array.
      */
-    public function toSchema(?ObjectEntity $objectEntity): array
+    public function toSchema(?ObjectEntity $objectEntity = null): array
     {
         $schema = [
             '$id'               => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema'           => 'https://json-schema.org/draft/2020-12/schema',
+            '$schema'           => 'https://docs.commongateway.nl/schemas/Entity.schema.json',
             'title'             => $this->getName(),
             'description'       => $this->getDescription(),
             'version'           => $this->getVersion(),
@@ -1073,8 +1077,9 @@ class Entity
                     $property['value'] = $objectEntity->getValue($attribute);
                 } elseif ($attribute->getMultiple()) {
                     $property['value'] = $objectEntity->getValueObject($attribute)->getSimpleArrayValue();
+                } else {
+                    $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
                 }
-                $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
             }
 
             // What if the atribute is hooked to an object.

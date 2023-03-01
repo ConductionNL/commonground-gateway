@@ -24,6 +24,12 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		sleep 1
 	done
 
+	if [ "$APP_ENV" != 'prod' ]; then
+		# If you want to retain data in your dev environment comment this command out.
+		echo "Clearing the database"
+		bin/console doctrine:database:drop --force --no-interaction
+	fi
+
 	# Create the database if no databse exists.
 	echo "Creating the database"
 	bin/console doctrine:database:create --if-not-exists --no-interaction
@@ -32,15 +38,6 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	echo "Migrating the database to the currently used version"
 	bin/console doctrine:migrations:migrate --no-interaction
 
-	if [ "$APP_ENV" != 'prod' ]; then
-
-		# If you want to retain data in your dev environment comment this command out.
-		echo "Clearing the database"
-		bin/console doctrine:schema:drop --full-database --force --no-interaction
-
-		echo "Updating the database"
-		bin/console doctrine:schema:update --force --no-interaction
-	fi
 	echo "Clearing doctrine caches"
 	bin/console cache:clear
 	# Lets check if we have al the data that we need
