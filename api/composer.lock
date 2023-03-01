@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e2711adb4683cd023f35a6fac4785bd4",
+    "content-hash": "8bf187972befe1f8464edfee6dac0f72",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -698,16 +698,16 @@
         },
         {
             "name": "commongateway/corebundle",
-            "version": "dev-feature/installation-from-json",
+            "version": "1.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "0958591c6800dc20f9bcfadbb1c12516b193b7bc"
+                "reference": "2424de30d7dc4bd2251d643c68af37c3769943b6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/0958591c6800dc20f9bcfadbb1c12516b193b7bc",
-                "reference": "0958591c6800dc20f9bcfadbb1c12516b193b7bc",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/2424de30d7dc4bd2251d643c68af37c3769943b6",
+                "reference": "2424de30d7dc4bd2251d643c68af37c3769943b6",
                 "shasum": ""
             },
             "require": {
@@ -765,7 +765,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-02-28T13:55:48+00:00"
+            "time": "2023-03-01T08:54:56+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -4423,6 +4423,54 @@
                 }
             ],
             "time": "2021-09-02T17:10:53+00:00"
+        },
+        {
+            "name": "larping-base/larping-bundle",
+            "version": "1.0.61",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/LarpingBase/LarpingBundle.git",
+                "reference": "b43d2c08d8bb5d928cadf2f17b83bcddafaa5dcc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/b43d2c08d8bb5d928cadf2f17b83bcddafaa5dcc",
+                "reference": "b43d2c08d8bb5d928cadf2f17b83bcddafaa5dcc",
+                "shasum": ""
+            },
+            "require": {
+                "commongateway/corebundle": ">=0.0.1",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "LarpingBase\\LarpingBundle\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "EUPL-1.2"
+            ],
+            "description": "An Commong Gateay bundle for the larping application",
+            "homepage": "https://commongateway.nl",
+            "keywords": [
+                "common",
+                "common-gateway-plugin",
+                "commongateway",
+                "conduction",
+                "gateway",
+                "larping",
+                "symfony"
+            ],
+            "support": {
+                "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
+                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.61"
+            },
+            "time": "2023-02-25T10:06:06+00:00"
         },
         {
             "name": "league/html-to-markdown",
@@ -14730,10 +14778,9 @@
         }
     ],
     "aliases": [],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "stability-flags": {
         "common-gateway/formio-bundle": 20,
-        "commongateway/corebundle": 20,
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,
         "conduction/samlbundle": 20
