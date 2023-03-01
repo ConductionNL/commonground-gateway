@@ -18,7 +18,7 @@ kind: Ingress
 metadata:
     name: {{ $fullName }}
     labels:
-  {{- include "commonground-gateway.labels" . | nindent 4 }}
+  {{- include "commonground-gateway.labels" . | nindent 8 }}
     annotations:
     {{- if .Values.global.tls }}
         cert-manager.io/cluster-issuer: letsencrypt-prod
@@ -33,7 +33,7 @@ metadata:
         traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ .Release.Name }}-middleware@kubernetescrd
   {{ end }}
   {{- with .Values.ingress.annotations }}
-  {{- toYaml . | nindent 8 }}
+    {{- toYaml . | nindent 8 }}
   {{- end }}
 spec:
   {{- if and .Values.ingress.className (semverCompare ">=1.18-0" .Capabilities.KubeVersion.Version) }}

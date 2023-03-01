@@ -17,6 +17,11 @@ if [ ! -f "/tmp/vendor/symfony.lock" ]; then
 	echo "Copying symfony.lock"
 	cp /srv/api/symfony.lock /tmp/vendor/ -f
 fi
+if [ ! -f "/tmp/vendor/bundles.php" ]; then
+	touch /tmp/vendor/bundles.php
+	echo "Copying bundles.php"
+	cp /srv/api/config/bundles.php /tmp/vendor/ -f
+fi
 if [ ! -d "/tmp/vendor/vendor" ]; then
 	echo "Copying vendor folder"
 	cp /srv/api/vendor /tmp/vendor/vendor -R
