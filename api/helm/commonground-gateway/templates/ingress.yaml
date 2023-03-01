@@ -1,7 +1,7 @@
 {{- if .Values.ingress.enabled -}}
 {{- $fullName := include "commonground-gateway.fullname" . -}}
-{{- $svcPort := .Values.service.sslport -}}
-{{- $gatewayUi := include "commonground-gateway.fullname" . -}}
+{{- $svcPort := .Values.service.port -}}
+{{- $gatewayUi := include "commonground-gateway.fullname" . -}} 
 {{- if and .Values.ingress.className (not (semverCompare ">=1.18-0" .Capabilities.KubeVersion.Version)) }}
 {{- if not (hasKey .Values.ingress.annotations "kubernetes.io/ingress.class") }}
 {{- $_ := set .Values.ingress.annotations "kubernetes.io/ingress.class" .Values.ingress.className}}

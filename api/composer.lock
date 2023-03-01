@@ -5,6 +5,7 @@
         "This file is @generated automatically"
     ],
     "content-hash": "8bf187972befe1f8464edfee6dac0f72",
+
     "packages": [
         {
             "name": "adbario/php-dot-notation",
