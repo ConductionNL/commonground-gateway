@@ -48,7 +48,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Action
 {
     /**
-     * @var UuidInterface The UUID identifier of this resource
+     * @var ?UuidInterface The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
@@ -59,7 +59,7 @@ class Action
      * @ORM\GeneratedValue(strategy="CUSTOM")
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private UuidInterface $id;
+    private $id;
 
     /**
      * @Groups({"read", "write"})
@@ -101,7 +101,7 @@ class Action
      *
      * @ORM\Column(type="simple_array")
      */
-    private array $listens;
+    private array $listens = [];
 
     /**
      * @var array|null The event names the action should trigger
@@ -246,9 +246,9 @@ class Action
 
     public function fromSchema(array $schema): self
     {
-        if (!isset($schema['$schema']) || $schema['$schema'] != 'https://json-schema.org/draft/2020-12/action') {
-            // todo: throw exception on wron schema (requieres design desigin on referencese
-            // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://json-schema.org/draft/2020-12/mapping is required');
+        if (!isset($schema['$schema']) || $schema['$schema'] != 'https://docs.commongateway.nl/schemas/Action.schema.json') {
+            // todo: throw exception on wrong schema (requires design on references)
+            // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://docs.commongateway.nl/schemas/Mapping.schema.json is required');
         }
 
         (isset($schema['$id']) ? $this->setReference($schema['$id']) : '');
@@ -262,15 +262,17 @@ class Action
         (isset($schema['isLockable']) ? $this->setIsLockable($schema['isLockable']) : '');
         (isset($schema['isEnabled']) ? $this->setIsEnabled($schema['isEnabled']) : '');
         (isset($schema['class']) ? $this->setClass($schema['class']) : '');
+        (isset($schema['async']) ? $this->setAsync($schema['async']) : '');
+        (isset($schema['priority']) ? $this->setPriority($schema['priority']) : '');
 
         return  $this;
     }
 
     public function toSchema(): array
     {
-        $schema = [
+        return [
             '$id'                    => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema'                => 'https://json-schema.org/draft/2020-12/action',
+            '$schema'                => 'https://docs.commongateway.nl/schemas/Action.schema.json',
             'title'                  => $this->getName(),
             'description'            => $this->getDescription(),
             'version'                => $this->getVersion(),
@@ -280,9 +282,9 @@ class Action
             'configuration'          => $this->getConfiguration(),
             'isLockable'             => $this->getIsLockable(),
             'isEnabled'              => $this->getIsEnabled(),
+            'async'                  => $this->getAsync(),
+            'priority'               => $this->getPriority(),
         ];
-
-        return $schema;
     }
 
     /**

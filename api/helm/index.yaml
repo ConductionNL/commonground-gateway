@@ -3,7 +3,67 @@ entries:
   commonground-gateway:
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.616417168+01:00"
+    created: "2023-02-23T16:05:35.976787632+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 11.9.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    - condition: gateway-ui.enabled
+      name: gateway-ui
+      repository: https://raw.githubusercontent.com/ConductionNL/gateway-ui/refinement-demo-branch/helm/
+      version: 0.1.7
+    description: A Helm chart for Kubernetes
+    digest: 6a4f0f94988c1361b286dd156e69acebdf62e48eb9e3a04cbb8511ae68845b50
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.4.0.tgz
+    version: 1.4.0
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2023-02-23T16:05:35.960187949+01:00"
+    dependencies:
+    - condition: postgresql.enabled
+      name: postgresql
+      repository: https://charts.bitnami.com/bitnami
+      version: 12.1.2
+    - condition: redis.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.11
+    - name: rabbitmq
+      repository: https://charts.bitnami.com/bitnami
+      version: 11.9.1
+    - condition: mongodb.enabled
+      name: mongodb
+      repository: https://charts.bitnami.com/bitnami
+      version: 13.4.4
+    - condition: gateway-ui.enabled
+      name: gateway-ui
+      repository: https://raw.githubusercontent.com/ConductionNL/gateway-ui/refinement-demo-branch/helm/
+      version: 0.1.7
+    description: A Helm chart for Kubernetes
+    digest: c5673e076125d85b5fbcf341cb2ba910dc38a6a97a27c8a34c6d6c2511393491
+    name: commonground-gateway
+    type: application
+    urls:
+    - commonground-gateway-1.3.1.tgz
+    version: 1.3.1
+  - apiVersion: v2
+    appVersion: "2.2"
+    created: "2023-02-23T16:05:35.923192827+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -33,7 +93,7 @@ entries:
     version: 1.3.0
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.593356196+01:00"
+    created: "2023-02-23T16:05:35.907574438+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -63,7 +123,7 @@ entries:
     version: 1.2.9
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.564036229+01:00"
+    created: "2023-02-23T16:05:35.891128532+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -89,7 +149,7 @@ entries:
     version: 1.2.8
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.534703732+01:00"
+    created: "2023-02-23T16:05:35.875237731+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -115,7 +175,7 @@ entries:
     version: 1.2.7
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.506277575+01:00"
+    created: "2023-02-23T16:05:35.86028554+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -141,7 +201,7 @@ entries:
     version: 1.2.6
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.469314053+01:00"
+    created: "2023-02-23T16:05:35.844764993+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -167,7 +227,7 @@ entries:
     version: 1.2.5
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.443266427+01:00"
+    created: "2023-02-23T16:05:35.827121907+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -193,7 +253,7 @@ entries:
     version: 1.2.4
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.421207842+01:00"
+    created: "2023-02-23T16:05:35.811427491+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -219,7 +279,7 @@ entries:
     version: 1.2.3
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.398040449+01:00"
+    created: "2023-02-23T16:05:35.796502888+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -245,7 +305,7 @@ entries:
     version: 1.2.2
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.374826212+01:00"
+    created: "2023-02-23T16:05:35.7800801+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -271,7 +331,7 @@ entries:
     version: 1.2.1
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.348435001+01:00"
+    created: "2023-02-23T16:05:35.762806749+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -297,7 +357,7 @@ entries:
     version: 1.2.0
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.321332266+01:00"
+    created: "2023-02-23T16:05:35.747370214+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -323,7 +383,7 @@ entries:
     version: 1.1.4
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.299557142+01:00"
+    created: "2023-02-23T16:05:35.731962027+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -349,7 +409,7 @@ entries:
     version: 1.1.3
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.277154664+01:00"
+    created: "2023-02-23T16:05:35.716343295+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -375,7 +435,7 @@ entries:
     version: 1.1.2
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.25374717+01:00"
+    created: "2023-02-23T16:05:35.699206426+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -401,7 +461,7 @@ entries:
     version: 1.1.1
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.231076607+01:00"
+    created: "2023-02-23T16:05:35.683949436+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -427,7 +487,7 @@ entries:
     version: 1.1.0
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.208203063+01:00"
+    created: "2023-02-23T16:05:35.669183262+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -453,7 +513,7 @@ entries:
     version: 1.0.7
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.186257437+01:00"
+    created: "2023-02-23T16:05:35.653218943+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -479,7 +539,7 @@ entries:
     version: 1.0.6
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.164289575+01:00"
+    created: "2023-02-23T16:05:35.637091016+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -505,7 +565,7 @@ entries:
     version: 1.0.5
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.14241512+01:00"
+    created: "2023-02-23T16:05:35.617131103+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -531,7 +591,7 @@ entries:
     version: 1.0.4
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.120046225+01:00"
+    created: "2023-02-23T16:05:35.594496991+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -557,7 +617,7 @@ entries:
     version: 1.0.3
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.09714789+01:00"
+    created: "2023-02-23T16:05:35.572005405+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -583,7 +643,7 @@ entries:
     version: 1.0.2
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.073548982+01:00"
+    created: "2023-02-23T16:05:35.548107268+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -609,7 +669,7 @@ entries:
     version: 1.0.1
   - apiVersion: v2
     appVersion: "2.2"
-    created: "2023-02-20T12:46:22.051009823+01:00"
+    created: "2023-02-23T16:05:35.51603701+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -635,7 +695,7 @@ entries:
     version: 1.0.0
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-02-20T12:46:21.908467811+01:00"
+    created: "2023-02-23T16:05:35.364590178+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -657,7 +717,7 @@ entries:
     version: 0.1.12
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-02-20T12:46:21.8878589+01:00"
+    created: "2023-02-23T16:05:35.352943158+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -679,7 +739,7 @@ entries:
     version: 0.1.11
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-02-20T12:46:21.868578899+01:00"
+    created: "2023-02-23T16:05:35.341356256+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -701,7 +761,7 @@ entries:
     version: 0.1.10
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-02-20T12:46:22.028324357+01:00"
+    created: "2023-02-23T16:05:35.47894876+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -723,7 +783,7 @@ entries:
     version: 0.1.9
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-02-20T12:46:22.014178032+01:00"
+    created: "2023-02-23T16:05:35.449488003+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -745,7 +805,7 @@ entries:
     version: 0.1.8
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-02-20T12:46:21.998669713+01:00"
+    created: "2023-02-23T16:05:35.437703461+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -767,7 +827,7 @@ entries:
     version: 0.1.7
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-02-20T12:46:21.978554881+01:00"
+    created: "2023-02-23T16:05:35.422719039+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -786,7 +846,7 @@ entries:
     version: 0.1.6
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-02-20T12:46:21.966736678+01:00"
+    created: "2023-02-23T16:05:35.412327719+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -805,7 +865,7 @@ entries:
     version: 0.1.5
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-02-20T12:46:21.954513494+01:00"
+    created: "2023-02-23T16:05:35.402291084+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -824,7 +884,7 @@ entries:
     version: 0.1.4
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-02-20T12:46:21.94400043+01:00"
+    created: "2023-02-23T16:05:35.391114306+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -843,7 +903,7 @@ entries:
     version: 0.1.3
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-02-20T12:46:21.930900928+01:00"
+    created: "2023-02-23T16:05:35.380837422+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -862,7 +922,7 @@ entries:
     version: 0.1.2
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-02-20T12:46:21.847191995+01:00"
+    created: "2023-02-23T16:05:35.320288819+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -881,7 +941,7 @@ entries:
     version: 0.1.1
   - apiVersion: v2
     appVersion: 1.16.0
-    created: "2023-02-20T12:46:21.825901523+01:00"
+    created: "2023-02-23T16:05:35.303312332+01:00"
     dependencies:
     - condition: postgresql.enabled
       name: postgresql
@@ -898,4 +958,4 @@ entries:
     urls:
     - commonground-gateway-0.1.0.tgz
     version: 0.1.0
-generated: "2023-02-20T12:46:21.808809841+01:00"
+generated: "2023-02-23T16:05:35.278557651+01:00"
