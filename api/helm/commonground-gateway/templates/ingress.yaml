@@ -28,6 +28,10 @@ metadata:
         nginx.ingress.kubernetes.io/auth-tls-secret: {{ .Release.Namespace }}/{{ $fullName }}-rootca
         nginx.ingress.kubernetes.io/auth-tls-verify: optional_no_ca
         nginx.ingress.kubernetes.io/auth-tls-verify-depth: '4'
+        {{- if not .Values.ingress.annotations }}
+        nginx.ingress.kubernetes.io/cors-allow-origin: https://admin.{{ .Values.global.domain }}
+        nginx.ingress.kubernetes.io/enable-cors: "true"
+        {{- end }}
     {{ end }}
     {{ if eq .Values.ingress.className "traefik"}}
         traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ .Release.Name }}-middleware@kubernetescrd
