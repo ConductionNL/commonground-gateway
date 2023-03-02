@@ -364,6 +364,10 @@ class Value
                     // if object
                     //@todo get object from uuid
                     break;
+                case 'array':
+                    // if array
+                    //@todo ???
+                    break;
                 default:
                     throw new \UnexpectedValueException('Could not parse to array the attribute type of: '.$this->getAttribute()->getType());
             }

@@ -32,13 +32,16 @@ final class EntityToSchemaSubscriber implements EventSubscriberInterface
     /**
      * This function returns the schema of an objectEntity or entity.
      *
+     * @param RequestEvent $event The event object
+     *
      * @throws GatewayException
      */
     public function toSchema(RequestEvent $event)
     {
         $request = $event->getRequest();
 
-        if ($request->headers->get('Accept') != 'application/json+schema') {
+        // Let not do anything if a schema is not requested
+        if ($request->headers->get('Accept') !== 'application/json+schema' && $request->headers->get('Accept') !== 'application/schema+json') {
             return;
         }
 

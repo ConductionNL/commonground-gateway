@@ -260,8 +260,7 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
         // In dev we also want to run the installer
         //if( getenv("APP_ENV") == "dev"){
         $io->section('Running installer');
-        $this->installationService->setStyle(new SymfonyStyle($input, $output));
-        $this->installationService->composerupdate($config);
+        $this->installationService->update($config);
         //}
 
         $io->success('Successfully finished setting basic configuration');
