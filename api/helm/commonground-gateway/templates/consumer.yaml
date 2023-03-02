@@ -75,22 +75,26 @@ spec:
               name: idp-certificate
               readOnly: true
             {{- end }}            
-{{/*            - mountPath: /srv/api/vendor*/}}
-{{/*              subPath: vendor*/}}
-{{/*              name: vendor*/}}
-{{/*              readOnly: false*/}}
-{{/*            - mountPath: /srv/api/composer.json*/}}
-{{/*              subPath: composer.json*/}}
-{{/*              name: vendor*/}}
-{{/*              readOnly: false*/}}
-{{/*            - mountPath: /srv/api/composer.lock*/}}
-{{/*              subPath: composer.lock*/}}
-{{/*              name: vendor*/}}
-{{/*              readOnly: false*/}}
-{{/*            - mountPath: /srv/api/symfony.lock*/}}
-{{/*              subPath: symfony.lock*/}}
-{{/*              name: vendor*/}}
-{{/*              readOnly: false*/}}
+            - mountPath: /srv/api/vendor
+              subPath: vendor
+              name: vendor
+              readOnly: false
+            - mountPath: /srv/api/composer.json
+              subPath: composer.json
+              name: vendor
+              readOnly: false
+            - mountPath: /srv/api/composer.lock
+              subPath: composer.lock
+              name: vendor
+              readOnly: false
+            - mountPath: /srv/api/symfony.lock
+              subPath: symfony.lock
+              name: vendor
+              readOnly: false
+            - mountPath: /srv/api/config/bundles.php
+              subPath: bundles.php
+              name: vendor
+              readOnly: false
           args:
               - bin/console
               - messenger:consume
@@ -143,6 +147,11 @@ spec:
                 secretKeyRef:
                   key: database-url
                   name: {{ include "commonground-gateway.fullname" . }}
+            - name: CACHE_URL
+              valueFrom:
+                  secretKeyRef:
+                      key: mongodb-url
+                      name: {{ include "commonground-gateway.fullname" . }}
             - name: GLOBAL_DOMAIN
               valueFrom:
                 configMapKeyRef:

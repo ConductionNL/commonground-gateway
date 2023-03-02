@@ -4,7 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e39ad0ce840af3d54f77f7c38039c8df",
+    "content-hash": "8bf187972befe1f8464edfee6dac0f72",
+
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -892,16 +893,16 @@
         },
         {
             "name": "commongateway/corebundle",
-            "version": "dev-master",
+            "version": "1.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "08d0d8aa9faaac53aaf66394583d24fb0411c5c6"
+                "reference": "2424de30d7dc4bd2251d643c68af37c3769943b6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/08d0d8aa9faaac53aaf66394583d24fb0411c5c6",
-                "reference": "08d0d8aa9faaac53aaf66394583d24fb0411c5c6",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/2424de30d7dc4bd2251d643c68af37c3769943b6",
+                "reference": "2424de30d7dc4bd2251d643c68af37c3769943b6",
                 "shasum": ""
             },
             "require": {
@@ -922,7 +923,6 @@
                 "symfony/dependency-injection": "~3.4|~4.1|~5.0",
                 "symfony/var-dumper": "^4.1.1|^5.1"
             },
-            "default-branch": true,
             "type": "symfony-bundle",
             "autoload": {
                 "psr-4": {
@@ -960,7 +960,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-02-21T13:05:34+00:00"
+            "time": "2023-03-01T08:54:56+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -4684,16 +4684,16 @@
         },
         {
             "name": "larping-base/larping-bundle",
-            "version": "1.0.53",
+            "version": "1.0.61",
             "source": {
                 "type": "git",
                 "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "9e0bbd30e6c60d11091329a1de655616a5415297"
+                "reference": "b43d2c08d8bb5d928cadf2f17b83bcddafaa5dcc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/9e0bbd30e6c60d11091329a1de655616a5415297",
-                "reference": "9e0bbd30e6c60d11091329a1de655616a5415297",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/b43d2c08d8bb5d928cadf2f17b83bcddafaa5dcc",
+                "reference": "b43d2c08d8bb5d928cadf2f17b83bcddafaa5dcc",
                 "shasum": ""
             },
             "require": {
@@ -4726,9 +4726,9 @@
             ],
             "support": {
                 "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.53"
+                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.61"
             },
-            "time": "2023-02-03T14:07:20+00:00"
+            "time": "2023-02-25T10:06:06+00:00"
         },
         {
             "name": "league/html-to-markdown",
@@ -15088,7 +15088,6 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "common-gateway/formio-bundle": 20,
-        "commongateway/corebundle": 20,
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,
         "conduction/samlbundle": 20

@@ -64,7 +64,7 @@ class EavController extends AbstractController
             $oas = $this->oasService->createOas();
 
             if ($extension == 'json') {
-                $oas = json_encode($oas);
+                $oas = json_encode($oas, JSON_UNESCAPED_SLASHES);
             } else {
                 $oas = Yaml::dump($oas);
             }
