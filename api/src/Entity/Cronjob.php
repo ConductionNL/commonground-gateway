@@ -79,6 +79,18 @@ class Cronjob
     private ?string $description;
 
     /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     */
+    private ?string $reference = null;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     */
+    private ?string $version = null;
+
+    /**
      * @var string The crontab that determines the interval https://crontab.guru/
      *             defaulted at every 5 minutes * / 5  *  *  *  *
      *
@@ -161,6 +173,56 @@ class Cronjob
         }
     }
 
+    /**
+     * Create or update this Cronjob from an external schema array.
+     *
+     * This function is used to update and create cronjobs form cronjob.json objects.
+     *
+     * @param array $schema The schema to load.
+     *
+     * @return $this This Cronjob.
+     */
+    public function fromSchema(array $schema): self
+    {
+        // Basic stuff
+        if (array_key_exists('$id', $schema)) {
+            $this->setReference($schema['$id']);
+        }
+        if (array_key_exists('version', $schema)) {
+            $this->setVersion($schema['version']);
+        }
+        // Do not set jwt, secret, password or apikey this way!
+        array_key_exists('title', $schema) ? $this->setName($schema['title']) : '';
+        array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
+        array_key_exists('crontab', $schema) ? $this->setCrontab($schema['crontab']) : '';
+        array_key_exists('data', $schema) ? $this->setData($schema['data']) : '';
+        array_key_exists('isEnabled', $schema) ? $this->setIsEnabled($schema['isEnabled']) : '';
+        array_key_exists('throws', $schema) ? $this->setThrows($schema['throws']) : '';
+
+        return $this;
+    }
+
+    /**
+     * Convert this Cronjob to a schema.
+     *
+     * @return array Schema array.
+     */
+    public function toSchema(): array
+    {
+        return [
+            '$id'         => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'     => 'https://docs.commongateway.nl/schemas/Cronjob.schema.json',
+            'title'       => $this->getName(),
+            'description' => $this->getDescription(),
+            'version'     => $this->getVersion(),
+            'name'        => $this->getName(),
+            'crontab'     => $this->getCrontab(),
+            'data'        => $this->getData(),
+            'isEnabled'   => $this->getIsEnabled(),
+            'throws'      => $this->getThrows(),
+        ];
+    }
+
     public function __toString()
     {
         return $this->getName();
@@ -191,6 +253,30 @@ class Cronjob
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getVersion(): ?string
+    {
+        return $this->version;
+    }
+
+    public function setVersion(?string $version): self
+    {
+        $this->version = $version;
 
         return $this;
     }
