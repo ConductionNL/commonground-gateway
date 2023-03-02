@@ -957,7 +957,7 @@ class Entity
      */
     public function fromSchema(array $schema): self
     {
-        // Basic stuff
+        // Basic stuff.
         if (array_key_exists('$id', $schema)) {
             $this->setReference($schema['$id']);
             $this->setSchema($schema['$id']);
@@ -981,15 +981,15 @@ class Entity
             $this->setNameProperties($schema['nameProperties']);
         }
 
-        // Properties
+        // Properties.
         if (array_key_exists('properties', $schema)) {
             foreach ($schema['properties'] as $name => $property) {
-                // Some properties are considerd forbidden
+                // Some properties are considered forbidden.
                 if (in_array($name, ['id']) || str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
                     continue;
                 }
 
-                // Let see if the attribute exists
+                // Let see if the attribute exists.
                 if (!$attribute = $this->getAttributeByName($name)) {
                     $attribute = new Attribute();
                     $attribute->setName($name);
@@ -998,24 +998,24 @@ class Entity
             }
         }
 
-        // Required stuff
+        // Required stuff.
         if (array_key_exists('required', $schema)) {
             foreach ($schema['required'] as $required) {
                 $attribute = $this->getAttributeByName($required);
-                //We can only set the atribute on required if it exisits so.
+                // We can only set the attribute on required if it exists so.
                 if ($attribute instanceof Attribute === true) {
                     $attribute->setRequired(true);
                 }
             }
         }
 
-        // Bit of cleanup
+        // A bit of cleanup.
         foreach ($this->getAttributes() as $attribute) {
-            // Remove Required if no longer valid
+            // Remove Required if no longer valid.
             if (array_key_exists('required', $schema) && !in_array($attribute->getName(), $schema['required']) && $attribute->getRequired() == true) {
                 $attribute->setRequired(false);
             }
-            // Remove atribute if no longer present
+            // Remove attribute if no longer present.
             if (!array_key_exists($attribute->getName(), $schema['properties'])) {
                 $this->removeAttribute($attribute);
             }
@@ -1047,28 +1047,37 @@ class Entity
         ];
 
         if ($objectEntity && $objectEntity->getEntity() !== $this) {
-            throw new GatewayException('The given objectEntity has not have the same entity as this entity');
+            throw new GatewayException('The given objectEntity has not have the same entity as this entity.');
         }
 
         foreach ($this->getAttributes() as $attribute) {
-            // Zetten van required
+            // Zetten van required.
             if ($attribute->getRequired()) {
                 $schema['required'][] = $attribute->getName();
             }
 
             $property = [];
 
-            // Aanmaken property
+            // Aanmaken property.
             // @todo ik laad dit nu in als array maar eigenlijk wil je testen en alleen zetten als er waardes in zitten
 
-            // Create a url to fetch the objects from the schema this property refers to
+            // Create an url to fetch the objects from the schema this property refers to.
             if ($attribute->getType() == 'object' && $attribute->getObject() !== null) {
                 $property['_list'] = '/admin/objects?_self.schema.id='.$attribute->getObject()->getId()->toString();
             }
 
-            $attribute->getType() && $property['type'] = $attribute->getType();
-            $attribute->getFormat() && $property['format'] = $attribute->getFormat();
-            $attribute->getDescription() && $property['description'] = $attribute->getDescription();
+            if ($attribute->getType() === 'datetime' || $attribute->getType() === 'date') {
+                $property['type'] = 'string';
+                $property['format'] = $attribute->getType();
+            } elseif ($attribute->getType()) {
+                $property['type'] = $attribute->getType();
+                $attribute->getFormat() && $property['format'] = $attribute->getFormat();
+            }
+
+            $stringReplace = str_replace('“', "'", $attribute->getDescription());
+            $decodedDescription = str_replace('”', "'", $stringReplace);
+
+            $attribute->getDescription() && $property['description'] = $decodedDescription;
             $attribute->getExample() && $property['example'] = $attribute->getExample();
 
             // What if we have an $object entity.
@@ -1082,7 +1091,7 @@ class Entity
                 }
             }
 
-            // What if the atribute is hooked to an object.
+            // What if the attribute is hooked to an object.
             if ($attribute->getType() === 'object' && $attribute->getObject() === true) {
                 $property['$ref'] = '#/components/schemas/'.$attribute->getObject()->getName();
             }
@@ -1090,9 +1099,12 @@ class Entity
             // Zetten van de property.
             $schema['properties'][$attribute->getName()] = $property;
 
-            // Add the validators
+            // Add the validators.
             foreach ($attribute->getValidations() as $validator => $validation) {
                 if (!array_key_exists($validator, Entity::SUPPORTED_VALIDATORS) && $validation != null) {
+                    if ($validator === 'required') {
+                        continue;
+                    }
                     $schema['properties'][$attribute->getName()][$validator] = $validation;
                 }
             }
