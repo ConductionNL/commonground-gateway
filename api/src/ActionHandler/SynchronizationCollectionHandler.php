@@ -23,6 +23,18 @@ class SynchronizationCollectionHandler implements ActionHandlerInterface
         $this->synchronizationService = $synchronizationService;
     }
 
+    public function getConditions()
+    {
+        return ['==' => [1, 1]];
+    }
+
+    public function getListens()
+    {
+        return [
+            'none',
+        ];
+    }
+
     /**
      *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
      *

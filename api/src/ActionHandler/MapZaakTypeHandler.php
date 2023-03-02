@@ -17,6 +17,18 @@ class MapZaakTypeHandler implements ActionHandlerInterface
         $this->mapZaakTypeService = $mapZaakTypeService;
     }
 
+    public function getConditions()
+    {
+        return ['==' => [1, 1]];
+    }
+
+    public function getListens()
+    {
+        return [
+            'none',
+        ];
+    }
+
     /**
      *  This function returns the requered configuration as a [json-schema](https://json-schema.org/) array.
      *

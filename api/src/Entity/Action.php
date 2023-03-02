@@ -229,7 +229,8 @@ class Action
             (isset($schema['title']) ? $this->setName($schema['title']) : '');
             (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
             $this->setClass(get_class($actionHandler));
-            $this->setConditions(['==' => [1, 1]]);
+            $this->setConditions($actionHandler->getConditions());
+            $this->setListens($actionHandler->getListens());
             $this->setConfiguration($this->getDefaultConfigFromSchema($schema));
         }
     }

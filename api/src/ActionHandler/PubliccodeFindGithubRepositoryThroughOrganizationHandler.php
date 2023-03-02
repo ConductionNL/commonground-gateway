@@ -13,6 +13,18 @@ class PubliccodeFindGithubRepositoryThroughOrganizationHandler implements Action
         $this->publiccodeService = $publiccodeService;
     }
 
+    public function getConditions()
+    {
+        return ['==' => [1, 1]];
+    }
+
+    public function getListens()
+    {
+        return [
+            'none',
+        ];
+    }
+
     public function getConfiguration()
     {
         return [
