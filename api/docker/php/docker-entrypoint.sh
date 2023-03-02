@@ -38,6 +38,11 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 #	echo "Migrating the database to the currently used version"
 #	bin/console doctrine:migrations:migrate --no-interaction
 
+	if [ "$APP_ENV" != 'prod' ]; then
+		echo "Updating database schema"
+		bin/console doctrine:schema:update -f
+	fi
+
 	echo "Clearing doctrine caches"
 	bin/console cache:clear
 	# Lets check if we have al the data that we need
