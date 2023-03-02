@@ -984,12 +984,12 @@ class Entity
         // Properties.
         if (array_key_exists('properties', $schema)) {
             foreach ($schema['properties'] as $name => $property) {
-            // Some properties are considered forbidden.
+                // Some properties are considered forbidden.
                 if (in_array($name, ['id']) || str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
                     continue;
                 }
 
-            // Let see if the attribute exists.
+                // Let see if the attribute exists.
                 if (!$attribute = $this->getAttributeByName($name)) {
                     $attribute = new Attribute();
                     $attribute->setName($name);
