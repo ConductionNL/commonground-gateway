@@ -35,6 +35,14 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  itemOperations={
  *     "get"={"path"="/admin/entities/{id}"},
  *     "put"={"path"="/admin/entities/{id}"},
+ *      "delete_objects"={
+ *          "path"="/admin/entities/{id}/delete_objects",
+ *          "method"="put",
+ *          "openapi_context" = {
+ *              "summary"="Delete Objects",
+ *              "description"="Deletes all objects that belong to this schema"
+ *              }
+ *     },
  *     "delete"={"path"="/admin/entities/{id}"}
  *  },
  *  collectionOperations={
@@ -90,7 +98,7 @@ class Entity
 
     /**
      * @Groups({"read","write"})
-     * @ORM\OneToOne(targetEntity=Soap::class, fetch="EXTRA_LAZY", mappedBy="fromEntity")
+     * @ORM\OneToOne(targetEntity=Soap::class, fetch="EAGER", mappedBy="fromEntity")
      * @MaxDepth(1)
      *
      * @deprecated
@@ -98,7 +106,7 @@ class Entity
     private ?Soap $toSoap = null;
 
     /**
-     * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="toEntity", orphanRemoval=true, fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity=Soap::class, mappedBy="toEntity", orphanRemoval=true)
      *
      * @deprecated
      */
@@ -159,7 +167,7 @@ class Entity
      * The attributes of this Entity.
      *
      * @Groups({"read","write"})
-     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist"}, orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist"}, orphanRemoval=true, fetch="EAGER")
      * @MaxDepth(1)
      */
     private Collection $attributes;
@@ -168,7 +176,7 @@ class Entity
      * @var Collection|null The attributes allowed to partial search on using the search query parameter.
      *
      * @Groups({"read","write"})
-     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="searchPartial", fetch="EXTRA_LAZY")
+     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="searchPartial", fetch="EAGER")
      * @MaxDepth(1)
      *
      * @deprecated
@@ -345,15 +353,15 @@ class Entity
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private $reference;
+    private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private $version;
+    private ?string $version = null;
 
     //todo: do we want read/write groups here?
     /**
@@ -941,13 +949,11 @@ class Entity
     /**
      * Create or update this schema from an external schema array.
      *
-     * This function is ussed to update and create schema's form schema.json objects
+     * This function is used to update and create schema's form schema.json objects
      *
-     * @param array $schema the schema to load
+     * @param array $schema The schema to load.
      *
-     * @throws GatewayException
-     *
-     * @return $this This schema
+     * @return $this This schema.
      */
     public function fromSchema(array $schema): self
     {
@@ -976,25 +982,27 @@ class Entity
         }
 
         // Properties.
-        foreach ($schema['properties'] as $name => $property) {
-            // Some properties are considered forbidden.
-            if (in_array($name, ['id']) || str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
-                continue;
-            }
+        if (array_key_exists('properties', $schema)) {
+            foreach ($schema['properties'] as $name => $property) {
+                // Some properties are considered forbidden.
+                if (in_array($name, ['id']) || str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
+                    continue;
+                }
 
-            // Let see if the attribute exists.
-            if (!$attribute = $this->getAttributeByName($name)) {
-                $attribute = new Attribute();
-                $attribute->setName($name);
+                // Let see if the attribute exists.
+                if (!$attribute = $this->getAttributeByName($name)) {
+                    $attribute = new Attribute();
+                    $attribute->setName($name);
+                }
+                $this->addAttribute($attribute->fromSchema($property));
             }
-            $this->addAttribute($attribute->fromSchema($property));
         }
 
         // Required stuff.
         if (array_key_exists('required', $schema)) {
             foreach ($schema['required'] as $required) {
                 $attribute = $this->getAttributeByName($required);
-                // We can only set the attribute on required if it exists so.
+                //We can only set the attribute on required if it exists so.
                 if ($attribute instanceof Attribute === true) {
                     $attribute->setRequired(true);
                 }
@@ -1017,13 +1025,17 @@ class Entity
     }
 
     /**
+     * Convert this Entity to a schema.
+     *
      * @throws GatewayException
+     *
+     * @return array Schema array.
      */
-    public function toSchema(?ObjectEntity $objectEntity): array
+    public function toSchema(?ObjectEntity $objectEntity = null): array
     {
         $schema = [
             '$id'               => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema'           => 'https://json-schema.org/draft/2020-12/schema',
+            '$schema'           => 'https://docs.commongateway.nl/schemas/Entity.schema.json',
             'title'             => $this->getName(),
             'description'       => $this->getDescription(),
             'version'           => $this->getVersion(),
@@ -1074,8 +1086,9 @@ class Entity
                     $property['value'] = $objectEntity->getValue($attribute);
                 } elseif ($attribute->getMultiple()) {
                     $property['value'] = $objectEntity->getValueObject($attribute)->getSimpleArrayValue();
+                } else {
+                    $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
                 }
-                $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
             }
 
             // What if the attribute is hooked to an object.
