@@ -91,6 +91,10 @@ spec:
               subPath: symfony.lock
               name: vendor
               readOnly: false
+            - mountPath: /srv/api/config/bundles.php
+              subPath: bundles.php
+              name: vendor
+              readOnly: false
           args:
               - bin/console
               - messenger:consume
