@@ -1438,10 +1438,10 @@ class SynchronizationService
     }
 
     /**
-     * Find an object by URL, and synchronize it if it does not exist in the gateway
+     * Find an object by URL, and synchronize it if it does not exist in the gateway.
      *
-     * @param string $url       The URL of the object
-     * @param Entity $entity    The schema the object should fit into
+     * @param string $url    The URL of the object
+     * @param Entity $entity The schema the object should fit into
      *
      * @return ObjectEntity|null
      */
