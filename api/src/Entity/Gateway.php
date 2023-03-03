@@ -696,6 +696,7 @@ class Gateway
         array_key_exists('translationConfig', $schema) ? $this->setTranslationConfig($schema['translationConfig']) : '';
         array_key_exists('type', $schema) ? $this->setType($schema['type']) : '';
         array_key_exists('configuration', $schema) ? $this->setConfiguration($schema['configuration']) : '';
+        array_key_exists('endpointsConfig', $schema) ? $this->setEndpointsConfig($schema['endpointsConfig']) : '';
 
         return $this;
     }
@@ -727,6 +728,7 @@ class Gateway
             'translationConfig'              => $this->getTranslationConfig(),
             'type'                           => $this->getType(),
             'configuration'                  => $this->getConfiguration(),
+            'endpointsConfig'                => $this->getEndpointsConfig(),
         ];
     }
 
