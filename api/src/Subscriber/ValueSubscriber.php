@@ -30,7 +30,7 @@ class ValueSubscriber implements EventSubscriberInterface
     private LoggerInterface $logger;
 
     /**
-     * @var SynchronizationService $synchronizationService
+     * @var SynchronizationService
      */
     private SynchronizationService $synchronizationService;
 
@@ -101,19 +101,19 @@ class ValueSubscriber implements EventSubscriberInterface
         $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
 
         // 2.b The source might be on a path e.g. /v1 so if whe cant find a source let try to cycle
-        foreach(explode('/', $parse['path']) as $pathPart) {
+        foreach (explode('/', $parse['path']) as $pathPart) {
             $location = $location.'/'.$pathPart;
             $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
-            if($source !== null) {
+            if ($source !== null) {
                 break;
             }
         }
-        if($source instanceof Gateway === false) {
+        if ($source instanceof Gateway === false) {
             return null;
         }
 
         // 3 If we have a source we can establich an endpoint.
-        $endpoint = str_replace($location,'',$url);
+        $endpoint = str_replace($location, '', $url);
 
         // 4 Createa sync
         $synchronization = new Synchronization($source, $entity);
@@ -129,12 +129,12 @@ class ValueSubscriber implements EventSubscriberInterface
     {
         $self = str_replace($this->parameterBag->get('app_url'), '', $url);
         $objecEntity = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['self' => $self]);
-        if($objecEntity !== null) {
+        if ($objecEntity !== null) {
             return $objecEntity;
         }
 
         $synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['sourceId' => $url]);
-        if($synchronization instanceof Synchronization === true) {
+        if ($synchronization instanceof Synchronization === true) {
             return $synchronization->getObject();
         } else {
             $this->aquireObject($url, $valueObject->getAttribute()->getObject());
@@ -143,11 +143,9 @@ class ValueSubscriber implements EventSubscriberInterface
         return null;
     }
 
-
     public function findSubobject(string $identifier, Value $valueObject): ?ObjectEntity
     {
-
-        if(Uuid::isValid($identifier)) {
+        if (Uuid::isValid($identifier)) {
             $subObject = $this->getSubObjectById($identifier, $valueObject);
             $subObject && $valueObject->addObject($subObject);
         } elseif (filter_var($identifier, FILTER_VALIDATE_URL)) {
@@ -156,7 +154,6 @@ class ValueSubscriber implements EventSubscriberInterface
 
         return $subObject;
     }
-
 
     public function preUpdate(LifecycleEventArgs $value): void
     {
@@ -169,8 +166,9 @@ class ValueSubscriber implements EventSubscriberInterface
                 }
                 $valueObject->setArrayValue([]);
             } elseif ($identifier = $valueObject->getStringValue()) {
-                foreach($valueObject->getObjects() as $object)
+                foreach ($valueObject->getObjects() as $object) {
                     $valueObject->removeObject($object);
+                }
                 $valueObject->addObject($this->findSubobject($identifier, $valueObject));
             }
         }
