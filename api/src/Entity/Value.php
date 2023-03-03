@@ -593,8 +593,7 @@ class Value
             $doNotGetArrayTypes = ['object', 'file'];
             if ($this->getAttribute()->getMultiple() && !in_array($this->getAttribute()->getType(), $doNotGetArrayTypes)) {
                 return $this->setSimpleArrayValue($value);
-            }
-            elseif ($this->getAttribute()->getMultiple()) {
+            } elseif ($this->getAttribute()->getMultiple()) {
                 // Lest deal with multiple file subobjects
                 if ($unsafe) {
                     $this->objects->clear();
