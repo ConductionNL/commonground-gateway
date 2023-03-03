@@ -6,6 +6,7 @@
     "require": {
         "php": "^7.4.0",
         "ext-ctype": "*",
+        "ext-curl": "*",
         "ext-fileinfo": "*",
         "ext-iconv": "*",
         "ext-json": "*",
@@ -32,7 +33,7 @@
         "mongodb/mongodb": "^1.15",
         "monolog/monolog": "^2.8.0",
         "nelmio/cors-bundle": "^2.1",
-        "open-catalogi/open-catalogi-bundle": "^0.0.48",
+        "open-catalogi/open-catalogi-bundle": "^0.0.54",
         "phpdocumentor/reflection-docblock": "^5.2",
         "phpoffice/phpword": "^0.18.2",
         "respect/validation": "^2.2",
@@ -57,8 +58,7 @@
         "symfony/twig-bundle": "5.3.*",
         "symfony/validator": "5.3.*",
         "symfony/web-profiler-bundle": "5.3.*",
-        "symfony/yaml": "5.3.*",
-      "ext-curl": "*"
+        "symfony/yaml": "5.3.*"
     },
     "config": {
         "optimize-autoloader": true,
