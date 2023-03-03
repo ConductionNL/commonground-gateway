@@ -81,7 +81,7 @@ class UserController extends AbstractController
 
         $user->setJwtToken($authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session)));
 
-        return new Response($serializer->serialize($user, 'json'), $status, ['Content-type' => 'application/json']);
+        return new Response($serializer->serialize($user, 'json'), $status, ['Content-type' => 'application/json', 'Access-Control-Allow-Origin' => 'opencatalogi.nl']);
     }
 
     private function getActiveOrganization(array $user, array $organizations): ?string

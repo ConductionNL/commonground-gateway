@@ -11,11 +11,14 @@ server {
     add_header Permissions-Policy "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(self), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), conversion-measurement=(self),focus-without-user-activation=(), hid=(), idle-detection=(), serial=(),sync-script=(), trust-token-redemption=(), vertical-scroll=(self)";
 
     # Fixes CORS header
-    if ($http_origin = ''){
-        set $http_origin "*";
-    }
-    proxy_hide_header Access-Control-Allow-Origin;
-    add_header Access-Control-Allow-Origin $http_origin always;
+    #if ($http_origin = ''){
+    #    set $http_origin "*";
+    #}
+    #proxy_hide_header Access-Control-Allow-Origin;
+    #add_header Access-Control-Allow-Origin $http_origin always;
+
+
+    proxy_pass_header Access-Control-Allow-Origin;
 
     client_max_body_size 51M;
 
@@ -44,6 +47,8 @@ server {
 
         fastcgi_buffer_size          128k;
         fastcgi_buffers              4 256k;
+
+        fastcgi_pass_header Access-Control-Allow-Origin;
 
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
         include fastcgi_params;

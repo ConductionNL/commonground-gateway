@@ -141,6 +141,7 @@ services:
     environment:
       - NGINX_HOST=php
       - NGINX_ENV=${APP_ENV}
+      - HTTP_ORIGIN=localhost,*
     cap_drop:
       - ALL
     cap_add:
