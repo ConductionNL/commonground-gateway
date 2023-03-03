@@ -70,11 +70,11 @@ class ProxySubscriber implements EventSubscriberInterface
                 $source,
                 $endpoint,
                 $method,
-                array_merge([
+                [
                     'headers' => $headers,
                     'query'   => $event->getRequest()->query->all(),
                     'body'    => $event->getRequest()->getContent(),
-                ], $source->getConfiguration())
+                ]
             );
         } catch (ServerException|ClientException|RequestException $e) {
             $result = $e->getResponse();
