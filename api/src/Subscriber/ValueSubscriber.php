@@ -39,14 +39,25 @@ class ValueSubscriber implements EventSubscriberInterface
      */
     private ParameterBagInterface $parameterBag;
 
+    /**
+     * @param EntityManagerInterface $entityManager
+     * @param LoggerInterface        $valueSubscriberLogger
+     * @param SynchronizationService $synchronizationService
+     * @param ParameterBagInterface  $parameterBag
+     */
     public function __construct(EntityManagerInterface $entityManager, LoggerInterface $valueSubscriberLogger, SynchronizationService $synchronizationService, ParameterBagInterface $parameterBag)
     {
         $this->entityManager = $entityManager;
         $this->logger = $valueSubscriberLogger;
         $this->synchronizationService = $synchronizationService;
         $this->parameterBag = $parameterBag;
-    }
+    }//end __construct()
 
+    /**
+     * Defines the events that the subscriber should subscribe to
+     *
+     * @return array The subscribed events
+     */
     public function getSubscribedEvents(): array
     {
         return [
@@ -56,6 +67,14 @@ class ValueSubscriber implements EventSubscriberInterface
         ];
     }
 
+    /**
+     * Gets a subobject by uuid
+     *
+     * @param string $uuid        The id of the subobject
+     * @param Value  $valueObject The valueObject to add the subobject to
+     *
+     * @return ObjectEntity|null The found subobject
+     */
     public function getSubObjectById(string $uuid, Value $valueObject): ?ObjectEntity
     {
         $parentObject = $valueObject->getObjectEntity();
@@ -91,58 +110,40 @@ class ValueSubscriber implements EventSubscriberInterface
         return $subObject;
     }
 
-    public function aquireObject(string $url, Entity $entity): ?ObjectEntity
-    {
-        // 1. Get the domain from the url
-        $parse = parse_url($url);
-        $location = $parse['host'];
-
-        // 2.c Try to establich a source for the domain
-        $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
-
-        // 2.b The source might be on a path e.g. /v1 so if whe cant find a source let try to cycle
-        foreach (explode('/', $parse['path']) as $pathPart) {
-            $location = $location.'/'.$pathPart;
-            $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
-            if ($source !== null) {
-                break;
-            }
-        }
-        if ($source instanceof Gateway === false) {
-            return null;
-        }
-
-        // 3 If we have a source we can establich an endpoint.
-        $endpoint = str_replace($location, '', $url);
-
-        // 4 Createa sync
-        $synchronization = new Synchronization($source, $entity);
-        $synchronization->setSourceId($url);
-        $synchronization->setEndpoint($endpoint);
-
-        $this->synchronizationService->synchronize($synchronization);
-
-        return $synchronization->getObject();
-    }
-
+    /**
+     * Gets a subobject by url
+     *
+     * @param string $url         The url of the subobject
+     * @param Value  $valueObject The value object to add the subobject to
+     *
+     * @return ObjectEntity|null The resulting subobject
+     */
     public function getSubObjectByUrl(string $url, Value $valueObject): ?ObjectEntity
     {
         $self = str_replace($this->parameterBag->get('app_url'), '', $url);
-        $objecEntity = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['self' => $self]);
-        if ($objecEntity !== null) {
-            return $objecEntity;
+        $objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['self' => $self]);
+        if ($objectEntity !== null) {
+            return $objectEntity;
         }
 
         $synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['sourceId' => $url]);
         if ($synchronization instanceof Synchronization === true) {
             return $synchronization->getObject();
         } else {
-            $this->aquireObject($url, $valueObject->getAttribute()->getObject());
+            $this->synchronizationService->aquireObject($url, $valueObject->getAttribute()->getObject());
         }
 
         return null;
-    }
+    }//end getSubObjectByUrl()
 
+    /**
+     * Finds subobjects by identifiers
+     *
+     * @param string $identifier  The identifier to find the object for
+     * @param Value  $valueObject The value object to add objects to
+     *
+     * @return ObjectEntity|null The found object
+     */
     public function findSubobject(string $identifier, Value $valueObject): ?ObjectEntity
     {
         if (Uuid::isValid($identifier)) {
@@ -153,8 +154,13 @@ class ValueSubscriber implements EventSubscriberInterface
         }
 
         return $subObject;
-    }
+    }//end findSubObject()
 
+    /**
+     * Adds object resources from identifier
+     *
+     * @param LifecycleEventArgs $value The lifecycle event arguments for this event
+     */
     public function preUpdate(LifecycleEventArgs $value): void
     {
         $valueObject = $value->getObject();
@@ -172,14 +178,19 @@ class ValueSubscriber implements EventSubscriberInterface
                 $valueObject->addObject($this->findSubobject($identifier, $valueObject));
             }
         }
-    }
+    }//end preUpdate()
 
+    /**
+     * Passes the result of prePersist to preUpdate
+     *
+     * @param LifecycleEventArgs $args The lifecycle event arguments for this prePersist
+     */
     public function prePersist(LifecycleEventArgs $args): void
     {
         $this->preUpdate($args);
-    }
+    }//end prePersist()
 
     public function preRemove(LifecycleEventArgs $args): void
     {
-    }
-}
+    }//end preRemove()
+}//end class
