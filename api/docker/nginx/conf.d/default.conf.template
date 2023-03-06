@@ -15,8 +15,8 @@ server {
 #        set $http_origin $http_referer;
 #    }
     proxy_hide_header Access-Control-Allow-Origin;
-    #add_header 'Access-Control-Allow-Origin' 'http://localhost:8000,https://admin-opencatalogi-acceptatie.apps.ocp.rotterdam.nl' always;
-    add_header 'Access-Control-Allow-Origin' 'https://admin-opencatalogi-acceptatie.apps.ocp.rotterdam.nl' always;
+    add_header 'Access-Control-Allow-Origin' '*' always;
+    #add_header 'Access-Control-Allow-Origin' 'https://admin-opencatalogi-acceptatie.apps.ocp.rotterdam.nl' always;
     #fastcgi_pass_header Access-Control-Allow-Origin;
 
     #proxy_set_header Origin '$http_origin';
