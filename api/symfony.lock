@@ -40,6 +40,18 @@
     "brick/reflection": {
         "version": "0.4.1"
     },
+    "common-gateway/brp-bundle": {
+        "version": "dev-feature/use-new-installationService"
+    },
+    "common-gateway/klanten-bundle": {
+        "version": "dev-feature/use-new-installationService"
+    },
+    "common-gateway/kvk-bundle": {
+        "version": "dev-feature/use-new-installationService"
+    },
+    "common-gateway/zgw-bundle": {
+        "version": "dev-feature/use-new-installationService"
+    },
     "commongateway/corebundle": {
         "version": "dev-master"
     },
@@ -244,6 +256,9 @@
     },
     "khanamiryan/qrcode-detector-decoder": {
         "version": "1.0.6"
+    },
+    "klantinteractie-servicesysteem/kiss-bundle": {
+        "version": "dev-feature/DIT-55/openzaak"
     },
     "knplabs/knp-markdown-bundle": {
         "version": "1.9.0"

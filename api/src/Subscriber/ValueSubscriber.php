@@ -130,10 +130,9 @@ class ValueSubscriber implements EventSubscriberInterface
         if ($synchronization instanceof Synchronization === true) {
             return $synchronization->getObject();
         } else {
-            $this->synchronizationService->aquireObject($url, $valueObject->getAttribute()->getObject());
+            var_dump('for me and you');
+            return $this->synchronizationService->aquireObject($url, $valueObject->getAttribute()->getObject());
         }
-
-        return null;
     }//end getSubObjectByUrl()
 
     /**
@@ -150,6 +149,7 @@ class ValueSubscriber implements EventSubscriberInterface
             $subObject = $this->getSubObjectById($identifier, $valueObject);
             $subObject && $valueObject->addObject($subObject);
         } elseif (filter_var($identifier, FILTER_VALIDATE_URL)) {
+            var_dump('I see them bloom');
             $subObject = $this->getSubObjectByUrl($identifier, $valueObject);
         }
 
@@ -165,17 +165,21 @@ class ValueSubscriber implements EventSubscriberInterface
     {
         $valueObject = $value->getObject();
 
+        var_dump('I see trees of green');
         if ($valueObject instanceof Value && $valueObject->getAttribute()->getType() == 'object') {
+            var_dump('red roses too');
             if ($valueObject->getArrayValue()) {
                 foreach ($valueObject->getArrayValue() as $identifier) {
-                    $valueObject->addObject($this->findSubobject($identifier, $valueObject));
+                    $subobject = $this->findSubobject($identifier, $valueObject);
+                    $subobject === null ?? $valueObject->addObject($subobject);
                 }
                 $valueObject->setArrayValue([]);
             } elseif ($identifier = $valueObject->getStringValue()) {
                 foreach ($valueObject->getObjects() as $object) {
                     $valueObject->removeObject($object);
                 }
-                $valueObject->addObject($this->findSubobject($identifier, $valueObject));
+                $subobject = $this->findSubobject($identifier, $valueObject);
+                $subobject === null ?? $valueObject->addObject($subobject);
             }
         }
     }//end preUpdate()

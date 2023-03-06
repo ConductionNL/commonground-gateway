@@ -97,6 +97,11 @@ class SynchronizationService
         $this->mappingService = $mappingService;
     }
 
+    public function setConfiguration(array $configuration): void
+    {
+        $this->configuration = $configuration;
+    }
+
     /**
      * Set symfony style in order to output to the console.
      *
@@ -721,7 +726,7 @@ class SynchronizationService
             //todo: error, log this
             return null;
         }
-
+        var_dump($response->getStatusCode());
         $result = $this->callService->decodeResponse($callServiceConfig['source'], $response);
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
@@ -965,6 +970,7 @@ class SynchronizationService
         } else {
             $oldDateModified = $synchronization->getObject()->getDateModified()->getTimestamp();
         }
+        var_dump($synchronization->getSourceId());
 
         $sourceObject = $sourceObject ?: $this->getSingleFromSource($synchronization);
 
@@ -1449,14 +1455,16 @@ class SynchronizationService
     {
         // 1. Get the domain from the url
         $parse = parse_url($url);
-        $location = $parse['host'];
+        $location = $parse['scheme']."://".$parse['host'];
 
         // 2.c Try to establich a source for the domain
         $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
 
         // 2.b The source might be on a path e.g. /v1 so if whe cant find a source let try to cycle
         foreach (explode('/', $parse['path']) as $pathPart) {
-            $location = $location.'/'.$pathPart;
+            if($pathPart !== '') {
+                $location = $location.'/'.$pathPart;
+            }
             $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
             if ($source !== null) {
                 break;
@@ -1473,6 +1481,8 @@ class SynchronizationService
         $synchronization = new Synchronization($source, $entity);
         $synchronization->setSourceId($url);
         $synchronization->setEndpoint($endpoint);
+
+        $this->entityManager->persist($synchronization);
 
         $this->synchronize($synchronization);
 
