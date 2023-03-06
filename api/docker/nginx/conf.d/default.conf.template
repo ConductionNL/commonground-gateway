@@ -7,18 +7,20 @@ server {
     listen 8080;
     root /srv/api/public;
 
-    add_header Content-Security-Policy $csp;
-    add_header Permissions-Policy "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(self), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), conversion-measurement=(self),focus-without-user-activation=(), hid=(), idle-detection=(), serial=(),sync-script=(), trust-token-redemption=(), vertical-scroll=(self)";
+    #add_header Content-Security-Policy $csp;
+    #add_header Permissions-Policy "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(self), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=(), conversion-measurement=(self),focus-without-user-activation=(), hid=(), idle-detection=(), serial=(),sync-script=(), trust-token-redemption=(), vertical-scroll=(self)";
 
     # Fixes CORS header
-    #if ($http_origin = ''){
-    #    set $http_origin "*";
-    #}
-    #proxy_hide_header Access-Control-Allow-Origin;
-    #add_header Access-Control-Allow-Origin $http_origin always;
+#    if ($http_origin = ''){
+#        set $http_origin $http_referer;
+#    }
+    proxy_hide_header Access-Control-Allow-Origin;
+    #add_header 'Access-Control-Allow-Origin' 'http://localhost:8000,https://admin-opencatalogi-acceptatie.apps.ocp.rotterdam.nl' always;
+    add_header 'Access-Control-Allow-Origin' 'https://admin-opencatalogi-acceptatie.apps.ocp.rotterdam.nl' always;
+    #fastcgi_pass_header Access-Control-Allow-Origin;
 
-
-    proxy_pass_header Access-Control-Allow-Origin;
+    #proxy_set_header Origin '$http_origin';
+    #proxy_set_header Host '$host';
 
     client_max_body_size 51M;
 
@@ -48,10 +50,11 @@ server {
         fastcgi_buffer_size          128k;
         fastcgi_buffers              4 256k;
 
-        fastcgi_pass_header Access-Control-Allow-Origin;
-
         fastcgi_split_path_info ^(.+\.php)(/.*)$;
         include fastcgi_params;
+
+        #fastcgi_ignore_headers Access-Control-Allow-Origin;
+
         # When you are using symlinks to link the document root to the
         # current version of your application, you should pass the real
         # application path instead of the path to the symlink to PHP
