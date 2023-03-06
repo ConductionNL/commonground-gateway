@@ -4,8 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8bf187972befe1f8464edfee6dac0f72",
-
+    "content-hash": "19983b908bb9227279a18440443ec30f",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -893,16 +892,16 @@
         },
         {
             "name": "commongateway/corebundle",
-            "version": "1.0.6",
+            "version": "1.0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "2424de30d7dc4bd2251d643c68af37c3769943b6"
+                "reference": "7a1347f694406285d7d1ffc6a7c0039a62dddcd5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/2424de30d7dc4bd2251d643c68af37c3769943b6",
-                "reference": "2424de30d7dc4bd2251d643c68af37c3769943b6",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/7a1347f694406285d7d1ffc6a7c0039a62dddcd5",
+                "reference": "7a1347f694406285d7d1ffc6a7c0039a62dddcd5",
                 "shasum": ""
             },
             "require": {
@@ -960,7 +959,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-03-01T08:54:56+00:00"
+            "time": "2023-03-02T15:13:23+00:00"
         },
         {
             "name": "composer/ca-bundle",
