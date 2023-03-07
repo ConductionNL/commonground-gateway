@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "485414b4f3ad1a204ae87d41ae04f344",
+    "content-hash": "22f65e451cd1055bf318c4a137be415a",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -659,54 +659,6 @@
             "time": "2020-10-24T20:01:03+00:00"
         },
         {
-            "name": "common-gateway/brp-bundle",
-            "version": "dev-feature/use-new-installationService",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CommonGateway/BRPBundle.git",
-                "reference": "8b3120493316fdb576df57f5928dd14e9789fb8c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/BRPBundle/zipball/8b3120493316fdb576df57f5928dd14e9789fb8c",
-                "reference": "8b3120493316fdb576df57f5928dd14e9789fb8c",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": ">=1.0.8",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "CommonGateway\\BRPBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An example package for creating symfony flex bundles as plugins",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "pet store",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/CommonGateway/BRPBundle/issues",
-                "source": "https://github.com/CommonGateway/BRPBundle/tree/feature/use-new-installationService"
-            },
-            "time": "2023-03-03T09:07:36+00:00"
-        },
-        {
             "name": "common-gateway/formio-bundle",
             "version": "dev-main",
             "source": {
@@ -743,151 +695,6 @@
                 "source": "https://github.com/CommonGateway/FormIOBundle/tree/main"
             },
             "time": "2022-11-16T13:35:03+00:00"
-        },
-        {
-            "name": "common-gateway/klanten-bundle",
-            "version": "dev-feature/use-new-installationService",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CommonGateway/KlantenBundle.git",
-                "reference": "8b966f98ecce5c37922efee79d2803cec61e093f"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/KlantenBundle/zipball/8b966f98ecce5c37922efee79d2803cec61e093f",
-                "reference": "8b966f98ecce5c37922efee79d2803cec61e093f",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": ">=1.0.8",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "CommonGateway\\KlantenBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An example package for creating symfony flex bundles as plugins",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "pet store",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/CommonGateway/KlantenBundle/issues",
-                "source": "https://github.com/CommonGateway/KlantenBundle/tree/feature/use-new-installationService"
-            },
-            "time": "2023-03-03T09:08:36+00:00"
-        },
-        {
-            "name": "common-gateway/kvk-bundle",
-            "version": "dev-feature/use-new-installationService",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CommonGateway/KVKBundle.git",
-                "reference": "b3ffd6c91de0353fa52cc3940ffb318cd2ae7345"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/KVKBundle/zipball/b3ffd6c91de0353fa52cc3940ffb318cd2ae7345",
-                "reference": "b3ffd6c91de0353fa52cc3940ffb318cd2ae7345",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": ">=1.0.8",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "CommonGateway\\KVKBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An example mock for the KVK api",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "kamer van koophandel",
-                "kvk",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/CommonGateway/KVKBundle/issues",
-                "source": "https://github.com/CommonGateway/KVKBundle/tree/feature/use-new-installationService"
-            },
-            "time": "2023-03-03T09:08:11+00:00"
-        },
-        {
-            "name": "common-gateway/zgw-bundle",
-            "version": "dev-feature/use-new-installationService",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CommonGateway/ZGWBundle.git",
-                "reference": "0f4c28180f898793b8521c62ce3f86faa2e7c7c9"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/0f4c28180f898793b8521c62ce3f86faa2e7c7c9",
-                "reference": "0f4c28180f898793b8521c62ce3f86faa2e7c7c9",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": ">=1.0.8",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "CommonGateway\\ZGWBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "Symfony bundle for zgw standard functionality",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "symfony",
-                "zgw"
-            ],
-            "support": {
-                "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/ZGWBundle/tree/feature/use-new-installationService"
-            },
-            "time": "2023-03-03T09:09:06+00:00"
         },
         {
             "name": "commongateway/corebundle",
@@ -4428,59 +4235,6 @@
                 "source": "https://github.com/khanamiryan/php-qrcode-detector-decoder/tree/1.0.6"
             },
             "time": "2022-06-29T09:25:13+00:00"
-        },
-        {
-            "name": "klantinteractie-servicesysteem/kiss-bundle",
-            "version": "dev-feature/DIT-55/openzaak",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/Klantinteractie-Servicesysteem/KissBundle.git",
-                "reference": "ccf7401ebb0b8185f6af67538724486409927b47"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/Klantinteractie-Servicesysteem/KissBundle/zipball/ccf7401ebb0b8185f6af67538724486409927b47",
-                "reference": "ccf7401ebb0b8185f6af67538724486409927b47",
-                "shasum": ""
-            },
-            "require": {
-                "common-gateway/brp-bundle": "dev-feature/use-new-installationService",
-                "common-gateway/klanten-bundle": "dev-feature/use-new-installationService",
-                "common-gateway/kvk-bundle": "dev-feature/use-new-installationService",
-                "common-gateway/zgw-bundle": "dev-feature/use-new-installationService",
-                "commongateway/corebundle": ">=1.0.8",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "Kiss\\KissBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An example package for creating symfony flex bundles as plugins",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "dimpact",
-                "gateway",
-                "kiss",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/issues",
-                "source": "https://github.com/Klantinteractie-Servicesysteem/KissBundle/tree/feature/DIT-55/openzaak"
-            },
-            "time": "2023-03-03T13:13:42+00:00"
         },
         {
             "name": "knplabs/knp-markdown-bundle",
@@ -15026,15 +14780,10 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "common-gateway/brp-bundle": 20,
         "common-gateway/formio-bundle": 20,
-        "common-gateway/klanten-bundle": 20,
-        "common-gateway/kvk-bundle": 20,
-        "common-gateway/zgw-bundle": 20,
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,
-        "conduction/samlbundle": 20,
-        "klantinteractie-servicesysteem/kiss-bundle": 20
+        "conduction/samlbundle": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
