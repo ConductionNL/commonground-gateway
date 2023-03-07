@@ -120,9 +120,8 @@ class ValueSubscriber implements EventSubscriberInterface
     public function getSubObjectByUrl(string $url, Value $valueObject): ?ObjectEntity
     {
         // First check if the object is already being synced.
-        foreach($this->entityManager->getUnitOfWork()->getScheduledEntityInsertions() as $insertion)
-        {
-            if($insertion instanceof Synchronization === true && $insertion->getSourceId() === $url) {
+        foreach ($this->entityManager->getUnitOfWork()->getScheduledEntityInsertions() as $insertion) {
+            if ($insertion instanceof Synchronization === true && $insertion->getSourceId() === $url) {
                 return $insertion->getObject();
             }
         }//end foreach
