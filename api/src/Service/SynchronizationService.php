@@ -353,6 +353,7 @@ class SynchronizationService
             $updatedSynchronization = $this->handleSync($synchronization, $result);
 
             $this->entityManager->persist($updatedSynchronization);
+
             $this->entityManager->flush();
 
             if ($config['collectionDelete'] && ($key = array_search($synchronization, $config['existingSynchronizations'])) !== false) {
@@ -726,7 +727,6 @@ class SynchronizationService
             //todo: error, log this
             return null;
         }
-        var_dump($response->getStatusCode());
         $result = $this->callService->decodeResponse($callServiceConfig['source'], $response);
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
@@ -970,8 +970,6 @@ class SynchronizationService
         } else {
             $oldDateModified = $synchronization->getObject()->getDateModified()->getTimestamp();
         }
-        var_dump($synchronization->getSourceId());
-
         $sourceObject = $sourceObject ?: $this->getSingleFromSource($synchronization);
 
         if ($sourceObject === null) {
