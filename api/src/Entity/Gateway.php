@@ -536,6 +536,14 @@ class Gateway
     private ?array $configuration = [];
 
     /**
+     * @var array|null The configuration for endpoints on this source, mostly mapping for now.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $endpointsConfig = [];
+
+    /**
      * @var string The status from the last call made to this source
      *
      * @ApiProperty(
@@ -688,6 +696,7 @@ class Gateway
         array_key_exists('translationConfig', $schema) ? $this->setTranslationConfig($schema['translationConfig']) : '';
         array_key_exists('type', $schema) ? $this->setType($schema['type']) : '';
         array_key_exists('configuration', $schema) ? $this->setConfiguration($schema['configuration']) : '';
+        array_key_exists('endpointsConfig', $schema) ? $this->setEndpointsConfig($schema['endpointsConfig']) : '';
 
         return $this;
     }
@@ -719,6 +728,7 @@ class Gateway
             'translationConfig'              => $this->getTranslationConfig(),
             'type'                           => $this->getType(),
             'configuration'                  => $this->getConfiguration(),
+            'endpointsConfig'                => $this->getEndpointsConfig(),
         ];
     }
 
@@ -1199,6 +1209,18 @@ class Gateway
     public function setConfiguration(?array $configuration = []): self
     {
         $this->configuration = $configuration;
+
+        return $this;
+    }
+
+    public function getEndpointsConfig(): ?array
+    {
+        return $this->endpointsConfig;
+    }
+
+    public function setEndpointsConfig(?array $endpointsConfig = []): self
+    {
+        $this->endpointsConfig = $endpointsConfig;
 
         return $this;
     }

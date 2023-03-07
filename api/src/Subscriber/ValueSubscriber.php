@@ -2,8 +2,6 @@
 
 namespace App\Subscriber;
 
-use App\Entity\Entity;
-use App\Entity\Gateway;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Entity\Value;
@@ -54,7 +52,7 @@ class ValueSubscriber implements EventSubscriberInterface
     }//end __construct()
 
     /**
-     * Defines the events that the subscriber should subscribe to
+     * Defines the events that the subscriber should subscribe to.
      *
      * @return array The subscribed events
      */
@@ -68,7 +66,7 @@ class ValueSubscriber implements EventSubscriberInterface
     }//end getSubscribedEvents()
 
     /**
-     * Gets a subobject by uuid
+     * Gets a subobject by uuid.
      *
      * @param string $uuid        The id of the subobject
      * @param Value  $valueObject The valueObject to add the subobject to
@@ -112,7 +110,7 @@ class ValueSubscriber implements EventSubscriberInterface
     }//end getSubObjectById()
 
     /**
-     * Gets a subobject by url
+     * Gets a subobject by url.
      *
      * @param string $url         The url of the subobject
      * @param Value  $valueObject The value object to add the subobject to
@@ -146,7 +144,7 @@ class ValueSubscriber implements EventSubscriberInterface
     }//end getSubObjectByUrl()
 
     /**
-     * Finds subobjects by identifiers
+     * Finds subobjects by identifiers.
      *
      * @param string $identifier  The identifier to find the object for
      * @param Value  $valueObject The value object to add objects to
@@ -165,7 +163,7 @@ class ValueSubscriber implements EventSubscriberInterface
     }//end findSubObject()
 
     /**
-     * Adds object resources from identifier
+     * Adds object resources from identifier.
      *
      * @param LifecycleEventArgs $value The lifecycle event arguments for this event
      */
@@ -191,7 +189,7 @@ class ValueSubscriber implements EventSubscriberInterface
     }//end preUpdate()
 
     /**
-     * Passes the result of prePersist to preUpdate
+     * Passes the result of prePersist to preUpdate.
      *
      * @param LifecycleEventArgs $args The lifecycle event arguments for this prePersist
      */
