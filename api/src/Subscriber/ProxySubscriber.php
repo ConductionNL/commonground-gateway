@@ -70,8 +70,6 @@ class ProxySubscriber implements EventSubscriberInterface
         unset($headers['x-endpoint']);
         unset($headers['x-method']);
 
-        var_dump($source->getLocation().$endpoint);
-
         try {
             $result = $this->callService->call(
                 $source,
