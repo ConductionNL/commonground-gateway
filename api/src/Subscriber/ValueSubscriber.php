@@ -84,7 +84,7 @@ class ValueSubscriber implements EventSubscriberInterface
 
                 return null;
             }
-        }//end if
+        }
 
         if (!$subObject instanceof ObjectEntity) {
             $this->logger->error(
@@ -107,7 +107,9 @@ class ValueSubscriber implements EventSubscriberInterface
         }//end if
 
         return $subObject;
+
     }//end getSubObjectById()
+
 
     /**
      * Gets a subobject by url.
@@ -124,7 +126,7 @@ class ValueSubscriber implements EventSubscriberInterface
             if ($insertion instanceof Synchronization === true && $insertion->getSourceId() === $url) {
                 return $insertion->getObject();
             }
-        }//end foreach
+        }
 
         // Then check if the url is internal.
         $self = str_replace($this->parameterBag->get('app_url'), '', $url);
@@ -174,7 +176,9 @@ class ValueSubscriber implements EventSubscriberInterface
             if ($valueObject->getArrayValue()) {
                 foreach ($valueObject->getArrayValue() as $identifier) {
                     $subobject = $this->findSubobject($identifier, $valueObject);
-                    $subobject === null ?: $valueObject->addObject($subobject);
+                    if($subobject !== null){
+                        $valueObject->addObject($subobject);
+                    }
                 }
                 $valueObject->setArrayValue([]);
             } elseif ($identifier = $valueObject->getStringValue()) {
@@ -182,7 +186,9 @@ class ValueSubscriber implements EventSubscriberInterface
                     $valueObject->removeObject($object);
                 }
                 $subobject = $this->findSubobject($identifier, $valueObject);
-                $subobject === null ?: $valueObject->addObject($subobject);
+                if($subobject !== null){
+                    $valueObject->addObject($subobject);
+                }
             }
         }
     }//end preUpdate()
