@@ -1453,14 +1453,14 @@ class SynchronizationService
     {
         // 1. Get the domain from the url
         $parse = parse_url($url);
-        $location = $parse['scheme']."://".$parse['host'];
+        $location = $parse['scheme'].'://'.$parse['host'];
 
         // 2.c Try to establich a source for the domain
         $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
 
         // 2.b The source might be on a path e.g. /v1 so if whe cant find a source let try to cycle
         foreach (explode('/', $parse['path']) as $pathPart) {
-            if($pathPart !== '') {
+            if ($pathPart !== '') {
                 $location = $location.'/'.$pathPart;
             }
             $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
