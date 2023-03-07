@@ -5,6 +5,7 @@ namespace App\Subscriber;
 use ApiPlatform\Core\EventListener\EventPriorities;
 use App\Entity\Gateway as Source;
 use CommonGateway\CoreBundle\Service\CallService;
+use CommonGateway\CoreBundle\Service\RequestService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
@@ -18,6 +19,7 @@ class ProxySubscriber implements EventSubscriberInterface
 {
     private EntityManagerInterface $entityManager;
     private CallService $callService;
+    private RequestService $requestService;
 
     public const PROXY_ROUTES = [
         'api_gateways_get_proxy_item',
@@ -28,10 +30,11 @@ class ProxySubscriber implements EventSubscriberInterface
         'api_gateways_delete_proxy_single_item',
     ];
 
-    public function __construct(EntityManagerInterface $entityManager, CallService $callService)
+    public function __construct(EntityManagerInterface $entityManager, CallService $callService, RequestService $requestService)
     {
         $this->entityManager = $entityManager;
         $this->callService = $callService;
+        $this->requestService = $requestService;
     }
 
     public static function getSubscribedEvents()
@@ -74,7 +77,7 @@ class ProxySubscriber implements EventSubscriberInterface
                 $method,
                 [
                     'headers' => $headers,
-                    'query'   => $event->getRequest()->query->all(),
+                    'query'   => $this->requestService->realRequestQueryAll($method, $event->getRequest()->getQueryString()),
                     'body'    => $event->getRequest()->getContent(),
                 ]
             );
