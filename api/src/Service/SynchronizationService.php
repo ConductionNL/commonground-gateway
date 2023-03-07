@@ -97,11 +97,6 @@ class SynchronizationService
         $this->mappingService = $mappingService;
     }
 
-    public function setConfiguration(array $configuration): void
-    {
-        $this->configuration = $configuration;
-    }
-
     /**
      * Set symfony style in order to output to the console.
      *
