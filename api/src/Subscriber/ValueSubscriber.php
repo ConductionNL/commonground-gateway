@@ -107,9 +107,7 @@ class ValueSubscriber implements EventSubscriberInterface
         }//end if
 
         return $subObject;
-
     }//end getSubObjectById()
-
 
     /**
      * Gets a subobject by url.
@@ -176,7 +174,7 @@ class ValueSubscriber implements EventSubscriberInterface
             if ($valueObject->getArrayValue()) {
                 foreach ($valueObject->getArrayValue() as $identifier) {
                     $subobject = $this->findSubobject($identifier, $valueObject);
-                    if($subobject !== null){
+                    if ($subobject !== null) {
                         $valueObject->addObject($subobject);
                     }
                 }
@@ -186,7 +184,7 @@ class ValueSubscriber implements EventSubscriberInterface
                     $valueObject->removeObject($object);
                 }
                 $subobject = $this->findSubobject($identifier, $valueObject);
-                if($subobject !== null){
+                if ($subobject !== null) {
                     $valueObject->addObject($subobject);
                 }
             }
