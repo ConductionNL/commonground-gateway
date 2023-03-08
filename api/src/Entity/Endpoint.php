@@ -763,7 +763,7 @@ class Endpoint
 
     public function getEntity(): ?Entity
     {
-        return $this->Entity;
+        return $this->entity;
     }
 
     public function setEntity(?Entity $entity): self

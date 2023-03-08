@@ -63,7 +63,7 @@ class ValueSubscriber implements EventSubscriberInterface
             Events::prePersist,
             Events::preRemove,
         ];
-    }
+    }//end getSubscribedEvents()
 
     /**
      * Gets a subobject by uuid.
@@ -85,6 +85,7 @@ class ValueSubscriber implements EventSubscriberInterface
                 return null;
             }
         }
+
         if (!$subObject instanceof ObjectEntity) {
             $this->logger->error(
                 "No subObjectEntity found with uuid ($uuid) or with a synchronization with sourceId = uuid for ParentObject",
@@ -103,10 +104,10 @@ class ValueSubscriber implements EventSubscriberInterface
             );
 
             return null;
-        }
+        }//end if
 
         return $subObject;
-    }
+    }//end getSubObjectById()
 
     /**
      * Gets a subobject by url.
@@ -118,20 +119,27 @@ class ValueSubscriber implements EventSubscriberInterface
      */
     public function getSubObjectByUrl(string $url, Value $valueObject): ?ObjectEntity
     {
+        // First check if the object is already being synced.
+        foreach ($this->entityManager->getUnitOfWork()->getScheduledEntityInsertions() as $insertion) {
+            if ($insertion instanceof Synchronization === true && $insertion->getSourceId() === $url) {
+                return $insertion->getObject();
+            }
+        }
+
+        // Then check if the url is internal.
         $self = str_replace($this->parameterBag->get('app_url'), '', $url);
         $objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['self' => $self]);
         if ($objectEntity !== null) {
             return $objectEntity;
         }
 
+        // Finally, if we really don't have the object, get it from the source.
         $synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['sourceId' => $url]);
         if ($synchronization instanceof Synchronization === true) {
             return $synchronization->getObject();
-        } else {
-            $this->synchronizationService->aquireObject($url, $valueObject->getAttribute()->getObject());
         }
 
-        return null;
+        return $this->synchronizationService->aquireObject($url, $valueObject->getAttribute()->getObject());
     }//end getSubObjectByUrl()
 
     /**
@@ -145,13 +153,12 @@ class ValueSubscriber implements EventSubscriberInterface
     public function findSubobject(string $identifier, Value $valueObject): ?ObjectEntity
     {
         if (Uuid::isValid($identifier)) {
-            $subObject = $this->getSubObjectById($identifier, $valueObject);
-            $subObject && $valueObject->addObject($subObject);
+            return $this->getSubObjectById($identifier, $valueObject);
         } elseif (filter_var($identifier, FILTER_VALIDATE_URL)) {
-            $subObject = $this->getSubObjectByUrl($identifier, $valueObject);
+            return $this->getSubObjectByUrl($identifier, $valueObject);
         }
 
-        return $subObject;
+        return null;
     }//end findSubObject()
 
     /**
@@ -166,14 +173,20 @@ class ValueSubscriber implements EventSubscriberInterface
         if ($valueObject instanceof Value && $valueObject->getAttribute()->getType() == 'object') {
             if ($valueObject->getArrayValue()) {
                 foreach ($valueObject->getArrayValue() as $identifier) {
-                    $valueObject->addObject($this->findSubobject($identifier, $valueObject));
+                    $subobject = $this->findSubobject($identifier, $valueObject);
+                    if ($subobject !== null) {
+                        $valueObject->addObject($subobject);
+                    }
                 }
                 $valueObject->setArrayValue([]);
             } elseif ($identifier = $valueObject->getStringValue()) {
                 foreach ($valueObject->getObjects() as $object) {
                     $valueObject->removeObject($object);
                 }
-                $valueObject->addObject($this->findSubobject($identifier, $valueObject));
+                $subobject = $this->findSubobject($identifier, $valueObject);
+                if ($subobject !== null) {
+                    $valueObject->addObject($subobject);
+                }
             }
         }
     }//end preUpdate()
