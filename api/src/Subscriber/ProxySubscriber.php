@@ -70,7 +70,7 @@ class ProxySubscriber implements EventSubscriberInterface
         unset($headers['x-endpoint']);
         unset($headers['x-method']);
 
-        try {
+        // try {
             $result = $this->callService->call(
                 $source,
                 $endpoint,
@@ -81,12 +81,12 @@ class ProxySubscriber implements EventSubscriberInterface
                     'body'    => $event->getRequest()->getContent(),
                 ]
             );
-        } catch (ServerException|ClientException|RequestException $e) {
-            $result = $e->getResponse();
+        // } catch (ServerException|ClientException|RequestException $e) {
+        //     $result = $e->getResponse();
 
-            // If error catched dont pass event->getHeaders (causes infinite loop)
-            $wentWrong = true;
-        }
+        //     // If error catched dont pass event->getHeaders (causes infinite loop)
+        //     $wentWrong = true;
+        // }
         $event->setResponse(new Response($result->getBody()->getContents(), $result->getStatusCode(), !isset($wentWrong) ? $result->getHeaders() : []));
     }
 }
