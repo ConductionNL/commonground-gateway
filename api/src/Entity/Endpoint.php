@@ -769,7 +769,13 @@ class Endpoint
     public function setEntity(?Entity $entity): self
     {
         // Also put it in the array
-        $this->addEntity($entity);
+        if ($entity === null) {
+            foreach ($this->getEntities() as $removeEntity) {
+                $this->removeEntity($removeEntity);
+            }
+        } else {
+            $this->addEntity($entity);
+        }
 
         $this->entity = $entity;
 
