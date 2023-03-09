@@ -2,33 +2,39 @@
 
 namespace App\Controller;
 
-use App\Service\AuthorizationService;
-use App\Service\EavService;
 use App\Service\OasDocumentationService;
-use Conduction\CommonGroundBundle\Service\SerializerService;
-use Doctrine\ORM\EntityManagerInterface;
+use CommonGateway\CoreBundle\Service\OasService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Contracts\Cache\CacheInterface;
 
 class EavController extends AbstractController
 {
+    /**
+     * @var SerializerInterface
+     */
     private SerializerInterface $serializer;
 
+    /**
+     * @var OasService
+     */
+    private OasService $oasService;
+
+    /**
+     * @param SerializerInterface $serializer The serializer
+     * @param OasService          $oasService The OAS service
+     */
     public function __construct(
-        EntityManagerInterface $entityManager,
-        ParameterBagInterface $params,
-        SerializerInterface $serializer
+        SerializerInterface $serializer,
+        OasService $oasService
     ) {
-        $this->entityManager = $entityManager;
         $this->serializer = $serializer;
+        $this->oasService = $oasService;
     }
 
     /**
@@ -55,10 +61,10 @@ class EavController extends AbstractController
         if ($item->isHit() && $useCache) {
             $oas = $item->get();
         } else {
-            $oas = $oasDocumentationService->getRenderDocumentation($application !== null ? $application : null);
+            $oas = $this->oasService->createOas();
 
             if ($extension == 'json') {
-                $oas = json_encode($oas);
+                $oas = json_encode($oas, JSON_UNESCAPED_SLASHES);
             } else {
                 $oas = Yaml::dump($oas);
             }
@@ -76,46 +82,5 @@ class EavController extends AbstractController
         $response->headers->set('Content-Disposition', $disposition);
 
         return $response;
-    }
-
-    /**
-     * @Route("/eav/docs", name="blog_list")
-     */
-    public function DocsAction(): Response
-    {
-        return $this->render('eav/docs.html.twig');
-    }
-
-    public function extraAction(?string $id, Request $request, EavService $eavService, AuthorizationService $authorizationService, SerializerService $serializerService): Response
-    {
-        $offset = strlen('dynamic_eav_');
-        $entityName = substr($request->attributes->get('_route'), $offset, strpos($request->attributes->get('_route'), strtolower($request->getMethod())) - 1 - $offset);
-
-        try {
-            return $eavService->handleRequest($request, $entityName);
-        } catch (AccessDeniedException $exception) {
-            $contentType = $request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'));
-            if ($contentType == '*/*') {
-                $contentType = 'application/ld+json';
-            }
-
-            return $authorizationService->serializeAccessDeniedException($contentType, $serializerService, $exception);
-        }
-    }
-
-    public function deleteAction(Request $request, EavService $eavService, AuthorizationService $authorizationService, SerializerService $serializerService): Response
-    {
-        $entityName = $request->attributes->get('entity');
-
-        try {
-            return $eavService->handleRequest($request, $entityName);
-        } catch (AccessDeniedException $exception) {
-            $contentType = $request->headers->get('Accept', $request->headers->get('accept', 'application/ld+json'));
-            if ($contentType == '*/*') {
-                $contentType = 'application/ld+json';
-            }
-
-            return $authorizationService->serializeAccessDeniedException($contentType, $serializerService, $exception);
-        }
     }
 }

@@ -62,7 +62,7 @@ class CollectionEntity
      * @ORM\GeneratedValue(strategy="CUSTOM")
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private UuidInterface $id;
+    private $id;
 
     /**
      * @var string The name of this Collection
@@ -84,6 +84,19 @@ class CollectionEntity
      * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
     private ?string $description = null;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     */
+    private ?string $reference = null;
+
+    /**
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     */
+    private ?string $version = null;
+
     /**
      * @var ?string The location where the OAS can be loaded from
      *
@@ -253,6 +266,52 @@ class CollectionEntity
         $this->entities = new ArrayCollection();
     }
 
+    /**
+     * Create or update this CollectionEntity from an external schema array.
+     *
+     * This function is used to update and create collections form collection.json objects.
+     *
+     * @param array $schema The schema to load.
+     *
+     * @return $this This CollectionEntity.
+     */
+    public function fromSchema(array $schema): self
+    {
+        // Basic stuff
+        if (array_key_exists('$id', $schema)) {
+            $this->setReference($schema['$id']);
+        }
+        if (array_key_exists('version', $schema)) {
+            $this->setVersion($schema['version']);
+        }
+        // Do not set jwt, secret, password or apikey this way!
+        array_key_exists('title', $schema) ? $this->setName($schema['title']) : '';
+        array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
+        array_key_exists('prefix', $schema) ? $this->setPrefix($schema['prefix']) : '';
+        array_key_exists('plugin', $schema) ? $this->setPlugin($schema['plugin']) : '';
+
+        return $this;
+    }
+
+    /**
+     * Convert this CollectionEntity to a schema.
+     *
+     * @return array Schema array.
+     */
+    public function toSchema(): array
+    {
+        return [
+            '$id'         => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'     => 'https://docs.commongateway.nl/schemas/CollectionEntity.schema.json',
+            'title'       => $this->getName(),
+            'description' => $this->getDescription(),
+            'version'     => $this->getVersion(),
+            'name'        => $this->getName(),
+            'prefix'      => $this->getPrefix(),
+            'plugin'      => $this->getPlugin(),
+        ];
+    }
+
     public function export()
     {
         if ($this->getSource() !== null) {
@@ -282,9 +341,9 @@ class CollectionEntity
         return $this->id;
     }
 
-    public function setId(UuidInterface $id): self
+    public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
@@ -309,6 +368,30 @@ class CollectionEntity
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getVersion(): ?string
+    {
+        return $this->version;
+    }
+
+    public function setVersion(?string $version): self
+    {
+        $this->version = $version;
 
         return $this;
     }

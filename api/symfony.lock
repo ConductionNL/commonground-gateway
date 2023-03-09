@@ -40,9 +40,6 @@
     "brick/reflection": {
         "version": "0.4.1"
     },
-    "common-gateway/formio-bundle": {
-        "version": "dev-main"
-    },
     "common-gateway/xxllnc-zgw-bundle": {
         "version": "0.0.16"
     },
@@ -264,7 +261,7 @@
         "version": "2.9.0"
     },
     "larping-base/larping-bundle": {
-        "version": "1.0.35"
+        "version": "1.0.61"
     },
     "league/html-to-markdown": {
         "version": "4.10.0"

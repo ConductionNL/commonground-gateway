@@ -14,7 +14,8 @@ data:
   debug: {{ .Values.config.debug | quote }}
   trusted-proxies: {{ join "," .Values.config.trustedProxies }}
   trusted-hosts: {{ .Values.config.trustedHosts | quote }}
-  url: {{ printf "https://%s%s" .Values.ingress.hostname .Values.ingress.path | quote }}
+  global-domain: {{ .Values.global.domain | quote }}
+  url: {{ printf "https://api.%s%s" .Values.global.domain .Values.ingress.path | quote }}
   {{- if .Values.redis.enabled }}
   redis-host: {{ printf "%s-headless" $redisServiceName | quote }}
   redis-port: {{ .Values.redis.redisPort | toString | quote }}

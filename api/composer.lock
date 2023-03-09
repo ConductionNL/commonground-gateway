@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a0995c2684d176963c5e96492dde8c6f",
+    "content-hash": "19d924534e9da846796b6427da9024eb",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -795,16 +795,16 @@
         },
         {
             "name": "commongateway/corebundle",
-            "version": "dev-master",
+            "version": "1.0.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "a96fb9c79baba322e957246584640201287feef7"
+                "reference": "93fa057fac424d56f0bdc650e11fb4c040f5d516"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/a96fb9c79baba322e957246584640201287feef7",
-                "reference": "a96fb9c79baba322e957246584640201287feef7",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/93fa057fac424d56f0bdc650e11fb4c040f5d516",
+                "reference": "93fa057fac424d56f0bdc650e11fb4c040f5d516",
                 "shasum": ""
             },
             "require": {
@@ -825,7 +825,6 @@
                 "symfony/dependency-injection": "~3.4|~4.1|~5.0",
                 "symfony/var-dumper": "^4.1.1|^5.1"
             },
-            "default-branch": true,
             "type": "symfony-bundle",
             "autoload": {
                 "psr-4": {
@@ -863,7 +862,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-02-13T12:50:30+00:00"
+            "time": "2023-03-07T14:34:51+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -4524,16 +4523,16 @@
         },
         {
             "name": "larping-base/larping-bundle",
-            "version": "1.0.53",
+            "version": "1.0.61",
             "source": {
                 "type": "git",
                 "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "9e0bbd30e6c60d11091329a1de655616a5415297"
+                "reference": "b43d2c08d8bb5d928cadf2f17b83bcddafaa5dcc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/9e0bbd30e6c60d11091329a1de655616a5415297",
-                "reference": "9e0bbd30e6c60d11091329a1de655616a5415297",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/b43d2c08d8bb5d928cadf2f17b83bcddafaa5dcc",
+                "reference": "b43d2c08d8bb5d928cadf2f17b83bcddafaa5dcc",
                 "shasum": ""
             },
             "require": {
@@ -4566,9 +4565,9 @@
             ],
             "support": {
                 "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.53"
+                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.61"
             },
-            "time": "2023-02-03T14:07:20+00:00"
+            "time": "2023-02-25T10:06:06+00:00"
         },
         {
             "name": "league/html-to-markdown",
@@ -4941,16 +4940,16 @@
         },
         {
             "name": "monolog/monolog",
-            "version": "2.8.0",
+            "version": "2.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/Seldaek/monolog.git",
-                "reference": "720488632c590286b88b80e62aa3d3d551ad4a50"
+                "reference": "f259e2b15fb95494c83f52d3caad003bbf5ffaa1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/720488632c590286b88b80e62aa3d3d551ad4a50",
-                "reference": "720488632c590286b88b80e62aa3d3d551ad4a50",
+                "url": "https://api.github.com/repos/Seldaek/monolog/zipball/f259e2b15fb95494c83f52d3caad003bbf5ffaa1",
+                "reference": "f259e2b15fb95494c83f52d3caad003bbf5ffaa1",
                 "shasum": ""
             },
             "require": {
@@ -4965,7 +4964,7 @@
                 "doctrine/couchdb": "~1.0@dev",
                 "elasticsearch/elasticsearch": "^7 || ^8",
                 "ext-json": "*",
-                "graylog2/gelf-php": "^1.4.2",
+                "graylog2/gelf-php": "^1.4.2 || ^2@dev",
                 "guzzlehttp/guzzle": "^7.4",
                 "guzzlehttp/psr7": "^2.2",
                 "mongodb/mongodb": "^1.8",
@@ -5027,7 +5026,7 @@
             ],
             "support": {
                 "issues": "https://github.com/Seldaek/monolog/issues",
-                "source": "https://github.com/Seldaek/monolog/tree/2.8.0"
+                "source": "https://github.com/Seldaek/monolog/tree/2.9.1"
             },
             "funding": [
                 {
@@ -5039,7 +5038,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-07-24T11:55:47+00:00"
+            "time": "2023-02-06T13:44:46+00:00"
         },
         {
             "name": "myclabs/deep-copy",
@@ -14879,7 +14878,6 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "common-gateway/formio-bundle": 20,
-        "commongateway/corebundle": 20,
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,
         "conduction/samlbundle": 20

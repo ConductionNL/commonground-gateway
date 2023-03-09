@@ -102,7 +102,7 @@ class Attribute
      * @example string
      *
      * @Assert\Length(max = 255)
-     * @Assert\Choice({"countryCode","bsn","url","uri","uuid","email","phone","json","dutch_pc4"})
+     * @Assert\Choice({"countryCode","bsn","url","uri","uuid","email","phone","json","dutch_pc4","text"})
      * @Groups({"read", "write"})
      * @ORM\Column(type="string", length=255, nullable=true)
      */
