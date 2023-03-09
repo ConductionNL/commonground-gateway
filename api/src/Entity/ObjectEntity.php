@@ -1078,7 +1078,7 @@ class ObjectEntity
                         if ($configuration['embedded']) {
                             // todo: put this line back later, with the continue below.
                             // $array[$attribute->getName()] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
-                            switch($attribute->getFormat()) {
+                            switch ($attribute->getFormat()) {
                                 case 'uuid':
                                     $array[$attribute->getName()] = $object->getId()->toString();
                                     break;
@@ -1117,7 +1117,7 @@ class ObjectEntity
                             if ($configuration['embedded']) {
                                 // todo: put this line back later, with the continue below.
                                 // $array[$attribute->getName()][] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
-                                switch($attribute->getFormat()) {
+                                switch ($attribute->getFormat()) {
                                     case 'uuid':
                                         $array[$attribute->getName()] = $object->getId()->toString();
                                         break;
