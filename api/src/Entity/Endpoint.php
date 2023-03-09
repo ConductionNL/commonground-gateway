@@ -327,11 +327,11 @@ class Endpoint
      * $configuration or $default array must contain the key 'path'!
      * And either $configuration array must contain the key 'pathRegex' or the $default array must contain the key 'pathRegexEnd'.
      *
-     * @param array $schema        The schema to load.
-     * @param array $default       An array with data. The default values used for setting properties. Can contain the following keys:
-     *                             'path' => If $configuration array has no key 'path' this value is used to set the Path. (and pathRegex if $configuration has no 'pathRegex' key)
-     *                             'pathRegexEnd' => A string added to the end of the pathRegex.
-     *                             'pathArrayEnd' => The final item in the path array, 'id' for an Entity Endpoint and {route} for a proxy Endpoint.
+     * @param array $schema  The schema to load.
+     * @param array $default An array with data. The default values used for setting properties. Can contain the following keys:
+     *                       'path' => If $configuration array has no key 'path' this value is used to set the Path. (and pathRegex if $configuration has no 'pathRegex' key)
+     *                       'pathRegexEnd' => A string added to the end of the pathRegex.
+     *                       'pathArrayEnd' => The final item in the path array, 'id' for an Entity Endpoint and {route} for a proxy Endpoint.
      *
      * @return void
      */
@@ -394,6 +394,7 @@ class Endpoint
         foreach ($this->entities as $entity) {
             $entities[] = $entity->toSchema();
         }
+
         return [
             '$id'                            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
             '$schema'                        => 'https://docs.commongateway.nl/schemas/Endpoint.schema.json',
@@ -409,7 +410,7 @@ class Endpoint
             'tag'                            => $this->getTag(),
             'tags'                           => $this->getTags(),
             'proxy'                          => $this->getProxy()->toSchema(),
-            'entities'                       => $entities
+            'entities'                       => $entities,
         ];
     }
 
