@@ -1414,7 +1414,6 @@ class SynchronizationService
         $sourceObjectDot = new Dot($sourceObject);
 
         $object = $this->populateObject($sourceObject, $object, $method);
-        $object->setUri($synchronization->getSource()->getLocation().$this->getCallServiceEndpoint($synchronization->getSourceId()));
 
         if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
             $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
