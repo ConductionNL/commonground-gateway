@@ -41,13 +41,13 @@
         "version": "0.4.1"
     },
     "common-gateway/xxllnc-zgw-bundle": {
-        "version": "0.0.16"
+        "version": "dev-feature/XZ-36/cleanup"
     },
     "common-gateway/zgw-bundle": {
-        "version": "0.1.18"
+        "version": "0.1.26"
     },
     "commongateway/corebundle": {
-        "version": "dev-master"
+        "version": "1.0.22"
     },
     "composer/ca-bundle": {
         "version": "1.2.10"
@@ -259,9 +259,6 @@
     },
     "laminas/laminas-escaper": {
         "version": "2.9.0"
-    },
-    "larping-base/larping-bundle": {
-        "version": "1.0.61"
     },
     "league/html-to-markdown": {
         "version": "4.10.0"
