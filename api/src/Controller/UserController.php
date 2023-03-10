@@ -56,12 +56,11 @@ class UserController extends AbstractController
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
         $status = 200;
         $user = $this->getUser();
-        if($user instanceof AuthenticationUser === false) {
+        if ($user instanceof AuthenticationUser === false) {
             return new Response('User not found', 401);
         }
 
         $user = $this->entityManager->getRepository('App:User')->find($user->getUserIdentifier());
-
 
         if ($user->getOrganisation() !== null) {
             $organizations[] = $user->getOrganisation();
