@@ -3,11 +3,15 @@
 namespace App\Security;
 
 use App\Entity\Application;
+use App\Entity\Authentication;
+use App\Entity\SecurityGroup;
 use App\Entity\User;
 use App\Exception\GatewayException;
 use App\Security\User\AuthenticationUser;
 use App\Service\ApplicationService;
 use CommonGateway\CoreBundle\Service\AuthenticationService;
+use Doctrine\ORM\EntityManagerInterface;
+use GuzzleHttp\Client;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -29,17 +33,20 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
     private SessionInterface $session;
     private ParameterBagInterface $parameterBag;
     private ApplicationService $applicationService;
+    private EntityManagerInterface $entityManager;
 
     public function __construct(
         AuthenticationService $authenticationService,
         ParameterBagInterface $parameterBag,
         SessionInterface $session,
-        ApplicationService $applicationService
+        ApplicationService $applicationService,
+        EntityManagerInterface $entityManager
     ) {
         $this->authenticationService = $authenticationService;
         $this->session = $session;
         $this->applicationService = $applicationService;
         $this->parameterBag = $parameterBag;
+        $this->entityManager = $entityManager;
     }
 
     /**
@@ -71,6 +78,17 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
             return $application->getPublicKey();
         } elseif ($alg === 'HS256') {
             return $application->getSecret();
+        } elseif ($alg === 'RS256') {
+            $payload = json_decode(base64_decode(array_shift($tokenArray)), true);
+            $issuer = str_replace('127.0.0.1', 'localhost', $payload['iss']);
+            $authenticator = $this->entityManager->getRepository('App:Authentication')->findOneBy(['authenticateUrl' => $issuer.'/auth']);
+            if($authenticator instanceof Authentication) {
+                $keyUrl = $authenticator->getKeysUrl();
+                $client = new Client();
+                $response = $client->get($keyUrl);
+                $key = $response->getBody()->getContents();
+                return $key;
+            }
         }
 
         return '';
@@ -134,6 +152,8 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
         $payload = $this->validateToken($token);
 //        $this->setOrganizations($payload);
 
+//        var_dump($payload);
+
         $application = $this->applicationService->getApplication();
         if (!isset($payload['client_id'])) {
             $user = $payload;
@@ -141,19 +161,32 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
             $user = $this->authenticationService->serializeUser($application->getUsers()[0], $this->session);
         }
 
+        if(isset($user['roles']) === false && isset($user['groups']) === true) {
+            $user['roles'] = [];
+            foreach($user['groups'] as $group) {
+                $securityGroup = $this->entityManager->getRepository('App:SecurityGroup')->findOneBy(['name' => $group]);
+                if($securityGroup instanceof SecurityGroup === true)
+                    $user['roles'] = array_merge($securityGroup->getScopes(), $user['roles']);
+            }
+        }
+
+        if(isset($user['id']) === false && isset($user['email']) === true) {
+            $user['id'] = $user['email'];
+        }
+
         return new Passport(
             new UserBadge($user['user']['id'] ?? $user['userId'] ?? $user['id'], function ($userIdentifier) use ($user) {
                 return new AuthenticationUser(
                     $userIdentifier,
-                    $user['user']['id'] ?? $user['username'],
+                    $user['user']['id'] ?? $user['username'] ?? $user['email'],
                     '',
-                    $user['user']['givenName'] ?? $user['username'],
-                    $user['user']['familyName'] ?? $user['username'],
-                    $user['username'],
+                    $user['user']['givenName'] ?? $user['username'] ?? '',
+                    $user['user']['familyName'] ?? $user['username'] ?? '',
+                    $user['username'] ?? $user['email'],
                     '',
                     $this->prefixRoles($user['roles']),
-                    $user['username'],
-                    $user['locale'],
+                    $user['username'] ?? $user['email'],
+                    $user['locale'] ?? 'en',
                     $user['organization'] ?? null,
                     $user['person'] ?? null
                 );

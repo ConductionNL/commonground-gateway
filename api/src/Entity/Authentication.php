@@ -31,8 +31,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     },
  *      itemOperations={
  * 		    "get"={
- *              "read"=false,
- *              "validate"=false,
  *              "path"="/admin/authentications/{id}"
  *          },
  * 	        "put"={"path"="/admin/authentications/{id}"},
@@ -129,6 +127,21 @@ class Authentication
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $tokenUrl = null;
+
+    /**
+     * @var ?string The location where the token for the authentication is hosted
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="https://test.nl/keys"
+     *         }
+     *     }
+     * )
+     * @Groups({"read","read_secure","write"})
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $keysUrl = null;
 
     /**
      * @var ?string The secret used for authentication
@@ -304,6 +317,24 @@ class Authentication
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getKeysUrl(): ?string
+    {
+        return $this->keysUrl;
+    }
+
+    /**
+     * @param string|null $keysUrl
+     */
+    public function setKeysUrl(?string $keysUrl): self
+    {
+        $this->keysUrl = $keysUrl;
 
         return $this;
     }

@@ -51,7 +51,7 @@ class UserController extends AbstractController
     /**
      * @Route("api/users/reset_token", methods={"GET"})
      */
-    public function resetTokenAction(Request $request, SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService): Response
+    public function resetTokenAction(SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService): Response
     {
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
         $status = 200;

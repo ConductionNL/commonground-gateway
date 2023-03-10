@@ -168,6 +168,7 @@ class AuthenticationService
         }
 
         $authentication = $this->retrieveAuthentication($identifier);
+        $this->session->set('authenticator', $authentication->getId()->toString());
 
         return $this->retrieveData($method, $code, $authentication);
     }
@@ -205,7 +206,14 @@ class AuthenticationService
 
         $accessToken = json_decode($response->getBody()->getContents(), true);
 
+        var_dump($accessToken, $this->session->getId());
+        die;
         return $accessToken;
+    }
+
+    public function refreshToken(string $refreshToken, Authentication $authentication): array
+    {
+
     }
 
     public function handleAuthenticationUrl(string $method, string $identifier, string $redirectUrl): string

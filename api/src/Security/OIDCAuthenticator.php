@@ -66,6 +66,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
         $this->session->set('organizations', $organizations);
         $this->session->set('parentOrganizations', $parentOrganizations);
         $this->session->set('activeOrganization', $defaultOrganization);
+        $this->session->set('refresh_token', $accessToken['refresh_token']);
 
         return new Passport(
             new UserBadge($result['email'], function ($userIdentifier) use ($result) {
