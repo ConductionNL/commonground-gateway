@@ -25,6 +25,7 @@ class SessionDataProcessor
         $record['context']['cronjob'] = $this->session->has('cronjob') ? $this->session->get('cronjob') : '';
         $record['context']['action'] = $this->session->has('cronjob') ? $this->session->get('action') : '';
         $record['context']['mapping'] = $this->session->has('mapping') ? $this->session->get('mapping') : '';
+        $record['context']['source'] = $this->session->has('source') ? $this->session->get('source') : '';
         $record['context']['user'] = $this->session->has('user') ? $this->session->get('user') : '';
         $record['context']['organization'] = $this->session->has('organization') ? $this->session->get('organization') : '';
         $record['context']['application'] = $this->session->has('application') ? $this->session->get('application') : '';
