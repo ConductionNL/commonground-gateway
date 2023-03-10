@@ -62,14 +62,14 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
     {
         $tokenArray = explode('.', $token);
         $header = json_decode(base64_decode(array_shift($tokenArray)), true);
-        if(isset($header['alg']) === true) {
+        if (isset($header['alg']) === true) {
             $alg = $header['alg'];
         }
 
         $application = $this->applicationService->getApplication();
-        if(isset($alg) === false || $alg === 'RS512') {
+        if (isset($alg) === false || $alg === 'RS512') {
             return $application->getPublicKey();
-        } elseif($alg === 'HS256') {
+        } elseif ($alg === 'HS256') {
             return $application->getSecret();
         }
 
