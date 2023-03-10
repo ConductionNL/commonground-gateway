@@ -204,6 +204,14 @@ class Application
      */
     private array $certificates = [];
 
+    /**
+     * @var array|null The configuration of this application.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $configuration = [];
+
     public function __construct()
     {
         $this->objectEntities = new ArrayCollection();
@@ -539,6 +547,18 @@ class Application
     public function setCertificates(?array $certificates): self
     {
         $this->certificates = $certificates;
+
+        return $this;
+    }
+
+    public function getConfiguration(): ?array
+    {
+        return $this->configuration;
+    }
+
+    public function setConfiguration(?array $configuration = []): self
+    {
+        $this->configuration = $configuration;
 
         return $this;
     }
