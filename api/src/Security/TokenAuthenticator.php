@@ -58,15 +58,22 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
      *
      * @return string Public key for the application or the general public key
      */
-    public function getPublicKey(): string
+    public function getPublicKey(string $token): string
     {
-        $application = $this->applicationService->getApplication();
-        $publicKey = $application->getPublicKey();
-        //if (!$publicKey) {
-        //    $publicKey = $this->parameterBag->get('app_x509_cert');
-        //}
+        $tokenArray = explode('.', $token);
+        $header = json_decode(base64_decode(array_shift($tokenArray)), true);
+        if(isset($header['alg']) === true) {
+            $alg = $header['alg'];
+        }
 
-        return $publicKey;
+        $application = $this->applicationService->getApplication();
+        if(isset($alg) === false || $alg === 'RS512') {
+            return $application->getPublicKey();
+        } elseif($alg === 'HS256') {
+            return $application->getSecret();
+        }
+
+        return '';
     }
 
     /**
@@ -78,7 +85,7 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
      */
     public function validateToken(string $token): array
     {
-        $publicKey = $this->getPublicKey();
+        $publicKey = $this->getPublicKey($token);
 
         try {
             $payload = $this->authenticationService->verifyJWTToken($token, $publicKey);
