@@ -62,6 +62,7 @@ class UserController extends AbstractController
 
             $serializeUser = new User();
             $serializeUser->setJwtToken($accessToken['access_token']);
+            $serializeUser->setName($user->getEmail());
             $serializeUser->setEmail($user->getEmail());
             $serializeUser->setPassword('');
             $session->set('refresh_token', $accessToken['refresh_token']);
