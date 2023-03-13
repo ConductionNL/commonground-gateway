@@ -189,6 +189,29 @@ class AuthenticationService
         }
     }
 
+    public function refreshAccessToken(string $refreshToken, string $authenticator): array
+    {
+        $authentication = $this->entityManager->getRepository('App:Authentication')->find($authenticator);
+        if($authentication instanceof Authentication === false){
+            return [];
+        }
+        $body = [
+            'client_id'         => $authentication->getClientId(),
+            'grant_type'        => 'refresh_token',
+            'refresh_token'     => $refreshToken,
+            'client_secret'     => $authentication->getSecret(),
+        ];
+
+        $response = $this->client->request('POST', $authentication->getTokenUrl(), [
+            'form_params'  => $body,
+            'content_type' => 'application/x-www-form-urlencoded',
+        ]);
+
+        $accessToken = json_decode($response->getBody()->getContents(), true);
+
+        return $accessToken;
+    }
+
     public function retrieveAdfsData(string $code, Authentication $authentication, string $redirectUrl): array
     {
         $body = [
@@ -206,14 +229,10 @@ class AuthenticationService
 
         $accessToken = json_decode($response->getBody()->getContents(), true);
 
-        var_dump($accessToken, $this->session->getId());
-        die;
+//        var_dump($this->session->getId());
+//        die;
+
         return $accessToken;
-    }
-
-    public function refreshToken(string $refreshToken, Authentication $authentication): array
-    {
-
     }
 
     public function handleAuthenticationUrl(string $method, string $identifier, string $redirectUrl): string
