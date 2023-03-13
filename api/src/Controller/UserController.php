@@ -63,8 +63,8 @@ class UserController extends AbstractController
             $serializeUser = new User();
             $serializeUser->setJwtToken($accessToken['access_token']);
             $serializeUser->setEmail($user->getEmail());
+            $serializeUser->setPassword('')
             $session->set('refresh_token', $accessToken['refresh_token']);
-
             $this->entityManager->persist($serializeUser);
 
             return new Response($serializer->serialize($serializeUser, 'json'), 200, ['Content-type' => 'application/json']);
