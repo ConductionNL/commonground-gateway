@@ -92,7 +92,7 @@ class User implements PasswordAuthenticatedUserInterface
      * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="users")
      * @ORM\JoinColumn(nullable=false)
      */
-    private Organization $organisation;
+    private ?Organization $organisation = null;
 
     /**
      * @Groups({"read", "write"})
