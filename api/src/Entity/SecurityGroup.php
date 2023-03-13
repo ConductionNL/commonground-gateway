@@ -31,7 +31,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/admin/user_groups"}
  *  })
  * )
+ *
  * @ORM\HasLifecycleCallbacks
+ *
  * @ORM\Entity(repositoryClass=App\Repository\SecurityGroupRepository::class)
  */
 class SecurityGroup
@@ -42,10 +44,15 @@ class SecurityGroup
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -54,11 +61,15 @@ class SecurityGroup
      * @var string The name of this Security Group.
      *
      * @Gedmo\Versioned
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Assert\NotNull
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
@@ -67,33 +78,41 @@ class SecurityGroup
      * @var string A description of this Security Group.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $description;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array")
      */
     private $scopes = [];
 
     /**
      * @Groups({"read"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=User::class, inversedBy="securityGroups")
      */
     private $users;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToOne(targetEntity=SecurityGroup::class, inversedBy="children")
      */
     private $parent;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\OneToMany(targetEntity=SecurityGroup::class, mappedBy="parent")
      */
     private $children;
@@ -102,7 +121,9 @@ class SecurityGroup
      * Wheter or not this is the user group that defines the rights for anonymous users.
      *
      * @var bool
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="boolean", options={"default"=false})
      */
     private bool $anonymous = false;
@@ -111,7 +132,9 @@ class SecurityGroup
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -120,7 +143,9 @@ class SecurityGroup
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;

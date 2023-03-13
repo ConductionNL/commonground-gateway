@@ -26,6 +26,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * A value for a given attribute on an Object Entity.
  *
  * @category Entity
+ *
  * @ORM\HasLifecycleCallbacks()
  *
  * @ApiResource(
@@ -40,7 +41,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get"={"path"="/admin/values"},
  *      "post"={"path"="/admin/values"}
  *  })
+ *
  * @ORM\Entity(repositoryClass="App\Repository\ValueRepository")
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -63,10 +66,15 @@ class Value
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -76,7 +84,9 @@ class Value
      * @var string An uri
      *
      * @Assert\Url
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $uri;
@@ -86,6 +96,7 @@ class Value
      * @var string The actual value if is of type string
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private $stringValue; //TODO make this type=string again!?
@@ -94,6 +105,7 @@ class Value
      * @var int Integer if the value is type integer
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="integer", nullable=true)
      */
     private $integerValue;
@@ -102,6 +114,7 @@ class Value
      * @var float Float if the value is type number
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="float", nullable=true)
      */
     private $numberValue;
@@ -110,6 +123,7 @@ class Value
      * @var bool Boolean if the value is type boolean
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $booleanValue;
@@ -118,6 +132,7 @@ class Value
      * @var array Array if the value is type multidemensional array
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private $arrayValue;
@@ -126,6 +141,7 @@ class Value
      * @var array Array if the value is type singledimensional array without key's e.g. a list
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="simple_array", nullable=true)
      */
     private $simpleArrayValue = [];
@@ -134,34 +150,43 @@ class Value
      * @var DateTime DateTime if the value is type DateTime
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateTimeValue;
 
     /**
      * @Groups({"read","write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\OneToMany(targetEntity=File::class, mappedBy="value", cascade={"persist", "remove"})
      */
     private $files;
 
     /**
      * @Groups({"read","write"})
+     *
      * @ORM\ManyToOne(targetEntity=Attribute::class, inversedBy="attributeValues")
+     *
      * @ORM\JoinColumn(nullable=false)
+     *
      * @MaxDepth(1)
      */
     private Attribute $attribute;
 
     /**
      * @Groups({"write"})
+     *
      * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="objectValues", fetch="EXTRA_LAZY", cascade={"persist"})
+     *
      * @MaxDepth(1)
      */
     private $objectEntity; // parent object
 
     /**
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="LAZY", cascade={"persist"})
      */
     private $objects; // sub objects
@@ -170,7 +195,9 @@ class Value
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -179,7 +206,9 @@ class Value
      * @var Datetime The moment this resource last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
@@ -558,7 +587,6 @@ class Value
 
     public function setAttribute(?Attribute $attribute): self
     {
-
         // If we have an atribute we can deal with default values
         $this->setDefaultValue();
 
@@ -588,7 +616,6 @@ class Value
     public function setValue($value, bool $unsafe = false, ?DateTimeInterface $dateModified = null): self
     {
         if ($this->getAttribute()) {
-
             // For files and objects it quicker to just return the collection (no mapping and aditional query's invollved)
             $doNotGetArrayTypes = ['object', 'file'];
             if ($this->getAttribute()->getMultiple() && !in_array($this->getAttribute()->getType(), $doNotGetArrayTypes)) {
@@ -606,7 +633,6 @@ class Value
                 $valueArray = $value;
                 $idArray = [];
                 foreach ($valueArray as $value) {
-
                     // Catch Array input (for hydrator)
                     if (is_array($value)) {
                         $object = new ObjectEntity($this->getAttribute()->getObject());

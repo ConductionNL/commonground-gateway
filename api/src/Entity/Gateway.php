@@ -135,13 +135,16 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          },
  *     },
  * )
+ *
  * @ORM\Entity(repositoryClass="App\Repository\GatewayRepository")
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class)
+ *
  * @UniqueEntity("name")
  */
 class Gateway
@@ -152,10 +155,15 @@ class Gateway
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -164,9 +172,11 @@ class Gateway
      * @var string The Name of the Gateway which is used in the commonGround service
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -175,7 +185,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $name = '';
@@ -191,19 +203,23 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $description = '';
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $version = null;
@@ -212,9 +228,11 @@ class Gateway
      * @var string The location where the Gateway needs to be accessed
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -223,7 +241,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255, options={"default": ""})
      */
     private string $location = '';
@@ -232,6 +252,7 @@ class Gateway
      * @var bool true if this Source is enabled and can be used.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="boolean", options={"default": true})
      */
     private bool $isEnabled = true;
@@ -240,10 +261,13 @@ class Gateway
      * @var string The type of this gatewat
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @Assert\Choice({"json", "xml", "soap", "ftp", "sftp"})
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -253,7 +277,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(nullable=true, type="string", length=255)
      */
     private string $type = 'json';
@@ -264,6 +290,7 @@ class Gateway
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -272,7 +299,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $authorizationHeader = 'Authorization';
@@ -281,10 +310,13 @@ class Gateway
      * @var string The method used for authentication to the Gateway
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256", "vrijbrp-jwt"})
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -294,7 +326,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $auth = 'none';
@@ -303,10 +337,13 @@ class Gateway
      * @var string The method used for authentication to the Gateway
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @Assert\Choice({"header", "query"})
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -316,7 +353,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $authorizationPassthroughMethod = 'header';
@@ -327,6 +366,7 @@ class Gateway
      * @Assert\Length(
      *      max = 10
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -335,7 +375,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=10, nullable=true)
      */
     private ?string $locale = null;
@@ -346,6 +388,7 @@ class Gateway
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -354,7 +397,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $accept = null;
@@ -370,7 +415,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $jwt = null;
@@ -386,7 +433,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $jwtId = null;
@@ -402,7 +451,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $secret = null;
@@ -413,6 +464,7 @@ class Gateway
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -421,7 +473,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $username = null;
@@ -432,6 +486,7 @@ class Gateway
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -440,7 +495,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $password = null;
@@ -451,6 +508,7 @@ class Gateway
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -459,7 +517,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $apikey = null;
@@ -468,6 +528,7 @@ class Gateway
      * @var ?string The documentation url for this gateway
      *
      * @Assert\Url
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -476,7 +537,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", nullable=true)
      */
     private ?string $documentation = null;
@@ -492,6 +555,7 @@ class Gateway
      * @var array ...
      *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private $oas = [];
@@ -500,6 +564,7 @@ class Gateway
      * @var array ...
      *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private $paths = [];
@@ -508,6 +573,7 @@ class Gateway
      * Headers that are required to be added for every request.
      *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private $headers = [];
@@ -516,13 +582,16 @@ class Gateway
      * @var array Config to translate specific calls to a different method or endpoint. When changing the endpoint, if you want, you can use {id} to specify the location of the id in the endpoint.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private array $translationConfig = [];
 
     /**
      * @Groups({"read", "write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\OneToMany(targetEntity=CollectionEntity::class, mappedBy="source")
      */
     private ?Collection $collections;
@@ -531,6 +600,7 @@ class Gateway
      * @var array|null The guzzle configuration of the source
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $configuration = [];
@@ -539,6 +609,7 @@ class Gateway
      * @var array|null The configuration for endpoints on this source, mostly mapping for now.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $endpointsConfig = [];
@@ -554,7 +625,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", nullable=true, options={"default":"No calls have been made yet to this source"})
      */
     private string $status = 'No calls have been made yet to this source';
@@ -570,7 +643,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="datetime", nullable=true, options={"default":null})
      */
     private ?Datetime $lastCall = null;
@@ -586,7 +661,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="datetime", nullable=true, options={"default":null})
      */
     private ?Datetime $lastSync = null;
@@ -602,7 +679,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="integer", options={"default":0})
      */
     private int $objectCount = 0;
@@ -611,6 +690,7 @@ class Gateway
      * @var Collection The synchronizations of this source
      *
      * @Groups({"write"})
+     *
      * @ORM\OneToMany(targetEntity=Synchronization::class, fetch="EXTRA_LAZY", mappedBy="gateway", orphanRemoval=true)
      */
     private Collection $synchronizations;
@@ -619,7 +699,9 @@ class Gateway
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -628,7 +710,9 @@ class Gateway
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
@@ -637,6 +721,7 @@ class Gateway
      * @var bool Whether the source is in test mode
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="boolean", options={"default": false})
      */
     private bool $test = false;

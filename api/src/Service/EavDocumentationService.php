@@ -266,7 +266,6 @@ class EavDocumentationService
      */
     public function addOtherRoutes(array $docs): array
     {
-
         //$docs['paths']['reports/{type}'] =
 
         $docs['tags'][] = [
@@ -623,7 +622,6 @@ class EavDocumentationService
      */
     public function addEntityToDocs(Entity $entity, array $docs): array
     {
-
         /* @todo this only goes one deep */
         $docs['components']['schemas'][ucfirst($this->toCamelCase($entity->getName()))] = $this->getItemSchema($entity);
 
@@ -736,7 +734,6 @@ class EavDocumentationService
         $docs = [];
         $types = ['get', 'put', 'delete'];
         foreach ($types as $type) {
-
             // Basic path operations
             $docs[$type] = [
                 'description'=> ucfirst($type).' a '.$entity->getName(),
@@ -847,7 +844,6 @@ class EavDocumentationService
     {
         // Add our own properties
         foreach ($entity->getAttributes() as $attribute) {
-
             // Handle requireded fields
             if ($attribute->getRequired() and $attribute->getRequired() != null) {
                 $schema['required'][] = $attribute->getName();
@@ -902,7 +898,7 @@ class EavDocumentationService
         if ($attribute->getObject() && $attribute->getCascade()) {
             $schema['properties'][$attribute->getName()] = ['$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
         // that also means that we don't have to do the rest
-            //continue;
+        //continue;
         } elseif ($attribute->getObject() && !$attribute->getCascade()) {
             $schema['properties'][$attribute->getName()]['type'] = 'string';
             $schema['properties'][$attribute->getName()]['format'] = 'uuid';

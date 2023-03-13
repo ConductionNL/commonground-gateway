@@ -36,8 +36,11 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/admin/applications"}
  *  })
  * )
+ *
  * @ORM\HasLifecycleCallbacks
+ *
  * @ORM\Entity(repositoryClass="App\Repository\ApplicationRepository")
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -53,10 +56,15 @@ class Application
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -65,11 +73,15 @@ class Application
      * @var string The name of this Application.
      *
      * @Gedmo\Versioned
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Assert\NotNull
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
@@ -78,6 +90,7 @@ class Application
      * @var string A description of this Application.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $description;
@@ -88,6 +101,7 @@ class Application
      * @var array An array of hosts of this Application.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array")
      */
     private array $domains = [];
@@ -96,6 +110,7 @@ class Application
      * @var string A public key of this Application.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="text", nullable=true, name="public_column")
      */
     private ?string $public = null;
@@ -104,6 +119,7 @@ class Application
      * @var string A secret key of this Application.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $secret = null;
@@ -112,6 +128,7 @@ class Application
      * @var string|null A public key for authentication, or a secret for HS256 keys
      *
      * @Groups({"write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $publicKey = null;
@@ -120,6 +137,7 @@ class Application
      * @var string|null A private key for authentication, or a secret for HS256 keys
      *
      * @Groups({"write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $privateKey = null;
@@ -128,6 +146,7 @@ class Application
      * @var string Uri of user object.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", nullable=true)
      */
     private ?string $resource = null;
@@ -137,21 +156,27 @@ class Application
      * @var Organization An uuid or uri of an organization for this Application.
      *
      * @Groups({"read", "write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="applications")
+     *
      * @ORM\JoinColumn(nullable=false)
      */
     private ?Organization $organization;
 
     /**
      * @MaxDepth(1)
+     *
      * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="application", fetch="EXTRA_LAZY", cascade={"remove"})
      */
     private Collection $objectEntities;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="applications")
      */
     private $endpoints;
@@ -160,14 +185,18 @@ class Application
      * @var ?Collection The collections of this Application
      *
      * @Groups({"read", "write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="applications")
      */
     private ?Collection $collections;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\OneToMany(targetEntity=Contract::class, mappedBy="application")
      */
     private ?Collection $contracts;
@@ -176,7 +205,9 @@ class Application
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -185,13 +216,16 @@ class Application
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
 
     /**
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=User::class, mappedBy="applications")
      */
     private $users;
@@ -200,6 +234,7 @@ class Application
      * @var array Certificates that can be used to verify with this application
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private array $certificates = [];
@@ -208,6 +243,7 @@ class Application
      * @var array|null The configuration of this application.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $configuration = [];
@@ -498,6 +534,7 @@ class Application
 
     /**
      *  @ORM\PrePersist
+     *
      *  @ORM\PreUpdate
      */
     public function prePersist()

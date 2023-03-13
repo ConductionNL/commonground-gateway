@@ -710,8 +710,8 @@ class ObjectEntityService
         // Get filters from query parameters
         $filters = $this->getFilterFromParameters();
 
-        array_key_exists('id', ($filters)) && $id = $filters['id'];
-        !isset($id) && array_key_exists('uuid', ($filters)) && $id = $filters['uuid'];
+        array_key_exists('id', $filters) && $id = $filters['id'];
+        !isset($id) && array_key_exists('uuid', $filters) && $id = $filters['uuid'];
 
         $validationErrors = null;
         switch ($method) {
@@ -1193,7 +1193,7 @@ class ObjectEntityService
 //                        if ($value == $attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
 //                            $value = $this->commonGroundService->getUuidFromUrl($value);
 //                        } else {
-////                            var_dump('The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
+                        ////                            var_dump('The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
 //                            break;
 //                        }
                     }
