@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Entity\Application;
 use App\Entity\User;
+use App\Security\User\AuthenticationUser;
 use App\Service\AuthenticationService;
 use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
@@ -45,6 +46,55 @@ class UserController extends AbstractController
      */
     public function LoginAction(Request $request, CommonGroundService $commonGroundService)
     {
+    }
+
+    /**
+     * @Route("api/users/reset_token", methods={"GET"})
+     */
+    public function resetTokenAction(SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService, SessionInterface $session): Response
+    {
+        if ($session->has('refresh_token') === true && $session->has('authenticator') === true) {
+            $accessToken = $this->authenticationService->refreshAccessToken($session->get('refresh_token'), $session->get('authenticator'));
+            $user = $this->getUser();
+            if ($user instanceof AuthenticationUser === false) {
+                return new Response('User not found', 401);
+            }
+
+            $serializeUser = new User();
+            $serializeUser->setJwtToken($accessToken['access_token']);
+            $serializeUser->setName($user->getEmail());
+            $serializeUser->setEmail($user->getEmail());
+            $serializeUser->setPassword('');
+            $session->set('refresh_token', $accessToken['refresh_token']);
+            $this->entityManager->persist($serializeUser);
+
+            return new Response($serializer->serialize($serializeUser, 'json'), 200, ['Content-type' => 'application/json']);
+        }
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $status = 200;
+        $user = $this->getUser();
+        if ($user instanceof AuthenticationUser === false) {
+            return new Response('User not found', 401);
+        }
+
+        $user = $this->entityManager->getRepository('App:User')->find($user->getUserIdentifier());
+
+        if ($user->getOrganisation() !== null) {
+            $organizations[] = $user->getOrganisation();
+        }
+        foreach ($user->getApplications() as $application) {
+            if ($application->getOrganization() !== null) {
+                $organizations[] = $application->getOrganization();
+            }
+        }
+
+        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
+        $this->session->set('activeOrganization', $user->getOrganisation()->getId()->toString());
+
+        $user->setJwtToken($authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session)));
+
+        return new Response($serializer->serialize($user, 'json'), $status, ['Content-type' => 'application/json']);
     }
 
     /**

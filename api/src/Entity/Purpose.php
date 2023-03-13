@@ -30,7 +30,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get"={"path"="/admin/purposes"},
  *      "post"={"path"="/admin/purposes"}
  *  })
+ *
  * @ORM\Entity(repositoryClass=PurposeRepository::class)
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -44,9 +46,13 @@ class Purpose
      * @var UuidInterface The UUID identifier of this Entity.
      *
      * @Groups({"read"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -55,11 +61,15 @@ class Purpose
      * @var string The name of this Entity
      *
      * @Gedmo\Versioned
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Assert\NotNull
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
@@ -68,17 +78,22 @@ class Purpose
      * @var ?string The description of this Entity
      *
      * @Gedmo\Versioned
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $description;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToOne(targetEntity=Contract::class, inversedBy="purposes")
      */
     private ?Contract $contract;

@@ -33,7 +33,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/admin/mappings"}
  *  })
  * )
+ *
  * @ORM\Entity(repositoryClass=MappingRepository::class)
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -51,22 +53,29 @@ class Mapping
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $version = null;
@@ -75,6 +84,7 @@ class Mapping
      * @var string The name of the mapping
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(max=255)
      *
      * @Groups({"read","read_secure","write"})
@@ -139,7 +149,9 @@ class Mapping
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -148,7 +160,9 @@ class Mapping
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
@@ -172,17 +186,17 @@ class Mapping
     {
         if (!isset($schema['$schema']) || $schema['$schema'] != 'https://docs.commongateway.nl/schemas/Mapping.schema.json') {
             // todo: throw exception on wron schema (requieres design desigin on referencese
-           // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://docs.commongateway.nl/schemas/Mapping.schema.json is required');
+            // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://docs.commongateway.nl/schemas/Mapping.schema.json is required');
         }
 
-        (isset($schema['$id']) ? $this->setReference($schema['$id']) : '');
-        (isset($schema['title']) ? $this->setName($schema['title']) : '');
-        (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
-        (isset($schema['version']) ? $this->setVersion($schema['version']) : '');
-        (isset($schema['passTrough']) ? $this->setPassTrough($schema['passTrough']) : '');
-        (isset($schema['mapping']) ? $this->setMapping($schema['mapping']) : '');
-        (isset($schema['unset']) ? $this->setUnset($schema['unset']) : '');
-        (isset($schema['cast']) ? $this->setCast($schema['cast']) : '');
+        isset($schema['$id']) ? $this->setReference($schema['$id']) : '';
+        isset($schema['title']) ? $this->setName($schema['title']) : '';
+        isset($schema['description']) ? $this->setDescription($schema['description']) : '';
+        isset($schema['version']) ? $this->setVersion($schema['version']) : '';
+        isset($schema['passTrough']) ? $this->setPassTrough($schema['passTrough']) : '';
+        isset($schema['mapping']) ? $this->setMapping($schema['mapping']) : '';
+        isset($schema['unset']) ? $this->setUnset($schema['unset']) : '';
+        isset($schema['cast']) ? $this->setCast($schema['cast']) : '';
 
         return  $this;
     }

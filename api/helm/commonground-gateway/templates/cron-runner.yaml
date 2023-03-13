@@ -61,7 +61,19 @@ spec:
                     persistentVolumeClaim:
                         claimName: {{ include "commonground-gateway.fullname" . }}-vendor
                   
-        
+              initContainers:
+                  - name: {{ include "commonground-gateway.fullname" . }}-init
+                    securityContext:
+                      {{- toYaml .Values.securityContextPhp | nindent 22 }}
+                    image: "{{ .Values.php.repository }}:{{ .Values.php.tag | default .Chart.AppVersion }}"
+                    imagePullPolicy: {{ .Values.php.pullPolicy }}
+                    volumeMounts:
+                        - mountPath: /tmp/vendor
+                          name: vendor
+                          readOnly: false
+                    command:
+                        - bash
+                        - /srv/api/docker/php/online-copy-vendor.sh
               containers:
                   - name: {{ include "commonground-gateway.fullname" . }}-php
                     securityContext:
@@ -104,6 +116,10 @@ spec:
                           subPath: symfony.lock
                           name: vendor
                           readOnly: false
+                        - mountPath: /srv/api/config/bundles.php
+                          subPath: bundles.php
+                          name: vendor
+                          readOnly: false
                     args:
                         - bin/console
                         - cronjob:command
@@ -112,6 +128,8 @@ spec:
                           value: {{ .Values.config.env }}
                         - name: APP_AUTH
                           value: '{{ .Values.config.cronRunner.appAuth }}'
+                        - name: APP_INIT
+                          value: 'false'
                         - name: AUTH_ENABLED
                           value: 'true'
                         - name: APP_REPRO

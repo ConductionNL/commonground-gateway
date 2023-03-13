@@ -1,25 +1,27 @@
 #!/bin/sh
 set -e
 ls -la /srv/api
+ls -la /tmp/vendor
 
 if [ ! -f "/tmp/vendor/composer.json" ]; then
-	touch /tmp/vendor/composer.json
 	echo "Copying composer.json"
-	cp /srv/api/composer.json /tmp/vendor/ -f
+	cp -f /srv/api/composer.json /tmp/vendor/
 fi
 if [ ! -f "/tmp/vendor/composer.lock" ]; then
-	touch /tmp/vendor/composer.lock
 	echo "Copying composer.lock"
-	cp /srv/api/composer.lock /tmp/vendor/ -f
+	cp -f /srv/api/composer.lock /tmp/vendor/
 fi
 if [ ! -f "/tmp/vendor/symfony.lock" ]; then
-	touch /tmp/vendor/symfony.lock
 	echo "Copying symfony.lock"
-	cp /srv/api/symfony.lock /tmp/vendor/ -f
+	cp -f /srv/api/symfony.lock /tmp/vendor/
+fi
+if [ ! -f "/tmp/vendor/bundles.php" ]; then
+	echo "Copying bundles.php"
+	cp -f /srv/api/config/bundles.php /tmp/vendor/
 fi
 if [ ! -d "/tmp/vendor/vendor" ]; then
 	echo "Copying vendor folder"
-	cp /srv/api/vendor /tmp/vendor/vendor -R
+	cp -R /srv/api/vendor /tmp/vendor/vendor
 fi
 
 ls -la /tmp/vendor

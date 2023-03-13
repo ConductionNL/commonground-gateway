@@ -38,7 +38,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get"={"path"="/admin/collections"},
  *      "post"={"path"="/admin/collections"}
  *  })
+ *
  * @ORM\Entity(repositoryClass=CollectionEntityRepository::class)
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -56,10 +58,15 @@ class CollectionEntity
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -68,9 +75,11 @@ class CollectionEntity
      * @var string The name of this Collection
      *
      * @Assert\NotNull
+     *
      * @Assert\Type("string")
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(name="name", type="string", length=255)
      */
     private string $name;
@@ -81,18 +90,21 @@ class CollectionEntity
      * @Assert\Type("string")
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
     private ?string $description = null;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $version = null;
@@ -103,6 +115,7 @@ class CollectionEntity
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -111,7 +124,9 @@ class CollectionEntity
      *         }
      *     }
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
     private ?string $locationOAS = null;
@@ -120,8 +135,11 @@ class CollectionEntity
      * @var ?Gateway|string The source of this Collection
      *
      * @Groups({"write"})
+     *
      * @ORM\JoinColumn(nullable=true)
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="collections", fetch="EXTRA_LAZY")
      */
     private $source;
@@ -132,6 +150,7 @@ class CollectionEntity
      * @Assert\Type("string")
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
     private ?string $sourceUrl = null;
@@ -140,9 +159,11 @@ class CollectionEntity
      * @var ?string The source type of this Collection
      *
      * @Assert\Type("string")
+     *
      * @Assert\Choice({"url", "GitHub"})
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
     private ?string $sourceType = null;
@@ -151,6 +172,7 @@ class CollectionEntity
      * @var ?string The source branch of this Collection
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
     private ?string $sourceBranch = null;
@@ -161,13 +183,16 @@ class CollectionEntity
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
     private ?string $testDataLocation = null;
 
     /**
      * @var bool Wether or not the test data from the location above should be loaded. Defaults to false
+     *
      * @Groups({"read","write"})
      *
      * @ORM\Column(type="boolean", nullable=true, options={"default":false})
@@ -178,6 +203,7 @@ class CollectionEntity
      * @var ?DateTimeInterface The moment this Collection was synced
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="datetime", nullable=true, options={"default":null})
      */
     private ?DateTimeInterface $syncedAt = null;
@@ -186,6 +212,7 @@ class CollectionEntity
      * @var bool Wether or not this Collection's config and testdata should be loaded when fixtures are loaded
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="boolean", nullable=true, options={"default":false})
      */
     private bool $autoLoad = false;
@@ -194,6 +221,7 @@ class CollectionEntity
      * @var ?string The prefix for all endpoints on this Collection
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", nullable=true)
      */
     private ?string $prefix = null;
@@ -202,7 +230,9 @@ class CollectionEntity
      * @var ?Collection The applications of this Collection
      *
      * @Groups({"write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=Application::class, inversedBy="collections", fetch="EXTRA_LAZY")
      */
     private ?Collection $applications;
@@ -211,7 +241,9 @@ class CollectionEntity
      * @var ?Collection The endpoints of this Collection
      *
      * @Groups({"write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="collections", fetch="EXTRA_LAZY")
      */
     private ?Collection $endpoints;
@@ -220,7 +252,9 @@ class CollectionEntity
      * @var ?Collection The entities of this Collection
      *
      * @Groups({"write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=Entity::class, inversedBy="collections", fetch="EXTRA_LAZY")
      */
     private ?Collection $entities;
@@ -229,7 +263,9 @@ class CollectionEntity
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -238,7 +274,9 @@ class CollectionEntity
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;

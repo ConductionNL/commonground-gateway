@@ -56,6 +56,7 @@ services:
       - ./api/var/certs:/var/certs:rw,cached
       - ./gateway:/srv/api/fixtures:rw,cached
     environment:
+      - APP_INIT='true'
       - CONTAINER_REGISTRY_BASE=${CONTAINER_REGISTRY_BASE}
       - CONTAINER_PROJECT_NAME=${CONTAINER_PROJECT_NAME}
       - DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1

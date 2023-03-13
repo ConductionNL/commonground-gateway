@@ -49,7 +49,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "get"={"path"="/admin/entities"},
  *     "post"={"path"="/admin/entities"}
  *  })
+ *
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -65,17 +67,24 @@ class Entity
      * @var UuidInterface The UUID identifier of this Entity.
      *
      * @Groups({"read"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
 
     /**
      * @Groups({"read","write"})
+     *
      * @ORM\ManyToOne(targetEntity=Gateway::class, fetch="EAGER")
+     *
      * @ORM\JoinColumn(nullable=true)
+     *
      * @MaxDepth(1)
      *
      * @deprecated
@@ -86,10 +95,13 @@ class Entity
      * @var string The type of this Entity
      *
      * @Gedmo\Versioned
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      *
      * @deprecated
@@ -98,7 +110,9 @@ class Entity
 
     /**
      * @Groups({"read","write"})
+     *
      * @ORM\OneToOne(targetEntity=Soap::class, fetch="EXTRA_LAZY", mappedBy="fromEntity")
+     *
      * @MaxDepth(1)
      *
      * @deprecated
@@ -116,11 +130,15 @@ class Entity
      * @var string The name of this Entity
      *
      * @Gedmo\Versioned
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Assert\NotNull
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private $name;
@@ -129,7 +147,9 @@ class Entity
      * @var string The description of this Entity
      *
      * @Gedmo\Versioned
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private $description = '';
@@ -140,7 +160,9 @@ class Entity
      * @example organization
      *
      * @Assert\Choice({"noFunction","organization", "person", "user", "userGroup", "processingLog"})
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", options={"default":"noFunction"}, name="function_column")
      *
      * @deprecated
@@ -151,6 +173,7 @@ class Entity
      * @var bool whether the properties of the original object are automatically include.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $extend = false;
@@ -159,6 +182,7 @@ class Entity
      * Whether objects created from this entity should be available to child organisations.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $inherited = false;
@@ -167,7 +191,9 @@ class Entity
      * The attributes of this Entity.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist"}, orphanRemoval=true)
+     *
      * @MaxDepth(1)
      */
     private Collection $attributes;
@@ -176,7 +202,9 @@ class Entity
      * @var Collection|null The attributes allowed to partial search on using the search query parameter.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="searchPartial", fetch="EXTRA_LAZY")
+     *
      * @MaxDepth(1)
      *
      * @deprecated
@@ -185,21 +213,27 @@ class Entity
 
     /**
      * @Groups({"write"})
+     *
      * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="entity", cascade={"remove"}, fetch="EXTRA_LAZY")
+     *
      * @ORM\OrderBy({"dateCreated" = "DESC"})
+     *
      * @MaxDepth(1)
      */
     private Collection $objectEntities;
 
     /**
      * @Groups({"write"})
+     *
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="object", fetch="EXTRA_LAZY")
+     *
      * @MaxDepth(1)
      */
     private Collection $usedIn;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -210,6 +244,7 @@ class Entity
      * @var string|null The route this entity can be found easier
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      *
      * @deprecated
@@ -220,6 +255,7 @@ class Entity
      * @var array|null The properties available for this entity (for all CRUD calls) if null all properties will be used. This affects which properties are written to / retrieved from external api's.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -230,6 +266,7 @@ class Entity
      * @var array|null The properties used for this entity (for all CRUD calls) if null all properties will be used. This affects which properties will be written / shown.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -240,6 +277,7 @@ class Entity
      * @var array Used for ConvertToGatewayService. Config to translate specific calls to a different method or endpoint. When changing the endpoint, if you want, you can use {id} to specify the location of the id in the endpoint.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -250,6 +288,7 @@ class Entity
      * @var array Used for ConvertToGatewayService. Config for getting the results out of a get collection on this endpoint (results and id are required!). "results" for where to find all items, "envelope" for where to find a single item in results, "id" for where to find the id of in a single item and "paginationPages" for where to find the total amount of pages or a reference to the last page (from root). (both envelope and id are from the root of results! So if id is in the envelope example: envelope = instance, id = instance.id)
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -260,6 +299,7 @@ class Entity
      * @var array Used for ConvertToGatewayService. Config for getting the body out of a get item on this endpoint. "envelope" for where to find the body. example: envelope => result.instance
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -270,6 +310,7 @@ class Entity
      * @var array|null Used for ConvertToGatewayService. The mapping in from extern source to gateway.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -280,6 +321,7 @@ class Entity
      * @var array|null Used for ConvertToGatewayService. The mapping out from gateway to extern source.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -290,7 +332,9 @@ class Entity
      * @var array|null The handlers used for this entity.
      *
      * @MaxDepth(1)
+     *
      * @Groups({"write"})
+     *
      * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="entity", fetch="EXTRA_LAZY")
      *
      * @deprecated
@@ -301,8 +345,11 @@ class Entity
      * @var ?Collection The collections of this Entity
      *
      * @Groups({"write", "read"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="entities")
+     *
      * @ORM\OrderBy({"dateCreated" = "DESC"})
      */
     private ?Collection $collections;
@@ -311,6 +358,7 @@ class Entity
      * @var ?string The uri to a schema.org object
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default":null}, name="schema_column")
      *
      * @deprecated Replaced by reference
@@ -321,7 +369,9 @@ class Entity
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -330,7 +380,9 @@ class Entity
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
@@ -339,6 +391,7 @@ class Entity
      * @var array|null The properties used to set the name for ObjectEntities created linked to this Entity.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", length=255, nullable=true, options={"default": null})
      */
     private ?array $nameProperties = [];
@@ -347,18 +400,21 @@ class Entity
      * @var int The maximum depth that should be used when casting objects of this entity to array
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="integer", length=1, options={"default": 3})
      */
     private int $maxDepth = 3;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $version = null;
@@ -371,6 +427,7 @@ class Entity
 
     /**
      * @var bool Whether the entity should be excluded from rendering as sub object
+     *
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="boolean", options={"default": false}, nullable=true)
@@ -1002,7 +1059,7 @@ class Entity
         if (array_key_exists('required', $schema)) {
             foreach ($schema['required'] as $required) {
                 $attribute = $this->getAttributeByName($required);
-                // We can only set the attribute on required if it exists so.
+                //We can only set the attribute on required if it exists so.
                 if ($attribute instanceof Attribute === true) {
                     $attribute->setRequired(true);
                 }

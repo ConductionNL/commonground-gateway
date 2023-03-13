@@ -21,7 +21,8 @@ when@dev:
             main:
                 type: stream
                 path: php://stderr
-                level: error
+                level: critical
+                channels: ["!event"]
             nested:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.log"

@@ -19,6 +19,7 @@ RUN apk add --no-cache \
 	;
 
 ARG APCU_VERSION=5.1.17
+ARG SQLSRV_VERSION=5.10.1
 
 RUN set -eux; \
 	apk add --no-cache --virtual .build-deps \
@@ -52,7 +53,7 @@ RUN set -eux; \
 		apcu-${APCU_VERSION} \
 		redis \
     	amqp \
-    	sqlsrv \
+    	sqlsrv-${SQLSRV_VERSION} \
     	mongodb \
 	; \
 	rm -rf /tmp/pear \
