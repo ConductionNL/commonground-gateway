@@ -87,7 +87,7 @@ class CronjobCommand extends Command
                 $this->session->set('currentCronJobThrow', 'commongateway.action.event');
                 $this->session->set('currentCronJobSubThrow', $throw);
             }
-            $actionEvent = new ActionEvent($throw, ($cronjob->getData()));
+            $actionEvent = new ActionEvent($throw, $cronjob->getData());
             $this->eventDispatcher->dispatch($actionEvent, $actionEvent->getType());
 
             $io->comment("Get crontab expression ({$cronjob->getCrontab()}) and set the next and last run properties of the Cronjob");

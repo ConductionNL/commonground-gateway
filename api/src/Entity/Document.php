@@ -33,6 +33,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * 	        "delete"={"path"="/admin/documents/{id}"},
  *     },
  * )
+ *
  * @ORM\Entity(repositoryClass="App\Repository\DocumentRepository")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -48,10 +49,15 @@ class Document
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Groups({"read"})
+     *
      * @Assert\Uuid
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -62,7 +68,9 @@ class Document
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private string $name;
@@ -73,16 +81,22 @@ class Document
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Assert\NotNull
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $route;
 
     /**
      * @Groups({"read","write"})
+     *
      * @ORM\ManyToOne(targetEntity=Entity::class, fetch="EAGER")
+     *
      * @ORM\JoinColumn(nullable=true)
+     *
      * @MaxDepth(1)
      */
     private ?Entity $object = null;
@@ -93,8 +107,11 @@ class Document
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Assert\NotNull
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $data;
@@ -105,9 +122,13 @@ class Document
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Assert\NotNull
+     *
      * @Assert\Uuid
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $dataId;
@@ -118,9 +139,13 @@ class Document
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Assert\NotNull
+     *
      * @Assert\Url
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $documentCreationService;
@@ -131,8 +156,11 @@ class Document
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Assert\NotNull
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $documentType;
@@ -143,7 +171,9 @@ class Document
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, name="content_type")
      */
     private ?string $type;
@@ -152,6 +182,7 @@ class Document
      * @var string The content of the template
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $content;
@@ -160,7 +191,9 @@ class Document
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -169,7 +202,9 @@ class Document
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;

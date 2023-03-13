@@ -478,7 +478,7 @@ class SynchronizationService
             'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService($id), //todo maybe array_merge instead of ??
             'headers'   => array_merge(
                 ['Content-Type' => 'application/json'],
-                ($this->getCallServiceOverwrite('headers') ?? $source->getHeaders()) //todo maybe array_merge instead of ??
+                $this->getCallServiceOverwrite('headers') ?? $source->getHeaders() //todo maybe array_merge instead of ??
             ),
             'method'    => $this->getCallServiceOverwrite('method'),
         ];
@@ -538,7 +538,6 @@ class SynchronizationService
      */
     private function getQueryForCallService(string $id = null): array
     {
-
         // What if we do not have an action?
         if (!isset($this->configuration['apiSource'])) {
             return [];
