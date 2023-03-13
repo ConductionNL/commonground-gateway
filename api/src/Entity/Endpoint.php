@@ -345,7 +345,7 @@ class Endpoint
         $this->properties = new ArrayCollection();
         $this->entities = new ArrayCollection();
 
-        if (!$entity && !$source) {
+        if (!$entity && !$source && isset($configuration['entities']) === false) {
             return;
         }
 
@@ -354,12 +354,12 @@ class Endpoint
             $default = $this->constructEntityEndpoint($entity);
         }
         // Create simple endpoint(s) for source (proxy)
-        else {
+        elseif ($source) {
             $default = $this->constructProxyEndpoint($source);
         }
 
         if ($configuration) {
-            $this->fromSchema($configuration, $default);
+            $this->fromSchema($configuration, $default ?? []);
         }
     }
 
@@ -388,6 +388,10 @@ class Endpoint
 
         // Lets make a path & add prefix to this path if it is needed.
         $path = array_key_exists('path', $schema) ? $schema['path'] : $default['path'];
+        if (is_array($path)) {
+            $setPath = $path;
+            $path = '';
+        }
 
         // Make sure we never have a starting / for PathRegex.
         // todo: make sure all bundles create endpoints with a path that does not start with a slash!
@@ -411,14 +415,14 @@ class Endpoint
         // Create Path array (add default pathArrayEnd to this, different depending on if we create en Endpoint for $entity or $source.)
         $explodedPath = explode('/', $path);
         array_key_exists('pathArrayEnd', $default) && $explodedPath[] = $default['pathArrayEnd'];
-        $this->setPath($explodedPath);
+        $this->setPath($setPath ?? $explodedPath);
         $this->setMethods(array_key_exists('methods', $schema) && $schema['methods'] ? $schema['methods'] : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
         array_key_exists('title', $schema) ? $this->setName($schema['title']) :
             (array_key_exists('name', $schema) ? $this->setName($schema['name']) : '');
         array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
         array_key_exists('tags', $schema) ? $this->setTags($schema['tags']) : '';
-//        array_key_exists('entities', $schema) ? $this->setEntities($schema['entities']) : ''; // todo: make this work somehow?
+        array_key_exists('entities', $schema) ? $this->setEntities($schema['entities']) : ''; // todo: make this work somehow?
 
         /*@depricated kept here for lagacy */
         $this->setMethod(array_key_exists('method', $schema) ? $schema['method'] : 'GET');
