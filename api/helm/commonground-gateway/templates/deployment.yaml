@@ -169,7 +169,7 @@ spec:
                   key: auth-enabled
                   name: {{ include "commonground-gateway.fullname" . }}
             - name: APP_INIT
-              value: 'false'
+              value: 'true'
             - name: AUTH_ENABLED
               value: 'true'
             - name: APP_REPRO
