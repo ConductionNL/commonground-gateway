@@ -72,7 +72,7 @@ class User implements PasswordAuthenticatedUserInterface
      * @Groups({"read", "write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private ?string $description;
+    private ?string $description = null;
 
     /**
      * @Groups({"write"})
