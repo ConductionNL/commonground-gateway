@@ -393,9 +393,11 @@ class Endpoint
         // todo: make sure all bundles create endpoints with a path that does not start with a slash!
         $path = ltrim($path, '/');
 
+        // Find the first Entity, so we can check if it is connected to a Collection.
         $entity = (array_key_exists('entities', $schema) && is_array($schema['entities']) && !empty($schema['entities']))
             ? $schema['entities'][0] : ($this->entities->first() ?? $this->entity);
 
+        // Get the most recent created collection of the Entity and check if we need to add a prefix to this Endpoint.
         $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
         if ($entity instanceof Entity && !$entity->getCollections()->isEmpty() &&
             $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
@@ -415,11 +417,13 @@ class Endpoint
         array_key_exists('title', $schema) ? $this->setName($schema['title']) :
             (array_key_exists('name', $schema) ? $this->setName($schema['name']) : '');
         array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
-        // etc^...
+        array_key_exists('tags', $schema) ? $this->setTags($schema['tags']) : '';
+//        array_key_exists('entities', $schema) ? $this->setEntities($schema['entities']) : ''; // todo: make this work somehow?
 
         /*@depricated kept here for lagacy */
         $this->setMethod(array_key_exists('method', $schema) ? $schema['method'] : 'GET');
         $this->setOperationType(array_key_exists('operationType', $schema) ? $schema['operationType'] : 'GET');
+        array_key_exists('tag', $schema) ? $this->setTag($schema['tag']) : '';
 
         $this->setThrows($schema['throws'] ?? []);
     }
@@ -851,9 +855,7 @@ class Endpoint
     {
         // Also put it in the array
         if ($entity === null) {
-            foreach ($this->getEntities() as $removeEntity) {
-                $this->removeEntity($removeEntity);
-            }
+            $this->setEntities(null);
         } else {
             $this->addEntity($entity);
         }
@@ -868,6 +870,21 @@ class Endpoint
      */
     public function getEntities(): Collection
     {
+        return $this->entities;
+    }
+
+    public function setEntities(?array $entities): Collection
+    {
+        if ($entities === null || $entities === []) {
+            foreach ($this->getEntities() as $removeEntity) {
+                $this->removeEntity($removeEntity);
+            }
+        } else {
+            foreach ($entities as $entity) {
+                $this->addEntity($entity);
+            }
+        }
+
         return $this->entities;
     }
 
