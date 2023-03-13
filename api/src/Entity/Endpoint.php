@@ -327,25 +327,33 @@ class Endpoint
      * $configuration or $default array must contain the key 'path'!
      * And either $configuration array must contain the key 'pathRegex' or the $default array must contain the key 'pathRegexEnd'.
      *
-     * @param array $configuration An array with data.
-     * @param array $default       An array with data. The default values used for setting properties. Can contain the following keys:
-     *                             'path' => If $configuration array has no key 'path' this value is used to set the Path. (and pathRegex if $configuration has no 'pathRegex' key)
-     *                             'pathRegexEnd' => A string added to the end of the pathRegex.
-     *                             'pathArrayEnd' => The final item in the path array, 'id' for an Entity Endpoint and {route} for a proxy Endpoint.
+     * @param array $schema  The schema to load.
+     * @param array $default An array with data. The default values used for setting properties. Can contain the following keys:
+     *                       'path' => If $configuration array has no key 'path' this value is used to set the Path. (and pathRegex if $configuration has no 'pathRegex' key)
+     *                       'pathRegexEnd' => A string added to the end of the pathRegex.
+     *                       'pathArrayEnd' => The final item in the path array, 'id' for an Entity Endpoint and {route} for a proxy Endpoint.
      *
      * @return void
      */
-    public function fromSchema(array $configuration, array $default = [])
+    public function fromSchema(array $schema, array $default = [])
     {
+        // Basic stuff
+        if (array_key_exists('$id', $schema)) {
+            $this->setReference($schema['$id']);
+        }
+        if (array_key_exists('version', $schema)) {
+            $this->setVersion($schema['version']);
+        }
+
         // Lets make a path & add prefix to this path if it is needed.
-        $path = array_key_exists('path', $configuration) ? $configuration['path'] : $default['path'];
+        $path = array_key_exists('path', $schema) ? $schema['path'] : $default['path'];
 
         // Make sure we never have a starting / for PathRegex.
         // todo: make sure all bundles create endpoints with a path that does not start with a slash!
         $path = ltrim($path, '/');
 
-        $entity = (array_key_exists('entities', $configuration) && is_array($configuration['entities']) && !empty($configuration['entities']))
-            ? $configuration['entities'][0] : ($this->entities->first() ?? $this->entity);
+        $entity = (array_key_exists('entities', $schema) && is_array($schema['entities']) && !empty($schema['entities']))
+            ? $schema['entities'][0] : ($this->entities->first() ?? $this->entity);
 
         $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
         if ($entity instanceof Entity && !$entity->getCollections()->isEmpty() &&
@@ -354,24 +362,56 @@ class Endpoint
         }
 
         // Set the pathRegex
-        $pathRegex = array_key_exists('pathRegex', $configuration) ? $configuration['pathRegex'] : "^$path/{$default['pathRegexEnd']}$";
+        $pathRegex = array_key_exists('pathRegex', $schema) ? $schema['pathRegex'] : "^$path/{$default['pathRegexEnd']}$";
         $this->setPathRegex($pathRegex);
 
         // Create Path array (add default pathArrayEnd to this, different depending on if we create en Endpoint for $entity or $source.)
         $explodedPath = explode('/', $path);
         array_key_exists('pathArrayEnd', $default) && $explodedPath[] = $default['pathArrayEnd'];
         $this->setPath($explodedPath);
-        $this->setMethods(array_key_exists('methods', $configuration) && $configuration['methods'] ? $configuration['methods'] : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
+        $this->setMethods(array_key_exists('methods', $schema) && $schema['methods'] ? $schema['methods'] : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
-        array_key_exists('name', $configuration) ? $this->setName($configuration['name']) : '';
-        array_key_exists('description', $configuration) ? $this->setDescription($configuration['description']) : '';
+        array_key_exists('title', $schema) ? $this->setName($schema['title']) :
+            (array_key_exists('name', $schema) ? $this->setName($schema['name']) : '');
+        array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
         // etc^...
 
         /*@depricated kept here for lagacy */
-        $this->setMethod(array_key_exists('method', $configuration) ? $configuration['method'] : 'GET');
-        $this->setOperationType(array_key_exists('operationType', $configuration) ? $configuration['operationType'] : 'GET');
+        $this->setMethod(array_key_exists('method', $schema) ? $schema['method'] : 'GET');
+        $this->setOperationType(array_key_exists('operationType', $schema) ? $schema['operationType'] : 'GET');
 
-        $this->setThrows($configuration['throws'] ?? []);
+        $this->setThrows($schema['throws'] ?? []);
+    }
+
+    /**
+     * Convert this Gateway to a schema.
+     *
+     * @return array Schema array.
+     */
+    public function toSchema(): array
+    {
+        $entities = [];
+        foreach ($this->entities as $entity) {
+            $entities[] = $entity->toSchema();
+        }
+
+        return [
+            '$id'                            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'                        => 'https://docs.commongateway.nl/schemas/Endpoint.schema.json',
+            'title'                          => $this->getName(),
+            'description'                    => $this->getDescription(),
+            'version'                        => $this->getVersion(),
+            'name'                           => $this->getName(),
+            'pathRegex'                      => $this->getPathRegex(),
+            'path'                           => $this->getPath(),
+            'methods'                        => $this->getMethods(),
+            'method'                         => $this->getMethod(),
+            'throws'                         => $this->getThrows(),
+            'tag'                            => $this->getTag(),
+            'tags'                           => $this->getTags(),
+            'proxy'                          => $this->getProxy()->toSchema(),
+            'entities'                       => $entities,
+        ];
     }
 
     public function __toString()
