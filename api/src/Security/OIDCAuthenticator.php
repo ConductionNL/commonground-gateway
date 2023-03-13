@@ -92,10 +92,6 @@ class OIDCAuthenticator extends AbstractAuthenticator
                 ['method' => $method, 'identifier' => $identifier, 'code' => $code, 'service' => $this->authenticationService]
             )
         );
-
-        var_dump($this->session->getId());
-        var_dump($this->session->get('refresh_token'));
-        die;
     }
 
     private function getDefaultOrganization(): string
