@@ -229,9 +229,6 @@ class AuthenticationService
 
         $accessToken = json_decode($response->getBody()->getContents(), true);
 
-//        var_dump($this->session->getId());
-//        die;
-
         return $accessToken;
     }
 
