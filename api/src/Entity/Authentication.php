@@ -53,13 +53,16 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          },
  *     },
  * )
+ *
  * @ORM\Entity(repositoryClass="App\Repository\AuthenticationRepository")
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class)
+ *
  * @UniqueEntity("name")
  */
 class Authentication
@@ -70,10 +73,15 @@ class Authentication
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -82,9 +90,11 @@ class Authentication
      * @var string The Name of the Gateway which is used in the commonGround service
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -93,13 +103,16 @@ class Authentication
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
 
     /**
      * @var ?string The location where the authentication is hosted
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -108,13 +121,16 @@ class Authentication
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $authenticateUrl = null;
 
     /**
      * @var ?string The location where the token for the authentication is hosted
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -123,13 +139,16 @@ class Authentication
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $tokenUrl = null;
 
     /**
      * @var ?string The location where the token for the authentication is hosted
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -138,7 +157,9 @@ class Authentication
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $keysUrl = null;
@@ -154,7 +175,9 @@ class Authentication
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $secret = null;
@@ -170,7 +193,9 @@ class Authentication
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $clientId = null;
@@ -185,7 +210,9 @@ class Authentication
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $scopes = [];
@@ -194,7 +221,9 @@ class Authentication
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -203,7 +232,9 @@ class Authentication
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;

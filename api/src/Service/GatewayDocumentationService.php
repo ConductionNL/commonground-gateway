@@ -209,7 +209,6 @@ class GatewayDocumentationService
         foreach ($schema['properties'] as $key => $property) {
             // Lets see if we have main stuf
             if (array_key_exists('$ref', $property)) {
-
                 // we only go 5 levels deep
                 if ($level > 3) {
                     unset($schema['properties'][$key]);
@@ -219,7 +218,6 @@ class GatewayDocumentationService
             }
             // The schema might also be in an array
             if (array_key_exists('items', $property) && array_key_exists('$ref', $property['items'])) {
-
                 // we only go 5 levels deep
                 if ($level > 3) {
                     unset($schema['properties'][$key]['items']);

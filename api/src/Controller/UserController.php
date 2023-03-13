@@ -53,10 +53,10 @@ class UserController extends AbstractController
      */
     public function resetTokenAction(SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService, SessionInterface $session): Response
     {
-        if($session->has('refresh_token') === true && $session->has('authenticator') === true) {
+        if ($session->has('refresh_token') === true && $session->has('authenticator') === true) {
             $accessToken = $this->authenticationService->refreshAccessToken($session->get('refresh_token'), $session->get('authenticator'));
             $user = $this->getUser();
-            if($user instanceof AuthenticationUser === false) {
+            if ($user instanceof AuthenticationUser === false) {
                 return new Response('User not found', 401);
             }
 
@@ -74,12 +74,11 @@ class UserController extends AbstractController
 
         $status = 200;
         $user = $this->getUser();
-        if($user instanceof AuthenticationUser === false) {
+        if ($user instanceof AuthenticationUser === false) {
             return new Response('User not found', 401);
         }
 
         $user = $this->entityManager->getRepository('App:User')->find($user->getUserIdentifier());
-
 
         if ($user->getOrganisation() !== null) {
             $organizations[] = $user->getOrganisation();

@@ -82,11 +82,12 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
             $payload = json_decode(base64_decode(array_shift($tokenArray)), true);
             $issuer = str_replace('127.0.0.1', 'localhost', $payload['iss']);
             $authenticator = $this->entityManager->getRepository('App:Authentication')->findOneBy(['authenticateUrl' => $issuer.'/auth']);
-            if($authenticator instanceof Authentication) {
+            if ($authenticator instanceof Authentication) {
                 $keyUrl = $authenticator->getKeysUrl();
                 $client = new Client();
                 $response = $client->get($keyUrl);
                 $key = $response->getBody()->getContents();
+
                 return $key;
             }
         }
@@ -158,16 +159,17 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
             $user = $this->authenticationService->serializeUser($application->getUsers()[0], $this->session);
         }
 
-        if(isset($user['roles']) === false && isset($user['groups']) === true) {
+        if (isset($user['roles']) === false && isset($user['groups']) === true) {
             $user['roles'] = [];
-            foreach($user['groups'] as $group) {
+            foreach ($user['groups'] as $group) {
                 $securityGroup = $this->entityManager->getRepository('App:SecurityGroup')->findOneBy(['name' => $group]);
-                if($securityGroup instanceof SecurityGroup === true)
+                if ($securityGroup instanceof SecurityGroup === true) {
                     $user['roles'] = array_merge($securityGroup->getScopes(), $user['roles']);
+                }
             }
         }
 
-        if(isset($user['id']) === false && isset($user['email']) === true) {
+        if (isset($user['id']) === false && isset($user['email']) === true) {
             $user['id'] = $user['email'];
         }
 

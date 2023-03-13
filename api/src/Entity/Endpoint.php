@@ -38,7 +38,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/admin/endpoints"}
  *  })
  * )
+ *
  * @ORM\Entity(repositoryClass="App\Repository\EndpointRepository")
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -59,10 +61,15 @@ class Endpoint
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -71,11 +78,15 @@ class Endpoint
      * @var string The name of this Endpoint.
      *
      * @Gedmo\Versioned
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Assert\NotNull
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
@@ -84,6 +95,7 @@ class Endpoint
      * @var string|null A description of this Endpoint.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="text", nullable=true, options={"default":null})
      */
     private ?string $description = null;
@@ -92,6 +104,7 @@ class Endpoint
      * @var string|null A regex description of this path.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", nullable=true, options={"default":null})
      */
     private ?string $pathRegex = null;
@@ -100,6 +113,7 @@ class Endpoint
      * @var string|null The method.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", nullable=true, options={"default":null})
      */
     private ?string $method = null;
@@ -108,6 +122,7 @@ class Endpoint
      * @var string|null The (OAS) tag of this Endpoint.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", nullable=true, options={"default":null})
      */
     private ?string $tag = null;
@@ -130,6 +145,7 @@ class Endpoint
      * @Assert\NotNull
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array")
      */
     private ?array $path = [];
@@ -140,13 +156,16 @@ class Endpoint
      * @example ["statusCode", "status", "headers" => ["authorization", "accept"]]
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private array $loggingConfig = ['headers' => ['authorization']];
 
     /**
      * @Groups({"read", "write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=Application::class, mappedBy="endpoints")
      */
     private $applications;
@@ -155,8 +174,11 @@ class Endpoint
      * @var ?Collection The collections of this Endpoint
      *
      * @Groups({"read", "write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="endpoints")
+     *
      * @ORM\OrderBy({"dateCreated" = "DESC"})
      */
     private ?Collection $collections;
@@ -165,6 +187,7 @@ class Endpoint
      * @var ?string The operation type calls must be that are requested through this Endpoint
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $operationType = null;
@@ -173,6 +196,7 @@ class Endpoint
      * @var ?array (OAS) tags to identify this Endpoint
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $tags = [];
@@ -181,6 +205,7 @@ class Endpoint
      * @var ?string Array of the path if this Endpoint has parameters and/or subpaths
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $pathArray = [];
@@ -189,6 +214,7 @@ class Endpoint
      * @var ?array needs to be refined
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $methods = [];
@@ -197,6 +223,7 @@ class Endpoint
      * @var ?array needs to be refined
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $throws = [];
@@ -205,6 +232,7 @@ class Endpoint
      * @var ?bool needs to be refined
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="boolean", nullable=true)
      */
     private ?bool $status = null;
@@ -213,7 +241,9 @@ class Endpoint
      * @var Collection|null Properties of this Endpoint
      *
      * @MaxDepth(1)
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\OneToMany(targetEntity=Property::class, mappedBy="endpoint")
      */
     private ?Collection $properties;
@@ -222,7 +252,9 @@ class Endpoint
      * @var Collection|null Handlers of this Endpoint
      *
      * @MaxDepth(1)
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\ManyToMany(targetEntity=Handler::class, mappedBy="endpoints")
      */
     private ?Collection $handlers;
@@ -231,7 +263,9 @@ class Endpoint
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -240,7 +274,9 @@ class Endpoint
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
@@ -249,6 +285,7 @@ class Endpoint
      * @var string|null The default content type of the endpoint
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $defaultContentType = 'application/json';
@@ -264,24 +301,28 @@ class Endpoint
      * The Entities of this Endpoint.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\ManyToMany(targetEntity=Entity::class, inversedBy="endpoints")
      */
     private $entities;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="proxies")
      */
     private $proxy;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $version = null;

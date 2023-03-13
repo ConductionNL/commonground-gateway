@@ -32,9 +32,11 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/admin/users"}
  *  })
  * )
+ *
  * @ORM\HasLifecycleCallbacks
  *
  * @ORM\Entity(repositoryClass=App\Repository\UserRepository::class)
+ *
  * @ORM\Table(name="`user`")
  */
 class User implements PasswordAuthenticatedUserInterface
@@ -45,10 +47,15 @@ class User implements PasswordAuthenticatedUserInterface
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -57,11 +64,15 @@ class User implements PasswordAuthenticatedUserInterface
      * @var string The name of this User.
      *
      * @Gedmo\Versioned
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Assert\NotNull
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
@@ -70,26 +81,32 @@ class User implements PasswordAuthenticatedUserInterface
      * @var string A description of this User.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $description = null;
 
     /**
      * @Groups({"write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private $password;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private $email;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="users")
+     *
      * @ORM\JoinColumn(nullable=false)
      */
     private ?Organization $organisation = null;
@@ -98,18 +115,21 @@ class User implements PasswordAuthenticatedUserInterface
      * @Groups({"read", "write"})
      *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=Application::class, inversedBy="users")
      */
     private $applications;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $locale = 'en';
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $person;
@@ -124,6 +144,7 @@ class User implements PasswordAuthenticatedUserInterface
      * @Groups({"read", "write"})
      *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=SecurityGroup::class, mappedBy="users")
      */
     private $securityGroups;
@@ -132,7 +153,9 @@ class User implements PasswordAuthenticatedUserInterface
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -141,13 +164,16 @@ class User implements PasswordAuthenticatedUserInterface
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
 
     /**
      * @var string RS512 token
+     *
      * @Groups({"read"})
      */
     private string $jwtToken = '';

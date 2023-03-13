@@ -586,7 +586,6 @@ class OasDocumentationService
     {
         // Let do mapping (changing of property names)
         foreach ($mapping as $key => $value) {
-
             // Get first and last part of the string
             $last_part = substr(strrchr($value, '.'), 1);
 
