@@ -54,10 +54,8 @@ class UserController extends AbstractController
     public function resetTokenAction(SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService, SessionInterface $session): Response
     {
         if($session->has('refresh_token') === true && $session->has('authenticator') === true) {
-            var_dump('refreshing');
             $accessToken = $this->authenticationService->refreshAccessToken($session->get('refresh_token'), $session->get('authenticator'));
             $user = $this->getUser();
-            var_dump($user);
             if($user instanceof AuthenticationUser === false) {
                 return new Response('User not found', 401);
             }
@@ -66,6 +64,8 @@ class UserController extends AbstractController
             $serializeUser->setJwtToken($accessToken['access_token']);
             $serializeUser->setEmail($user->getEmail());
             $session->set('refresh_token', $accessToken['refresh_token']);
+
+            $this->entityManager->persist($serializeUser);
 
             return new Response($serializer->serialize($serializeUser, 'json'), 200, ['Content-type' => 'application/json']);
         }
