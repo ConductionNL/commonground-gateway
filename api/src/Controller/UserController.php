@@ -24,6 +24,11 @@ use Symfony\Component\Serializer\SerializerInterface;
 /**
  * Class LoginController.
  *
+ * @Author Gino Kok, Robert Zondervan <robert@conduction.nl>, Ruben van der Linde <ruben@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Controller
  *
  * @Route("/")
  */

@@ -10,6 +10,13 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * @Author Ruben van der Linde <ruben@conduction.nl>, Gino Kok
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Command
+ */
 class ExportConfigurationCommand extends Command
 {
     // the name of the command (the part after "bin/console")

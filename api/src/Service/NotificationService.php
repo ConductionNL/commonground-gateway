@@ -8,6 +8,12 @@ use Symfony\Component\ExpressionLanguage\SyntaxError;
 
 /**
  * This service holds al the logic for the notification plugin.
+ *
+ * @Author Ruben van der Linde <ruben@conduction.nl>, Sarai Misidjan <sarai@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
  */
 class NotificationService
 {

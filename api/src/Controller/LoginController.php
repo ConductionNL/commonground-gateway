@@ -17,6 +17,11 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * Class LoginController.
  *
+ * @Author Gino Kok, Robert Zondervan <robert@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Controller
  *
  * @Route("/")
  */
