@@ -7,7 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * Authors: Gino Kok, Ruben van der Linde <ruben@conduction.nl>
+ * Authors: Gino Kok, Ruben van der Linde <ruben@conduction.nl>.
  *
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *
