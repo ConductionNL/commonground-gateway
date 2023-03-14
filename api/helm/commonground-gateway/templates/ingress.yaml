@@ -24,10 +24,10 @@ metadata:
         cert-manager.io/cluster-issuer: letsencrypt-prod
       {{- end }}
     {{ if eq .Values.ingress.className "nginx" }}
-        nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: 'true'
-        nginx.ingress.kubernetes.io/auth-tls-secret: {{ .Release.Namespace }}/{{ $fullName }}-rootca
-        nginx.ingress.kubernetes.io/auth-tls-verify: optional_no_ca
-        nginx.ingress.kubernetes.io/auth-tls-verify-depth: '4'
+{{/*        nginx.ingress.kubernetes.io/auth-tls-pass-certificate-to-upstream: 'true'*/}}
+{{/*        nginx.ingress.kubernetes.io/auth-tls-secret: {{ .Release.Namespace }}/{{ $fullName }}-rootca*/}}
+{{/*        nginx.ingress.kubernetes.io/auth-tls-verify: optional_no_ca*/}}
+{{/*        nginx.ingress.kubernetes.io/auth-tls-verify-depth: '4'*/}}
         {{- if not .Values.ingress.annotations }}
         nginx.ingress.kubernetes.io/cors-allow-origin: https://admin.{{ .Values.global.domain }}
         nginx.ingress.kubernetes.io/enable-cors: "true"
