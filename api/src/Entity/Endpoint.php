@@ -37,7 +37,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get"={"path"="/admin/endpoints"},
  *      "post"={"path"="/admin/endpoints"}
  *  })
- * )
  *
  * @ORM\Entity(repositoryClass="App\Repository\EndpointRepository")
  *
@@ -441,7 +440,10 @@ class Endpoint
     {
         $entities = [];
         foreach ($this->entities as $entity) {
-            $entities[] = $entity->toSchema();
+            if ($entity !== null) {
+                $entity = $entity->toSchema();
+            }
+            $entities[] = $entity;
         }
 
         return [
@@ -458,7 +460,7 @@ class Endpoint
             'throws'                         => $this->getThrows(),
             'tag'                            => $this->getTag(),
             'tags'                           => $this->getTags(),
-            'proxy'                          => $this->getProxy()->toSchema(),
+            'proxy'                          => $this->getProxy() !== null ? $this->getProxy()->toSchema() : null,
             'entities'                       => $entities,
         ];
     }
