@@ -51,9 +51,27 @@ class UserController extends AbstractController
     /**
      * @Route("api/users/reset_token", methods={"GET"})
      */
-    public function resetTokenAction(Request $request, SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService): Response
+    public function resetTokenAction(SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService, SessionInterface $session): Response
     {
+        if ($session->has('refresh_token') === true && $session->has('authenticator') === true) {
+            $accessToken = $this->authenticationService->refreshAccessToken($session->get('refresh_token'), $session->get('authenticator'));
+            $user = $this->getUser();
+            if ($user instanceof AuthenticationUser === false) {
+                return new Response('User not found', 401);
+            }
+
+            $serializeUser = new User();
+            $serializeUser->setJwtToken($accessToken['access_token']);
+            $serializeUser->setName($user->getEmail());
+            $serializeUser->setEmail($user->getEmail());
+            $serializeUser->setPassword('');
+            $session->set('refresh_token', $accessToken['refresh_token']);
+            $this->entityManager->persist($serializeUser);
+
+            return new Response($serializer->serialize($serializeUser, 'json'), 200, ['Content-type' => 'application/json']);
+        }
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
         $status = 200;
         $user = $this->getUser();
         if ($user instanceof AuthenticationUser === false) {

@@ -30,7 +30,9 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *     "get"={"path"="/admin/dashboardCards"},
  *     "post"={"path"="/admin/dashboardCards"}
  *  })
+ *
  * @ORM\Entity(repositoryClass=DashboardCardRepository::class)
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -44,9 +46,13 @@ class DashboardCard
      * @var UuidInterface The UUID identifier of this Entity.
      *
      * @Groups({"read"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -55,6 +61,7 @@ class DashboardCard
      * The name of the dashboard card.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
@@ -63,6 +70,7 @@ class DashboardCard
      * The description of the dashboard.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $description;
@@ -73,6 +81,7 @@ class DashboardCard
      * @todo enum on schema etc
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $type;
@@ -81,6 +90,7 @@ class DashboardCard
      * The entity of the schema e.g. Gateway.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $entity;
@@ -96,12 +106,14 @@ class DashboardCard
      * The UUID of the object stored in Dashboard Card.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="uuid")
      */
     private Uuid $entityId;
 
     /**
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="integer")
      */
     private int $ordering = 1;

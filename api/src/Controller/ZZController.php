@@ -84,7 +84,6 @@ class ZZController extends AbstractController
      */
     private function getParametersFromRequest(?array $parameters = [], ?Request $request): array
     {
-
         // Lets make sure that we always have a path
         if (!isset($parameters['path'])) {
             $parameters['path'] = [];

@@ -33,7 +33,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "get"={"path"="/admin/cronjobs"},
  *     "post"={"path"="/admin/cronjobs"}
  *  })
+ *
  * @ORM\Entity(repositoryClass=CronjobRepository::class)
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -47,9 +49,13 @@ class Cronjob
      * @var UuidInterface The UUID identifier of this Cronjob.
      *
      * @Groups({"read"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -58,10 +64,13 @@ class Cronjob
      * @var string The name of this Cronjob
      *
      * @Gedmo\Versioned
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
@@ -70,22 +79,27 @@ class Cronjob
      * @var string|null The description of this Cronjob
      *
      * @Gedmo\Versioned
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $description;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $version = null;
@@ -99,8 +113,11 @@ class Cronjob
      *     match=true,
      *     message="This is an invalid crontab, see https://crontab.guru/ to create an interval"
      * )
+     *
      * @Gedmo\Versioned
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string")
      */
     private string $crontab = '*/5 * * * *';
@@ -109,6 +126,7 @@ class Cronjob
      * @var array The actions that put on the stack by the crontab.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array")
      */
     private array $throws = [];
@@ -117,6 +135,7 @@ class Cronjob
      * @var array|null The optional data array of this Cronjob
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $data = [];
@@ -125,6 +144,7 @@ class Cronjob
      * @var Datetime The last run of this Cronjob
      *
      * @Groups({"read"})
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $lastRun;
@@ -133,6 +153,7 @@ class Cronjob
      * @var Datetime The next run of this Cronjob
      *
      * @Groups({"read"})
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $nextRun;
@@ -141,6 +162,7 @@ class Cronjob
      * @var ?bool true if action should be ran
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="boolean", nullable=true, options={"default": true})
      */
     private ?bool $isEnabled = true;
@@ -149,7 +171,9 @@ class Cronjob
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private DateTimeInterface $dateCreated;
@@ -158,7 +182,9 @@ class Cronjob
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private DateTimeInterface $dateModified;
