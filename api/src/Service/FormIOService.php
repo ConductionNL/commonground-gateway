@@ -8,6 +8,12 @@ use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * This service parses an Entity and its Attributes into a form.io JSON configuration used in front-ends.
+ *
+ * @Author Barry Brands <barry@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
  */
 class FormIOService
 {

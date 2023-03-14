@@ -13,6 +13,11 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * Class PluginControllerc.
  *
+ * Authors: Ruben van der Linde <ruben@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Controller
  *
  * @Route("/admin/plugins")
  */

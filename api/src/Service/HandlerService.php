@@ -26,6 +26,13 @@ use Symfony\Component\Stopwatch\Stopwatch;
 // Hack van de maand award
 use Twig\Environment;
 
+/**
+ * @Author Barry Brands <barry@conduction.nl>, Ruben van der Linde <ruben@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>, Robert Zondervan <robert@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
+ */
 class HandlerService
 {
     private EntityManagerInterface $entityManager;
