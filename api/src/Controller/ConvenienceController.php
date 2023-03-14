@@ -23,7 +23,7 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Twig\Environment;
 
 /**
- * @Author Barry Brands <barry@conduction.nl>, Sarai Misidjan <sarai@conduction.nl>, Robert Zondervan <robert@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>
+ * Authors: Barry Brands <barry@conduction.nl>, Sarai Misidjan <sarai@conduction.nl>, Robert Zondervan <robert@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>
  *
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *

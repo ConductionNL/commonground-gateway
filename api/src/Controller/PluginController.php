@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * Class PluginControllerc.
  *
- * @Author Ruben van der Linde <ruben@conduction.nl>
+ * Authors: Ruben van der Linde <ruben@conduction.nl>
  *
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *

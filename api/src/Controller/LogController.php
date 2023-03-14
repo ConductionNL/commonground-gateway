@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * Fires the cronjon service from an api endpoint.
  *
- * @Author Wilco Louwerse <wilco@conduction.nl>
+ * Authors: Wilco Louwerse <wilco@conduction.nl>
  *
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *

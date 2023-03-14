@@ -8,7 +8,7 @@ use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Author Gino Kok, Wilco Louwerse <wilco@conduction.nl>
+ * Authors: Gino Kok, Wilco Louwerse <wilco@conduction.nl>
  *
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *
