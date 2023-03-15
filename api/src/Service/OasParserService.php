@@ -17,6 +17,12 @@ use Symfony\Component\Yaml\Yaml;
 
 /**
  * This service takes an external OpenAPI v3 specification and turns that into a gateway + eav structure.
+ *
+ * @Author Ruben van der Linde <ruben@conduction.nl>, Barry Brands <barry@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>, Robert Zondervan <robert@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
  */
 class OasParserService
 {

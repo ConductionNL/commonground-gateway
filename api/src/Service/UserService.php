@@ -7,6 +7,13 @@ use Conduction\SamlBundle\Security\User\AuthenticationUser;
 use Exception;
 use Symfony\Component\Security\Core\User\UserInterface;
 
+/**
+ * @Author Robert Zondervan <robert@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
+ */
 class UserService
 {
     private CommonGroundService $commonGroundService;

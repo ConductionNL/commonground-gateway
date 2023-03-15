@@ -18,6 +18,13 @@ use Respect\Validation\Validator;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * @Author Wilco Louwerse <wilco@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
+ */
 class ValidatorService
 {
     public CacheInterface $cache;
@@ -118,8 +125,9 @@ class ValidatorService
      *
      * @param Entity    $entity
      * @param Validator $validator
+     * @param int       $level
      *
-     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
      *
      * @return Validator
      */
@@ -222,8 +230,9 @@ class ValidatorService
      * Returns a Rule that makes sure an Attribute is present if it is required. Continues with the 'normal' / other Attribute validations after that.
      *
      * @param Attribute $attribute
+     * @param int       $level
      *
-     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
      *
      * @return Rules\AbstractRule
      */
@@ -268,6 +277,7 @@ class ValidatorService
      * Gets a Validator for the given Attribute. This function is the point from where we start validating the actual value of an Attribute.
      *
      * @param Attribute $attribute
+     * @param int       $level
      *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
      *
@@ -284,6 +294,7 @@ class ValidatorService
      * Checks if the attribute is nullable and adds the correct Rules for this if needed.
      *
      * @param Attribute $attribute
+     * @param int       $level
      *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
      *
@@ -304,6 +315,7 @@ class ValidatorService
      * Checks if the attribute is an array (multiple) and adds the correct Rules for this if needed.
      *
      * @param Attribute $attribute
+     * @param int       $level
      *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
      *
@@ -335,6 +347,7 @@ class ValidatorService
      * Gets a Validator for the type of the given Attribute. (And format and other validations if type validation is true).
      *
      * @param Attribute $attribute
+     * @param int       $level
      *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
      *
@@ -393,6 +406,7 @@ class ValidatorService
      * Gets the correct Rule(s) for the type of the given Attribute.
      *
      * @param Attribute $attribute
+     * @param int       $level
      *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
      *
@@ -456,6 +470,7 @@ class ValidatorService
      * Gets a Validator for the object of the given Attribute with type = 'object'.
      *
      * @param Attribute $attribute
+     * @param int       $level
      *
      * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
      *

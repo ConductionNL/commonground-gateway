@@ -37,7 +37,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get"={"path"="/admin/endpoints"},
  *      "post"={"path"="/admin/endpoints"}
  *  })
- * )
  *
  * @ORM\Entity(repositoryClass="App\Repository\EndpointRepository")
  *
@@ -345,7 +344,7 @@ class Endpoint
         $this->properties = new ArrayCollection();
         $this->entities = new ArrayCollection();
 
-        if (!$entity && !$source) {
+        if (!$entity && !$source && isset($configuration['entities']) === false) {
             return;
         }
 
@@ -354,12 +353,12 @@ class Endpoint
             $default = $this->constructEntityEndpoint($entity);
         }
         // Create simple endpoint(s) for source (proxy)
-        else {
+        elseif ($source) {
             $default = $this->constructProxyEndpoint($source);
         }
 
         if ($configuration) {
-            $this->fromSchema($configuration, $default);
+            $this->fromSchema($configuration, $default ?? []);
         }
     }
 
@@ -388,14 +387,20 @@ class Endpoint
 
         // Lets make a path & add prefix to this path if it is needed.
         $path = array_key_exists('path', $schema) ? $schema['path'] : $default['path'];
+        if (is_array($path)) {
+            $setPath = $path;
+            $path = '';
+        }
 
         // Make sure we never have a starting / for PathRegex.
         // todo: make sure all bundles create endpoints with a path that does not start with a slash!
         $path = ltrim($path, '/');
 
+        // Find the first Entity, so we can check if it is connected to a Collection.
         $entity = (array_key_exists('entities', $schema) && is_array($schema['entities']) && !empty($schema['entities']))
             ? $schema['entities'][0] : ($this->entities->first() ?? $this->entity);
 
+        // Get the most recent created collection of the Entity and check if we need to add a prefix to this Endpoint.
         $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
         if ($entity instanceof Entity && !$entity->getCollections()->isEmpty() &&
             $entity->getCollections()->matching($criteria)->first()->getPrefix()) {
@@ -409,17 +414,19 @@ class Endpoint
         // Create Path array (add default pathArrayEnd to this, different depending on if we create en Endpoint for $entity or $source.)
         $explodedPath = explode('/', $path);
         array_key_exists('pathArrayEnd', $default) && $explodedPath[] = $default['pathArrayEnd'];
-        $this->setPath($explodedPath);
+        $this->setPath($setPath ?? $explodedPath);
         $this->setMethods(array_key_exists('methods', $schema) && $schema['methods'] ? $schema['methods'] : ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']);
 
         array_key_exists('title', $schema) ? $this->setName($schema['title']) :
             (array_key_exists('name', $schema) ? $this->setName($schema['name']) : '');
         array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
-        // etc^...
+        array_key_exists('tags', $schema) ? $this->setTags($schema['tags']) : '';
+        array_key_exists('entities', $schema) ? $this->setEntities($schema['entities']) : ''; // todo: make this work somehow?
 
         /*@depricated kept here for lagacy */
         $this->setMethod(array_key_exists('method', $schema) ? $schema['method'] : 'GET');
         $this->setOperationType(array_key_exists('operationType', $schema) ? $schema['operationType'] : 'GET');
+        array_key_exists('tag', $schema) ? $this->setTag($schema['tag']) : '';
 
         $this->setThrows($schema['throws'] ?? []);
     }
@@ -433,7 +440,10 @@ class Endpoint
     {
         $entities = [];
         foreach ($this->entities as $entity) {
-            $entities[] = $entity->toSchema();
+            if ($entity !== null) {
+                $entity = $entity->toSchema();
+            }
+            $entities[] = $entity;
         }
 
         return [
@@ -450,7 +460,7 @@ class Endpoint
             'throws'                         => $this->getThrows(),
             'tag'                            => $this->getTag(),
             'tags'                           => $this->getTags(),
-            'proxy'                          => $this->getProxy()->toSchema(),
+            'proxy'                          => $this->getProxy() !== null ? $this->getProxy()->toSchema() : null,
             'entities'                       => $entities,
         ];
     }
@@ -851,9 +861,7 @@ class Endpoint
     {
         // Also put it in the array
         if ($entity === null) {
-            foreach ($this->getEntities() as $removeEntity) {
-                $this->removeEntity($removeEntity);
-            }
+            $this->setEntities(null);
         } else {
             $this->addEntity($entity);
         }
@@ -868,6 +876,21 @@ class Endpoint
      */
     public function getEntities(): Collection
     {
+        return $this->entities;
+    }
+
+    public function setEntities(?array $entities): Collection
+    {
+        if ($entities === null || $entities === []) {
+            foreach ($this->getEntities() as $removeEntity) {
+                $this->removeEntity($removeEntity);
+            }
+        } else {
+            foreach ($entities as $entity) {
+                $this->addEntity($entity);
+            }
+        }
+
         return $this->entities;
     }
 

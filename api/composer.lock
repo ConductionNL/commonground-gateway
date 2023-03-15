@@ -5,6 +5,7 @@
         "This file is @generated automatically"
     ],
     "content-hash": "ff49527288113562cf7660ab7602212c",
+    "content-hash": "308538d58c6df21cf2910029178c1925",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -698,16 +699,16 @@
         },
         {
             "name": "commongateway/corebundle",
-            "version": "1.0.26",
+            "version": "1.0.30",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "7bd0ac881ffd91558eb0d1c94cfdd606504ee7a4"
+                "reference": "4f7c4f172294a8739788f91c72412f18f65aaedd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/7bd0ac881ffd91558eb0d1c94cfdd606504ee7a4",
-                "reference": "7bd0ac881ffd91558eb0d1c94cfdd606504ee7a4",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/4f7c4f172294a8739788f91c72412f18f65aaedd",
+                "reference": "4f7c4f172294a8739788f91c72412f18f65aaedd",
                 "shasum": ""
             },
             "require": {
@@ -765,7 +766,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-03-13T13:26:30+00:00"
+            "time": "2023-03-14T10:59:17+00:00"
         },
         {
             "name": "composer/ca-bundle",
