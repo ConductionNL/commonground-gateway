@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9b9ef6d9786675c5f7d3f2fb198bcbdf",
+    "content-hash": "caffebaa1a3335206658bfbd459efa40",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -5277,20 +5277,20 @@
         },
         {
             "name": "open-catalogi/open-catalogi-bundle",
-            "version": "0.0.55",
+            "version": "0.0.59",
             "source": {
                 "type": "git",
                 "url": "https://github.com/OpenCatalogi/OpenCatalogiBundle.git",
-                "reference": "0f179fc995bb11962e7a55fb8ef394c97dc2ba0a"
+                "reference": "1ae0263e07bed71d35307d1643a7273786db3621"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/0f179fc995bb11962e7a55fb8ef394c97dc2ba0a",
-                "reference": "0f179fc995bb11962e7a55fb8ef394c97dc2ba0a",
+                "url": "https://api.github.com/repos/OpenCatalogi/OpenCatalogiBundle/zipball/1ae0263e07bed71d35307d1643a7273786db3621",
+                "reference": "1ae0263e07bed71d35307d1643a7273786db3621",
                 "shasum": ""
             },
             "require": {
-                "commongateway/corebundle": ">=0.0.1",
+                "commongateway/corebundle": ">=1.0.32",
                 "php": ">=7.4"
             },
             "require-dev": {
@@ -5319,9 +5319,9 @@
             ],
             "support": {
                 "issues": "https://github.com/OpenCatalogi/OpenCatalogiBundle/issues",
-                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/0.0.55"
+                "source": "https://github.com/OpenCatalogi/OpenCatalogiBundle/tree/0.0.59"
             },
-            "time": "2023-03-06T14:11:30+00:00"
+            "time": "2023-03-14T16:01:19+00:00"
         },
         {
             "name": "paragonie/random_compat",
