@@ -1092,7 +1092,10 @@ class ObjectEntity
             $valueObject = $this->getValueObject($attribute);
             // Subobjects are a bit complicated
             if ($attribute->getType() == 'object') {
-                if ($valueObject->getValue() == null) {
+                if ($attribute->getObject() === null) {
+                    // todo: error or even critical monolog?
+                    $array[$attribute->getName()] = "Attribute {$attribute->getId()->toString()} of type 'object' has not Entity connected through Attribute->object";
+                } elseif ($valueObject->getValue() == null) {
                     $array[$attribute->getName()] = null;
                 } elseif (!$attribute->getMultiple() && $configuration['level'] < $configuration['maxdepth']) {
                     $object = $valueObject->getObjects()->first();
