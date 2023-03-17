@@ -20,6 +20,13 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
+/**
+ * @Author Sarai Misidjan <sarai@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>, Robert Zondervan <robert@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Command
+ */
 class CronjobCommand extends Command
 {
     private InputInterface $input;
@@ -87,7 +94,7 @@ class CronjobCommand extends Command
                 $this->session->set('currentCronJobThrow', 'commongateway.action.event');
                 $this->session->set('currentCronJobSubThrow', $throw);
             }
-            $actionEvent = new ActionEvent($throw, ($cronjob->getData()));
+            $actionEvent = new ActionEvent($throw, $cronjob->getData());
             $this->eventDispatcher->dispatch($actionEvent, $actionEvent->getType());
 
             $io->comment("Get crontab expression ({$cronjob->getCrontab()}) and set the next and last run properties of the Cronjob");

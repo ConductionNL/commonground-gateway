@@ -2,9 +2,10 @@
 
 namespace App\Service\Validation\Rules;
 
+use Respect\Validation\Rules\AbstractRule;
+
 use function ctype_digit;
 use function mb_strlen;
-use Respect\Validation\Rules\AbstractRule;
 
 /**
  * Copy from BSN Rule.

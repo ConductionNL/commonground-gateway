@@ -15,6 +15,13 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
+/**
+ * Authors: Ruben van der Linde <ruben@conduction.nl>, Robert Zondervan <robert@conduction.nl>, Barry Brands <barry@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>.
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Controller
+ */
 class ZZController extends AbstractController
 {
     /**
@@ -84,7 +91,6 @@ class ZZController extends AbstractController
      */
     private function getParametersFromRequest(?array $parameters = [], ?Request $request): array
     {
-
         // Lets make sure that we always have a path
         if (!isset($parameters['path'])) {
             $parameters['path'] = [];

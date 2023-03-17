@@ -30,8 +30,11 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/admin/actionHandlers"}
  *  })
  * )
+ *
  * @ORM\Entity(repositoryClass=ActionHandlerRepository::class)
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ *
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
@@ -45,10 +48,15 @@ class ActionHandler
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -57,6 +65,7 @@ class ActionHandler
      * @var string The class of the actionHandler
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(max=255)
      *
      * @Groups({"read","write"})

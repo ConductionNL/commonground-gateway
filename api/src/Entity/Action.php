@@ -35,9 +35,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/admin/actions"}
  *  })
  * )
+ *
  * @ORM\HasLifecycleCallbacks
+ *
  * @ORM\Entity(repositoryClass=ActionRepository::class)
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ *
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
@@ -53,22 +57,29 @@ class Action
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $reference;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $version;
@@ -77,6 +88,7 @@ class Action
      * @var string The name of the action
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(max=255)
      *
      * @Groups({"read","read_secure","write"})
@@ -134,6 +146,7 @@ class Action
      * @var int The priority of the action
      *
      * @Assert\NotNull
+     *
      * @Groups({"read","read_secure","write"})
      *
      * @ORM\Column(type="integer")
@@ -151,31 +164,37 @@ class Action
 
     /**
      * @var array|null The configuration of the action
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $configuration = [];
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="boolean", options={"default":false})
      */
     private bool $isLockable = false;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $locked;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $lastRun;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="integer", nullable=true, options={"default": 0})
      */
     private ?int $lastRunTime = 0;
@@ -184,6 +203,7 @@ class Action
      * @var ?bool true if last run went good and false if something went wrong
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="boolean", nullable=true, options={"default": null})
      */
     private ?bool $status = null;
@@ -192,6 +212,7 @@ class Action
      * @var ?bool true if action should be ran
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="boolean", nullable=true, options={"default": true})
      */
     private ?bool $isEnabled = true;
@@ -209,7 +230,9 @@ class Action
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -218,7 +241,9 @@ class Action
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
@@ -231,8 +256,8 @@ class Action
                 return;
             }
 
-            (isset($schema['title']) ? $this->setName($schema['title']) : '');
-            (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
+            isset($schema['title']) ? $this->setName($schema['title']) : '';
+            isset($schema['description']) ? $this->setDescription($schema['description']) : '';
             $this->setClass(get_class($actionHandler));
             $this->setConditions(['==' => [1, 1]]);
             $this->setConfiguration($this->getDefaultConfigFromSchema($schema));
@@ -251,19 +276,19 @@ class Action
             // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://docs.commongateway.nl/schemas/Mapping.schema.json is required');
         }
 
-        (isset($schema['$id']) ? $this->setReference($schema['$id']) : '');
-        (isset($schema['title']) ? $this->setName($schema['title']) : '');
-        (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
-        (isset($schema['version']) ? $this->setVersion($schema['version']) : '');
-        (isset($schema['listens']) ? $this->setListens($schema['listens']) : '');
-        (isset($schema['throws']) ? $this->setThrows($schema['throws']) : '');
-        (isset($schema['conditions']) ? $this->setConditions($schema['conditions']) : '');
-        (isset($schema['configuration']) ? $this->setConfiguration($schema['configuration']) : '');
-        (isset($schema['isLockable']) ? $this->setIsLockable($schema['isLockable']) : '');
-        (isset($schema['isEnabled']) ? $this->setIsEnabled($schema['isEnabled']) : '');
-        (isset($schema['class']) ? $this->setClass($schema['class']) : '');
-        (isset($schema['async']) ? $this->setAsync($schema['async']) : '');
-        (isset($schema['priority']) ? $this->setPriority($schema['priority']) : '');
+        isset($schema['$id']) ? $this->setReference($schema['$id']) : '';
+        isset($schema['title']) ? $this->setName($schema['title']) : '';
+        isset($schema['description']) ? $this->setDescription($schema['description']) : '';
+        isset($schema['version']) ? $this->setVersion($schema['version']) : '';
+        isset($schema['listens']) ? $this->setListens($schema['listens']) : '';
+        isset($schema['throws']) ? $this->setThrows($schema['throws']) : '';
+        isset($schema['conditions']) ? $this->setConditions($schema['conditions']) : '';
+        isset($schema['configuration']) ? $this->setConfiguration($schema['configuration']) : '';
+        isset($schema['isLockable']) ? $this->setIsLockable($schema['isLockable']) : '';
+        isset($schema['isEnabled']) ? $this->setIsEnabled($schema['isEnabled']) : '';
+        isset($schema['class']) ? $this->setClass($schema['class']) : '';
+        isset($schema['async']) ? $this->setAsync($schema['async']) : '';
+        isset($schema['priority']) ? $this->setPriority($schema['priority']) : '';
 
         return  $this;
     }

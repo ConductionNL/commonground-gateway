@@ -65,7 +65,7 @@ class EavSyncSubscriber implements EventSubscriberInterface
 
             $status = 201;
             // Lets do the practical stuff
-           // (isset($event->getRequest()->query->get('endpoint', false))? '': '');
+            // (isset($event->getRequest()->query->get('endpoint', false))? '': '');
         }
 //
         $synchronization = $this->synchronizationService->handleSync($synchronization);

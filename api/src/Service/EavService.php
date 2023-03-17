@@ -16,7 +16,6 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
-use function GuzzleHttp\json_decode;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
@@ -31,6 +30,15 @@ use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
+use function GuzzleHttp\json_decode;
+
+/**
+ * @Author Ruben van der Linde <ruben@conduction.nl>, Robert Zondervan <robert@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>, Gino Kok, Barry Brands <barry@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
+ */
 class EavService
 {
     private EntityManagerInterface $em;

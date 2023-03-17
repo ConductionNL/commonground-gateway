@@ -26,6 +26,13 @@ use Symfony\Component\Stopwatch\Stopwatch;
 // Hack van de maand award
 use Twig\Environment;
 
+/**
+ * @Author Barry Brands <barry@conduction.nl>, Ruben van der Linde <ruben@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>, Robert Zondervan <robert@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
+ */
 class HandlerService
 {
     private EntityManagerInterface $entityManager;
@@ -292,7 +299,6 @@ class HandlerService
 
         // If data contains error dont execute following code and create response
         if (!(isset($data['type']) && isset($data['message']))) {
-
             // Update current Log
             $this->request->getMethod() !== 'DELETE' && $this->logService->saveLog($this->request, null, 2, json_encode($data));
 
@@ -330,31 +336,31 @@ class HandlerService
         $content = $this->request->getContent();
         $contentType = $this->getRequestType('content-type');
         switch ($contentType) {
-      case 'json':
-      case 'jsonhal':
-      case 'jsonld':
-        return json_decode($content, true);
-      case 'xml':
-          $xmlEncoder = new XmlEncoder();
-          $xml = $xmlEncoder->decode($content, $contentType);
-        // otherwise xml will throw its own error bypassing our exception handling
+            case 'json':
+            case 'jsonhal':
+            case 'jsonld':
+                return json_decode($content, true);
+            case 'xml':
+                $xmlEncoder = new XmlEncoder();
+                $xml = $xmlEncoder->decode($content, $contentType);
+                // otherwise xml will throw its own error bypassing our exception handling
 //        libxml_use_internal_errors(true);
-        // string to xml object, encode that to json then decode to array
+                // string to xml object, encode that to json then decode to array
 //        $xml = simplexml_load_string($content);
-        // if xml is false get errors and throw exception
-        if ($xml === false) {
-            $errors = 'Something went wrong decoding xml:';
-            foreach (libxml_get_errors() as $e) {
-                $errors .= ' '.$e->message;
-            }
+                // if xml is false get errors and throw exception
+                if ($xml === false) {
+                    $errors = 'Something went wrong decoding xml:';
+                    foreach (libxml_get_errors() as $e) {
+                        $errors .= ' '.$e->message;
+                    }
 
-            throw new GatewayException($errors, null, null, ['data' => $content, 'path' => 'Request body', 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
+                    throw new GatewayException($errors, null, null, ['data' => $content, 'path' => 'Request body', 'responseType' => Response::HTTP_UNPROCESSABLE_ENTITY]);
+                }
+
+                return json_decode(json_encode($xml), true);
+            default:
+                throw new GatewayException('Unsupported content type', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
         }
-
-        return json_decode(json_encode($xml), true);
-      default:
-        throw new GatewayException('Unsupported content type', null, null, ['data' => $content, 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
-    }
     }
 
     /**
@@ -366,24 +372,24 @@ class HandlerService
     {
         // We only end up here if there are no errors, so we only suply best case senario's
         switch ($this->request->getMethod()) {
-      case 'GET':
-        $status = Response::HTTP_OK;
-        break;
-      case 'POST':
-        $status = Response::HTTP_CREATED;
-        break;
-      case 'PUT':
-        $status = Response::HTTP_OK;
-        break;
-      case 'UPDATE':
-        $status = Response::HTTP_OK;
-        break;
-      case 'DELETE':
-        $status = Response::HTTP_NO_CONTENT;
-        break;
-      default:
-        $status = Response::HTTP_OK;
-    }
+            case 'GET':
+                $status = Response::HTTP_OK;
+                break;
+            case 'POST':
+                $status = Response::HTTP_CREATED;
+                break;
+            case 'PUT':
+                $status = Response::HTTP_OK;
+                break;
+            case 'UPDATE':
+                $status = Response::HTTP_OK;
+                break;
+            case 'DELETE':
+                $status = Response::HTTP_NO_CONTENT;
+                break;
+            default:
+                $status = Response::HTTP_OK;
+        }
 
         $this->stopwatch->start('getRequestType', 'createResponse');
         $acceptType = $this->getRequestType('accept', $endpoint);
@@ -394,33 +400,32 @@ class HandlerService
         $this->stopwatch->start('switchAcceptType', 'createResponse');
         switch ($acceptType) {
             case 'text/csv':
-            // @todo do something with options?
-            $options = [
-                CsvEncoder::ENCLOSURE_KEY   => '"',
-                CsvEncoder::ESCAPE_CHAR_KEY => '+',
-            ];
-            $data = $this->serializer->encode($data, 'csv');
+                // @todo do something with options?
+                $options = [
+                    CsvEncoder::ENCLOSURE_KEY   => '"',
+                    CsvEncoder::ESCAPE_CHAR_KEY => '+',
+                ];
+                $data = $this->serializer->encode($data, 'csv');
 
-            break;
+                break;
             case 'pdf':
-            $document = new Document();
-            // @todo find better name for document
-            $document->setName('pdf');
-            $document->setDocumentType($acceptType);
-            $document->setType('pdf');
-            // If data is not a template json_encode it
-            if (isset($data) && !is_string($data)) {
-                $data = json_encode($data);
-            }
-            $document->setContent($data);
-            $result = $this->templateService->renderPdf($document);
-            break;
+                $document = new Document();
+                // @todo find better name for document
+                $document->setName('pdf');
+                $document->setDocumentType($acceptType);
+                $document->setType('pdf');
+                // If data is not a template json_encode it
+                if (isset($data) && !is_string($data)) {
+                    $data = json_encode($data);
+                }
+                $document->setContent($data);
+                $result = $this->templateService->renderPdf($document);
+                break;
             case 'xml':
                 $options['xml_root_node_name'] = array_keys($data)[0];
                 $options['xml_encoding'] = 'utf-8';
                 $data = $data[array_keys($data)[0]];
                 break;
-
         }
         $this->stopwatch->stop('switchAcceptType');
 
@@ -516,23 +521,23 @@ class HandlerService
 
         // We only end up here if there are no errors, so we only suply best case senario's
         switch (strtoupper($handler->getTemplateType())) {
-      case 'TWIG':
-        $document = $this->templating->createTemplate($handler->getTemplate());
+            case 'TWIG':
+                $document = $this->templating->createTemplate($handler->getTemplate());
 
-        return $document->render($variables);
-        break;
-      case 'MD':
-        return $handler->getTemplate();
-        break;
-      case 'RST':
-        return $handler->getTemplate();
-        break;
-      case 'HTML':
-        return $handler->getTemplate();
-        break;
-      default:
-        throw new GatewayException('Unsupported template type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
-    }
+                return $document->render($variables);
+                break;
+            case 'MD':
+                return $handler->getTemplate();
+                break;
+            case 'RST':
+                return $handler->getTemplate();
+                break;
+            case 'HTML':
+                return $handler->getTemplate();
+                break;
+            default:
+                throw new GatewayException('Unsupported template type', null, null, ['data' => $this->request->getAcceptableContentTypes(), 'path' => null, 'responseType' => Response::HTTP_UNSUPPORTED_MEDIA_TYPE]);
+        }
     }
 
     private function handleDataBeforeEAV(array $data, Handler $handler): array

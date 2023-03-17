@@ -53,7 +53,19 @@ spec:
         - name: vendor
           persistentVolumeClaim:
               claimName: {{ include "commonground-gateway.fullname" . }}-vendor
-
+      initContainers:
+          - name: {{ include "commonground-gateway.fullname" . }}-init
+            securityContext:
+              {{- toYaml .Values.securityContextPhp | nindent 14 }}
+            image: "{{ .Values.php.repository }}:{{ .Values.php.tag | default .Chart.AppVersion }}"
+            imagePullPolicy: {{ .Values.php.pullPolicy }}
+            volumeMounts:
+                - mountPath: /tmp/vendor
+                  name: vendor
+                  readOnly: false
+            command:
+                - bash
+                - /srv/api/docker/php/online-copy-vendor.sh
       containers:
         - name: {{ include "commonground-gateway.fullname" . }}-worker
           securityContext:
@@ -103,6 +115,8 @@ spec:
           env:
             - name: APP_ENV
               value: {{ .Values.config.env }}
+            - name: APP_INIT
+              value: 'false'
             - name: APP_AUTH
               valueFrom:
                 configMapKeyRef:

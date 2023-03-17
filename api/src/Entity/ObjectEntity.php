@@ -14,8 +14,9 @@ use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
-use function Symfony\Component\Translation\t;
 use Symfony\Component\Validator\Constraints as Assert;
+
+use function Symfony\Component\Translation\t;
 
 /**
  * An (data) object that resides within the datalayer of the gateway.
@@ -23,7 +24,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @category Entity
  *
  * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
+ *
  * @ORM\HasLifecycleCallbacks
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  */
 class ObjectEntity
@@ -34,10 +37,15 @@ class ObjectEntity
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -46,6 +54,7 @@ class ObjectEntity
      * @var ?string The name of this Object (configured from a attribute)
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $name = null;
@@ -54,6 +63,7 @@ class ObjectEntity
      * @var string The {at sign} id or self->href of this Object.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $self;
@@ -62,7 +72,9 @@ class ObjectEntity
      * @var string UUID of the external object of this ObjectEntity
      *
      * @Assert\Uuid
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $externalId;
@@ -71,7 +83,9 @@ class ObjectEntity
      * @var string An uri (or url identifier) for this object
      *
      * @Assert\Url
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $uri;
@@ -80,7 +94,9 @@ class ObjectEntity
      * The application that this object belongs to.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\ManyToOne(targetEntity=Application::class, inversedBy="objectEntities")
+     *
      * @MaxDepth(1)
      */
     private ?Application $application = null;
@@ -89,6 +105,7 @@ class ObjectEntity
      * @var string An uuid or uri of an organization
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="objectEntities")
      */
     private ?Organization $organization = null;
@@ -97,20 +114,25 @@ class ObjectEntity
      * @var string An uuid or uri of an owner of this object
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $owner;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="objectEntities", fetch="EAGER")
+     *
      * @MaxDepth(1)
      */
     private ?Entity $entity = null;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"persist","remove"}, orphanRemoval=true)
+     *
      * @MaxDepth(1)
      */
     private $objectValues;
@@ -142,7 +164,9 @@ class ObjectEntity
 
     /**
      * @Groups({"read"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"})
      */
     private $subresourceOf;
@@ -159,12 +183,14 @@ class ObjectEntity
 
     /**
      * @MaxDepth(1)
+     *
      * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="object", fetch="EXTRA_LAZY", cascade={"remove"})
      */
     private Collection $synchronizations;
 
     /**
      * @MaxDepth(1)
+     *
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="object", fetch="EXTRA_LAZY", cascade={"remove","persist"})
      */
     private Collection $usedIn;
@@ -180,7 +206,9 @@ class ObjectEntity
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -189,7 +217,9 @@ class ObjectEntity
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
@@ -251,7 +281,7 @@ class ObjectEntity
                 $endpoints = $this->getEntity()->getEndpoints();
                 foreach ($endpoints as $endpoint) {
                     // We need a GET endpoint
-                    if (!in_array('get', $endpoint->getMethods()) && !in_array('GET', $endpoint->getMethods())) {
+                    if (!in_array('get', $endpoint->getMethods()) && !in_array('GET', $endpoint->getMethods()) && $endpoint->getMethods() !== []) {
                         continue;
                     }
 
@@ -1022,11 +1052,11 @@ class ObjectEntity
     public function toArray(array $configuration = []): array
     {
         // Let's default the config array
-        (!isset($configuration['level']) ? $configuration['level'] = 1 : '');
-        (!isset($configuration['maxdepth']) ? $configuration['maxdepth'] = $this->getEntity()->getMaxDepth() : '');
-        (!isset($configuration['renderedObjects']) ? $configuration['renderedObjects'] = [] : '');
-        (!isset($configuration['embedded']) ? $configuration['embedded'] = false : '');
-        (!isset($configuration['onlyMetadata']) ? $configuration['onlyMetadata'] = false : '');
+        !isset($configuration['level']) ? $configuration['level'] = 1 : '';
+        !isset($configuration['maxdepth']) ? $configuration['maxdepth'] = $this->getEntity()->getMaxDepth() : '';
+        !isset($configuration['renderedObjects']) ? $configuration['renderedObjects'] = [] : '';
+        !isset($configuration['embedded']) ? $configuration['embedded'] = false : '';
+        !isset($configuration['onlyMetadata']) ? $configuration['onlyMetadata'] = false : '';
 
         // Working arrays
         $array = [];
@@ -1062,7 +1092,10 @@ class ObjectEntity
             $valueObject = $this->getValueObject($attribute);
             // Subobjects are a bit complicated
             if ($attribute->getType() == 'object') {
-                if ($valueObject->getValue() == null) {
+                if ($attribute->getObject() === null) {
+                    // todo: error or even critical monolog?
+                    $array[$attribute->getName()] = "Attribute {$attribute->getId()->toString()} of type 'object' has not Entity connected through Attribute->object";
+                } elseif ($valueObject->getValue() == null) {
                     $array[$attribute->getName()] = null;
                 } elseif (!$attribute->getMultiple() && $configuration['level'] < $configuration['maxdepth']) {
                     $object = $valueObject->getObjects()->first();
@@ -1078,7 +1111,21 @@ class ObjectEntity
                         if ($configuration['embedded']) {
                             // todo: put this line back later, with the continue below.
                             // $array[$attribute->getName()] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
-                            $array[$attribute->getName()] = $object->getSelf();
+                            switch ($attribute->getFormat()) {
+                                case 'uuid':
+                                    $array[$attribute->getName()][] = $object->getId()->toString();
+                                    break;
+                                case 'url':
+                                    $array[$attribute->getName()][] = $object->getUri();
+                                    break;
+                                case 'json':
+                                    $array[$attribute->getName()][] = $objectToArray;
+                                    break;
+                                case 'iri':
+                                default:
+                                    $array[$attribute->getName()][] = $object->getSelf();
+                                    break;
+                            }
                             $embedded[$attribute->getName()] = $objectToArray;
                             continue;
                         }
@@ -1103,8 +1150,23 @@ class ObjectEntity
                             if ($configuration['embedded']) {
                                 // todo: put this line back later, with the continue below.
                                 // $array[$attribute->getName()][] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
-                                $array[$attribute->getName()][] = $object->getSelf();
-                                $embedded[$attribute->getName()][] = $objectToArray;
+                                switch ($attribute->getFormat()) {
+                                    case 'uuid':
+                                        $array[$attribute->getName()] = $object->getId()->toString();
+                                        break;
+                                    case 'url':
+                                    case 'uri':
+                                        $array[$attribute->getName()] = $object->getUri();
+                                        break;
+                                    case 'json':
+                                        $array[$attribute->getName()] = $objectToArray;
+                                        break;
+                                    case 'iri':
+                                    default:
+                                        $array[$attribute->getName()] = $object->getSelf();
+                                        break;
+                                }
+                                $embedded[$attribute->getName()] = $objectToArray;
                                 continue; // todo: put this continue back later!
                             }
                             $array[$attribute->getName()][] = $objectToArray;
@@ -1116,7 +1178,7 @@ class ObjectEntity
                         }
                     }
                 }
-                // But normal values are simple
+            // But normal values are simple
             } else {
                 $array[$attribute->getName()] = $valueObject->getValue();
             }
@@ -1344,6 +1406,7 @@ class ObjectEntity
      * This function makes sure that each and every oject alwys has a name when saved
      *
      * @ORM\PrePersist
+     *
      * @ORM\PreUpdate
      */
     public function prePersist(): void

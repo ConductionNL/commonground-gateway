@@ -5,6 +5,7 @@ namespace App\Service;
 use Adbar\Dot;
 use App\Entity\Application;
 use App\Entity\Entity;
+use App\Entity\Gateway;
 use App\Entity\Gateway as Source;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
@@ -33,6 +34,13 @@ use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\SyntaxError;
 
+/**
+ * @Author Robert Zondervan <robert@conduction.nl>, Ruben van der Linde <ruben@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>, Sarai Misidjan <sarai@conduction.nl>, Barry Brands <barry@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
+ */
 class SynchronizationService
 {
     private CallService $callService;
@@ -347,6 +355,7 @@ class SynchronizationService
             $updatedSynchronization = $this->handleSync($synchronization, $result);
 
             $this->entityManager->persist($updatedSynchronization);
+
             $this->entityManager->flush();
 
             if ($config['collectionDelete'] && ($key = array_search($synchronization, $config['existingSynchronizations'])) !== false) {
@@ -476,7 +485,7 @@ class SynchronizationService
             'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService($id), //todo maybe array_merge instead of ??
             'headers'   => array_merge(
                 ['Content-Type' => 'application/json'],
-                ($this->getCallServiceOverwrite('headers') ?? $source->getHeaders()) //todo maybe array_merge instead of ??
+                $this->getCallServiceOverwrite('headers') ?? $source->getHeaders() //todo maybe array_merge instead of ??
             ),
             'method'    => $this->getCallServiceOverwrite('method'),
         ];
@@ -536,7 +545,6 @@ class SynchronizationService
      */
     private function getQueryForCallService(string $id = null): array
     {
-
         // What if we do not have an action?
         if (!isset($this->configuration['apiSource'])) {
             return [];
@@ -720,7 +728,6 @@ class SynchronizationService
             //todo: error, log this
             return null;
         }
-
         $result = $this->callService->decodeResponse($callServiceConfig['source'], $response);
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
@@ -964,7 +971,6 @@ class SynchronizationService
         } else {
             $oldDateModified = $synchronization->getObject()->getDateModified()->getTimestamp();
         }
-
         $sourceObject = $sourceObject ?: $this->getSingleFromSource($synchronization);
 
         if ($sourceObject === null) {
@@ -1414,7 +1420,6 @@ class SynchronizationService
         $sourceObjectDot = new Dot($sourceObject);
 
         $object = $this->populateObject($sourceObject, $object, $method);
-        $object->setUri($synchronization->getSource()->getLocation().$this->getCallServiceEndpoint($synchronization->getSourceId()));
 
         if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
             $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
@@ -1434,5 +1439,51 @@ class SynchronizationService
     private function syncThroughComparing(Synchronization $synchronization): Synchronization
     {
         return $synchronization;
+    }
+
+    /**
+     * Find an object by URL, and synchronize it if it does not exist in the gateway.
+     *
+     * @param string $url    The URL of the object
+     * @param Entity $entity The schema the object should fit into
+     *
+     * @return ObjectEntity|null
+     */
+    public function aquireObject(string $url, Entity $entity): ?ObjectEntity
+    {
+        // 1. Get the domain from the url
+        $parse = parse_url($url);
+        $location = $parse['scheme'].'://'.$parse['host'];
+
+        // 2.c Try to establich a source for the domain
+        $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
+
+        // 2.b The source might be on a path e.g. /v1 so if whe cant find a source let try to cycle
+        foreach (explode('/', $parse['path']) as $pathPart) {
+            if ($pathPart !== '') {
+                $location = $location.'/'.$pathPart;
+            }
+            $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
+            if ($source !== null) {
+                break;
+            }
+        }
+        if ($source instanceof Gateway === false) {
+            return null;
+        }
+
+        // 3 If we have a source we can establich an endpoint.
+        $endpoint = str_replace($location, '', $url);
+
+        // 4 Create sync
+        $synchronization = new Synchronization($source, $entity);
+        $synchronization->setSourceId($url);
+        $synchronization->setEndpoint($endpoint);
+
+        $this->entityManager->persist($synchronization);
+
+        $this->synchronize($synchronization);
+
+        return $synchronization->getObject();
     }
 }
