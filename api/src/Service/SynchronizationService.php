@@ -13,6 +13,7 @@ use App\Event\ActionEvent;
 use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
+use CommonGateway\CoreBundle\Service\FileSystemService;
 use CommonGateway\CoreBundle\Service\MappingService;
 use DateInterval;
 use DateTime;
@@ -44,6 +45,8 @@ use Twig\Error\SyntaxError;
 class SynchronizationService
 {
     private CallService $callService;
+    private FileSystemService $fileSystemService;
+
     private EntityManagerInterface $entityManager;
     private SessionInterface $session;
     private GatewayService $gatewayService;
@@ -81,7 +84,23 @@ class SynchronizationService
      * @param Environment            $twig
      * @param MappingService         $mappingService
      */
-    public function __construct(CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig, EventDispatcherInterface $eventDispatcher, MappingService $mappingService)
+    public function __construct(
+        CallService $callService,
+        EntityManagerInterface $entityManager,
+        SessionInterface $session,
+        GatewayService $gatewayService,
+        FunctionService $functionService,
+        LogService $logService,
+        MessageBusInterface $messageBus,
+        TranslationService $translationService,
+        ObjectEntityService $objectEntityService,
+        ValidatorService $validatorService,
+        EavService $eavService,
+        Environment $twig,
+        EventDispatcherInterface $eventDispatcher,
+        MappingService $mappingService,
+        FileSystemService $fileSystemService
+    )
     {
         $this->callService = $callService;
         $this->entityManager = $entityManager;
@@ -102,6 +121,7 @@ class SynchronizationService
         $this->eventDispatcher = $eventDispatcher;
         $this->logger = new Logger('installation');
         $this->mappingService = $mappingService;
+        $this->fileSystemService = $fileSystemService;
     }
 
     /**
@@ -700,41 +720,48 @@ class SynchronizationService
      *
      * @return array|null The resulting object
      */
-    private function getSingleFromSource(Synchronization $synchronization): ?array
+    public function getSingleFromSource(Synchronization $synchronization): ?array
     {
         $callServiceConfig = $this->getCallServiceConfig($synchronization->getSource(), $synchronization->getSourceId());
 
-        // Get object form source with callservice
-        try {
-            if (isset($this->io)) {
-                $this->io->text("getSingleFromSource with Synchronization->sourceId = {$synchronization->getSourceId()}");
+        $url = \Safe\parse_url($synchronization->getSource()->getLocation());
+
+        if($url['scheme'] === 'http' || $url['scheme'] === 'https') {
+            // Get object form source with callservice
+            try {
+                $this->logger->info("getSingleFromSource with Synchronization->sourceId = {$synchronization->getSourceId()}");
+                $response = $this->callService->call(
+                    $callServiceConfig['source'],
+                    $synchronization->getEndpoint() ?? $callServiceConfig['endpoint'],
+                    $callServiceConfig['method'] ?? 'GET',
+                    [
+                        'body' => '',
+                        'query' => $callServiceConfig['query'],
+                        'headers' => $callServiceConfig['headers'],
+                    ]
+                );
+            } catch (Exception | GuzzleException $exception) {
+                $this->ioCatchException($exception, ['line', 'file', 'message' => [
+                    'preMessage' => 'Error while doing getSingleFromSource: ',
+                ]]);
+
+                //todo: error, log this
+                return null;
             }
-
-            $response = $this->callService->call(
-                $callServiceConfig['source'],
-                $synchronization->getEndpoint() ?? $callServiceConfig['endpoint'],
-                $callServiceConfig['method'] ?? 'GET',
-                [
-                    'body'    => '',
-                    'query'   => $callServiceConfig['query'],
-                    'headers' => $callServiceConfig['headers'],
-                ]
-            );
-        } catch (Exception|GuzzleException $exception) {
-            $this->ioCatchException($exception, ['line', 'file', 'message' => [
-                'preMessage' => 'Error while doing getSingleFromSource: ',
-            ]]);
-
-            //todo: error, log this
-            return null;
+            $result = $this->callService->decodeResponse($callServiceConfig['source'], $response);
+        } else if ($url['scheme'] === 'ftp') {
+            $result = $this->fileSystemService->call($synchronization->getSource(), $synchronization->getEndpoint() ?? $callServiceConfig['endpoint']);
         }
-        $result = $this->callService->decodeResponse($callServiceConfig['source'], $response);
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
         //        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
 
         // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-        return $dot->get($this->configuration['apiSource']['location']['object'], $result);
+        if(isset($this->configuration['apiSource']['location']['object'])) {
+            return $dot->get($this->configuration['apiSource']['location']['object'], $result);
+        }
+
+        return $dot->jsonSerialize();
     }
 
     /**
@@ -1452,7 +1479,7 @@ class SynchronizationService
     public function aquireObject(string $url, Entity $entity): ?ObjectEntity
     {
         // 1. Get the domain from the url
-        $parse = parse_url($url);
+        $parse = \Safe\parse_url($url);
         $location = $parse['scheme'].'://'.$parse['host'];
 
         // 2.c Try to establich a source for the domain
