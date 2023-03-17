@@ -1097,7 +1097,7 @@ class Attribute
 
     public function setObject(?Entity $object): self
     {
-        if (!$object) {
+        if ($this->type === 'object' && $object === null) {
             return $this;
         }
         $this->type = 'object';
@@ -1344,7 +1344,7 @@ class Attribute
         $this->type = $type;
 
         // If the attribute type is changes away from an object we need to drop the object
-        if ($type != 'object' and $this->object) {
+        if ($type !== 'object' && $this->object !== null) {
             $this->object = null;
         }
 
