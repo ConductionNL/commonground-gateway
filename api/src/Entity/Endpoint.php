@@ -421,7 +421,7 @@ class Endpoint
             (array_key_exists('name', $schema) ? $this->setName($schema['name']) : '');
         array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
         array_key_exists('tags', $schema) ? $this->setTags($schema['tags']) : '';
-        array_key_exists('entities', $schema) ? $this->setEntities($schema['entities']) : ''; // todo: make this work somehow?
+        array_key_exists('entities', $schema) ? $this->setEntities($schema['entities']) : '';
 
         /*@depricated kept here for lagacy */
         $this->setMethod(array_key_exists('method', $schema) ? $schema['method'] : 'GET');
