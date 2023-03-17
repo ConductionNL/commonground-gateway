@@ -1126,15 +1126,15 @@ class ObjectEntity
                                     $array[$attribute->getName()][] = $object->getSelf();
                                     break;
                             }
-                            $embedded[$attribute->getName()] = $objectToArray;
+                            $embedded[$attribute->getName()][] = $objectToArray;
                             continue;
                         }
-                        $array[$attribute->getName()] = $objectToArray; // getValue will return a single ObjectEntity
+                        $array[$attribute->getName()][] = $objectToArray; // getValue will return a single ObjectEntity
                     }
                     // If we don't set the full object then we want to set self
                     else {
                         // $array[$attribute->getName()] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
-                        $array[$attribute->getName()] = $object->getSelf();
+                        $array[$attribute->getName()][] = $object->getSelf();
                     }
                 } elseif ($configuration['level'] < $configuration['maxdepth']) {
                     $currentObjects[] = $valueObject->getObjects()->toArray();
@@ -1169,7 +1169,7 @@ class ObjectEntity
                                 $embedded[$attribute->getName()] = $objectToArray;
                                 continue; // todo: put this continue back later!
                             }
-                            $array[$attribute->getName()][] = $objectToArray;
+                            $array[$attribute->getName()] = $objectToArray;
                         }
                         // If we don't set the full object then we want to set self
                         else {
