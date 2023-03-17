@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "19983b908bb9227279a18440443ec30f",
+    "content-hash": "59768fb0f8e0539f3ec21d1be2faf2c7",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -660,20 +660,20 @@
         },
         {
             "name": "common-gateway/brp-bundle",
-            "version": "0.0.12",
+            "version": "0.0.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/BRPBundle.git",
-                "reference": "7309f5bca00bbb3ed64563169b47bdbe176f4791"
+                "reference": "f20ac15634a659bc82d23b0d694cb83589478751"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/BRPBundle/zipball/7309f5bca00bbb3ed64563169b47bdbe176f4791",
-                "reference": "7309f5bca00bbb3ed64563169b47bdbe176f4791",
+                "url": "https://api.github.com/repos/CommonGateway/BRPBundle/zipball/f20ac15634a659bc82d23b0d694cb83589478751",
+                "reference": "f20ac15634a659bc82d23b0d694cb83589478751",
                 "shasum": ""
             },
             "require": {
-                "commongateway/corebundle": ">=0.0.1",
+                "commongateway/corebundle": ">=1.0.32",
                 "php": ">=7.4"
             },
             "require-dev": {
@@ -702,9 +702,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/BRPBundle/issues",
-                "source": "https://github.com/CommonGateway/BRPBundle/tree/0.0.12"
+                "source": "https://github.com/CommonGateway/BRPBundle/tree/0.0.23"
             },
-            "time": "2023-02-03T14:55:20+00:00"
+            "time": "2023-03-14T16:00:29+00:00"
         },
         {
             "name": "common-gateway/formio-bundle",
@@ -746,16 +746,16 @@
         },
         {
             "name": "common-gateway/huwelijksplanner-bundle",
-            "version": "0.0.33",
+            "version": "dev-feature/pr-comments",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/HuwelijksplannerBundle.git",
-                "reference": "3d7d460cd855846e9903cfd209a26fba89bfebe4"
+                "reference": "6b015537c27f71116e59d4fa19b7662f4f58db2c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/HuwelijksplannerBundle/zipball/3d7d460cd855846e9903cfd209a26fba89bfebe4",
-                "reference": "3d7d460cd855846e9903cfd209a26fba89bfebe4",
+                "url": "https://api.github.com/repos/CommonGateway/HuwelijksplannerBundle/zipball/6b015537c27f71116e59d4fa19b7662f4f58db2c",
+                "reference": "6b015537c27f71116e59d4fa19b7662f4f58db2c",
                 "shasum": ""
             },
             "require": {
@@ -790,26 +790,26 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/HuwelijksplannerBundle/issues",
-                "source": "https://github.com/CommonGateway/HuwelijksplannerBundle/tree/0.0.33"
+                "source": "https://github.com/CommonGateway/HuwelijksplannerBundle/tree/feature/pr-comments"
             },
-            "time": "2023-02-22T09:28:45+00:00"
+            "time": "2023-03-06T14:56:01+00:00"
         },
         {
             "name": "common-gateway/klanten-bundle",
-            "version": "0.0.22",
+            "version": "0.0.34",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/KlantenBundle.git",
-                "reference": "7afb244590fdc389226f8fb097a9d7aad597ca92"
+                "reference": "6371d6461f0f1cfca38293dc12dc106d02ff5870"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/KlantenBundle/zipball/7afb244590fdc389226f8fb097a9d7aad597ca92",
-                "reference": "7afb244590fdc389226f8fb097a9d7aad597ca92",
+                "url": "https://api.github.com/repos/CommonGateway/KlantenBundle/zipball/6371d6461f0f1cfca38293dc12dc106d02ff5870",
+                "reference": "6371d6461f0f1cfca38293dc12dc106d02ff5870",
                 "shasum": ""
             },
             "require": {
-                "commongateway/corebundle": ">=0.0.1",
+                "commongateway/corebundle": ">=1.0.32",
                 "php": ">=7.4"
             },
             "require-dev": {
@@ -838,26 +838,26 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/KlantenBundle/issues",
-                "source": "https://github.com/CommonGateway/KlantenBundle/tree/0.0.22"
+                "source": "https://github.com/CommonGateway/KlantenBundle/tree/0.0.34"
             },
-            "time": "2023-02-06T10:24:21+00:00"
+            "time": "2023-03-14T16:00:16+00:00"
         },
         {
             "name": "common-gateway/zgw-bundle",
-            "version": "0.1.20",
+            "version": "0.1.30",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/ZGWBundle.git",
-                "reference": "dea6b5b06df4da0c0704df3ca17d764f41bf8de9"
+                "reference": "3d20f19e44f3c7979d0f210526e475fd90f5f32f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/dea6b5b06df4da0c0704df3ca17d764f41bf8de9",
-                "reference": "dea6b5b06df4da0c0704df3ca17d764f41bf8de9",
+                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/3d20f19e44f3c7979d0f210526e475fd90f5f32f",
+                "reference": "3d20f19e44f3c7979d0f210526e475fd90f5f32f",
                 "shasum": ""
             },
             "require": {
-                "commongateway/corebundle": ">=0.0.1",
+                "commongateway/corebundle": ">=1.0.32",
                 "php": ">=7.4"
             },
             "require-dev": {
@@ -886,22 +886,22 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.20"
+                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.30"
             },
-            "time": "2023-02-09T09:01:05+00:00"
+            "time": "2023-03-14T16:00:10+00:00"
         },
         {
             "name": "commongateway/corebundle",
-            "version": "1.0.8",
+            "version": "1.0.33",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "7a1347f694406285d7d1ffc6a7c0039a62dddcd5"
+                "reference": "229006961ab7d8aa4602244337ea6bc740f913d8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/7a1347f694406285d7d1ffc6a7c0039a62dddcd5",
-                "reference": "7a1347f694406285d7d1ffc6a7c0039a62dddcd5",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/229006961ab7d8aa4602244337ea6bc740f913d8",
+                "reference": "229006961ab7d8aa4602244337ea6bc740f913d8",
                 "shasum": ""
             },
             "require": {
@@ -959,7 +959,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-03-02T15:13:23+00:00"
+            "time": "2023-03-15T10:59:15+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -15087,6 +15087,7 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "common-gateway/formio-bundle": 20,
+        "common-gateway/huwelijksplanner-bundle": 20,
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,
         "conduction/samlbundle": 20
