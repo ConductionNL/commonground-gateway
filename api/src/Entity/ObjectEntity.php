@@ -1113,28 +1113,28 @@ class ObjectEntity
                             // $array[$attribute->getName()] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
                             switch ($attribute->getFormat()) {
                                 case 'uuid':
-                                    $array[$attribute->getName()][] = $object->getId()->toString();
+                                    $array[$attribute->getName()] = $object->getId()->toString();
                                     break;
                                 case 'url':
-                                    $array[$attribute->getName()][] = $object->getUri();
+                                    $array[$attribute->getName()] = $object->getUri();
                                     break;
                                 case 'json':
-                                    $array[$attribute->getName()][] = $objectToArray;
+                                    $array[$attribute->getName()] = $objectToArray;
                                     break;
                                 case 'iri':
                                 default:
-                                    $array[$attribute->getName()][] = $object->getSelf();
+                                    $array[$attribute->getName()] = $object->getSelf();
                                     break;
                             }
-                            $embedded[$attribute->getName()][] = $objectToArray;
+                            $embedded[$attribute->getName()] = $objectToArray;
                             continue;
                         }
-                        $array[$attribute->getName()][] = $objectToArray; // getValue will return a single ObjectEntity
+                        $array[$attribute->getName()] = $objectToArray; // getValue will return a single ObjectEntity
                     }
                     // If we don't set the full object then we want to set self
                     else {
                         // $array[$attribute->getName()] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
-                        $array[$attribute->getName()][] = $object->getSelf();
+                        $array[$attribute->getName()] = $object->getSelf();
                     }
                 } elseif ($configuration['level'] < $configuration['maxdepth']) {
                     $currentObjects[] = $valueObject->getObjects()->toArray();
@@ -1152,24 +1152,24 @@ class ObjectEntity
                                 // $array[$attribute->getName()][] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
                                 switch ($attribute->getFormat()) {
                                     case 'uuid':
-                                        $array[$attribute->getName()] = $object->getId()->toString();
+                                        $array[$attribute->getName()][] = $object->getId()->toString();
                                         break;
                                     case 'url':
                                     case 'uri':
-                                        $array[$attribute->getName()] = $object->getUri();
+                                        $array[$attribute->getName()][] = $object->getUri();
                                         break;
                                     case 'json':
-                                        $array[$attribute->getName()] = $objectToArray;
+                                        $array[$attribute->getName()][] = $objectToArray;
                                         break;
                                     case 'iri':
                                     default:
-                                        $array[$attribute->getName()] = $object->getSelf();
+                                        $array[$attribute->getName()][] = $object->getSelf();
                                         break;
                                 }
-                                $embedded[$attribute->getName()] = $objectToArray;
+                                $embedded[$attribute->getName()][] = $objectToArray;
                                 continue; // todo: put this continue back later!
                             }
-                            $array[$attribute->getName()] = $objectToArray;
+                            $array[$attribute->getName()][] = $objectToArray;
                         }
                         // If we don't set the full object then we want to set self
                         else {
