@@ -14,12 +14,14 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class ProxySubscriber implements EventSubscriberInterface
 {
     private EntityManagerInterface $entityManager;
     private CallService $callService;
     private RequestService $requestService;
+    private SerializerInterface $serializer;
 
     public const PROXY_ROUTES = [
         'api_gateways_get_proxy_item',
@@ -30,11 +32,12 @@ class ProxySubscriber implements EventSubscriberInterface
         'api_gateways_delete_proxy_single_item',
     ];
 
-    public function __construct(EntityManagerInterface $entityManager, CallService $callService, RequestService $requestService)
+    public function __construct(EntityManagerInterface $entityManager, CallService $callService, RequestService $requestService, SerializerInterface $serializer)
     {
         $this->entityManager = $entityManager;
         $this->callService = $callService;
         $this->requestService = $requestService;
+        $this->serializer = $serializer;
     }
 
     public static function getSubscribedEvents()
@@ -81,8 +84,16 @@ class ProxySubscriber implements EventSubscriberInterface
                     'body'    => $event->getRequest()->getContent(),
                 ]
             );
-        } catch (ServerException|ClientException|RequestException $e) {
-            $result = $e->getResponse();
+        } catch (ServerException|ClientException|RequestException $exception) {
+            $result = $exception->getResponse();
+
+            if (empty($result->getBody()->getContents())) {
+                $body = $this->serializer->serialize([
+                    "Message" => $exception->getMessage(),
+                    "Body" => $result->getBody()->getContents()
+                ], 'json');
+                $result = new \GuzzleHttp\Psr7\Response($result->getStatusCode(), $result->getHeaders(), $body);
+            }
 
             // If error catched dont pass event->getHeaders (causes infinite loop)
             $wentWrong = true;
