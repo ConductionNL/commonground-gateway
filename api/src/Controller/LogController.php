@@ -130,7 +130,10 @@ class LogController extends AbstractController
             $filter['_extend'], $filter['_search'], $filter['_order'], $filter['_fields']);
         $completeFilter = $this->setPagination($limit, $start, $completeFilter);
 
-        $content = json_encode(['results' => $collection->find($filter, ['limit' => $limit, 'skip' => $start])->toArray(), 'page' => intval($completeFilter['_page'] ?? 1), 'count' => $total = $collection->count($filter), 'pages' => floor($total / $limit)]);
+        $order = isset($completeFilter['_order']) ? str_replace(['ASC', 'asc', 'DESC', 'desc'], [1, 1, -1, -1], $completeFilter['_order']) : [];
+        !empty($order) && $order[array_keys($order)[0]] = (int) $order[array_keys($order)[0]];
+
+        $content = json_encode(['results' => $collection->find($filter, ['limit' => $limit, 'skip' => $start, 'order' => $order])->toArray(), 'page' => intval($completeFilter['_page'] ?? 1), 'count' => $total = $collection->count($filter), 'pages' => floor($total / $limit)]);
 
         return new Response($content, $status, ['Content-type' => 'application/json']);
     }
