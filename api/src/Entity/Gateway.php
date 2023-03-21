@@ -782,6 +782,7 @@ class Gateway
         array_key_exists('type', $schema) ? $this->setType($schema['type']) : '';
         array_key_exists('configuration', $schema) ? $this->setConfiguration($schema['configuration']) : '';
         array_key_exists('endpointsConfig', $schema) ? $this->setEndpointsConfig($schema['endpointsConfig']) : '';
+        array_key_exists('isEnabled', $schema) ? $this->setIsEnabled($schema['isEnabled']) : '';
 
         return $this;
     }
@@ -814,6 +815,7 @@ class Gateway
             'type'                           => $this->getType(),
             'configuration'                  => $this->getConfiguration(),
             'endpointsConfig'                => $this->getEndpointsConfig(),
+            'isEnabled'                      => $this->getIsEnabled(),
         ];
     }
 
