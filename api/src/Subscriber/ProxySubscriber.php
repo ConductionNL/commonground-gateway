@@ -89,8 +89,8 @@ class ProxySubscriber implements EventSubscriberInterface
 
             if (empty($result->getBody()->getContents())) {
                 $body = $this->serializer->serialize([
-                    "Message" => $exception->getMessage(),
-                    "Body" => $result->getBody()->getContents()
+                    'Message' => $exception->getMessage(),
+                    'Body'    => $result->getBody()->getContents(),
                 ], 'json');
                 $result = new \GuzzleHttp\Psr7\Response($result->getStatusCode(), $result->getHeaders(), $body);
             }
