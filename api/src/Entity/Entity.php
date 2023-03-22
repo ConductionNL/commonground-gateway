@@ -434,6 +434,15 @@ class Entity
      */
     private bool $exclude = false;
 
+    /**
+     * @var bool Whether the object of the entity should be persisted to the database
+     *
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="boolean", options={"default": false}, nullable=true)
+     */
+    private bool $persist = true;
+
     public function __toString()
     {
         return $this->getName().' ('.$this->getId().')';
@@ -1261,6 +1270,26 @@ class Entity
     public function setExclude(bool $exclude): self
     {
         $this->exclude = $exclude;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getPersist(): bool
+    {
+        return $this->persist;
+    }
+
+    /**
+     * @param bool $persist
+     *
+     * @return Entity
+     */
+    public function setPersist(bool $persist): self
+    {
+        $this->persist = $persist;
 
         return $this;
     }
