@@ -1,0 +1,26 @@
+name: php-cbf
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: cs2pr, phpcbf
+
+      - name: Run phpcbf
+        run: phpcbf .
+        continue-on-error: true
+      - name: Git commit
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email ""
+          git add src
+          git commit -m "Update src from PHP Codesniffer" || echo "No changes to commit"
+          git push
