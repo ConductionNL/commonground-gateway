@@ -130,10 +130,15 @@ class LogController extends AbstractController
             $filter['_extend'], $filter['_search'], $filter['_order'], $filter['_fields']);
         $completeFilter = $this->setPagination($limit, $start, $completeFilter);
 
-        $order = isset($completeFilter['_order']) ? str_replace(['ASC', 'asc', 'DESC', 'desc'], [1, 1, -1, -1], $completeFilter['_order']) : [];
+        $order = isset($completeFilter['_order']) === true ? str_replace(['ASC', 'asc', 'DESC', 'desc'], [1, 1, -1, -1], $completeFilter['_order']) : [];
         !empty($order) && $order[array_keys($order)[0]] = (int) $order[array_keys($order)[0]];
 
-        $content = json_encode(['results' => $collection->find($filter, ['limit' => $limit, 'skip' => $start, 'sort' => $order])->toArray(), 'page' => intval($completeFilter['_page'] ?? 1), 'count' => $total = $collection->countDocuments($filter), 'pages' => ceil($total / $limit)]);
+        $content = json_encode([
+            'results' => $collection->find($filter, ['limit' => $limit, 'skip' => $start, 'sort' => $order])->toArray(),
+            'page' => ((int) $completeFilter['_page'] ?? 1),
+            'count' => $total = $collection->countDocuments($filter),
+            'pages' => ceil($total / $limit)
+        ]);
 
         return new Response($content, $status, ['Content-type' => 'application/json']);
     }
