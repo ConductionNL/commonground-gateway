@@ -18,7 +18,7 @@
         "common-gateway/huwelijksplanner-bundle": "dev-feature/pr-comments",
         "common-gateway/klanten-bundle": "^0.0.34",
         "common-gateway/zgw-bundle": "^0.1.30",
-        "commongateway/corebundle": "^1.0.33",
+        "commongateway/corebundle": "*",
         "composer/package-versions-deprecated": "1.11.99.3",
         "conduction/commongroundbundle": "dev-feature-gateway",
         "conduction/digidbundle": "dev-master",

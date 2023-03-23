@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "59768fb0f8e0539f3ec21d1be2faf2c7",
+    "content-hash": "56daa8bddfae4bd8be315487e116b270",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -750,19 +750,19 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/HuwelijksplannerBundle.git",
-                "reference": "6b015537c27f71116e59d4fa19b7662f4f58db2c"
+                "reference": "fd873f22565548ad02765e12fab31b1088113ed3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/HuwelijksplannerBundle/zipball/6b015537c27f71116e59d4fa19b7662f4f58db2c",
-                "reference": "6b015537c27f71116e59d4fa19b7662f4f58db2c",
+                "url": "https://api.github.com/repos/CommonGateway/HuwelijksplannerBundle/zipball/fd873f22565548ad02765e12fab31b1088113ed3",
+                "reference": "fd873f22565548ad02765e12fab31b1088113ed3",
                 "shasum": ""
             },
             "require": {
-                "common-gateway/brp-bundle": ">=0.0.12",
-                "common-gateway/klanten-bundle": ">=0.0.22",
-                "common-gateway/zgw-bundle": ">=0.0.19",
-                "commongateway/corebundle": ">=0.0.1",
+                "common-gateway/brp-bundle": ">=0.0.23",
+                "common-gateway/klanten-bundle": ">=0.0.34",
+                "common-gateway/zgw-bundle": ">=0.1.30",
+                "commongateway/corebundle": ">=1.0.33",
                 "php": ">=7.4"
             },
             "require-dev": {
@@ -771,7 +771,7 @@
             "type": "symfony-bundle",
             "autoload": {
                 "psr-4": {
-                    "CommonGateway\\HuwelijksplannerBundle\\": ""
+                    "CommonGateway\\HuwelijksplannerBundle\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -792,7 +792,7 @@
                 "issues": "https://github.com/CommonGateway/HuwelijksplannerBundle/issues",
                 "source": "https://github.com/CommonGateway/HuwelijksplannerBundle/tree/feature/pr-comments"
             },
-            "time": "2023-03-06T14:56:01+00:00"
+            "time": "2023-03-22T14:31:57+00:00"
         },
         {
             "name": "common-gateway/klanten-bundle",
@@ -892,16 +892,16 @@
         },
         {
             "name": "commongateway/corebundle",
-            "version": "1.0.33",
+            "version": "1.0.41",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "229006961ab7d8aa4602244337ea6bc740f913d8"
+                "reference": "4628030cb0b8388f57b70a06a7caea6689122df9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/229006961ab7d8aa4602244337ea6bc740f913d8",
-                "reference": "229006961ab7d8aa4602244337ea6bc740f913d8",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/4628030cb0b8388f57b70a06a7caea6689122df9",
+                "reference": "4628030cb0b8388f57b70a06a7caea6689122df9",
                 "shasum": ""
             },
             "require": {
@@ -959,7 +959,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-03-15T10:59:15+00:00"
+            "time": "2023-03-22T14:12:49+00:00"
         },
         {
             "name": "composer/ca-bundle",
