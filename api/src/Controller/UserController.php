@@ -276,11 +276,9 @@ class UserController extends AbstractController
      */
     public function ApiLogoutAction(Request $request, CommonGroundService $commonGroundService)
     {
-        if ($request->headers->has('Authorization')) {
-            $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
-            $user = $commonGroundService->createResource(['jwtToken' => $token], ['component' => 'uc', 'type' => 'logout'], false, false, false, false);
-        }
+        $request->getSession()->clear();
         $request->getSession()->invalidate();
+
         $response = new Response(
             json_encode(['status' => 'logout successful']),
             200,
@@ -288,7 +286,13 @@ class UserController extends AbstractController
                 'Content-type' => 'application/json',
             ]
         );
+
+        $response->headers->remove('Set-Cookie');
         $response->headers->clearCookie('PHPSESSID', '/', null, true, true, $this->getParameter('samesite'));
+
+        if ($request->query->has('redirectUrl') === true) {
+            return $this->redirect($request->query->get('redirectUrl'));
+        }
 
         return $response;
     }
