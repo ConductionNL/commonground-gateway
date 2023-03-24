@@ -70,19 +70,21 @@ class SynchronizationService
     private bool $asyncError = false;
 
     /**
-     * @param CallService            $callService
+     * @param CallService $callService
      * @param EntityManagerInterface $entityManager
-     * @param SessionInterface       $session
-     * @param GatewayService         $gatewayService
-     * @param FunctionService        $functionService
-     * @param LogService             $logService
-     * @param MessageBusInterface    $messageBus
-     * @param TranslationService     $translationService
-     * @param ObjectEntityService    $objectEntityService
-     * @param ValidatorService       $validatorService
-     * @param EavService             $eavService
-     * @param Environment            $twig
-     * @param MappingService         $mappingService
+     * @param SessionInterface $session
+     * @param GatewayService $gatewayService
+     * @param FunctionService $functionService
+     * @param LogService $logService
+     * @param MessageBusInterface $messageBus
+     * @param TranslationService $translationService
+     * @param ObjectEntityService $objectEntityService
+     * @param ValidatorService $validatorService
+     * @param EavService $eavService
+     * @param Environment $twig
+     * @param EventDispatcherInterface $eventDispatcher
+     * @param MappingService $mappingService
+     * @param FileSystemService $fileSystemService
      */
     public function __construct(
         CallService $callService,
@@ -726,7 +728,7 @@ class SynchronizationService
 
         $url = \Safe\parse_url($synchronization->getSource()->getLocation());
 
-        if($url['scheme'] === 'http' || $url['scheme'] === 'https') {
+        if ($url['scheme'] === 'http' || $url['scheme'] === 'https') {
             // Get object form source with callservice
             try {
                 $this->logger->info("getSingleFromSource with Synchronization->sourceId = {$synchronization->getSourceId()}");

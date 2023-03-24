@@ -5,6 +5,7 @@ namespace App\Subscriber;
 use ApiPlatform\Core\EventListener\EventPriorities;
 use App\Entity\Gateway as Source;
 use CommonGateway\CoreBundle\Service\CallService;
+use CommonGateway\CoreBundle\Service\FileSystemService;
 use CommonGateway\CoreBundle\Service\RequestService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\ClientException;
@@ -20,6 +21,7 @@ class ProxySubscriber implements EventSubscriberInterface
 {
     private EntityManagerInterface $entityManager;
     private CallService $callService;
+    private FileSystemService $fileSystemService;
     private RequestService $requestService;
     private SerializerInterface $serializer;
 
@@ -32,10 +34,11 @@ class ProxySubscriber implements EventSubscriberInterface
         'api_gateways_delete_proxy_single_item',
     ];
 
-    public function __construct(EntityManagerInterface $entityManager, CallService $callService, RequestService $requestService, SerializerInterface $serializer)
+    public function __construct(EntityManagerInterface $entityManager, CallService $callService, FileSystemService $fileSystemService, RequestService $requestService, SerializerInterface $serializer)
     {
         $this->entityManager = $entityManager;
         $this->callService = $callService;
+        $this->fileSystemService = $fileSystemService;
         $this->requestService = $requestService;
         $this->serializer = $serializer;
     }
@@ -73,27 +76,37 @@ class ProxySubscriber implements EventSubscriberInterface
         unset($headers['x-endpoint']);
         unset($headers['x-method']);
 
-        try {
-            $result = $this->callService->call(
-                $source,
-                $endpoint,
-                $method,
-                [
-                    'headers' => $headers,
-                    'query'   => $this->requestService->realRequestQueryAll($method, $event->getRequest()->getQueryString()),
-                    'body'    => $event->getRequest()->getContent(),
-                ]
-            );
-        } catch (ServerException|ClientException|RequestException $exception) {
-            $result = $exception->getResponse();
+        $url = parse_url($source->getLocation());
 
-            if (empty($result->getBody()->getContents())) {
-                $body = $this->serializer->serialize([
-                    'Message' => $exception->getMessage(),
-                    'Body'    => $result->getBody()->getContents(),
-                ], 'json');
-                $result = new \GuzzleHttp\Psr7\Response($result->getStatusCode(), $result->getHeaders(), $body);
+        try {
+            if ($url['scheme'] === 'http' || $url['scheme'] === 'https') {
+                $result = $this->callService->call(
+                    $source,
+                    $endpoint,
+                    $method,
+                    [
+                        'headers' => $headers,
+                        'query'   => $this->requestService->realRequestQueryAll($method, $event->getRequest()->getQueryString()),
+                        'body'    => $event->getRequest()->getContent(),
+                    ]
+                );
+            } else {
+                $result = $this->fileSystemService->call($source, $endpoint);
+                $result = new \GuzzleHttp\Psr7\Response(200, [], $this->serializer->serialize($result, 'json'));
             }
+        } catch (ServerException|ClientException|RequestException $exception) {
+            $statusCode = $exception->getCode() ?? 500;
+            if (method_exists(get_class($exception), 'getResponse') === true && $exception->getResponse() !== null) {
+                $body = $exception->getResponse()->getBody()->getContents();
+                $statusCode = $exception->getResponse()->getStatusCode();
+                $headers = $exception->getResponse()->getHeaders();
+            }
+            $content = $this->serializer->serialize([
+                'Message' => $exception->getMessage(),
+                'Body'    => $body ?? "Can\'t get a response & body for this type of Exception: ".get_class($exception),
+            ], 'json');
+
+            $result = new \GuzzleHttp\Psr7\Response($statusCode, $headers, $content);
 
             // If error catched dont pass event->getHeaders (causes infinite loop)
             $wentWrong = true;
