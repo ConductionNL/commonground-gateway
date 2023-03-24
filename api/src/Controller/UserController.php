@@ -290,7 +290,7 @@ class UserController extends AbstractController
         $response->headers->remove('Set-Cookie');
         $response->headers->clearCookie('PHPSESSID', '/', null, true, true, $this->getParameter('samesite'));
 
-        if($request->query->has('redirectUrl') === true) {
+        if ($request->query->has('redirectUrl') === true) {
             return $this->redirect($request->query->get('redirectUrl'));
         }
 
