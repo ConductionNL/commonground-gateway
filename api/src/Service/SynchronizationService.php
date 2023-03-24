@@ -13,7 +13,7 @@ use App\Event\ActionEvent;
 use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
-use CommonGateway\CoreBundle\Service\FileSystemService;
+use CommonGateway\CoreBundle\Service\FileSystemHandlerService;
 use CommonGateway\CoreBundle\Service\MappingService;
 use DateInterval;
 use DateTime;
@@ -45,7 +45,7 @@ use Twig\Error\SyntaxError;
 class SynchronizationService
 {
     private CallService $callService;
-    private FileSystemService $fileSystemService;
+    private FileSystemHandlerService $fileSystemService;
 
     private EntityManagerInterface $entityManager;
     private SessionInterface $session;
@@ -84,7 +84,7 @@ class SynchronizationService
      * @param Environment $twig
      * @param EventDispatcherInterface $eventDispatcher
      * @param MappingService $mappingService
-     * @param FileSystemService $fileSystemService
+     * @param FileSystemHandlerService $fileSystemService
      */
     public function __construct(
         CallService $callService,
@@ -101,7 +101,7 @@ class SynchronizationService
         Environment $twig,
         EventDispatcherInterface $eventDispatcher,
         MappingService $mappingService,
-        FileSystemService $fileSystemService
+        FileSystemHandlerService $fileSystemService
     )
     {
         $this->callService = $callService;
