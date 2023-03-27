@@ -5,7 +5,7 @@ namespace App\Subscriber;
 use ApiPlatform\Core\EventListener\EventPriorities;
 use App\Entity\Gateway as Source;
 use CommonGateway\CoreBundle\Service\CallService;
-use CommonGateway\CoreBundle\Service\FileSystemHandlerService;
+use CommonGateway\CoreBundle\Service\FileSystemHandleService;
 use CommonGateway\CoreBundle\Service\RequestService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\ClientException;
@@ -21,7 +21,7 @@ class ProxySubscriber implements EventSubscriberInterface
 {
     private EntityManagerInterface $entityManager;
     private CallService $callService;
-    private FileSystemHandlerService $fileSystemService;
+    private FileSystemHandleService $fileSystemService;
     private RequestService $requestService;
     private SerializerInterface $serializer;
 
@@ -34,7 +34,7 @@ class ProxySubscriber implements EventSubscriberInterface
         'api_gateways_delete_proxy_single_item',
     ];
 
-    public function __construct(EntityManagerInterface $entityManager, CallService $callService, FileSystemHandlerService $fileSystemService, RequestService $requestService, SerializerInterface $serializer)
+    public function __construct(EntityManagerInterface $entityManager, CallService $callService, FileSystemHandleService $fileSystemService, RequestService $requestService, SerializerInterface $serializer)
     {
         $this->entityManager = $entityManager;
         $this->callService = $callService;
