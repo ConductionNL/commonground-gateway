@@ -21,4 +21,5 @@ return [
     Endroid\QrCodeBundle\EndroidQrCodeBundle::class                            => ['all' => true],
     Symfony\Bundle\MonologBundle\MonologBundle::class                          => ['all' => true],
     LarpingBase\LarpingBundle\LarpingBundle::class                             => ['all' => true],
+    League\FlysystemBundle\FlysystemBundle::class                              => ['all' => true],
 ];
