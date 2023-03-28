@@ -208,7 +208,7 @@ class Gateway
      *
      * @ORM\Column(type="text", nullable=true)
      */
-    private ?string $description = '';
+    private ?string $description = null = '';
 
     /**
      * @Groups({"read", "write"})

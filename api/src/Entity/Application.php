@@ -93,7 +93,7 @@ class Application
      *
      * @ORM\Column(type="text", nullable=true)
      */
-    private ?string $description;
+    private ?string $description = null;
 
     /**
      * The hosts that this applications uses, keep in ind that a host is exluding a trailing slach / and https:// ot http://.

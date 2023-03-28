@@ -91,7 +91,7 @@ class Handler
      *
      * @ORM\Column(type="text", nullable=true)
      */
-    private ?string $description;
+    private ?string $description = null;
 
     /**
      * @Assert\Choice({"*", "GET", "POST", "PUT", "PATCH", "DELETE", "get", "post", "put", "patch", "delete"}, multiple=true)

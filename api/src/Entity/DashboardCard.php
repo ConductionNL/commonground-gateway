@@ -73,7 +73,7 @@ class DashboardCard
      *
      * @ORM\Column(type="text", nullable=true)
      */
-    private ?string $description;
+    private ?string $description = null;
 
     /**
      * The type of the card.

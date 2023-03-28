@@ -87,7 +87,7 @@ class Purpose
      *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $description;
+    private ?string $description = null;
 
     /**
      * @Groups({"read", "write"})
