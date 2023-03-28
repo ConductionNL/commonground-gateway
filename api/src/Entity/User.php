@@ -224,6 +224,7 @@ class User implements PasswordAuthenticatedUserInterface
         // Todo: for now set password always to !ChangeMe! When we support hashed password maybe change this.
         $this->setPassword('!ChangeMe!');
         array_key_exists('locale', $schema) ? $this->setLocale($schema['locale']) : '';
+        array_key_exists('person', $schema) ? $this->setPerson($schema['person']) : '';
 
         // Todo: temporary? make sure we never allow admin scopes to be added or removed with fromSchema
         if (array_key_exists('securityGroups', $schema)) {
@@ -262,6 +263,7 @@ class User implements PasswordAuthenticatedUserInterface
             'name'                           => $this->getName(),
             'email'                          => $this->getEmail(),
             'locale'                         => $this->getLocale(),
+            'person'                         => $this->getPerson(),
             'scopes'                         => $this->getScopes()
         ];
     }
