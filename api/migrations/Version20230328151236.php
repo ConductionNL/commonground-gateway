@@ -40,7 +40,7 @@ final class Version20230328151236 extends AbstractMigration
         $this->addSql('ALTER TABLE organization ADD version VARCHAR(255) DEFAULT NULL');
         $this->addSql('ALTER TABLE application ADD reference VARCHAR(255) DEFAULT NULL');
         $this->addSql('ALTER TABLE application ADD version VARCHAR(255) DEFAULT NULL');
-    }
+    }//end up()
 
     /**
      * Down.
@@ -61,5 +61,5 @@ final class Version20230328151236 extends AbstractMigration
         $this->addSql('ALTER TABLE organization DROP version');
         $this->addSql('ALTER TABLE application DROP reference');
         $this->addSql('ALTER TABLE application DROP version');
-    }
-}
+    }//end down()
+}//end class
