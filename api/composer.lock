@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c8596b570853a7894f9f8e763a63a0a9",
+    "content-hash": "7a71ff14d25af070c767f7d0d1e89505",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -659,54 +659,6 @@
             "time": "2020-10-24T20:01:03+00:00"
         },
         {
-            "name": "common-gateway/brk-bundle",
-            "version": "0.0.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/CommonGateway/BRKBundle.git",
-                "reference": "91319c5b996c68416c0a4d8dd5e4f462ddacb93a"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/BRKBundle/zipball/91319c5b996c68416c0a4d8dd5e4f462ddacb93a",
-                "reference": "91319c5b996c68416c0a4d8dd5e4f462ddacb93a",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": ">=1.0.30",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "CommonGateway\\BRKBundle\\": ""
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An example package for creating symfony flex bundles as plugins",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "BRK",
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/CommonGateway/BRKBundle/issues",
-                "source": "https://github.com/CommonGateway/BRKBundle/tree/0.0.3"
-            },
-            "time": "2023-03-14T11:34:22+00:00"
-        },
-        {
             "name": "common-gateway/formio-bundle",
             "version": "dev-main",
             "source": {
@@ -746,16 +698,16 @@
         },
         {
             "name": "commongateway/corebundle",
-            "version": "dev-feature/BRK-13/filesystemservice",
+            "version": "1.0.46",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "8ab60842bde2973134f172cc1b3adbcf4dc9e254"
+                "reference": "be5074ee4896ce8371d613bb59df279a54497767"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/8ab60842bde2973134f172cc1b3adbcf4dc9e254",
-                "reference": "8ab60842bde2973134f172cc1b3adbcf4dc9e254",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/be5074ee4896ce8371d613bb59df279a54497767",
+                "reference": "be5074ee4896ce8371d613bb59df279a54497767",
                 "shasum": ""
             },
             "require": {
@@ -815,7 +767,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-03-23T13:00:31+00:00"
+            "time": "2023-03-27T14:53:43+00:00"
         },
         {
             "name": "composer/ca-bundle",

@@ -40,9 +40,6 @@
     "brick/reflection": {
         "version": "0.4.1"
     },
-    "common-gateway/brk-bundle": {
-        "version": "0.0.3"
-    },
     "commongateway/corebundle": {
         "version": "dev-master"
     },

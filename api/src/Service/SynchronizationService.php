@@ -361,6 +361,7 @@ class SynchronizationService
             $id = $dot->get($this->configuration['apiSource']['location']['idField']);
 
             // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
+            // Todo: this should be 'objects' not 'object'... 'object' is for finding a single object not an array of objects!
             array_key_exists('object', $this->configuration['apiSource']['location']) && $result = $dot->get($this->configuration['apiSource']['location']['object'], $result);
 
             // Lets grab the sync object, if we don't find an existing one, this will create a new one:
@@ -752,13 +753,14 @@ class SynchronizationService
             }
             $result = $this->callService->decodeResponse($callServiceConfig['source'], $response);
         } else if ($url['scheme'] === 'ftp') {
+            // This only works if a file data equals a single Object(Entity). Or if the mapping on the Source or Synchronization results in data for just a single Object.
             $result = $this->fileSystemService->call($synchronization->getSource(), $synchronization->getEndpoint() ?? $callServiceConfig['endpoint']);
         }
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
         //        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
 
-        // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
+        // The place where we can find the object, from $result root, by object (dot notation)
         if(isset($this->configuration['apiSource']['location']['object'])) {
             return $dot->get($this->configuration['apiSource']['location']['object'], $result);
         }
