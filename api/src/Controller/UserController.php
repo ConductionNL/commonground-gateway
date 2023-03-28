@@ -58,7 +58,7 @@ class UserController extends AbstractController
      */
     public function resetTokenAction(SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService, SessionInterface $session): Response
     {
-         if ($session->has('refresh_token') === true && $session->has('authenticator') === true) {
+        if ($session->has('refresh_token') === true && $session->has('authenticator') === true) {
             $accessToken = $this->authenticationService->refreshAccessToken($session->get('refresh_token'), $session->get('authenticator'));
             $user = $this->getUser();
             if ($user instanceof AuthenticationUser === false) {
@@ -74,20 +74,20 @@ class UserController extends AbstractController
             $this->entityManager->persist($serializeUser);
 
             return new Response($serializer->serialize($serializeUser, 'json'), 200, ['Content-type' => 'application/json']);
-         }
+        }//end if
 
          // If the token is in the session because we are redirected, return the token here.
-         if($session->has('jwtToken') === true) {
-             $serializeUser = new User();
-             $serializeUser->setJwtToken($session->get('jwtToken'));
-             $serializeUser->setPassword('');
-             $serializeUser->setName('');
-             $serializeUser->setEmail('');
-             $session->remove('jwtToken');
-             $this->entityManager->persist($serializeUser);
+        if ($session->has('jwtToken') === true) {
+            $serializeUser = new User();
+            $serializeUser->setJwtToken($session->get('jwtToken'));
+            $serializeUser->setPassword('');
+            $serializeUser->setName('');
+            $serializeUser->setEmail('');
+            $session->remove('jwtToken');
+            $this->entityManager->persist($serializeUser);
 
-             return new Response($serializer->serialize($serializeUser, 'json'), 200, ['Content-type' => 'application/json']);
-         }
+            return new Response($serializer->serialize($serializeUser, 'json'), 200, ['Content-type' => 'application/json']);
+        }//end if
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         $status = 200;
