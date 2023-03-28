@@ -270,7 +270,7 @@
         "version": "2.9.0"
     },
     "larping-base/larping-bundle": {
-        "version": "1.0.61"
+        "version": "1.0.100"
     },
     "league/flysystem": {
         "version": "2.5.0"

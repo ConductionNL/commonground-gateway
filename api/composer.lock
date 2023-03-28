@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "52dc7159ae275ed854755c5e5cab8ad4",
+    "content-hash": "c74ed0a387ef60818d373d9fbaec9e59",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -660,20 +660,20 @@
         },
         {
             "name": "common-gateway/brp-bundle",
-            "version": "0.0.23",
+            "version": "0.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/BRPBundle.git",
-                "reference": "f20ac15634a659bc82d23b0d694cb83589478751"
+                "reference": "468359a8bcc11bfae770e507b79925d49390f3fd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/BRPBundle/zipball/f20ac15634a659bc82d23b0d694cb83589478751",
-                "reference": "f20ac15634a659bc82d23b0d694cb83589478751",
+                "url": "https://api.github.com/repos/CommonGateway/BRPBundle/zipball/468359a8bcc11bfae770e507b79925d49390f3fd",
+                "reference": "468359a8bcc11bfae770e507b79925d49390f3fd",
                 "shasum": ""
             },
             "require": {
-                "commongateway/corebundle": ">=1.0.32",
+                "commongateway/corebundle": ">=1.0.37",
                 "php": ">=7.4"
             },
             "require-dev": {
@@ -702,9 +702,9 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/BRPBundle/issues",
-                "source": "https://github.com/CommonGateway/BRPBundle/tree/0.0.23"
+                "source": "https://github.com/CommonGateway/BRPBundle/tree/0.1.2"
             },
-            "time": "2023-03-14T16:00:29+00:00"
+            "time": "2023-03-21T09:27:03+00:00"
         },
         {
             "name": "common-gateway/formio-bundle",
@@ -796,20 +796,20 @@
         },
         {
             "name": "common-gateway/klanten-bundle",
-            "version": "0.0.34",
+            "version": "0.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/KlantenBundle.git",
-                "reference": "6371d6461f0f1cfca38293dc12dc106d02ff5870"
+                "reference": "04b1832316459eb949f9cafae7ae071eca4d27be"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/KlantenBundle/zipball/6371d6461f0f1cfca38293dc12dc106d02ff5870",
-                "reference": "6371d6461f0f1cfca38293dc12dc106d02ff5870",
+                "url": "https://api.github.com/repos/CommonGateway/KlantenBundle/zipball/04b1832316459eb949f9cafae7ae071eca4d27be",
+                "reference": "04b1832316459eb949f9cafae7ae071eca4d27be",
                 "shasum": ""
             },
             "require": {
-                "commongateway/corebundle": ">=1.0.32",
+                "commongateway/corebundle": ">=1.0.37",
                 "php": ">=7.4"
             },
             "require-dev": {
@@ -838,26 +838,26 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/KlantenBundle/issues",
-                "source": "https://github.com/CommonGateway/KlantenBundle/tree/0.0.34"
+                "source": "https://github.com/CommonGateway/KlantenBundle/tree/0.1.2"
             },
-            "time": "2023-03-14T16:00:16+00:00"
+            "time": "2023-03-21T09:26:44+00:00"
         },
         {
             "name": "common-gateway/zgw-bundle",
-            "version": "0.1.30",
+            "version": "0.1.33",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/ZGWBundle.git",
-                "reference": "3d20f19e44f3c7979d0f210526e475fd90f5f32f"
+                "reference": "35fc04bae178e78244b17e8a6a2a5d04d91dbb6a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/3d20f19e44f3c7979d0f210526e475fd90f5f32f",
-                "reference": "3d20f19e44f3c7979d0f210526e475fd90f5f32f",
+                "url": "https://api.github.com/repos/CommonGateway/ZGWBundle/zipball/35fc04bae178e78244b17e8a6a2a5d04d91dbb6a",
+                "reference": "35fc04bae178e78244b17e8a6a2a5d04d91dbb6a",
                 "shasum": ""
             },
             "require": {
-                "commongateway/corebundle": ">=1.0.32",
+                "commongateway/corebundle": ">=1.0.37",
                 "php": ">=7.4"
             },
             "require-dev": {
@@ -886,22 +886,22 @@
             ],
             "support": {
                 "issues": "https://github.com/CommonGateway/ZGWBundle/issues",
-                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.30"
+                "source": "https://github.com/CommonGateway/ZGWBundle/tree/0.1.33"
             },
-            "time": "2023-03-14T16:00:10+00:00"
+            "time": "2023-03-21T09:26:39+00:00"
         },
         {
             "name": "commongateway/corebundle",
-            "version": "1.0.44",
+            "version": "1.0.47",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "d3d819800c60b49aa0627a06a9bd0b984e598e35"
+                "reference": "2f332f73d949ddb229d91e34663fc78cd4625315"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/d3d819800c60b49aa0627a06a9bd0b984e598e35",
-                "reference": "d3d819800c60b49aa0627a06a9bd0b984e598e35",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/2f332f73d949ddb229d91e34663fc78cd4625315",
+                "reference": "2f332f73d949ddb229d91e34663fc78cd4625315",
                 "shasum": ""
             },
             "require": {
@@ -961,7 +961,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-03-22T14:12:49+00:00"
+            "time": "2023-03-28T09:41:21+00:00"
         },
         {
             "name": "composer/ca-bundle",
