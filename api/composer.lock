@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7a71ff14d25af070c767f7d0d1e89505",
+    "content-hash": "52dc7159ae275ed854755c5e5cab8ad4",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -4428,16 +4428,16 @@
         },
         {
             "name": "larping-base/larping-bundle",
-            "version": "1.0.61",
+            "version": "1.0.100",
             "source": {
                 "type": "git",
                 "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "b43d2c08d8bb5d928cadf2f17b83bcddafaa5dcc"
+                "reference": "0dee9345a0c19dd9a02b18b1284cf67eb659b1fc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/b43d2c08d8bb5d928cadf2f17b83bcddafaa5dcc",
-                "reference": "b43d2c08d8bb5d928cadf2f17b83bcddafaa5dcc",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/0dee9345a0c19dd9a02b18b1284cf67eb659b1fc",
+                "reference": "0dee9345a0c19dd9a02b18b1284cf67eb659b1fc",
                 "shasum": ""
             },
             "require": {
@@ -4450,7 +4450,7 @@
             "type": "symfony-bundle",
             "autoload": {
                 "psr-4": {
-                    "LarpingBase\\LarpingBundle\\": ""
+                    "LarpingBase\\LarpingBundle\\": "src/"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -4470,9 +4470,9 @@
             ],
             "support": {
                 "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.61"
+                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.100"
             },
-            "time": "2023-02-25T10:06:06+00:00"
+            "time": "2023-03-27T10:16:20+00:00"
         },
         {
             "name": "league/flysystem",
