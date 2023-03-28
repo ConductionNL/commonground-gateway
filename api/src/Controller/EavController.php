@@ -73,6 +73,7 @@ class EavController extends AbstractController
             if ($extension == 'json') {
                 $oas = json_encode($oas, JSON_UNESCAPED_SLASHES);
             } else {
+                // The second parameter prevents the OAS from being bracketed.
                 $oas = Yaml::dump($oas, 11);
             }
 
