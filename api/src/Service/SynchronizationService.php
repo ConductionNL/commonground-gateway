@@ -70,21 +70,21 @@ class SynchronizationService
     private bool $asyncError = false;
 
     /**
-     * @param CallService $callService
-     * @param EntityManagerInterface $entityManager
-     * @param SessionInterface $session
-     * @param GatewayService $gatewayService
-     * @param FunctionService $functionService
-     * @param LogService $logService
-     * @param MessageBusInterface $messageBus
-     * @param TranslationService $translationService
-     * @param ObjectEntityService $objectEntityService
-     * @param ValidatorService $validatorService
-     * @param EavService $eavService
-     * @param Environment $twig
+     * @param CallService              $callService
+     * @param EntityManagerInterface   $entityManager
+     * @param SessionInterface         $session
+     * @param GatewayService           $gatewayService
+     * @param FunctionService          $functionService
+     * @param LogService               $logService
+     * @param MessageBusInterface      $messageBus
+     * @param TranslationService       $translationService
+     * @param ObjectEntityService      $objectEntityService
+     * @param ValidatorService         $validatorService
+     * @param EavService               $eavService
+     * @param Environment              $twig
      * @param EventDispatcherInterface $eventDispatcher
-     * @param MappingService $mappingService
-     * @param FileSystemHandleService $fileSystemService
+     * @param MappingService           $mappingService
+     * @param FileSystemHandleService  $fileSystemService
      */
     public function __construct(
         CallService $callService,
@@ -102,8 +102,7 @@ class SynchronizationService
         EventDispatcherInterface $eventDispatcher,
         MappingService $mappingService,
         FileSystemHandleService $fileSystemService
-    )
-    {
+    ) {
         $this->callService = $callService;
         $this->entityManager = $entityManager;
         $this->session = $session;
@@ -738,12 +737,12 @@ class SynchronizationService
                     $synchronization->getEndpoint() ?? $callServiceConfig['endpoint'],
                     $callServiceConfig['method'] ?? 'GET',
                     [
-                        'body' => '',
-                        'query' => $callServiceConfig['query'],
+                        'body'    => '',
+                        'query'   => $callServiceConfig['query'],
                         'headers' => $callServiceConfig['headers'],
                     ]
                 );
-            } catch (Exception | GuzzleException $exception) {
+            } catch (Exception|GuzzleException $exception) {
                 $this->ioCatchException($exception, ['line', 'file', 'message' => [
                     'preMessage' => 'Error while doing getSingleFromSource: ',
                 ]]);
@@ -752,7 +751,7 @@ class SynchronizationService
                 return null;
             }
             $result = $this->callService->decodeResponse($callServiceConfig['source'], $response);
-        } else if ($url['scheme'] === 'ftp') {
+        } elseif ($url['scheme'] === 'ftp') {
             // This only works if a file data equals a single Object(Entity). Or if the mapping on the Source or Synchronization results in data for just a single Object.
             $result = $this->fileSystemService->call($synchronization->getSource(), $synchronization->getEndpoint() ?? $callServiceConfig['endpoint']);
         }
@@ -761,7 +760,7 @@ class SynchronizationService
         //        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
 
         // The place where we can find the object, from $result root, by object (dot notation)
-        if(isset($this->configuration['apiSource']['location']['object'])) {
+        if (isset($this->configuration['apiSource']['location']['object'])) {
             return $dot->get($this->configuration['apiSource']['location']['object'], $result);
         }
 
