@@ -74,7 +74,20 @@ class UserController extends AbstractController
             $this->entityManager->persist($serializeUser);
 
             return new Response($serializer->serialize($serializeUser, 'json'), 200, ['Content-type' => 'application/json']);
-        }
+        }//end if
+
+        // If the token is in the session because we are redirected, return the token here.
+        if ($session->has('jwtToken') === true) {
+            $serializeUser = new User();
+            $serializeUser->setJwtToken($session->get('jwtToken'));
+            $serializeUser->setPassword('');
+            $serializeUser->setName('');
+            $serializeUser->setEmail('');
+            $session->remove('jwtToken');
+            $this->entityManager->persist($serializeUser);
+
+            return new Response($serializer->serialize($serializeUser, 'json'), 200, ['Content-type' => 'application/json']);
+        }//end if
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
 
         $status = 200;
@@ -134,7 +147,19 @@ class UserController extends AbstractController
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
         $this->session->set('activeOrganization', $user->getOrganisation()->getId()->toString());
 
-        $user->setJwtToken($authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session)));
+        $token = $authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session));
+
+        $user->setJwtToken($token);
+
+        if (isset($data['redirectUrl']) === true) {
+            $this->session->set('jwtToken', $token);
+
+            return $this->redirect($data['redirectUrl']);
+        } elseif ($request->query->has('redirectUrl') === true) {
+            $this->session->set('jwtToken', $token);
+
+            return $this->redirect($request->query->get('redirectUrl'));
+        }
 
         return new Response($serializer->serialize($user, 'json'), $status, ['Content-type' => 'application/json']);
     }
@@ -276,11 +301,9 @@ class UserController extends AbstractController
      */
     public function ApiLogoutAction(Request $request, CommonGroundService $commonGroundService)
     {
-        if ($request->headers->has('Authorization')) {
-            $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
-            $user = $commonGroundService->createResource(['jwtToken' => $token], ['component' => 'uc', 'type' => 'logout'], false, false, false, false);
-        }
+        $request->getSession()->clear();
         $request->getSession()->invalidate();
+
         $response = new Response(
             json_encode(['status' => 'logout successful']),
             200,
@@ -288,7 +311,13 @@ class UserController extends AbstractController
                 'Content-type' => 'application/json',
             ]
         );
+
+        $response->headers->remove('Set-Cookie');
         $response->headers->clearCookie('PHPSESSID', '/', null, true, true, $this->getParameter('samesite'));
+
+        if ($request->query->has('redirectUrl') === true) {
+            return $this->redirect($request->query->get('redirectUrl'));
+        }
 
         return $response;
     }
@@ -354,7 +383,7 @@ class UserController extends AbstractController
             throw new BadRequestException('Missing authentication method or identifier');
         }
 
-        $this->session->set('backUrl', $request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
+        $this->session->set('backUrl', $request->query->get('redirecturl') ?? $request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
         $this->session->set('method', $method);
         $this->session->set('identifier', $identifier);
 
