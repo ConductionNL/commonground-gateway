@@ -189,7 +189,7 @@ class Organization
             'title'                          => $this->getName(),
             'description'                    => $this->getDescription(),
             'version'                        => $this->getVersion(),
-            'name'                           => $this->getName()
+            'name'                           => $this->getName(),
         ];
     }
 

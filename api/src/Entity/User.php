@@ -285,7 +285,7 @@ class User implements PasswordAuthenticatedUserInterface
             'scopes'                         => $this->getScopes(),
             'organization'                   => $this->getOrganisation() ? $this->getOrganisation()->toSchema() : null,
             'applications'                   => $applications,
-            'securityGroups'                 => $securityGroups
+            'securityGroups'                 => $securityGroups,
         ];
     }
 
