@@ -236,7 +236,7 @@ class SecurityGroup
             'name'                           => $this->getName(),
             'scopes'                         => $this->getScopes(),
             'parent'                         => $this->getParent() ? $this->getParent()->toSchema($level + 1) : null,
-            'children'                       => $children
+            'children'                       => $children,
         ];
     }
 
