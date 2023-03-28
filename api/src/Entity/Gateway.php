@@ -794,6 +794,7 @@ class Gateway
      */
     public function toSchema(): array
     {
+        // Do not return jwt, secret, password or apikey this way!
         return [
             '$id'                            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
             '$schema'                        => 'https://docs.commongateway.nl/schemas/Gateway.schema.json',

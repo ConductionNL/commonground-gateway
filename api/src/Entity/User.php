@@ -87,6 +87,20 @@ class User implements PasswordAuthenticatedUserInterface
     private ?string $description = null;
 
     /**
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     */
+    private ?string $reference = null;
+
+    /**
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     */
+    private ?string $version = null;
+
+    /**
      * @Groups({"write"})
      *
      * @ORM\Column(type="string", length=255)
@@ -184,6 +198,79 @@ class User implements PasswordAuthenticatedUserInterface
         $this->securityGroups = new ArrayCollection();
     }
 
+    /**
+     * Create or update this User from an external schema array.
+     *
+     * This function is used to update and create users form user.json objects.
+     *
+     * @param array $schema The schema to load.
+     *
+     * @return $this This User.
+     */
+    public function fromSchema(array $schema): self
+    {
+        // Basic stuff
+        if (array_key_exists('$id', $schema)) {
+            $this->setReference($schema['$id']);
+        }
+        if (array_key_exists('version', $schema)) {
+            $this->setVersion($schema['version']);
+        }
+
+        array_key_exists('title', $schema) ? $this->setName($schema['title']) : '';
+        array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
+        array_key_exists('locale', $schema) ? $this->setLocale($schema['locale']) : '';
+        array_key_exists('email', $schema) ? $this->setEmail($schema['email']) : '';
+        // Todo: for now set password always to !ChangeMe! When we support hashed password maybe change this.
+        $this->setPassword('!ChangeMe!');
+        array_key_exists('locale', $schema) ? $this->setLocale($schema['locale']) : '';
+
+        // Todo: temporary? make sure we never allow admin scopes to be added or removed with fromSchema
+        if (array_key_exists('securityGroups', $schema)) {
+            $scopes = $this->getScopes();
+            foreach ($schema['securityGroups'] as $securityGroup) {
+                if ($securityGroup instanceof SecurityGroup === false) {
+                    return $this;
+                }
+                $scopes = array_merge($scopes, $securityGroup->getScopes());
+            }
+            foreach ($scopes as $scope) {
+                if (str_contains(strtolower($scope), 'admin')) {
+                    return $this;
+                }
+            }
+            $this->setSecurityGroups($schema['securityGroups']);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Convert this User to a schema.
+     *
+     * @return array Schema array.
+     */
+    public function toSchema(): array
+    {
+        // Do not return password this way!
+        return [
+            '$id'                            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'                        => 'https://docs.commongateway.nl/schemas/User.schema.json',
+            'title'                          => $this->getName(),
+            'description'                    => $this->getDescription(),
+            'version'                        => $this->getVersion(),
+            'name'                           => $this->getName(),
+            'email'                          => $this->getEmail(),
+            'locale'                         => $this->getLocale(),
+            'scopes'                         => $this->getScopes()
+        ];
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
+    }
+
     public function getId(): ?UuidInterface
     {
         return $this->id;
@@ -216,6 +303,30 @@ class User implements PasswordAuthenticatedUserInterface
     public function setDescription(string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getVersion(): ?string
+    {
+        return $this->version;
+    }
+
+    public function setVersion(?string $version): self
+    {
+        $this->version = $version;
 
         return $this;
     }
@@ -306,7 +417,7 @@ class User implements PasswordAuthenticatedUserInterface
 
     public function getScopes()
     {
-        // Lets see if we need to establisch al the scopes
+        // Lets see if we need to establish al the scopes
         if (!empty($this->scopes)) {
             foreach ($this->securityGroups as $securityGroup) {
                 array_merge($this->scopes, $securityGroup->getScopes());
@@ -321,6 +432,20 @@ class User implements PasswordAuthenticatedUserInterface
      */
     public function getSecurityGroups(): Collection
     {
+        return $this->securityGroups;
+    }
+
+    public function setSecurityGroups(?array $securityGroups): Collection
+    {
+        foreach ($this->getSecurityGroups() as $removeSecurityGroup) {
+            $this->removeSecurityGroup($removeSecurityGroup);
+        }
+        if ($securityGroups !== null || $securityGroups !== []) {
+            foreach ($securityGroups as $securityGroup) {
+                $this->addSecurityGroup($securityGroup);
+            }
+        }
+
         return $this->securityGroups;
     }
 
