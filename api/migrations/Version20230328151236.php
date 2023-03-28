@@ -24,8 +24,8 @@ final class Version20230328151236 extends AbstractMigration
         $this->addSql('ALTER TABLE security_group ADD version VARCHAR(255) DEFAULT NULL');
         $this->addSql('ALTER TABLE "user" ADD reference VARCHAR(255) DEFAULT NULL');
         $this->addSql('ALTER TABLE "user" ADD version VARCHAR(255) DEFAULT NULL');
-        $this->addSql('ALTER TABLE organisation ADD reference VARCHAR(255) DEFAULT NULL');
-        $this->addSql('ALTER TABLE organisation ADD version VARCHAR(255) DEFAULT NULL');
+        $this->addSql('ALTER TABLE organization ADD reference VARCHAR(255) DEFAULT NULL');
+        $this->addSql('ALTER TABLE organization ADD version VARCHAR(255) DEFAULT NULL');
         $this->addSql('ALTER TABLE application ADD reference VARCHAR(255) DEFAULT NULL');
         $this->addSql('ALTER TABLE application ADD version VARCHAR(255) DEFAULT NULL');
     }
@@ -38,8 +38,8 @@ final class Version20230328151236 extends AbstractMigration
         $this->addSql('ALTER TABLE security_group DROP version');
         $this->addSql('ALTER TABLE "user" DROP reference');
         $this->addSql('ALTER TABLE "user" DROP version');
-        $this->addSql('ALTER TABLE organisation DROP reference');
-        $this->addSql('ALTER TABLE organisation DROP version');
+        $this->addSql('ALTER TABLE organization DROP reference');
+        $this->addSql('ALTER TABLE organization DROP version');
         $this->addSql('ALTER TABLE application DROP reference');
         $this->addSql('ALTER TABLE application DROP version');
     }
