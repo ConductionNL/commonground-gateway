@@ -12,22 +12,18 @@ use Doctrine\Migrations\AbstractMigration;
  */
 final class Version20230328151236 extends AbstractMigration
 {
-
-
     /**
-     * Get description
+     * Get description.
      *
      * @return string
      */
     public function getDescription(): string
     {
         return '';
-
     }//end getDescription()
 
-
     /**
-     * Up
+     * Up.
      *
      * @param Schema $schema Schema
      *
@@ -46,9 +42,8 @@ final class Version20230328151236 extends AbstractMigration
         $this->addSql('ALTER TABLE application ADD version VARCHAR(255) DEFAULT NULL');
     }
 
-
     /**
-     * Down
+     * Down.
      *
      * @param Schema $schema Schema
      *
