@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "52dc7159ae275ed854755c5e5cab8ad4",
+    "content-hash": "4a175dcb7e68eae541e9ea16fe76b3c2",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -698,16 +698,16 @@
         },
         {
             "name": "commongateway/corebundle",
-            "version": "1.0.46",
+            "version": "1.0.48",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "be5074ee4896ce8371d613bb59df279a54497767"
+                "reference": "83565aeedc111814059d35fd593463929f9008ef"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/be5074ee4896ce8371d613bb59df279a54497767",
-                "reference": "be5074ee4896ce8371d613bb59df279a54497767",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/83565aeedc111814059d35fd593463929f9008ef",
+                "reference": "83565aeedc111814059d35fd593463929f9008ef",
                 "shasum": ""
             },
             "require": {
@@ -767,7 +767,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-03-27T14:53:43+00:00"
+            "time": "2023-03-28T10:57:09+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -15051,7 +15051,6 @@
     "minimum-stability": "stable",
     "stability-flags": {
         "common-gateway/formio-bundle": 20,
-        "commongateway/corebundle": 20,
         "conduction/commongroundbundle": 20,
         "conduction/digidbundle": 20,
         "conduction/samlbundle": 20
