@@ -73,7 +73,7 @@ class EavController extends AbstractController
             if ($extension == 'json') {
                 $oas = json_encode($oas, JSON_UNESCAPED_SLASHES);
             } else {
-                $oas = Yaml::dump($oas);
+                $oas = Yaml::dump($oas, 11);
             }
 
             // Let's stuff it into the cache
