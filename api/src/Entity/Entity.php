@@ -1179,7 +1179,7 @@ class Entity
             }
         }
 
-        if(empty($schema['required']) === true) {
+        if (empty($schema['required']) === true) {
             unset($schema['required']);
         }
 
