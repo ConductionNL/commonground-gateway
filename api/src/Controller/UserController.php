@@ -149,13 +149,13 @@ class UserController extends AbstractController
 
         $token = $authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session));
 
-        $this->session->set('jwtToken', $token);
+        $user->setJwtToken($token);
 
         if (isset($data['redirectUrl']) === true) {
-            $user->setJwtToken($token);
+            $this->session->set('jwtToken', $token);
             return $this->redirect($data['redirectUrl']);
         } elseif ($request->query->has('redirectUrl') === true) {
-            $user->setJwtToken($token);
+            $this->session->set('jwtToken', $token);
             return $this->redirect($request->query->get('redirectUrl'));
         }
 
