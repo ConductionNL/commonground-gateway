@@ -153,9 +153,11 @@ class UserController extends AbstractController
 
         if (isset($data['redirectUrl']) === true) {
             $this->session->set('jwtToken', $token);
+
             return $this->redirect($data['redirectUrl']);
         } elseif ($request->query->has('redirectUrl') === true) {
             $this->session->set('jwtToken', $token);
+            
             return $this->redirect($request->query->get('redirectUrl'));
         }
 
