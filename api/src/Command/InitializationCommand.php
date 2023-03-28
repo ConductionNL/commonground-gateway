@@ -102,6 +102,7 @@ class InitializationCommand extends Command
         if (!$organization = $this->entityManager->getRepository('App:Organization')->findOneBy([])) {
             $io->info('No organization found, creating a new one');
             $organization = new Organization();
+            $organization->setReference("https://docs.commongateway.nl/organization/default.organization.json");
             $organization->setName('Default Organization');
 
             // Set default id to this id for now (backwards compatibility)

@@ -86,6 +86,20 @@ class Organization
     /**
      * @Groups({"read", "write"})
      *
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     */
+    private ?string $reference = null;
+
+    /**
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     */
+    private ?string $version = null;
+
+    /**
+     * @Groups({"read", "write"})
+     *
      * @MaxDepth(1)
      *
      * @ORM\OneToMany(targetEntity=User::class, mappedBy="organisation", orphanRemoval=true)
@@ -137,6 +151,49 @@ class Organization
         $this->users = new ArrayCollection();
     }
 
+    /**
+     * Create or update this Organization from an external schema array.
+     *
+     * This function is used to update and create organizations form organization.json objects.
+     *
+     * @param array $schema The schema to load.
+     *
+     * @return $this This Organization.
+     */
+    public function fromSchema(array $schema): self
+    {
+        // Basic stuff
+        if (array_key_exists('$id', $schema)) {
+            $this->setReference($schema['$id']);
+        }
+        if (array_key_exists('version', $schema)) {
+            $this->setVersion($schema['version']);
+        }
+        // Do not set jwt, secret, password or apikey this way!
+        array_key_exists('title', $schema) ? $this->setName($schema['title']) : '';
+        array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
+
+        return $this;
+    }
+
+    /**
+     * Convert this Organization to a schema.
+     *
+     * @return array Schema array.
+     */
+    public function toSchema(): array
+    {
+        // Do not return jwt, secret, password or apikey this way!
+        return [
+            '$id'                            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'                        => 'https://docs.commongateway.nl/schemas/Gateway.schema.json',
+            'title'                          => $this->getName(),
+            'description'                    => $this->getDescription(),
+            'version'                        => $this->getVersion(),
+            'name'                           => $this->getName()
+        ];
+    }
+
     public function __toString()
     {
         return $this->getName();
@@ -174,6 +231,30 @@ class Organization
     public function setDescription(?string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getVersion(): ?string
+    {
+        return $this->version;
+    }
+
+    public function setVersion(?string $version): self
+    {
+        $this->version = $version;
 
         return $this;
     }

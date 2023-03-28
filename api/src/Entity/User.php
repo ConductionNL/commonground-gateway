@@ -225,6 +225,7 @@ class User implements PasswordAuthenticatedUserInterface
         $this->setPassword('!ChangeMe!');
         array_key_exists('locale', $schema) ? $this->setLocale($schema['locale']) : '';
         array_key_exists('person', $schema) ? $this->setPerson($schema['person']) : '';
+        array_key_exists('organization', $schema) ? $this->setOrganisation($schema['organization']) : '';
 
         // Todo: temporary? make sure we never allow admin scopes to be added or removed with fromSchema
         if (array_key_exists('securityGroups', $schema)) {
@@ -264,7 +265,8 @@ class User implements PasswordAuthenticatedUserInterface
             'email'                          => $this->getEmail(),
             'locale'                         => $this->getLocale(),
             'person'                         => $this->getPerson(),
-            'scopes'                         => $this->getScopes()
+            'scopes'                         => $this->getScopes(),
+            'organization'                   => $this->getOrganisation() ? $this->getOrganisation()->toSchema() : null
         ];
     }
 
@@ -362,9 +364,9 @@ class User implements PasswordAuthenticatedUserInterface
         return $this->organisation;
     }
 
-    public function setOrganisation(?Organization $organisation): self
+    public function setOrganisation(?Organization $organization): self
     {
-        $this->organisation = $organisation;
+        $this->organisation = $organization;
 
         return $this;
     }

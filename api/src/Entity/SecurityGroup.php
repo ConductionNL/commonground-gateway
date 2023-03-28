@@ -171,13 +171,13 @@ class SecurityGroup
     }
 
     /**
-     * Create or update this User from an external schema array.
+     * Create or update this SecurityGroup from an external schema array.
      *
-     * This function is used to update and create users form user.json objects.
+     * This function is used to update and create securityGroups form securityGroup.json objects.
      *
      * @param array $schema The schema to load.
      *
-     * @return $this This User.
+     * @return $this This SecurityGroup.
      */
     public function fromSchema(array $schema): self
     {
@@ -209,7 +209,7 @@ class SecurityGroup
     }
 
     /**
-     * Convert this User to a schema.
+     * Convert this SecurityGroup to a schema.
      *
      * @return array Schema array.
      */
