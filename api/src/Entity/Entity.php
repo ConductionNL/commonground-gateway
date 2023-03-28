@@ -1116,6 +1116,9 @@ class Entity
             throw new GatewayException('The given objectEntity has not have the same entity as this entity.');
         }
 
+        // Set the schema type to an object.
+        $schema['type'] = 'object';
+
         foreach ($this->getAttributes() as $attribute) {
             // Zetten van required.
             if ($attribute->getRequired()) {
@@ -1174,6 +1177,10 @@ class Entity
                     $schema['properties'][$attribute->getName()][$validator] = $validation;
                 }
             }
+        }
+
+        if (empty($schema['required']) === true) {
+            unset($schema['required']);
         }
 
         return $schema;

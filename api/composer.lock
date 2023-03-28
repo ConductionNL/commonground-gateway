@@ -893,15 +893,19 @@
         {
             "name": "commongateway/corebundle",
             "version": "1.0.47",
+            "version": "1.0.48",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
                 "reference": "2f332f73d949ddb229d91e34663fc78cd4625315"
+                "reference": "83565aeedc111814059d35fd593463929f9008ef"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/2f332f73d949ddb229d91e34663fc78cd4625315",
                 "reference": "2f332f73d949ddb229d91e34663fc78cd4625315",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/83565aeedc111814059d35fd593463929f9008ef",
+                "reference": "83565aeedc111814059d35fd593463929f9008ef",
                 "shasum": ""
             },
             "require": {
