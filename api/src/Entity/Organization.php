@@ -169,7 +169,7 @@ class Organization
         if (array_key_exists('version', $schema)) {
             $this->setVersion($schema['version']);
         }
-        // Do not set jwt, secret, password or apikey this way!
+
         array_key_exists('title', $schema) ? $this->setName($schema['title']) : '';
         array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
 
@@ -183,7 +183,6 @@ class Organization
      */
     public function toSchema(): array
     {
-        // Do not return jwt, secret, password or apikey this way!
         return [
             '$id'                            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
             '$schema'                        => 'https://docs.commongateway.nl/schemas/Gateway.schema.json',

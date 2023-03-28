@@ -226,6 +226,7 @@ class User implements PasswordAuthenticatedUserInterface
         array_key_exists('locale', $schema) ? $this->setLocale($schema['locale']) : '';
         array_key_exists('person', $schema) ? $this->setPerson($schema['person']) : '';
         array_key_exists('organization', $schema) ? $this->setOrganisation($schema['organization']) : '';
+        array_key_exists('applications', $schema) ? $this->setApplications($schema['applications']) : '';
 
         // Todo: temporary? make sure we never allow admin scopes to be added or removed with fromSchema
         if (array_key_exists('securityGroups', $schema)) {
@@ -254,6 +255,22 @@ class User implements PasswordAuthenticatedUserInterface
      */
     public function toSchema(): array
     {
+        $applications = [];
+        foreach ($this->applications as $application) {
+            if ($application !== null) {
+                $application = $application->toSchema();
+            }
+            $applications[] = $application;
+        }
+
+        $securityGroups = [];
+        foreach ($this->securityGroups as $securityGroup) {
+            if ($securityGroup !== null) {
+                $securityGroup = $securityGroup->toSchema(1);
+            }
+            $securityGroups[] = $securityGroup;
+        }
+
         // Do not return password this way!
         return [
             '$id'                            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
@@ -266,7 +283,9 @@ class User implements PasswordAuthenticatedUserInterface
             'locale'                         => $this->getLocale(),
             'person'                         => $this->getPerson(),
             'scopes'                         => $this->getScopes(),
-            'organization'                   => $this->getOrganisation() ? $this->getOrganisation()->toSchema() : null
+            'organization'                   => $this->getOrganisation() ? $this->getOrganisation()->toSchema() : null,
+            'applications'                   => $applications,
+            'securityGroups'                 => $securityGroups
         ];
     }
 
@@ -379,6 +398,18 @@ class User implements PasswordAuthenticatedUserInterface
         return $this->applications;
     }
 
+    public function setApplications(?array $applications): Collection
+    {
+        $this->applications->clear();
+        if ($applications !== null && $applications !== []) {
+            foreach ($applications as $application) {
+                $this->addApplication($application);
+            }
+        }
+
+        return $this->securityGroups;
+    }
+
     public function addApplication(Application $application): self
     {
         if (!$this->applications->contains($application)) {
@@ -441,10 +472,8 @@ class User implements PasswordAuthenticatedUserInterface
 
     public function setSecurityGroups(?array $securityGroups): Collection
     {
-        foreach ($this->getSecurityGroups() as $removeSecurityGroup) {
-            $this->removeSecurityGroup($removeSecurityGroup);
-        }
-        if ($securityGroups !== null || $securityGroups !== []) {
+        $this->securityGroups->clear();
+        if ($securityGroups !== null && $securityGroups !== []) {
             foreach ($securityGroups as $securityGroup) {
                 $this->addSecurityGroup($securityGroup);
             }

@@ -26,6 +26,8 @@ final class Version20230328151236 extends AbstractMigration
         $this->addSql('ALTER TABLE "user" ADD version VARCHAR(255) DEFAULT NULL');
         $this->addSql('ALTER TABLE organisation ADD reference VARCHAR(255) DEFAULT NULL');
         $this->addSql('ALTER TABLE organisation ADD version VARCHAR(255) DEFAULT NULL');
+        $this->addSql('ALTER TABLE application ADD reference VARCHAR(255) DEFAULT NULL');
+        $this->addSql('ALTER TABLE application ADD version VARCHAR(255) DEFAULT NULL');
     }
 
     public function down(Schema $schema): void
@@ -38,5 +40,7 @@ final class Version20230328151236 extends AbstractMigration
         $this->addSql('ALTER TABLE "user" DROP version');
         $this->addSql('ALTER TABLE organisation DROP reference');
         $this->addSql('ALTER TABLE organisation DROP version');
+        $this->addSql('ALTER TABLE application DROP reference');
+        $this->addSql('ALTER TABLE application DROP version');
     }
 }
