@@ -897,7 +897,6 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "2f332f73d949ddb229d91e34663fc78cd4625315"
                 "reference": "83565aeedc111814059d35fd593463929f9008ef"
             },
             "dist": {
