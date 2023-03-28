@@ -76,7 +76,7 @@ class UserController extends AbstractController
             return new Response($serializer->serialize($serializeUser, 'json'), 200, ['Content-type' => 'application/json']);
         }//end if
 
-         // If the token is in the session because we are redirected, return the token here.
+        // If the token is in the session because we are redirected, return the token here.
         if ($session->has('jwtToken') === true) {
             $serializeUser = new User();
             $serializeUser->setJwtToken($session->get('jwtToken'));
