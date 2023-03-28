@@ -21,7 +21,6 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 class ProxySubscriber implements EventSubscriberInterface
 {
-
     /**
      * @var EntityManagerInterface The entity manager
      */
@@ -56,15 +55,14 @@ class ProxySubscriber implements EventSubscriberInterface
         'api_gateways_delete_proxy_single_item',
     ];
 
-
     /**
-     * The constructor of this subscriber class
+     * The constructor of this subscriber class.
      *
-     * @param EntityManagerInterface $entityManager The entity manager
-     * @param CallService $callService The call service
+     * @param EntityManagerInterface  $entityManager     The entity manager
+     * @param CallService             $callService       The call service
      * @param FileSystemHandleService $fileSystemService The fileSystem service
-     * @param RequestService $requestService The request service
-     * @param SerializerInterface $serializer The serializer
+     * @param RequestService          $requestService    The request service
+     * @param SerializerInterface     $serializer        The serializer
      */
     public function __construct(EntityManagerInterface $entityManager, CallService $callService, FileSystemHandleService $fileSystemService, RequestService $requestService, SerializerInterface $serializer)
     {
@@ -75,9 +73,8 @@ class ProxySubscriber implements EventSubscriberInterface
         $this->serializer = $serializer;
     }
 
-
     /**
-     * Get Subscribed Events
+     * Get Subscribed Events.
      *
      * @return array[] Subscribed Events
      */
@@ -88,9 +85,8 @@ class ProxySubscriber implements EventSubscriberInterface
         ];
     }
 
-
     /**
-     * Handle Proxy
+     * Handle Proxy.
      *
      * @param RequestEvent $event The Event
      *
