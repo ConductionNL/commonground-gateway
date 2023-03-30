@@ -75,7 +75,7 @@ class Organization
     private string $name;
 
     /**
-     * @var string A description of this Organization.
+     * @var string|null A description of this Organization.
      *
      * @Groups({"read", "write"})
      *

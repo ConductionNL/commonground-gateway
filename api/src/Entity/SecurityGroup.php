@@ -75,7 +75,7 @@ class SecurityGroup
     private string $name;
 
     /**
-     * @var string A description of this Security Group.
+     * @var string|null A description of this Security Group.
      *
      * @Groups({"read", "write"})
      *

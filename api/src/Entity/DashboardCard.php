@@ -67,7 +67,7 @@ class DashboardCard
     private string $name;
 
     /**
-     * The description of the dashboard.
+     * @var string|null The description of the dashboard.
      *
      * @Groups({"read","write"})
      *

@@ -78,7 +78,7 @@ class User implements PasswordAuthenticatedUserInterface
     private string $name;
 
     /**
-     * @var string A description of this User.
+     * @var string|null A description of this User.
      *
      * @Groups({"read", "write"})
      *
@@ -323,7 +323,7 @@ class User implements PasswordAuthenticatedUserInterface
         return $this->description;
     }
 
-    public function setDescription(string $description): self
+    public function setDescription(?string $description): self
     {
         $this->description = $description;
 

@@ -87,7 +87,7 @@ class Application
     private string $name;
 
     /**
-     * @var string A description of this Application.
+     * @var string|null A description of this Application.
      *
      * @Groups({"read", "write"})
      *

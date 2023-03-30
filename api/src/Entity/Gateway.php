@@ -193,7 +193,7 @@ class Gateway
     private string $name = '';
 
     /**
-     * @var string The description of the Gateway which is used in the commonGround service
+     * @var string|null The description of the Gateway which is used in the commonGround service
      *
      * @ApiProperty(
      *     attributes={
