@@ -881,11 +881,8 @@ class Endpoint
 
     public function setEntities(?array $entities): Collection
     {
-        if ($entities === null || $entities === []) {
-            foreach ($this->getEntities() as $removeEntity) {
-                $this->removeEntity($removeEntity);
-            }
-        } else {
+        $this->entities->clear();
+        if ($entities !== null && $entities !== []) {
             foreach ($entities as $entity) {
                 $this->addEntity($entity);
             }

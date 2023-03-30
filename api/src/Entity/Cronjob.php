@@ -88,7 +88,7 @@ class Cronjob
      *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $description;
+    private ?string $description = null;
 
     /**
      * @Groups({"read", "write"})
@@ -217,7 +217,7 @@ class Cronjob
         if (array_key_exists('version', $schema)) {
             $this->setVersion($schema['version']);
         }
-        // Do not set jwt, secret, password or apikey this way!
+
         array_key_exists('title', $schema) ? $this->setName($schema['title']) : '';
         array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
         array_key_exists('crontab', $schema) ? $this->setCrontab($schema['crontab']) : '';
