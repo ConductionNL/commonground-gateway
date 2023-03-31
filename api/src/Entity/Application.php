@@ -168,7 +168,7 @@ class Application
      * @ORM\Column(type="string", nullable=true)
      */
     private ?string $resource = null;
-    
+
     /**
      * @var Organization An uuid or uri of an organization for this Application.
      *
