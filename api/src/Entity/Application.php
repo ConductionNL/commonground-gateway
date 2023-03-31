@@ -168,7 +168,7 @@ class Application
      * @ORM\Column(type="string", nullable=true)
      */
     private ?string $resource = null;
-
+    
     /**
      * @var Organization An uuid or uri of an organization for this Application.
      *
@@ -177,6 +177,8 @@ class Application
      * @MaxDepth(1)
      *
      * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="applications")
+     *
+     * @ORM\JoinColumn(nullable=false)
      */
     private ?Organization $organization;
 
@@ -441,7 +443,7 @@ class Application
         return $this->organization;
     }
 
-    public function setOrganization(?Organization $organization): self
+    public function setOrganization(Organization $organization): self
     {
         $this->organization = $organization;
 
