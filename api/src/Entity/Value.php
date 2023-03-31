@@ -622,8 +622,9 @@ class Value
                 return $this->setSimpleArrayValue($value);
             } elseif ($this->getAttribute()->getMultiple()) {
                 // Lest deal with multiple file subobjects
-                if ($unsafe) {
+                if ($unsafe || $value === null || $value === []) {
                     $this->objects->clear();
+                    $this->stringValue = null;
                 }
 
                 if (!$value) {
@@ -655,7 +656,7 @@ class Value
                 }
 
                 // Set a string reprecentation of the object
-                $this->stringValue = ','.implode(',', $idArray);
+                $this->stringValue = implode(',', $idArray);
                 $this->setArrayValue($idArray);
 
                 return $this;

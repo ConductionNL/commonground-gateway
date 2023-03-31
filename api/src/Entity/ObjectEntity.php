@@ -1098,83 +1098,87 @@ class ObjectEntity
                 } elseif ($valueObject->getValue() == null) {
                     $array[$attribute->getName()] = null;
                 } elseif (!$attribute->getMultiple() && $configuration['level'] < $configuration['maxdepth']) {
-                    $object = $valueObject->getObjects()->first();
-                    $currentObjects[] = $object;
-                    // Only add an object if it hasn't bean added yet
-                    if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
-                        $config = $configuration;
-                        $config['renderedObjects'][] = $object;
-                        $config['level'] = $config['level'] + 1;
-                        $objectToArray = $object->toArray($config);
-
-                        // Check if we want an embedded array
-                        if ($configuration['embedded']) {
-                            // todo: put this line back later, with the continue below.
-                            // $array[$attribute->getName()] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
-                            switch ($attribute->getFormat()) {
-                                case 'uuid':
-                                    $array[$attribute->getName()] = $object->getId()->toString();
-                                    break;
-                                case 'url':
-                                    $array[$attribute->getName()] = $object->getUri();
-                                    break;
-                                case 'json':
-                                    $array[$attribute->getName()] = $objectToArray;
-                                    break;
-                                case 'iri':
-                                default:
-                                    $array[$attribute->getName()] = $object->getSelf();
-                                    break;
-                            }
-                            $embedded[$attribute->getName()] = $objectToArray;
-                            continue;
-                        }
-                        $array[$attribute->getName()] = $objectToArray; // getValue will return a single ObjectEntity
-                    }
-                    // If we don't set the full object then we want to set self
-                    else {
-                        // $array[$attribute->getName()] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
-                        $array[$attribute->getName()] = $object->getSelf();
-                    }
-                } elseif ($configuration['level'] < $configuration['maxdepth']) {
-                    $currentObjects[] = $valueObject->getObjects()->toArray();
-                    foreach ($valueObject->getObjects() as $object) {
+                    if (count($valueObject->getObjects()) === 0) {
+                        $array[$attribute->getName()][] = null;
+                    } else {
+                        $object = $valueObject->getObjects()->first();
+                        $currentObjects[] = $object;
                         // Only add an object if it hasn't bean added yet
                         if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
                             $config = $configuration;
-                            $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
+                            $config['renderedObjects'][] = $object;
                             $config['level'] = $config['level'] + 1;
                             $objectToArray = $object->toArray($config);
 
                             // Check if we want an embedded array
                             if ($configuration['embedded']) {
-                                // todo: put this line back later, with the continue below.
-                                // $array[$attribute->getName()][] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
                                 switch ($attribute->getFormat()) {
                                     case 'uuid':
-                                        $array[$attribute->getName()][] = $object->getId()->toString();
+                                        $array[$attribute->getName()] = $object->getId()->toString();
                                         break;
                                     case 'url':
-                                    case 'uri':
-                                        $array[$attribute->getName()][] = $object->getUri();
+                                        $array[$attribute->getName()] = $object->getUri();
                                         break;
                                     case 'json':
-                                        $array[$attribute->getName()][] = $objectToArray;
+                                        $array[$attribute->getName()] = $objectToArray;
                                         break;
                                     case 'iri':
                                     default:
-                                        $array[$attribute->getName()][] = $object->getSelf();
+                                        $array[$attribute->getName()] = $object->getSelf();
                                         break;
                                 }
-                                $embedded[$attribute->getName()][] = $objectToArray;
-                                continue; // todo: put this continue back later!
+                                $embedded[$attribute->getName()] = $objectToArray;
+                                continue;
                             }
-                            $array[$attribute->getName()][] = $objectToArray;
+                            $array[$attribute->getName()] = $objectToArray; // getValue will return a single ObjectEntity
                         }
                         // If we don't set the full object then we want to set self
                         else {
-                            // $array[$attribute->getName()][] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
-                            $array[$attribute->getName()][] = $object->getSelf();
+                            // $array[$attribute->getName()] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
+                            $array[$attribute->getName()] = $object->getSelf();
+                        }
+                    }
+                } elseif ($configuration['level'] < $configuration['maxdepth']) {
+                    if (count($valueObject->getObjects()) === 0) {
+                        $array[$attribute->getName()] = [];
+                    } else {
+                        $currentObjects[] = $valueObject->getObjects()->toArray();
+                        foreach ($valueObject->getObjects() as $object) {
+                            // Only add an object if it hasn't bean added yet
+                            if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
+                                $config = $configuration;
+                                $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
+                                $config['level'] = $config['level'] + 1;
+                                $objectToArray = $object->toArray($config);
+
+                                // Check if we want an embedded array
+                                if ($configuration['embedded']) {
+                                    switch ($attribute->getFormat()) {
+                                        case 'uuid':
+                                            $array[$attribute->getName()][] = $object->getId()->toString();
+                                            break;
+                                        case 'url':
+                                        case 'uri':
+                                            $array[$attribute->getName()][] = $object->getUri();
+                                            break;
+                                        case 'json':
+                                            $array[$attribute->getName()][] = $objectToArray;
+                                            break;
+                                        case 'iri':
+                                        default:
+                                            $array[$attribute->getName()][] = $object->getSelf();
+                                            break;
+                                    }
+                                    $embedded[$attribute->getName()][] = $objectToArray;
+                                    continue; // todo: put this continue back later!
+                                }
+                                $array[$attribute->getName()][] = $objectToArray;
+                            }
+                            // If we don't set the full object then we want to set self
+                            else {
+                                // $array[$attribute->getName()][] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
+                                $array[$attribute->getName()][] = $object->getSelf();
+                            }
                         }
                     }
                 }

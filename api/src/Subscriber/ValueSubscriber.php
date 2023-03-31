@@ -179,7 +179,7 @@ class ValueSubscriber implements EventSubscriberInterface
                     }
                 }
                 $valueObject->setArrayValue([]);
-            } elseif ($identifier = $valueObject->getStringValue()) {
+            } elseif ((Uuid::isValid($valueObject->getStringValue()) || filter_var($valueObject->getStringValue(), FILTER_VALIDATE_URL)) && $identifier = $valueObject->getStringValue()) {
                 foreach ($valueObject->getObjects() as $object) {
                     $valueObject->removeObject($object);
                 }
