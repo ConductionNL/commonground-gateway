@@ -42,7 +42,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class, properties={
- *     "name": "exact"
+ *     "name": "exact",
+ *     "reference": "exact"
  * })
  */
 class Mapping

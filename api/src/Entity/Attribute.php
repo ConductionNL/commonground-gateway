@@ -8,6 +8,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use App\Repository\AttributeRepository;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -39,7 +40,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/admin/attributes"}
  *  })
  *
- * @ORM\Entity(repositoryClass="App\Repository\AttributeRepository")
+ * @ORM\Entity(repositoryClass=AttributeRepository::class)
  *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
@@ -49,7 +50,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(SearchFilter::class, properties={
  *     "entity.id": "exact",
  *     "object.id": "exact",
- *     "name": "exact"
+ *     "name": "exact",
+ *     "reference": "exact"
  * })
  */
 class Attribute

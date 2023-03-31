@@ -9,6 +9,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Gateway as Source;
+use App\Repository\SynchronizationRepository;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
@@ -34,7 +35,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/admin/synchronizations"}
  *  })
  *
- * @ORM\Entity(repositoryClass="App\Repository\SynchronizationRepository")
+ * @ORM\Entity(repositoryClass=SynchronizationRepository::class)
  *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
