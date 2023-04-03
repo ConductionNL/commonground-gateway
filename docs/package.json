@@ -26,7 +26,7 @@
     "react-dom": "16.13.1",
     "react-helmet": "6.1.0",
     "react-router-dom": "5.2.0",
-    "styled-components": "5.1.1"
+    "styled-components": "5.3.5"
   },
   "devDependencies": {
     "babel-plugin-styled-components": "1.10.7",
