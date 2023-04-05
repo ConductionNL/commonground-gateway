@@ -203,6 +203,16 @@ class ObjectEntity
     private bool $hydrated = false;
 
     /**
+     * Filled when the object entity is locked.
+     *
+     * @Groups({"read", "write"})
+     * @var string|null
+     *
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $lock = null;
+
+    /**
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
@@ -1288,6 +1298,18 @@ class ObjectEntity
     public function setSubresourceIndex(?string $subresourceIndex): self
     {
         $this->subresourceIndex = $subresourceIndex;
+
+        return $this;
+    }
+
+    public function getLock(): ?string
+    {
+        return $this->lock;
+    }
+
+    public function setLock(?string $lock): self
+    {
+        $this->lock = $lock;
 
         return $this;
     }
