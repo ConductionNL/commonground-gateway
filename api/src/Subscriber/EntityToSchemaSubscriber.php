@@ -55,7 +55,7 @@ final class EntityToSchemaSubscriber implements EventSubscriberInterface
 
         if ($objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($objectId)) {
             $schema = $objectEntity->getEntity()->toSchema($objectEntity);
-            if(isset($schema['required']) === false) {
+            if (isset($schema['required']) === false) {
                 $schema['required'] = [];
             }
             $event->setResponse(new Response(json_encode($schema), Response::HTTP_OK, ['content-type' => 'application/json+schema']));
@@ -63,7 +63,7 @@ final class EntityToSchemaSubscriber implements EventSubscriberInterface
 
         if ($entity = $this->entityManager->getRepository('App:Entity')->find($objectId)) {
             $schema = $entity->toSchema(null);
-            if(isset($schema['required']) === false) {
+            if (isset($schema['required']) === false) {
                 $schema['required'] = [];
             }
             $event->setResponse(new Response(json_encode($schema), Response::HTTP_OK, ['content-type' => 'application/json+schema']));
