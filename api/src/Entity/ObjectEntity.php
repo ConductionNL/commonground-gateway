@@ -206,6 +206,7 @@ class ObjectEntity
      * Filled when the object entity is locked.
      *
      * @Groups({"read", "write"})
+     *
      * @var string|null
      *
      * @ORM\Column(type="string", length=255, nullable=true)
