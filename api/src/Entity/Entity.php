@@ -440,7 +440,7 @@ class Entity
      *
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="boolean", options={"default": false}, nullable=true)
+     * @ORM\Column(type="boolean", options={"default": true}, nullable=true)
      */
     private bool $persist = true;
 
