@@ -1080,7 +1080,7 @@ class ObjectEntity
             'name'             => $this->getName(),
             'self'             => $this->getSelf(),
             'owner'            => $this->getOwner(),
-            // ToDo: Ugly fix, we should make sure that organisatin and application are set on object creation
+            // ToDo: Ugly fix, we should make sure that organization and application are set on object creation
             //'organization'     => $this->getOrganization() ? $this->getOrganization()->getId()->toString() : null,
             'application'      => $this->getApplication() ? $this->getApplication()->getId()->toString() : null,
             'dateCreated'      => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
@@ -1122,7 +1122,7 @@ class ObjectEntity
                             $objectToArray = $object->toArray($config);
 
                             // Check if we want an embedded array
-                            if ($configuration['embedded']) {
+                            if ($configuration['embedded'] && !$attribute->getInclude()) {
                                 switch ($attribute->getFormat()) {
                                     case 'uuid':
                                         $array[$attribute->getName()] = $object->getId()->toString();
@@ -1136,9 +1136,9 @@ class ObjectEntity
                                     case 'iri':
                                     default:
                                         $array[$attribute->getName()] = $object->getSelf();
+                                        $embedded[$attribute->getName()] = $objectToArray;
                                         break;
                                 }
-                                $embedded[$attribute->getName()] = $objectToArray;
                                 continue;
                             }
                             $array[$attribute->getName()] = $objectToArray; // getValue will return a single ObjectEntity
@@ -1163,7 +1163,7 @@ class ObjectEntity
                                 $objectToArray = $object->toArray($config);
 
                                 // Check if we want an embedded array
-                                if ($configuration['embedded']) {
+                                if ($configuration['embedded'] && !$attribute->getInclude()) {
                                     switch ($attribute->getFormat()) {
                                         case 'uuid':
                                             $array[$attribute->getName()][] = $object->getId()->toString();
@@ -1178,10 +1178,10 @@ class ObjectEntity
                                         case 'iri':
                                         default:
                                             $array[$attribute->getName()][] = $object->getSelf();
+                                            $embedded[$attribute->getName()][] = $objectToArray;
                                             break;
                                     }
-                                    $embedded[$attribute->getName()][] = $objectToArray;
-                                    continue; // todo: put this continue back later!
+                                    continue;
                                 }
                                 $array[$attribute->getName()][] = $objectToArray;
                             }

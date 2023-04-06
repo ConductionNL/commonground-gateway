@@ -273,7 +273,7 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
         // In dev we also want to run the installer
         //if( getenv("APP_ENV") == "dev"){
         $io->section('Running installer');
-        $this->installationService->update($config);
+        $this->installationService->update($config, $io);
         //}
 
         $io->success('Successfully finished setting basic configuration');
