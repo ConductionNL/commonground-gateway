@@ -1088,9 +1088,9 @@ class ObjectEntity
             'dateCreated'      => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
             'dateModified'     => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
             'owner'            => [
-                'id'    => $configuration['user']['id'] ?? $this->getOwner(),
-                'name'  => $configuration['user']['name'] ?? $this->getOwner(),
-                'ref'   => $configuration['user']['ref'] ?? $this->getOwner()
+                'id'    => $this->getOwner(),
+                'name'  => isset($configuration['user']) ? $configuration['user']->getName() : $this->getOwner(),
+                'ref'   => isset($configuration['user']) ? $configuration['user']->getReference() : $this->getOwner()
             ],
             'organization'     => [
                 'id'  => $this->getOrganization() ? $this->getOrganization()->getId()->toString() : null,
