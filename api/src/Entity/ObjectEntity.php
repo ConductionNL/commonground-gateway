@@ -1090,7 +1090,7 @@ class ObjectEntity
             'owner'            => [
                 'id'    => $this->getOwner(),
                 'name'  => isset($configuration['user']) ? $configuration['user']->getName() : $this->getOwner(),
-                'ref'   => isset($configuration['user']) ? $configuration['user']->getReference() : $this->getOwner()
+                'ref'   => isset($configuration['user']) ? $configuration['user']->getReference() : $this->getOwner(),
             ],
             'organization'     => [
                 'id'  => $this->getOrganization() ? $this->getOrganization()->getId()->toString() : null,
