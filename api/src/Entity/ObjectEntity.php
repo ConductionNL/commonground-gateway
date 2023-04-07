@@ -1269,6 +1269,11 @@ class ObjectEntity
 
     public function addSubresourceOf(Value $subresourceOf): self
     {
+        // Make sure we can only add a parent Value if the Entity of this ObjectEntity has the Value->Attribute configured as possible parent Attribute.
+        if ($this->entity->getUsedIn()->contains($subresourceOf->getAttribute()) === false) {
+            return $this;
+        }
+
         // let add this
         if (!$this->subresourceOf->contains($subresourceOf)) {
             $this->subresourceOf->add($subresourceOf);
