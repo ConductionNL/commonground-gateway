@@ -452,6 +452,11 @@ class ObjectEntity
 
     public function addObjectValue(Value $objectValue): self
     {
+        // // Make sure we can only add a child Value if the Entity of this ObjectEntity has the Value->Attribute configured as a possible child Attribute.
+        if ($this->entity !== $objectValue->getAttribute()->getEntity()) {
+            return $this;
+        }
+
         if (!$this->objectValues->contains($objectValue)) {
             $this->objectValues->add($objectValue);
             $objectValue->setObjectEntity($this);

@@ -607,6 +607,11 @@ class Value
 
     public function setObjectEntity(?ObjectEntity $objectEntity): self
     {
+        // Make sure we can only add a parent ObjectEntity if the Attribute of this Value has the ObjectEntity->Entity configured as a possible parent Entity.
+        if ($objectEntity->getEntity() !== $this->getAttribute()->getEntity()) {
+            return $this;
+        }
+
         $this->objectEntity = $objectEntity;
 
         return $this;
