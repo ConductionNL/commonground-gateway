@@ -1079,16 +1079,28 @@ class ObjectEntity
             'id'               => $this->getId() ? $this->getId()->toString() : null,
             'name'             => $this->getName(),
             'self'             => $this->getSelf(),
-            'owner'            => $this->getOwner(),
-            // ToDo: Ugly fix, we should make sure that organization and application are set on object creation
-            //'organization'     => $this->getOrganization() ? $this->getOrganization()->getId()->toString() : null,
-            'application'      => $this->getApplication() ? $this->getApplication()->getId()->toString() : null,
-            'dateCreated'      => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
-            'dateModified'     => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
-            'level'            => $configuration['level'],
             'schema'           => [
                 'id'  => $this->getEntity()->getId()->toString(),
+                'name'=> $this->getEntity()->getName(),
                 'ref' => $this->getEntity()->getReference(),
+            ],
+            'level'            => $configuration['level'],
+            'dateCreated'      => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
+            'dateModified'     => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
+            'owner'            => [
+                'id'    => $this->getOwner(),
+                'name'  => isset($configuration['user']) ? $configuration['user']->getName() : $this->getOwner(),
+                'ref'   => isset($configuration['user']) ? $configuration['user']->getReference() : $this->getOwner(),
+            ],
+            'organization'     => [
+                'id'  => $this->getOrganization() ? $this->getOrganization()->getId()->toString() : null,
+                'name'=> $this->getOrganization() ? $this->getOrganization()->getName() : null,
+                'ref' => $this->getOrganization() ? $this->getOrganization()->getReference() : null,
+            ],
+            'application'      => [
+                'id'  => $this->getApplication() ? $this->getApplication()->getId()->toString() : null,
+                'name'=> $this->getApplication() ? $this->getApplication()->getName() : null,
+                'ref' => $this->getApplication() ? $this->getApplication()->getReference() : null,
             ],
             'synchronizations' => $this->getReadableSyncDataArray(),
         ];
