@@ -623,7 +623,10 @@ class Value
             } elseif ($this->getAttribute()->getMultiple()) {
                 // Lest deal with multiple file subobjects
                 if ($unsafe || $value === null || $value === []) {
-                    $this->objects->clear();
+                    // Make sure we unset inversedBy en subresourceOf, so no: $this->objects->clear();
+                    foreach ($this->getObjects() as $object) {
+                        $this->removeObject($object);
+                    }
                     $this->stringValue = null;
                 }
 
@@ -727,7 +730,10 @@ class Value
                         return $this;
                     }
 
-                    $this->objects->clear();
+                    // Make sure we unset inversedBy en subresourceOf, so no: $this->objects->clear();
+                    foreach ($this->getObjects() as $object) {
+                        $this->removeObject($object);
+                    }
 
                     // Set a string reprecentation of the object
                     // var_dump('schema: '.$this->getObjectEntity()->getEntity()->getName());
