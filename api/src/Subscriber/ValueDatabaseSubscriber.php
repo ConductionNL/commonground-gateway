@@ -42,7 +42,6 @@ class ValueDatabaseSubscriber implements EventSubscriberInterface
             $value->setStringValue($this->twig->createTemplate($value->getStringValue())->render(['object' => $value->getObjectEntity()]));
             $this->entityManager->persist($value);
         }
-
     }
 
     public function postPersist(LifecycleEventArgs $args)
