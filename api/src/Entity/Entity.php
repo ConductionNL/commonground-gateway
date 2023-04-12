@@ -1052,7 +1052,7 @@ class Entity
         if (array_key_exists('properties', $schema)) {
             foreach ($schema['properties'] as $name => $property) {
                 // Some properties are considered forbidden.
-                if (in_array($name, ['id']) || str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
+                if (str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
                     continue;
                 }
 
