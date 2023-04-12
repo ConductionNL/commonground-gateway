@@ -480,6 +480,13 @@ class Value
 
     public function addObject(ObjectEntity $object): self
     {
+        // Make sure we can only add a child ObjectEntity if the Entity of that ObjectEntity has this Value->Attribute configured as a possible child Attribute.
+        // TODO: This check should be here, but because we have some ZGW attributes that want to be connected to multiple entities, this will break stuff for now...
+        // TODO: https://conduction.atlassian.net/browse/KISS-339
+//        if ($this->attribute->getObject() !== $object->getEntity()) {
+//            return $this;
+//        }
+
         // let add this
         if (!$this->objects->contains($object)) {
             $this->objects->add($object);
@@ -602,6 +609,11 @@ class Value
 
     public function setObjectEntity(?ObjectEntity $objectEntity): self
     {
+        // Make sure we can only add a parent ObjectEntity if the Attribute of this Value has the ObjectEntity->Entity configured as a possible parent Entity.
+        if ($objectEntity->getEntity() !== $this->getAttribute()->getEntity()) {
+            return $this;
+        }
+
         $this->objectEntity = $objectEntity;
 
         return $this;
@@ -623,7 +635,10 @@ class Value
             } elseif ($this->getAttribute()->getMultiple()) {
                 // Lest deal with multiple file subobjects
                 if ($unsafe || $value === null || $value === []) {
-                    $this->objects->clear();
+                    // Make sure we unset inversedBy en subresourceOf, so no: $this->objects->clear();
+                    foreach ($this->getObjects() as $object) {
+                        $this->removeObject($object);
+                    }
                     $this->stringValue = null;
                 }
 
@@ -727,7 +742,10 @@ class Value
                         return $this;
                     }
 
-                    $this->objects->clear();
+                    // Make sure we unset inversedBy en subresourceOf, so no: $this->objects->clear();
+                    foreach ($this->getObjects() as $object) {
+                        $this->removeObject($object);
+                    }
 
                     // Set a string reprecentation of the object
                     // var_dump('schema: '.$this->getObjectEntity()->getEntity()->getName());

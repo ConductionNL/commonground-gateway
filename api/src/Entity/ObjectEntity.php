@@ -452,6 +452,11 @@ class ObjectEntity
 
     public function addObjectValue(Value $objectValue): self
     {
+        // // Make sure we can only add a child Value if the Entity of this ObjectEntity has the Value->Attribute configured as a possible child Attribute.
+        if ($this->entity !== $objectValue->getAttribute()->getEntity()) {
+            return $this;
+        }
+
         if (!$this->objectValues->contains($objectValue)) {
             $this->objectValues->add($objectValue);
             $objectValue->setObjectEntity($this);
@@ -1234,6 +1239,7 @@ class ObjectEntity
                     'gateway' => [
                         'id'       => $synchronization->getSource()->getId()->toString(),
                         'name'     => $synchronization->getSource()->getName(),
+                        'ref'      => $synchronization->getSource()->getReference(),
                         'location' => $synchronization->getSource()->getLocation(),
                     ],
                     'endpoint'          => $synchronization->getEndpoint(),
@@ -1281,6 +1287,11 @@ class ObjectEntity
 
     public function addSubresourceOf(Value $subresourceOf): self
     {
+        // Make sure we can only add a parent Value if the Entity of this ObjectEntity has the Value->Attribute configured as possible parent Attribute.
+        if ($this->entity->getUsedIn()->contains($subresourceOf->getAttribute()) === false) {
+            return $this;
+        }
+
         // let add this
         if (!$this->subresourceOf->contains($subresourceOf)) {
             $this->subresourceOf->add($subresourceOf);

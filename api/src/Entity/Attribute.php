@@ -1102,8 +1102,17 @@ class Attribute
         if ($this->type === 'object' && $object === null) {
             return $this;
         }
-        $this->type = 'object';
+
         $this->object = $object;
+
+        if ($object === null) {
+            $this->object->removeUsedIn($this);
+
+            return $this;
+        }
+
+        $this->type = 'object';
+        $object->addUsedIn($this);
 
         return $this;
     }
