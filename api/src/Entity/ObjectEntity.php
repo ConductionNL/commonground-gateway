@@ -1227,6 +1227,7 @@ class ObjectEntity
                     'gateway' => [
                         'id'       => $synchronization->getSource()->getId()->toString(),
                         'name'     => $synchronization->getSource()->getName(),
+                        'ref'      => $synchronization->getSource()->getReference(),
                         'location' => $synchronization->getSource()->getLocation(),
                     ],
                     'endpoint'          => $synchronization->getEndpoint(),
