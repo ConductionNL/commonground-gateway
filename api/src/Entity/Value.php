@@ -481,9 +481,11 @@ class Value
     public function addObject(ObjectEntity $object): self
     {
         // Make sure we can only add a child ObjectEntity if the Entity of that ObjectEntity has this Value->Attribute configured as a possible child Attribute.
-        if ($this->attribute->getObject() !== $object->getEntity()) {
-            return $this;
-        }
+        // TODO: This check should be here, but because we have some ZGW attributes that want to be connected to multiple entities, this will break stuff for now...
+        // TODO: https://conduction.atlassian.net/browse/KISS-339
+//        if ($this->attribute->getObject() !== $object->getEntity()) {
+//            return $this;
+//        }
 
         // let add this
         if (!$this->objects->contains($object)) {
