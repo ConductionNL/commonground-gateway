@@ -40,7 +40,6 @@ class ValueDatabaseSubscriber implements EventSubscriberInterface
         $value = $args->getObject();
         if ($value instanceof Value && $value->getStringValue()) {
             $value->setStringValue($this->twig->createTemplate($value->getStringValue())->render(['object' => $value->getObjectEntity()]));
-            $this->entityManager->persist($value);
         }
     }
 
