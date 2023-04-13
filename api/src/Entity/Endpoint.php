@@ -421,6 +421,7 @@ class Endpoint
         array_key_exists('title', $schema) ? $this->setName($schema['title']) :
             (array_key_exists('name', $schema) ? $this->setName($schema['name']) : '');
         array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
+        array_key_exists('defaultContentType', $schema) ? $this->setDefaultContentType($schema['defaultContentType']) : '';
         array_key_exists('tags', $schema) ? $this->setTags($schema['tags']) : '';
         array_key_exists('entities', $schema) ? $this->setEntities($schema['entities']) : '';
 
@@ -459,6 +460,7 @@ class Endpoint
             'methods'                        => $this->getMethods(),
             'method'                         => $this->getMethod(),
             'throws'                         => $this->getThrows(),
+            'defaultContentType'             => $this->getDefaultContentType(),
             'tag'                            => $this->getTag(),
             'tags'                           => $this->getTags(),
             'proxy'                          => $this->getProxy() !== null ? $this->getProxy()->toSchema() : null,
