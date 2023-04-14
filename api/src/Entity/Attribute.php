@@ -860,6 +860,12 @@ class Attribute
         if (array_key_exists('readOnly', $property)) {
             $this->setReadOnly($property['readOnly']);
         }
+        if (array_key_exists('searchable', $property)) {
+            $this->setSearchable($property['searchable']);
+        }
+        if (array_key_exists('sortable', $property)) {
+            $this->setSortable($property['sortable']);
+        }
         if (array_key_exists('description', $property)) {
             $this->setDescription($property['description']);
         }
