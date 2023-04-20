@@ -318,13 +318,13 @@ class Gateway
      *      max = 255
      * )
      *
-     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256", "vrijbrp-jwt"})
+     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256", "vrijbrp-jwt", "pink-jwt"})
      *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
      *             "type"="string",
-     *             "enum"={"apikey", "jwt", "username-password","none", "jwt-HS256"},
+     *             "enum"={"apikey", "jwt", "username-password","none", "jwt-HS256", "vrijbrp-jwt", "pink-jwt"},
      *             "example"="apikey"
      *         }
      *     }
