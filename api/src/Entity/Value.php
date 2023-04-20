@@ -731,16 +731,23 @@ class Value
                     }
 
                     // Catch Array input (for hydrator)
+
                     if (is_array($value) && $this->getAttribute()->getObject()) {
-                        $object = new ObjectEntity($this->getAttribute()->getObject());
-                        $object->setOwner($this->getObjectEntity()->getOwner());
-                        $object->setApplication($this->getObjectEntity()->getApplication());
-                        $object->setOrganization($this->getObjectEntity()->getOrganization());
+                        if (count($this->getObjects()) === 0) {
+                            $object = new ObjectEntity($this->getAttribute()->getObject());
+                            $object->setOwner($this->getObjectEntity()->getOwner());
+                            $object->setApplication($this->getObjectEntity()->getApplication());
+                            $object->setOrganization($this->getObjectEntity()->getOrganization());
+                        } else {
+                            $object = $this->getObjects()->first();
+                        }
+
                         $object->hydrate($value, $unsafe, $dateModified);
                         $value = $object;
                     } elseif (is_array($value)) {
                         return $this;
                     }
+
 
                     // Make sure we unset inversedBy en subresourceOf, so no: $this->objects->clear();
                     foreach ($this->getObjects() as $object) {
