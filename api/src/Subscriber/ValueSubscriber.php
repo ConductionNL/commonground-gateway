@@ -127,7 +127,7 @@ class ValueSubscriber implements EventSubscriberInterface
         }
 
         // Then check if the url is internal.
-        $self = str_replace($this->parameterBag->get('app_url'), '', $url);
+        $self = str_replace(rtrim($this->parameterBag->get('app_url'), '/'), '', $url);
         $objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['self' => $self]);
         if ($objectEntity !== null) {
             return $objectEntity;
