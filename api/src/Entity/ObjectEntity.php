@@ -284,6 +284,7 @@ class ObjectEntity
 
     public function getSelf(): ?string
     {
+        $pathStrings = [];
         // If self not set we generate a uri with linked endpoints
         if (!isset($this->self) || empty($this->self) || $this->self == '') {
             $pathString = '/api';
@@ -300,6 +301,14 @@ class ObjectEntity
                     $idSet = false;
                     $tempPath = '';
 
+                    if(!in_array('id', $pathArray)
+                        && !in_array('{id}', $pathArray)
+                        && !in_array('uuid', $pathArray)
+                        && !in_array('{uuid}', $pathArray)
+                    ) {
+                        continue;
+                    }
+
                     // Add path item to self uri
                     foreach ($pathArray as $pathItem) {
                         if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
@@ -311,11 +320,15 @@ class ObjectEntity
                     }
                     // If id is set we found a correct endpoint and we can stop the foreach
                     if ($idSet == true) {
-                        $pathString = $pathString.$tempPath;
-                        break;
+                        $pathStrings[] = $pathString.$tempPath;
                     }
                 }
             }
+
+            usort($pathStrings, function($a, $b) {
+                return $a !== '/api' && $b !== '/api' && strlen($a) > strlen($b);
+            });
+            $pathString = array_shift($pathStrings);
 
             // Fallback for valid url
             if ($pathString == '/api' && $this->getId()) {
