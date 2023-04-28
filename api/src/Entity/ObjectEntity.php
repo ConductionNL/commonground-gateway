@@ -324,7 +324,7 @@ class ObjectEntity
             $tempPath = '';
 
             // Skip endpoint if it does not contain id fields.
-            if(in_array('id', $pathArray) === false
+            if( in_array('id', $pathArray) === false
                 && in_array('{id}', $pathArray) === false
                 && in_array('uuid', $pathArray) === false
                 && in_array('{uuid}', $pathArray) === false
