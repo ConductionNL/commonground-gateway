@@ -315,7 +315,10 @@ class ObjectEntity
         foreach ($endpoints as $endpoint) {
 
             // We need a GET endpoint.
-            if (!in_array('get', $endpoint->getMethods()) && !in_array('GET', $endpoint->getMethods()) && $endpoint->getMethods() !== []) {
+            if (!in_array('get', $endpoint->getMethods())
+                && !in_array('GET', $endpoint->getMethods())
+                && $endpoint->getMethods() !== []
+            ) {
                 continue;
             }
 
@@ -324,7 +327,7 @@ class ObjectEntity
             $tempPath = '';
 
             // Skip endpoint if it does not contain id fields.
-            if( in_array('id', $pathArray) === false
+            if (in_array('id', $pathArray) === false
                 && in_array('{id}', $pathArray) === false
                 && in_array('uuid', $pathArray) === false
                 && in_array('{uuid}', $pathArray) === false
