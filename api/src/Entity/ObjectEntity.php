@@ -282,65 +282,78 @@ class ObjectEntity
         return $this;
     }
 
+    /**
+     * Creates the self iri for an object. If an GET endpoint with id field can be determined we use the path of that endpoint.
+     * If multiple GET endpoints are found, then we take the shortest IRI that can be build.
+     * If no endpoint exist we use an internal reference to the admin paths.
+     *
+     * @return string|null
+     */
     public function getSelf(): ?string
     {
-        $pathStrings = [];
         // If self not set we generate a uri with linked endpoints
-        if (!isset($this->self) || empty($this->self) || $this->self == '') {
-            $pathString = '/api';
+        if (isset($this->self) === true || empty($this->self) === false || $this->self === '') {
+            return $this->self;
+        }
+        $pathStrings = [];
 
-            if ($this->getEntity() !== null) {
-                $endpoints = $this->getEntity()->getEndpoints();
-                foreach ($endpoints as $endpoint) {
-                    // We need a GET endpoint
-                    if (!in_array('get', $endpoint->getMethods()) && !in_array('GET', $endpoint->getMethods()) && $endpoint->getMethods() !== []) {
-                        continue;
-                    }
+        $pathString = '/api';
 
-                    $pathArray = $endpoint->getPath() ?? [];
-                    $idSet = false;
-                    $tempPath = '';
-
-                    // Skip endpoint if it does not contain id fields.
-                    if(in_array('id', $pathArray) === false
-                        && in_array('{id}', $pathArray) === false
-                        && in_array('uuid', $pathArray) === false
-                        && in_array('{uuid}', $pathArray) === false
-                    ) {
-                        continue;
-                    }
-
-                    // Add path item to self uri
-                    foreach ($pathArray as $pathItem) {
-                        if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
-                            $idSet = true;
-                            $tempPath .= '/'.$this->getId()->toString();
-                        } else {
-                            $tempPath .= '/'.$pathItem;
-                        }
-                    }
-                    // If id is set we found a correct endpoint and we can stop the foreach
-                    if ($idSet == true) {
-                        $pathStrings[] = $pathString.$tempPath;
-                    }
-                }
-            }
-
-            // Sort the array from shortest to longest, discard empty path strings (/api).
-            usort($pathStrings, function($a, $b) {
-                return $a !== '/api' && $b !== '/api' && strlen($a) > strlen($b);
-            });
-            $pathString = array_shift($pathStrings);
-
-            // Fallback for valid url
+        if ($this->getEntity() === null || $this->getEntity()->getEndpoints()->isEmpty() === true) {
+            // Fallback for valid url.
             if ($pathString == '/api' && $this->getId()) {
-                $pathString = $pathString.'/objects/'.$this->getId()->toString();
+                $pathString = $pathString . '/objects/' . $this->getId()->toString();
             } elseif (!$this->getId()) {
                 $pathString = '';
             }
 
             $this->self = $pathString;
+            return $this->self;
         }
+
+        $endpoints = $this->getEntity()->getEndpoints();
+        foreach ($endpoints as $endpoint) {
+
+            // We need a GET endpoint.
+            if (!in_array('get', $endpoint->getMethods()) && !in_array('GET', $endpoint->getMethods()) && $endpoint->getMethods() !== []) {
+                continue;
+            }
+
+            $pathArray = $endpoint->getPath() ?? [];
+            $idSet = false;
+            $tempPath = '';
+
+            // Skip endpoint if it does not contain id fields.
+            if(in_array('id', $pathArray) === false
+                && in_array('{id}', $pathArray) === false
+                && in_array('uuid', $pathArray) === false
+                && in_array('{uuid}', $pathArray) === false
+            ) {
+                continue;
+            }
+
+            // Add path item to self uri
+            foreach ($pathArray as $pathItem) {
+                if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
+                    $idSet = true;
+                    $tempPath .= '/'.$this->getId()->toString();
+                } else {
+                    $tempPath .= '/'.$pathItem;
+                }
+            }
+
+            // If id is set we found a correct endpoint and we can stop the foreach
+            if ($idSet == true) {
+                $pathStrings[] = $pathString.$tempPath;
+            }
+        }
+
+        // Sort the array from shortest to longest, discard empty path strings (/api).
+        usort($pathStrings, function($arrayItem1, $arrayItem2) {
+            return $arrayItem1 !== '/api' && $arrayItem2 !== '/api' && strlen($arrayItem1) > strlen($arrayItem2);
+        });
+
+        $this->self = array_shift($pathStrings);
 
         return $this->self;
     }
