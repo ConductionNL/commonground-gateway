@@ -301,10 +301,11 @@ class ObjectEntity
                     $idSet = false;
                     $tempPath = '';
 
-                    if(!in_array('id', $pathArray)
-                        && !in_array('{id}', $pathArray)
-                        && !in_array('uuid', $pathArray)
-                        && !in_array('{uuid}', $pathArray)
+                    // Skip endpoint if it does not contain id fields.
+                    if(in_array('id', $pathArray) === false
+                        && in_array('{id}', $pathArray) === false
+                        && in_array('uuid', $pathArray) === false
+                        && in_array('{uuid}', $pathArray) === false
                     ) {
                         continue;
                     }
@@ -325,6 +326,7 @@ class ObjectEntity
                 }
             }
 
+            // Sort the array from shortest to longest, discard empty path strings (/api).
             usort($pathStrings, function($a, $b) {
                 return $a !== '/api' && $b !== '/api' && strlen($a) > strlen($b);
             });
