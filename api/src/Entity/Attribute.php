@@ -1110,8 +1110,10 @@ class Attribute
         }
 
         if ($object === null) {
-            $this->object->removeUsedIn($this);
-            $this->object = null;
+            if ($this->object !== null) {
+                $this->object->removeUsedIn($this);
+                $this->object = null;
+            }
 
             return $this;
         }
