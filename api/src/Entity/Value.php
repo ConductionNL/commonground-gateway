@@ -725,6 +725,7 @@ class Value
 
                     // Catch empty input
                     if ($value === null) {
+                        $this->setStringValue(null);
                         return $this;
                     } elseif (is_string($value)) {
                         return $this->setStringValue($value);
