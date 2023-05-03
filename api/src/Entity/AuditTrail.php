@@ -78,7 +78,7 @@ class AuditTrail
      * @var ?string The source of the audit trail
      *
      * @Groups({"read", "write"})
-     * @ORM\OneToOne(targetEntity=CollectionEntity::class, cascade={"persist", "remove"})
+     * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $source;
 
