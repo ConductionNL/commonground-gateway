@@ -1109,16 +1109,19 @@ class Attribute
             return $this;
         }
 
-        $this->object = $object;
-
         if ($object === null) {
-            $this->object->removeUsedIn($this);
+            if ($this->object !== null) {
+                $this->object->removeUsedIn($this);
+                $this->object = null;
+            }
 
             return $this;
         }
 
-        $this->type = 'object';
+        $this->object = $object;
         $object->addUsedIn($this);
+
+        $this->type = 'object';
 
         return $this;
     }
