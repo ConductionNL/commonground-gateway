@@ -302,18 +302,18 @@ class ObjectEntity
         if ($this->getEntity() === null || $this->getEntity()->getEndpoints()->isEmpty() === true) {
             // Fallback for valid url.
             if ($pathString == '/api' && $this->getId()) {
-                $pathString = $pathString . '/objects/' . $this->getId()->toString();
+                $pathString = $pathString.'/objects/'.$this->getId()->toString();
             } elseif (!$this->getId()) {
                 $pathString = '';
             }
 
             $this->self = $pathString;
+
             return $this->self;
         }
 
         $endpoints = $this->getEntity()->getEndpoints();
         foreach ($endpoints as $endpoint) {
-
             // We need a GET endpoint.
             if (!in_array('get', $endpoint->getMethods())
                 && !in_array('GET', $endpoint->getMethods())
@@ -352,7 +352,7 @@ class ObjectEntity
         }
 
         // Sort the array from shortest to longest, discard empty path strings (/api).
-        usort($pathStrings, function($arrayItem1, $arrayItem2) {
+        usort($pathStrings, function ($arrayItem1, $arrayItem2) {
             return $arrayItem1 !== '/api' && $arrayItem2 !== '/api' && strlen($arrayItem1) > strlen($arrayItem2);
         });
 

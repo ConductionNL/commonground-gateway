@@ -751,7 +751,6 @@ class Value
                         return $this;
                     }
 
-
                     // Make sure we unset inversedBy en subresourceOf, so no: $this->objects->clear();
                     foreach ($this->getObjects() as $object) {
                         $this->removeObject($object);
