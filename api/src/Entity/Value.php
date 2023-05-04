@@ -725,6 +725,9 @@ class Value
 
                     // Catch empty input
                     if ($value === null) {
+                        foreach ($this->getObjects() as $object) {
+                            $this->removeObject($object);
+                        }
                         return $this;
                     } elseif (is_string($value)) {
                         return $this->setStringValue($value);
