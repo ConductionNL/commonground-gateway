@@ -10,7 +10,6 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\AuditTrailRepository;
 use DateTime;
-use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use phpDocumentor\Reflection\Types\Integer;
@@ -35,8 +34,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "get"={"path"="/admin/audit_trails"},
  *     "post"={"path"="/admin/audit_trails"}
  *  })
- * @ORM\Entity(repositoryClass=AuditTrailRepository::class)
  *
+ * @ORM\Entity(repositoryClass=AuditTrailRepository::class)
  *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
@@ -72,6 +71,7 @@ class AuditTrail
      * @var ?Uuid The uuid of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="uuid", nullable=true)
      */
     private ?Uuid $uuid;
@@ -80,6 +80,7 @@ class AuditTrail
      * @var ?string The source of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $source;
@@ -88,6 +89,7 @@ class AuditTrail
      * @var ?string The application id of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $applicationId;
@@ -96,6 +98,7 @@ class AuditTrail
      * @var ?string The application view of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $applicationView;
@@ -104,6 +107,7 @@ class AuditTrail
      * @var ?string The user id of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $userId;
@@ -112,6 +116,7 @@ class AuditTrail
      * @var ?string The user view of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $userView;
@@ -120,6 +125,7 @@ class AuditTrail
      * @var ?string The action of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $action;
@@ -128,6 +134,7 @@ class AuditTrail
      * @var ?string The action view of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $actionView;
@@ -136,6 +143,7 @@ class AuditTrail
      * @var ?int The result of the audit trail Status code.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="integer", nullable=true)
      */
     private ?int $result;
@@ -144,6 +152,7 @@ class AuditTrail
      * @var ?string The main object of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $mainObject;
@@ -152,6 +161,7 @@ class AuditTrail
      * @var ?string The resource of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $resource;
@@ -160,6 +170,7 @@ class AuditTrail
      * @var ?string The resource url of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $resourceUrl;
@@ -168,6 +179,7 @@ class AuditTrail
      * @var ?string The explanation of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $explanation;
@@ -176,6 +188,7 @@ class AuditTrail
      * @var ?string The resource view of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $resourceView;
@@ -184,6 +197,7 @@ class AuditTrail
      * @var ?DateTime The creation date of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private ?DateTime $creationDate;
@@ -192,6 +206,7 @@ class AuditTrail
      * @var ?object The amendments of the audit trail
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="object", nullable=true)
      */
     private ?object $amendments;
