@@ -23,20 +23,20 @@ use Symfony\Component\Validator\Constraints as Assert;
  * This entity holds the information about an Audit Trail.
  *
  * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  shortName="gateway_audit_trail",
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *      "get"={"path"="/admin/audit_trails/{id}"},
- *      "put"={"path"="/admin/audit_trails/{id}"},
- *      "delete"={"path"="/admin/audit_trails/{id}"}
+ *     "get"={"path"="/admin/audit_trails/{id}"},
+ *     "put"={"path"="/admin/audit_trails/{id}"},
+ *     "delete"={"path"="/admin/audit_trails/{id}"}
  *  },
  *  collectionOperations={
- *      "get"={"path"="/admin/audit_trails"},
- *      "post"={"path"="/admin/audit_trails"}
- *  }
- * )
+ *     "get"={"path"="/admin/audit_trails"},
+ *     "post"={"path"="/admin/audit_trails"}
+ *  })
  * @ORM\Entity(repositoryClass=AuditTrailRepository::class)
- * @ORM\Table(name="gateway_audit_trail")
+ *
  *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
@@ -44,6 +44,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class)
+ *
+ * @ORM\Table(name="`gateway_audit_trail`")
  */
 class AuditTrail
 {
