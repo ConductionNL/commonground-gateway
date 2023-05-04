@@ -68,15 +68,6 @@ class AuditTrail
     private $id;
 
     /**
-     * @var ?Uuid The uuid of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="uuid", nullable=true)
-     */
-    private ?Uuid $uuid;
-
-    /**
      * @var ?string The source of the audit trail
      *
      * @Groups({"read", "write"})
@@ -203,13 +194,13 @@ class AuditTrail
     private ?DateTime $creationDate;
 
     /**
-     * @var ?object The amendments of the audit trail
+     * @var ?array The amendments of the audit trail
      *
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="object", nullable=true)
+     * @ORM\Column(type="array", nullable=true)
      */
-    private ?object $amendments;
+    private ?array $amendments;
 
     public function getId(): ?UuidInterface
     {
@@ -219,18 +210,6 @@ class AuditTrail
     public function setId(string $id): self
     {
         $this->id = Uuid::fromString($id);
-
-        return $this;
-    }
-
-    public function getUuid()
-    {
-        return $this->uuid;
-    }
-
-    public function setUuid($uuid): self
-    {
-        $this->uuid = $uuid;
 
         return $this;
     }
@@ -415,12 +394,12 @@ class AuditTrail
         return $this;
     }
 
-    public function getAmendments(): ?object
+    public function getAmendments(): ?array
     {
         return $this->amendments;
     }
 
-    public function setAmendments(?object $amendments): self
+    public function setAmendments(?array $amendments): self
     {
         $this->amendments = $amendments;
 
