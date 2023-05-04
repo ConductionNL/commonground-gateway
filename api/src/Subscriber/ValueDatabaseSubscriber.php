@@ -9,6 +9,7 @@ use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Twig\Environment;
 
 class ValueDatabaseSubscriber implements EventSubscriberInterface
@@ -17,12 +18,16 @@ class ValueDatabaseSubscriber implements EventSubscriberInterface
 
     private EntityManagerInterface $entityManager;
 
+    private ParameterBagInterface $param;
+
     public function __construct(
         Environment $twig,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        ParameterBagInterface $param
     ) {
         $this->twig = $twig;
         $this->entityManager = $entityManager;
+        $this->param = $param;
     }
 
     // this method can only return the event names; you cannot define a
@@ -39,6 +44,9 @@ class ValueDatabaseSubscriber implements EventSubscriberInterface
     {
         $value = $args->getObject();
         if ($value instanceof Value && $value->getStringValue()) {
+            if($value->getObjectEntity()->getUri() === null) {
+                $value->getObjectEntity()->setUri(rtrim($this->param->get('app_url'), '/').$value->getObjectEntity()->getSelf());
+            }
             $value->setStringValue($this->twig->createTemplate($value->getStringValue())->render(['object' => $value->getObjectEntity()]));
         }
     }
