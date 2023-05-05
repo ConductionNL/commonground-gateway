@@ -134,7 +134,6 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         if ($object instanceof ObjectEntity === false) {
             return;
         }
-        var_dump('load!');
 
         $config = [
             'action' => 'READ',
@@ -153,13 +152,10 @@ class AuditTrailSubscriber implements EventSubscriberInterface
     public function postUpdate(LifecycleEventArgs $args): void
     {
         $object = $args->getObject();
+        
         if ($object instanceof ObjectEntity === false) {
             return;
         }
-
-
-//        $postAuditTrail = $this->entityManager->getRepository('App:AuditTrail')->findOneBy(['resource' => $object->getId()->toString(), 'result' => 201]);
-//        $amendments = $postAuditTrail->getAmendments();
 
         $config = [
             'action' => 'UPDATE',
