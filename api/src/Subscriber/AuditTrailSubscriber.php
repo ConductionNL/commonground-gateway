@@ -7,6 +7,7 @@ use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Entity\Value;
 use App\Service\SynchronizationService;
+use CommonGateway\CoreBundle\Service\CacheService;
 use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
@@ -15,6 +16,7 @@ use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Event\KernelEvent;
 use Symfony\Component\Security\Core\Security;
 
@@ -41,6 +43,20 @@ class AuditTrailSubscriber implements EventSubscriberInterface
     private ParameterBagInterface $parameterBag;
 
     /**
+     * The request stack
+     *
+     * @var RequestStack
+     */
+    private RequestStack $requestStack;
+
+    /**
+     * The cache service
+     *
+     * @var CacheService
+     */
+    private CacheService $cacheService;
+
+    /**
      * @param EntityManagerInterface $entityManager
      * @param LoggerInterface        $valueSubscriberLogger
      * @param Security $security
@@ -50,12 +66,16 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         EntityManagerInterface $entityManager,
         LoggerInterface $valueSubscriberLogger,
         Security $security,
-        ParameterBagInterface $parameterBag
+        ParameterBagInterface $parameterBag,
+        RequestStack $requestStack,
+        CacheService $cacheService
     ) {
         $this->entityManager = $entityManager;
-        $this->logger = $valueSubscriberLogger;
-        $this->security = $security;
-        $this->parameterBag = $parameterBag;
+        $this->logger        = $valueSubscriberLogger;
+        $this->security      = $security;
+        $this->parameterBag  = $parameterBag;
+        $this->requestStack  = $requestStack;
+        $this->cacheService  = $cacheService;
     }//end __construct()
 
     /**
@@ -69,7 +89,8 @@ class AuditTrailSubscriber implements EventSubscriberInterface
 //            Events::postLoad,
             Events::postUpdate,
             Events::postPersist,
-            Events::preRemove
+            Events::preRemove,
+            Events::postLoad
         ];
     }//end getSubscribedEvents()
 
@@ -98,7 +119,6 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $auditTrail->setResourceView($object->getName());
 
         $this->entityManager->persist($auditTrail);
-        $this->entityManager->flush();
 
         return $auditTrail;
     }
@@ -110,7 +130,19 @@ class AuditTrailSubscriber implements EventSubscriberInterface
      */
     public function postLoad(LifecycleEventArgs $args): void
     {
+        $object = $args->getObject();
+        if ($object instanceof ObjectEntity === false) {
+            return;
+        }
+        var_dump('load!');
 
+        $config = [
+            'action' => 'READ',
+            'result' => 200
+        ];
+
+        $auditTrail = $this->createAuditTrail($object, $config);
+        $this->entityManager->persist($auditTrail);
     }
 
     /**
@@ -125,6 +157,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
             return;
         }
 
+
 //        $postAuditTrail = $this->entityManager->getRepository('App:AuditTrail')->findOneBy(['resource' => $object->getId()->toString(), 'result' => 201]);
 //        $amendments = $postAuditTrail->getAmendments();
 
@@ -132,11 +165,19 @@ class AuditTrailSubscriber implements EventSubscriberInterface
             'action' => 'UPDATE',
             'result' => 200
         ];
+
+        if($this->requestStack->getMainRequest()->getMethod() === 'PATCH') {
+            $config = [
+                'action' => 'PARTIAL_UPDATE',
+                'result' => 200
+            ];
+        }
+
         $auditTrail = $this->createAuditTrail($object, $config);
         // @TODO Set old object.
         $auditTrail->setAmendments([
             'new' => $object->toArray(),
-            'old' => ''
+            'old' => $this->cacheService->getObject($object->getId()),
         ]);
         $this->entityManager->persist($auditTrail);
         $this->entityManager->flush();
