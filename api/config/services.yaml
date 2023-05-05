@@ -49,6 +49,25 @@ services:
             #       - !php/const Redis::OPT_PREFIX
             #       - 'my_prefix'
 
+    App\Subscriber\ValueDatabaseSubscriber:
+        tags:
+            - name: 'doctrine.event_subscriber'
+              priority: 0
+                
+              # you can also restrict listeners to a specific Doctrine connection
+              connection: 'default'
+    
+    CommonGateway\CoreBundle\Subscriber\ObjectUriSubscriber:
+        tags:
+            - name: 'doctrine.event_subscriber'
+                
+              # subscribers can define their priority in case multiple subscribers or listeners are associated
+              # to the same event (default priority = 0; higher numbers = listener is run earlier)
+              priority: 1
+
+              # you can also restrict listeners to a specific Doctrine connection
+              connection: 'default'
+        
     Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler:
         arguments:
             - '@Redis'

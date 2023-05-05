@@ -33,7 +33,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *     "get"={"path"="/admin/audit_trails"},
  *     "post"={"path"="/admin/audit_trails"}
- *  })
+ *  },
+ *  attributes={"order"={"creationDate": "DESC"}})
  *
  * @ORM\Entity(repositoryClass=AuditTrailRepository::class)
  *
@@ -43,6 +44,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class)
+ *
  *
  * @ORM\Table(name="`gateway_audit_trail`")
  */
@@ -66,15 +68,6 @@ class AuditTrail
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
-
-    /**
-     * @var ?Uuid The uuid of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="uuid", nullable=true)
-     */
-    private ?Uuid $uuid;
 
     /**
      * @var ?string The source of the audit trail
@@ -203,13 +196,13 @@ class AuditTrail
     private ?DateTime $creationDate;
 
     /**
-     * @var ?object The amendments of the audit trail
+     * @var ?array The amendments of the audit trail
      *
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="object", nullable=true)
+     * @ORM\Column(type="array", nullable=true)
      */
-    private ?object $amendments;
+    private ?array $amendments;
 
     public function getId(): ?UuidInterface
     {
@@ -219,18 +212,6 @@ class AuditTrail
     public function setId(string $id): self
     {
         $this->id = Uuid::fromString($id);
-
-        return $this;
-    }
-
-    public function getUuid()
-    {
-        return $this->uuid;
-    }
-
-    public function setUuid($uuid): self
-    {
-        $this->uuid = $uuid;
 
         return $this;
     }
@@ -415,12 +396,12 @@ class AuditTrail
         return $this;
     }
 
-    public function getAmendments(): ?object
+    public function getAmendments(): ?array
     {
         return $this->amendments;
     }
 
-    public function setAmendments(?object $amendments): self
+    public function setAmendments(?array $amendments): self
     {
         $this->amendments = $amendments;
 
