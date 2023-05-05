@@ -33,7 +33,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *     "get"={"path"="/admin/audit_trails"},
  *     "post"={"path"="/admin/audit_trails"}
- *  })
+ *  },
+ *  attributes={"order"={"creationDate": "DESC"}})
  *
  * @ORM\Entity(repositoryClass=AuditTrailRepository::class)
  *
@@ -43,6 +44,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class)
+ *
  *
  * @ORM\Table(name="`gateway_audit_trail`")
  */
