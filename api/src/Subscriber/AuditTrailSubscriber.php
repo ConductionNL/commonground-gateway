@@ -86,7 +86,6 @@ class AuditTrailSubscriber implements EventSubscriberInterface
     public function getSubscribedEvents(): array
     {
         return [
-//            Events::postLoad,
             Events::postUpdate,
             Events::postPersist,
             Events::preRemove,
@@ -152,7 +151,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
     public function postUpdate(LifecycleEventArgs $args): void
     {
         $object = $args->getObject();
-        
+
         if ($object instanceof ObjectEntity === false) {
             return;
         }
@@ -170,7 +169,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         }
 
         $auditTrail = $this->createAuditTrail($object, $config);
-        // @TODO Set old object.
+        
         $auditTrail->setAmendments([
             'new' => $object->toArray(),
             'old' => $this->cacheService->getObject($object->getId()),
