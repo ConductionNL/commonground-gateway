@@ -45,7 +45,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class)
  *
- *
  * @ORM\Table(name="`gateway_audit_trail`")
  */
 class AuditTrail
