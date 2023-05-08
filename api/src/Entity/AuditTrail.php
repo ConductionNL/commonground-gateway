@@ -312,18 +312,6 @@ class AuditTrail
         return $this;
     }
 
-    public function getHoofdObject(): ?string
-    {
-        return $this->hoofdObject;
-    }
-
-    public function setHoofdObject(?string $hoofdObject): self
-    {
-        $this->hoofdObject = $hoofdObject;
-
-        return $this;
-    }
-
     public function getMainObject(): ?string
     {
         return $this->mainObject;
