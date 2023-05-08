@@ -53,7 +53,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
     /**
      * @param EntityManagerInterface $entityManager
      * @param LoggerInterface        $valueSubscriberLogger
-     * @param Security $security
+     * @param Security               $security
      * @param ParameterBagInterface  $parameterBag
      */
     public function __construct(
@@ -65,11 +65,11 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         CacheService $cacheService
     ) {
         $this->entityManager = $entityManager;
-        $this->logger        = $valueSubscriberLogger;
-        $this->security      = $security;
-        $this->parameterBag  = $parameterBag;
-        $this->requestStack  = $requestStack;
-        $this->cacheService  = $cacheService;
+        $this->logger = $valueSubscriberLogger;
+        $this->security = $security;
+        $this->parameterBag = $parameterBag;
+        $this->requestStack = $requestStack;
+        $this->cacheService = $cacheService;
     }//end __construct()
 
     /**
@@ -91,6 +91,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
      * Passes the result of prePersist to preUpdate.
      *
      * @param ObjectEntity $object
+     *
      * @return array
      */
     public function createAuditTrail(ObjectEntity $object, array $config): AuditTrail
@@ -104,7 +105,11 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         }
 
         $auditTrail = new AuditTrail();
-        $auditTrail->setSource($object->getEntity()->getCollections()->first()->getPrefix());
+        if ($object->getEntity() !== null
+            && $object->getEntity()->getCollections()->first() !== false
+        ) {
+            $auditTrail->setSource($object->getEntity()->getCollections()->first()->getPrefix());
+        }
 
         $auditTrail->setApplicationId('Anonymous');
         $auditTrail->setApplicationView('Anonymous');
@@ -123,6 +128,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $auditTrail->setResource($object->getId()->toString());
         $auditTrail->setResourceUrl($object->getUri());
         $auditTrail->setResourceView($object->getName());
+        $auditTrail->setCreationDate(new \DateTime('now'));
 
         $this->entityManager->persist($auditTrail);
 
@@ -205,11 +211,9 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         ];
 
         $auditTrail = $this->createAuditTrail($object, $config);
-        $auditTrail->setCreationDate(new \DateTime('now'));
-
         $auditTrail->setAmendments([
             'new' => $object->toArray(),
-            'old' => null
+            'old' => null,
         ]);
 
         $this->entityManager->persist($auditTrail);
@@ -220,7 +224,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
     {
         $object = $args->getObject();
         if ($object instanceof ObjectEntity === false) {
-           return;
+            return;
         }
 
         $config = [
@@ -230,7 +234,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $auditTrail = $this->createAuditTrail($object, $config);
         $auditTrail->setAmendments([
             'new' => null,
-            'old' => $object->toArray()
+            'old' => $object->toArray(),
         ]);
 
         $this->entityManager->persist($auditTrail);
