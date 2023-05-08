@@ -45,7 +45,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class)
  *
- *
  * @ORM\Table(name="`gateway_audit_trail`")
  */
 class AuditTrail
@@ -308,18 +307,6 @@ class AuditTrail
     public function setResult(?int $result): self
     {
         $this->result = $result;
-
-        return $this;
-    }
-
-    public function getHoofdObject(): ?string
-    {
-        return $this->hoofdObject;
-    }
-
-    public function setHoofdObject(?string $hoofdObject): self
-    {
-        $this->hoofdObject = $hoofdObject;
 
         return $this;
     }

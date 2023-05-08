@@ -44,7 +44,7 @@ class ValueDatabaseSubscriber implements EventSubscriberInterface
     {
         $value = $args->getObject();
         if ($value instanceof Value && $value->getStringValue()) {
-            if($value->getObjectEntity()->getUri() === null) {
+            if ($value->getObjectEntity()->getUri() === null) {
                 $value->getObjectEntity()->setUri(rtrim($this->param->get('app_url'), '/').$value->getObjectEntity()->getSelf());
             }
             $value->setStringValue($this->twig->createTemplate($value->getStringValue())->render(['object' => $value->getObjectEntity()]));

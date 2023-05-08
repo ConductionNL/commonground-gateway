@@ -728,6 +728,7 @@ class Value
                         foreach ($this->getObjects() as $object) {
                             $this->removeObject($object);
                         }
+
                         return $this;
                     } elseif (is_string($value)) {
                         return $this->setStringValue($value);
