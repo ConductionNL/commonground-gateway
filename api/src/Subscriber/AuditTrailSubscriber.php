@@ -96,11 +96,12 @@ class AuditTrailSubscriber implements EventSubscriberInterface
     public function createAuditTrail(ObjectEntity $object, array $config): AuditTrail
     {
         $userId = null;
+        $user   = null;
 
         if ($this->security->getUser() !== null) {
             $userId = $this->security->getUser()->getUserIdentifier();
+            $user = $this->entityManager->getRepository('App:User')->find($userId);
         }
-        $user = $this->entityManager->getRepository('App:User')->find($userId);
 
         $auditTrail = new AuditTrail();
         $auditTrail->setSource($object->getEntity()->getCollections()->first()->getPrefix());
