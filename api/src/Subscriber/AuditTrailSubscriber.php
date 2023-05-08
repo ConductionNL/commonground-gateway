@@ -97,11 +97,12 @@ class AuditTrailSubscriber implements EventSubscriberInterface
     public function createAuditTrail(ObjectEntity $object, array $config): AuditTrail
     {
         $userId = null;
+        $user   = null;
 
         if ($this->security->getUser() !== null) {
             $userId = $this->security->getUser()->getUserIdentifier();
+            $user = $this->entityManager->getRepository('App:User')->find($userId);
         }
-        $user = $this->entityManager->getRepository('App:User')->find($userId);
 
         $auditTrail = new AuditTrail();
         if ($object->getEntity() !== null
@@ -173,7 +174,9 @@ class AuditTrailSubscriber implements EventSubscriberInterface
             'result' => 200,
         ];
 
-        if ($this->requestStack->getMainRequest()->getMethod() === 'PATCH') {
+        if ($this->requestStack->getMainRequest() !== null
+            && $this->requestStack->getMainRequest()->getMethod() === 'PATCH'
+        ) {
             $config = [
                 'action' => 'PARTIAL_UPDATE',
                 'result' => 200,
