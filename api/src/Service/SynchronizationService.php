@@ -983,7 +983,7 @@ class SynchronizationService
      *
      * @return Synchronization The updated synchronization
      */
-    public function synchronize(Synchronization $synchronization, array $sourceObject = []): Synchronization
+    public function synchronize(Synchronization $synchronization, array $sourceObject = [], bool $unsafe = false): Synchronization
     {
         if (isset($this->io)) {
             $this->io->text("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
@@ -1015,6 +1015,10 @@ class SynchronizationService
         $now = new DateTime();
         $synchronization->setLastChecked($now);
 
+        // Todo: we never check if we actually have to sync anything... see handleSync functie for an example:
+        // if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() >= $synchronization->getObject()->getDateModified())) {
+        // Todo: @ruben i heard from @robert we wanted to do this check somewhere else?
+
         // Counter
         $counter = $synchronization->getTryCounter() + 1;
         $synchronization->setTryCounter($counter);
@@ -1031,7 +1035,7 @@ class SynchronizationService
         if ($synchronization->getMapping()) {
             $sourceObject = $this->mappingService->mapping($synchronization->getMapping(), $sourceObject);
         }
-        $synchronization->getObject()->hydrate($sourceObject);
+        $synchronization->getObject()->hydrate($sourceObject, $unsafe);
         $this->entityManager->persist($synchronization);
 
         if ($oldDateModified !== $synchronization->getObject()->getDateModified()->getTimestamp()) {
