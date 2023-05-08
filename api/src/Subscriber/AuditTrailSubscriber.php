@@ -19,6 +19,7 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Event\KernelEvent;
 use Symfony\Component\Security\Core\Security;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 
 class AuditTrailSubscriber implements EventSubscriberInterface
 {
@@ -101,15 +102,27 @@ class AuditTrailSubscriber implements EventSubscriberInterface
      */
     public function createAuditTrail(ObjectEntity $object, array $config): AuditTrail
     {
-        $userId = $this->security->getUser()->getUserIdentifier();
+        $userId = null;
+
+        if($this->security->getUser() !== null) {
+            $userId = $this->security->getUser()->getUserIdentifier();
+        }
         $user = $this->entityManager->getRepository('App:User')->find($userId);
 
         $auditTrail = new AuditTrail();
         $auditTrail->setSource($object->getEntity()->getCollections()->first()->getPrefix());
-        $auditTrail->setApplicationId($user->getApplications()->first()->getId()->toString());
-        $auditTrail->setApplicationView($user->getApplications()->first()->getName());
-        $auditTrail->setUserId($userId);
-        $auditTrail->setUserView($user->getName());
+
+        $auditTrail->setApplicationId('Anonymous');
+        $auditTrail->setApplicationView('Anonymous');
+        $auditTrail->setUserId('Anonymous');
+        $auditTrail->setUserView('Anonymous');
+
+        if($user !== null) {
+            $auditTrail->setApplicationId($user->getApplications()->first()->getId()->toString());
+            $auditTrail->setApplicationView($user->getApplications()->first()->getName());
+            $auditTrail->setUserId($userId);
+            $auditTrail->setUserView($user->getName());
+        }
         $auditTrail->setAction($config['action']);
         $auditTrail->setActionView($config['action']);
         $auditTrail->setResult($config['result']);
@@ -169,7 +182,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         }
 
         $auditTrail = $this->createAuditTrail($object, $config);
-        
+
         $auditTrail->setAmendments([
             'new' => $object->toArray(),
             'old' => $this->cacheService->getObject($object->getId()),
