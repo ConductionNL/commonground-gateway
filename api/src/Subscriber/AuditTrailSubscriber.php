@@ -4,20 +4,14 @@ namespace App\Subscriber;
 
 use App\Entity\AuditTrail;
 use App\Entity\ObjectEntity;
-use App\Entity\Synchronization;
-use App\Entity\Value;
-use App\Service\SynchronizationService;
 use CommonGateway\CoreBundle\Service\CacheService;
 use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
-use Doctrine\ORM\NonUniqueResultException;
 use Doctrine\Persistence\Event\LifecycleEventArgs;
 use Psr\Log\LoggerInterface;
-use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\HttpKernel\Event\KernelEvent;
 use Symfony\Component\Security\Core\Security;
 
 class AuditTrailSubscriber implements EventSubscriberInterface
@@ -43,14 +37,14 @@ class AuditTrailSubscriber implements EventSubscriberInterface
     private ParameterBagInterface $parameterBag;
 
     /**
-     * The request stack
+     * The request stack.
      *
      * @var RequestStack
      */
     private RequestStack $requestStack;
 
     /**
-     * The cache service
+     * The cache service.
      *
      * @var CacheService
      */
@@ -89,7 +83,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
             Events::postUpdate,
             Events::postPersist,
             Events::preRemove,
-            Events::postLoad
+            Events::postLoad,
         ];
     }//end getSubscribedEvents()
 
@@ -101,15 +95,27 @@ class AuditTrailSubscriber implements EventSubscriberInterface
      */
     public function createAuditTrail(ObjectEntity $object, array $config): AuditTrail
     {
-        $userId = $this->security->getUser()->getUserIdentifier();
+        $userId = null;
+
+        if ($this->security->getUser() !== null) {
+            $userId = $this->security->getUser()->getUserIdentifier();
+        }
         $user = $this->entityManager->getRepository('App:User')->find($userId);
 
         $auditTrail = new AuditTrail();
         $auditTrail->setSource($object->getEntity()->getCollections()->first()->getPrefix());
-        $auditTrail->setApplicationId($user->getApplications()->first()->getId()->toString());
-        $auditTrail->setApplicationView($user->getApplications()->first()->getName());
-        $auditTrail->setUserId($userId);
-        $auditTrail->setUserView($user->getName());
+
+        $auditTrail->setApplicationId('Anonymous');
+        $auditTrail->setApplicationView('Anonymous');
+        $auditTrail->setUserId('Anonymous');
+        $auditTrail->setUserView('Anonymous');
+
+        if ($user !== null) {
+            $auditTrail->setApplicationId($user->getApplications()->first()->getId()->toString());
+            $auditTrail->setApplicationView($user->getApplications()->first()->getName());
+            $auditTrail->setUserId($userId);
+            $auditTrail->setUserView($user->getName());
+        }
         $auditTrail->setAction($config['action']);
         $auditTrail->setActionView($config['action']);
         $auditTrail->setResult($config['result']);
@@ -136,7 +142,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
 
         $config = [
             'action' => 'READ',
-            'result' => 200
+            'result' => 200,
         ];
 
         $auditTrail = $this->createAuditTrail($object, $config);
@@ -158,18 +164,18 @@ class AuditTrailSubscriber implements EventSubscriberInterface
 
         $config = [
             'action' => 'UPDATE',
-            'result' => 200
+            'result' => 200,
         ];
 
         if($this->requestStack->getMainRequest()->getMethod() === 'PATCH') {
             $config = [
                 'action' => 'PARTIAL_UPDATE',
-                'result' => 200
+                'result' => 200,
             ];
         }
 
         $auditTrail = $this->createAuditTrail($object, $config);
-        
+
         $auditTrail->setAmendments([
             'new' => $object->toArray(),
             'old' => $this->cacheService->getObject($object->getId()),
@@ -192,7 +198,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
 
         $config = [
             'action' => 'CREATE',
-            'result' => 201
+            'result' => 201,
         ];
 
         $auditTrail = $this->createAuditTrail($object, $config);
@@ -216,7 +222,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
 
         $config = [
             'action' => 'DELETE',
-            'result' => 204
+            'result' => 204,
         ];
         $auditTrail = $this->createAuditTrail($object, $config);
         $auditTrail->setAmendments([
