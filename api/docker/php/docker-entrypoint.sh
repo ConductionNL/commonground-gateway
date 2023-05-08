@@ -42,7 +42,7 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	bin/console cache:clear
 	# Lets check if we have al the data that we need
 
-	if [ "APP_INIT" != 'false' ]; then
+	if [ "$APP_INIT" != 'false' ]; then
 		echo "Initializing the gateway"
 		bin/console commongateway:initialize
 	fi
