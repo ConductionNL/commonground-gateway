@@ -103,7 +103,11 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $user = $this->entityManager->getRepository('App:User')->find($userId);
 
         $auditTrail = new AuditTrail();
-        $auditTrail->setSource($object->getEntity()->getCollections()->first()->getPrefix());
+        if ($object->getEntity() !== null
+            && $object->getEntity()->getCollections()->first() !== false
+        ) {
+            $auditTrail->setSource($object->getEntity()->getCollections()->first()->getPrefix());
+        }
 
         $auditTrail->setApplicationId('Anonymous');
         $auditTrail->setApplicationView('Anonymous');
@@ -122,6 +126,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $auditTrail->setResource($object->getId()->toString());
         $auditTrail->setResourceUrl($object->getUri());
         $auditTrail->setResourceView($object->getName());
+        $auditTrail->setCreationDate(new \DateTime('now'));
 
         $this->entityManager->persist($auditTrail);
 
@@ -202,8 +207,6 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         ];
 
         $auditTrail = $this->createAuditTrail($object, $config);
-        $auditTrail->setCreationDate(new \DateTime('now'));
-
         $auditTrail->setAmendments([
             'new' => $object->toArray(),
             'old' => null
