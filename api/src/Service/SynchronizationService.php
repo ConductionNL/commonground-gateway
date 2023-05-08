@@ -976,6 +976,7 @@ class SynchronizationService
      *
      * @param Synchronization $synchronization The synchronization to update
      * @param array           $sourceObject    The object in the source
+     * @param bool            $unsafe          Unset attributes that are not included in the hydrator array when calling the hydrate function
      *
      * @throws GuzzleException
      * @throws LoaderError
