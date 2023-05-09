@@ -444,6 +444,15 @@ class Entity
      */
     private bool $persist = true;
 
+    /**
+     * @var bool Whether audittrails have to be created for the entity
+     *
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="boolean", options={"default": false}, nullable=true)
+     */
+    private bool $createAuditTrails = false;
+
     public function __toString()
     {
         return $this->getName().' ('.$this->getId().')';
@@ -1298,6 +1307,26 @@ class Entity
     public function setPersist(bool $persist): self
     {
         $this->persist = $persist;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getCreateAuditTrails(): bool
+    {
+        return $this->createAuditTrails;
+    }
+
+    /**
+     * @param bool $createAuditTrails
+     *
+     * @return Entity
+     */
+    public function setCreateAuditTrails(bool $createAuditTrails): self
+    {
+        $this->createAuditTrails = $createAuditTrails;
 
         return $this;
     }
