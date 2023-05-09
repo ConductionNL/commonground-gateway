@@ -145,6 +145,8 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $object = $args->getObject();
         if ($object instanceof ObjectEntity === false) {
             return;
+        } else if ($object->getEntity()->getCreateAuditTrails() === false) {
+            return;
         }
 
         $config = [
@@ -166,6 +168,8 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $object = $args->getObject();
 
         if ($object instanceof ObjectEntity === false) {
+            return;
+        } else if ($object->getEntity()->getCreateAuditTrails() === false) {
             return;
         }
 
@@ -203,6 +207,8 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $object = $args->getObject();
         if ($object instanceof ObjectEntity === false) {
             return;
+        } else if ($object->getEntity()->getCreateAuditTrails() === false) {
+            return;
         }
 
         $config = [
@@ -224,6 +230,8 @@ class AuditTrailSubscriber implements EventSubscriberInterface
     {
         $object = $args->getObject();
         if ($object instanceof ObjectEntity === false) {
+            return;
+        } else if ($object->getEntity()->getCreateAuditTrails() === false) {
             return;
         }
 
