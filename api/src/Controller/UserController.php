@@ -12,6 +12,7 @@ use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\ClientException;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +20,10 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
 use Symfony\Component\Serializer\SerializerInterface;
+
 
 /**
  * Class LoginController.
@@ -116,9 +120,75 @@ class UserController extends AbstractController
     }
 
     /**
+     * Create an authentication user from a entity user
+     *
+     * @param User $user The user to log in.
+     *
+     * @return AuthenticationUser The resulting authentication user.
+     */
+    public function createAuthenticationUser(User $user): AuthenticationUser
+    {
+        $roleArray = [];
+        foreach ($user->getSecurityGroups() as $securityGroup) {
+            $roleArray['roles'][] = "Role_{$securityGroup->getName()}";
+            $roleArray['roles'] = array_merge($roleArray['roles'], $securityGroup->getScopes());
+        }
+
+        if (!in_array('ROLE_USER', $roleArray['roles'])) {
+            $roleArray['roles'][] = 'ROLE_USER';
+        }
+        foreach ($roleArray['roles'] as $key => $role) {
+            if (strpos($role, 'ROLE_') !== 0) {
+                $roleArray['roles'][$key] = "ROLE_$role";
+            }
+        }
+
+        $userArray = [
+            'id'           => $user->getId()->toString(),
+            'email'        => $user->getEmail(),
+            'locale'       => $user->getLocale(),
+            'organization' => $user->getOrganisation()->getId()->toString(),
+            'roles'        => $roleArray['roles'],
+        ];
+
+        return new AuthenticationUser(
+            $userArray['id'],
+            $userArray['email'],
+            '',
+            '',
+            '',
+            $userArray['email'],
+            '',
+            $userArray['roles'],
+            $userArray['email'],
+            $userArray['locale'],
+            $userArray['organization'],
+            null
+        );
+    }
+
+    /**
+     * Add the logged in user to session.
+     *
+     * @param User                     $user            The user to log in.
+     * @param EventDispatcherInterface $eventDispatcher The event dispatcher.
+     *
+     * @return void
+     */
+    public function addUserToSession(User $user, EventDispatcherInterface $eventDispatcher, Request $request): void
+    {
+        $authUser = $this->createAuthenticationUser($user);
+        $authToken = new UsernamePasswordToken($authUser, $user->getPassword(), "public", $authUser->getRoles());
+        $this->get("security.token_storage")->setToken($authToken);
+
+        $event = new InteractiveLoginEvent($request, $authToken);
+        $eventDispatcher->dispatch($event);
+    }
+
+    /**
      * @Route("api/users/login", methods={"POST"})
      */
-    public function apiLoginAction(Request $request, UserPasswordHasherInterface $hasher, SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService)
+    public function apiLoginAction(Request $request, UserPasswordHasherInterface $hasher, SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService, EventDispatcherInterface $eventDispatcher)
     {
         $status = 200;
         $data = json_decode($request->getContent(), true);
@@ -150,6 +220,8 @@ class UserController extends AbstractController
         $token = $authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session));
 
         $user->setJwtToken($token);
+
+        $this->addUserToSession($user, $eventDispatcher, $request);
 
         if (isset($data['redirectUrl']) === true) {
             $this->session->set('jwtToken', $token);
