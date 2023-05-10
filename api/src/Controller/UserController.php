@@ -134,7 +134,7 @@ class UserController extends AbstractController
             $roleArray['roles'] = array_merge($roleArray['roles'], $securityGroup->getScopes());
         }
 
-        if (!in_array('ROLE_USER', $roleArray['roles'])) {
+        if (in_array('ROLE_USER', $roleArray['roles']) === false) {
             $roleArray['roles'][] = 'ROLE_USER';
         }
         foreach ($roleArray['roles'] as $key => $role) {
