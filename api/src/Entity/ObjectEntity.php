@@ -1104,14 +1104,14 @@ class ObjectEntity
         !isset($configuration['renderedObjects']) ? $configuration['renderedObjects'] = [] : '';
         !isset($configuration['embedded']) ? $configuration['embedded'] = false : '';
         !isset($configuration['onlyMetadata']) ? $configuration['onlyMetadata'] = false : '';
-        !isset($configuration['noMetadata']) ? $configuration['noMetadata'] = false : '';
+        !isset($configuration['metadata']) ? $configuration['metadata'] = true : '';
 
         // Working arrays
         $array = [];
         $currentObjects = [];
         $embedded = [];
 
-        if ($configuration['noMetadata'] === false) {
+        if ($configuration['metadata'] === true) {
             // The new metadata
             $array['_self'] = [
                 'id'               => $this->getId() ? $this->getId()->toString() : null,
@@ -1142,11 +1142,11 @@ class ObjectEntity
                 ],
                 'synchronizations' => $this->getReadableSyncDataArray(),
             ];
-        }
 
-        // If we don't need the actual object data we can exit here
-        if ($configuration['onlyMetadata'] === true && $configuration['noMetadata'] === false) {
-            return $array;
+            // If we don't need the actual object data we can exit here
+            if ($configuration['onlyMetadata'] === true) {
+                return $array;
+            }
         }
 
         // Let loop trough al the values
