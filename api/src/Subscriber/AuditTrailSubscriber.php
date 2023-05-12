@@ -83,7 +83,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
             Events::postUpdate,
             Events::postPersist,
             Events::preRemove,
-            Events::postLoad,
+//            Events::postLoad,
         ];
     }//end getSubscribedEvents()
 
@@ -145,8 +145,14 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $object = $args->getObject();
         if ($object instanceof ObjectEntity === false) {
             return;
-        } else if ($object->getEntity()->getCreateAuditTrails() === false) {
-            return;
+        } else {
+            var_dump($object->getId()->toString());
+            var_dump($object->getEntity()->getId()->toString());
+
+            die;
+            if ($object->getEntity()->getCreateAuditTrails() === false) {
+                return;
+            }
         }
 
         $config = [
@@ -169,8 +175,13 @@ class AuditTrailSubscriber implements EventSubscriberInterface
 
         if ($object instanceof ObjectEntity === false) {
             return;
-        } else if ($object->getEntity()->getCreateAuditTrails() === false) {
-            return;
+        } else {
+            var_dump($object->getId()->toString());
+
+            die;
+            if ($object->getEntity()->getCreateAuditTrails() === false) {
+                return;
+            }
         }
 
         $config = [
