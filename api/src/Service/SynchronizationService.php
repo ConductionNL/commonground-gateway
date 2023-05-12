@@ -74,7 +74,7 @@ class SynchronizationService
      *
      * @var array|string[]
      */
-    private array $testDataDefault = [
+    private array $synchronizationDefault = [
         'owner' => 'https://docs.commongateway.nl/user/default.user.json',
     ];
 
@@ -853,7 +853,7 @@ class SynchronizationService
      */
     private function setDefaultOwner(ObjectEntity $object): ObjectEntity
     {
-        $defaultUser = $this->entityManager->getRepository('App:User')->findOneBy(['reference' => $this->testDataDefault['owner']]);
+        $defaultUser = $this->entityManager->getRepository('App:User')->findOneBy(['reference' => $this->synchronizationDefault['owner']]);
         if ($defaultUser instanceof User === false) {
 
             return $object;
