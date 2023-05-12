@@ -1104,46 +1104,49 @@ class ObjectEntity
         !isset($configuration['renderedObjects']) ? $configuration['renderedObjects'] = [] : '';
         !isset($configuration['embedded']) ? $configuration['embedded'] = false : '';
         !isset($configuration['onlyMetadata']) ? $configuration['onlyMetadata'] = false : '';
+        !isset($configuration['metadata']) ? $configuration['metadata'] = true : '';
 
         // Working arrays
         $array = [];
         $currentObjects = [];
         $embedded = [];
 
-        // The new metadata
-        $array['_self'] = [
-            'id'               => $this->getId() ? $this->getId()->toString() : null,
-            'name'             => $this->getName(),
-            'self'             => $this->getSelf(),
-            'schema'           => [
-                'id'  => $this->getEntity()->getId()->toString(),
-                'name'=> $this->getEntity()->getName(),
-                'ref' => $this->getEntity()->getReference(),
-            ],
-            'level'            => $configuration['level'],
-            'dateCreated'      => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
-            'dateModified'     => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
-            'owner'            => [
-                'id'    => $this->getOwner(),
-                'name'  => isset($configuration['user']) ? $configuration['user']->getName() : $this->getOwner(),
-                'ref'   => isset($configuration['user']) ? $configuration['user']->getReference() : $this->getOwner(),
-            ],
-            'organization'     => [
-                'id'  => $this->getOrganization() ? $this->getOrganization()->getId()->toString() : null,
-                'name'=> $this->getOrganization() ? $this->getOrganization()->getName() : null,
-                'ref' => $this->getOrganization() ? $this->getOrganization()->getReference() : null,
-            ],
-            'application'      => [
-                'id'  => $this->getApplication() ? $this->getApplication()->getId()->toString() : null,
-                'name'=> $this->getApplication() ? $this->getApplication()->getName() : null,
-                'ref' => $this->getApplication() ? $this->getApplication()->getReference() : null,
-            ],
-            'synchronizations' => $this->getReadableSyncDataArray(),
-        ];
+        if ($configuration['metadata'] === true) {
+            // The new metadata
+            $array['_self'] = [
+                'id'               => $this->getId() ? $this->getId()->toString() : null,
+                'name'             => $this->getName(),
+                'self'             => $this->getSelf(),
+                'schema'           => [
+                    'id'  => $this->getEntity()->getId()->toString(),
+                    'name'=> $this->getEntity()->getName(),
+                    'ref' => $this->getEntity()->getReference(),
+                ],
+                'level'            => $configuration['level'],
+                'dateCreated'      => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
+                'dateModified'     => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
+                'owner'            => [
+                    'id'    => $this->getOwner(),
+                    'name'  => isset($configuration['user']) ? $configuration['user']->getName() : $this->getOwner(),
+                    'ref'   => isset($configuration['user']) ? $configuration['user']->getReference() : $this->getOwner(),
+                ],
+                'organization'     => [
+                    'id'  => $this->getOrganization() ? $this->getOrganization()->getId()->toString() : null,
+                    'name'=> $this->getOrganization() ? $this->getOrganization()->getName() : null,
+                    'ref' => $this->getOrganization() ? $this->getOrganization()->getReference() : null,
+                ],
+                'application'      => [
+                    'id'  => $this->getApplication() ? $this->getApplication()->getId()->toString() : null,
+                    'name'=> $this->getApplication() ? $this->getApplication()->getName() : null,
+                    'ref' => $this->getApplication() ? $this->getApplication()->getReference() : null,
+                ],
+                'synchronizations' => $this->getReadableSyncDataArray(),
+            ];
 
-        // If we dont need the actual object data we can exit here
-        if ($configuration['onlyMetadata']) {
-            return $array;
+            // If we don't need the actual object data we can exit here
+            if ($configuration['onlyMetadata'] === true) {
+                return $array;
+            }
         }
 
         // Let loop trough al the values
