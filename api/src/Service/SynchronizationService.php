@@ -9,6 +9,7 @@ use App\Entity\Gateway;
 use App\Entity\Gateway as Source;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
+use App\Entity\User;
 use App\Event\ActionEvent;
 use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
@@ -66,6 +67,16 @@ class SynchronizationService
     private ActionEvent $event;
     private EventDispatcherInterface $eventDispatcher;
     private Logger $logger;
+
+    /**
+     * Default user for synchronizations.
+     * Note that owner => reference is replaces with an uuid of that User object.
+     *
+     * @var array|string[]
+     */
+    private array $synchronizationDefault = [
+        'owner' => 'https://docs.commongateway.nl/user/default.user.json',
+    ];
 
     private bool $asyncError = false;
 
@@ -834,6 +845,24 @@ class SynchronizationService
         return $synchronization;
     }
 
+
+    /**
+     * Sets default owner on objectEntity.
+     * 
+     * @return ObjectEntity $object
+     */
+    private function setDefaultOwner(ObjectEntity $object): ObjectEntity
+    {
+        $defaultUser = $this->entityManager->getRepository('App:User')->findOneBy(['reference' => $this->synchronizationDefault['owner']]);
+        if ($defaultUser instanceof User === false) {
+
+            return $object;
+        }
+        
+        return $object->setOwner($defaultUser->getId()->toString());;
+
+    }//end setDefaultOwner()
+
     /**
      * Adds a new ObjectEntity to a synchronization object.
      *
@@ -845,6 +874,7 @@ class SynchronizationService
     {
         if (!$synchronization->getObject()) {
             $object = new ObjectEntity();
+            $object = $this->setDefaultOwner($object);
             $synchronization->getSourceId() && $object->setExternalId($synchronization->getSourceId());
             $object->setEntity($synchronization->getEntity());
             $object = $this->setApplicationAndOrganization($object);
@@ -995,6 +1025,7 @@ class SynchronizationService
         if (!$synchronization->getObject()) {
             isset($this->io) && $this->io->text('creating new objectEntity');
             $object = new ObjectEntity($synchronization->getEntity());
+            $object = $this->setDefaultOwner($object);
             $object->addSynchronization($synchronization);
             $this->entityManager->persist($object);
             $this->entityManager->persist($synchronization);
