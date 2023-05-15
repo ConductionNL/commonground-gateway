@@ -145,7 +145,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $object = $args->getObject();
         if ($object instanceof ObjectEntity === false) {
             return;
-        } else if ($object->getEntity()->getCreateAuditTrails() === false) {
+        } else if ($object->getEntity() === null || $object->getEntity()->getCreateAuditTrails() === false) {
             return;
         }
 
