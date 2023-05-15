@@ -83,7 +83,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
             Events::postUpdate,
             Events::postPersist,
             Events::preRemove,
-            Events::postLoad,
+//            Events::postLoad,
         ];
     }//end getSubscribedEvents()
 
