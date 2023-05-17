@@ -1164,7 +1164,8 @@ class Entity
                 if ($attribute->getType() != 'object') {
                     $property['value'] = $objectEntity->getValue($attribute);
                 } elseif ($attribute->getMultiple()) {
-                    $property['value'] = $objectEntity->getValueObject($attribute)->getSimpleArrayValue();
+                    foreach($objectEntity->getValueObject($attribute)->getObjects() as $object)
+                        $property['value'][] = $object->getId()->toString();
                 } else {
                     $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
                 }
