@@ -390,6 +390,7 @@ class SynchronizationService
             $this->entityManager->persist($updatedSynchronization);
 
             $this->entityManager->flush();
+            $this->entityManager->flush();
 
             if ($config['collectionDelete'] && ($key = array_search($synchronization, $config['existingSynchronizations'])) !== false) {
                 unset($config['existingSynchronizations'][$key]);
@@ -848,7 +849,7 @@ class SynchronizationService
 
     /**
      * Sets default owner on objectEntity.
-     * 
+     *
      * @return ObjectEntity $object
      */
     private function setDefaultOwner(ObjectEntity $object): ObjectEntity
@@ -858,7 +859,7 @@ class SynchronizationService
 
             return $object;
         }
-        
+
         return $object->setOwner($defaultUser->getId()->toString());;
 
     }//end setDefaultOwner()
