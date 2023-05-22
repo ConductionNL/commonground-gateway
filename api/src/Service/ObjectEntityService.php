@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Attribute;
+use App\Entity\Coupler;
 use App\Entity\Endpoint;
 use App\Entity\Entity;
 use App\Entity\File;
@@ -206,7 +207,7 @@ class ObjectEntityService
                 $this->dispatchEvent(
                     'commongateway.object.update',
                     [
-                        'response' => $parentObject->toArray(),
+                        'response' => $this->toArray($parentObject),
                         'entity'   => $parentObject->getEntity()->getId()->toString(),
                     ],
                     null,
@@ -1155,7 +1156,7 @@ class ObjectEntityService
                     // Make sure we never connect the value of a multiple=false attribute to more than one object! Checks inversedBy
                     $this->disconnectNotMultipleObjects($objectEntity, $attribute, $saveSubObject);
 
-                    $valueObject->addObject($saveSubObject);
+                    $valueObject->addObject(new Coupler($saveSubObject));
                 }
                 break;
             case 'file':
@@ -1223,7 +1224,7 @@ class ObjectEntityService
 
                     // Object toevoegen
                     $valueObject->getObjects()->clear(); // We start with a default object
-                    $valueObject->addObject($subObject);
+                    $valueObject->addObject(new Coupler($subObject));
                     break;
                 }
 
@@ -1845,7 +1846,7 @@ class ObjectEntityService
                 $xmlEncoder = new XmlEncoder(['xml_root_node_name' => 'S:Envelope']);
                 $body = $this->translationService->parse($xmlEncoder->encode($this->translationService->dotHydrator(
                     $objectEntity->getEntity()->getToSoap()->getRequest() ? $xmlEncoder->decode($objectEntity->getEntity()->getToSoap()->getRequest(), 'xml') : [],
-                    $objectEntity->toArray(),
+                    $this->toArray($objectEntity),
                     $objectEntity->getEntity()->getToSoap()->getRequestHydration()
                 ), 'xml', ['xml_encoding' => 'utf-8', 'remove_empty_tags' => true]), false);
                 $headers['Content-Type'] = 'application/xml;charset=UTF-8';
@@ -2140,5 +2141,174 @@ class ObjectEntityService
         }
 
         return $str;
+    }
+
+    public function toArray(ObjectEntity $objectEntity, array $configuration = []): array
+
+    {
+        // Let's default the config array
+        !isset($configuration['level']) ? $configuration['level'] = 1 : '';
+        !isset($configuration['maxdepth']) ? $configuration['maxdepth'] = $objectEntity->getEntity()->getMaxDepth() : '';
+        !isset($configuration['renderedObjects']) ? $configuration['renderedObjects'] = [] : '';
+        !isset($configuration['embedded']) ? $configuration['embedded'] = false : '';
+        !isset($configuration['onlyMetadata']) ? $configuration['onlyMetadata'] = false : '';
+        !isset($configuration['metadata']) ? $configuration['metadata'] = true : '';
+
+        // Working arrays
+        $array = [];
+        $currentObjects = [];
+        $embedded = [];
+
+        if ($configuration['metadata'] === true) {
+            // The new metadata
+            $array['_self'] = [
+                'id'               => $objectEntity->getId() ? $objectEntity->getId()->toString() : null,
+                'name'             => $objectEntity->getName(),
+                'self'             => $objectEntity->getSelf(),
+                'schema'           => [
+                    'id'  => $objectEntity->getEntity()->getId()->toString(),
+                    'name'=> $objectEntity->getEntity()->getName(),
+                    'ref' => $objectEntity->getEntity()->getReference(),
+                ],
+                'level'            => $configuration['level'],
+                'dateCreated'      => $objectEntity->getDateCreated() ? $objectEntity->getDateCreated()->format('c') : null,
+                'dateModified'     => $objectEntity->getDateModified() ? $objectEntity->getDateModified()->format('c') : null,
+                'owner'            => [
+                    'id'    => $objectEntity->getOwner(),
+                    'name'  => isset($configuration['user']) ? $configuration['user']->getName() : $objectEntity->getOwner(),
+                    'ref'   => isset($configuration['user']) ? $configuration['user']->getReference() : $objectEntity->getOwner(),
+                ],
+                'organization'     => [
+                    'id'  => $objectEntity->getOrganization() ? $objectEntity->getOrganization()->getId()->toString() : null,
+                    'name'=> $objectEntity->getOrganization() ? $objectEntity->getOrganization()->getName() : null,
+                    'ref' => $objectEntity->getOrganization() ? $objectEntity->getOrganization()->getReference() : null,
+                ],
+                'application'      => [
+                    'id'  => $objectEntity->getApplication() ? $objectEntity->getApplication()->getId()->toString() : null,
+                    'name'=> $objectEntity->getApplication() ? $objectEntity->getApplication()->getName() : null,
+                    'ref' => $objectEntity->getApplication() ? $objectEntity->getApplication()->getReference() : null,
+                ],
+                'synchronizations' => $objectEntity->getReadableSyncDataArray(),
+            ];
+
+            // If we don't need the actual object data we can exit here
+            if ($configuration['onlyMetadata'] === true) {
+                return $array;
+            }
+        }
+
+        // Let loop trough al the values
+        foreach ($objectEntity->getEntity()->getAttributes() as $attribute) {
+            $valueObject = $objectEntity->getValueObject($attribute);
+            // Subobjects are a bit complicated
+            if ($attribute->getType() == 'object') {
+                if ($attribute->getObject() === null) {
+                    // todo: error or even critical monolog?
+                    $array[$attribute->getName()] = "Attribute {$attribute->getId()->toString()} of type 'object' has not Entity connected through Attribute->object";
+                } elseif ($valueObject->getValue() == null) {
+                    $array[$attribute->getName()] = null;
+                } elseif (!$attribute->getMultiple() && $configuration['level'] < $configuration['maxdepth']) {
+                    if (count($valueObject->getObjects()) === 0) {
+                        $array[$attribute->getName()][] = null;
+                    } else {
+                        $coupler = $valueObject->getObjects()->first();
+
+                        $object = $this->entityManager->getRepository($coupler->getEntity())->find($coupler->getObjectId);
+
+                        $currentObjects[] = $object;
+                        // Only add an object if it hasn't bean added yet
+                        if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
+                            $config = $configuration;
+                            $config['renderedObjects'][] = $object;
+                            $config['level'] = $config['level'] + 1;
+                            $objectToArray = $this->toArray($object, $config);
+
+                            // Check if we want an embedded array
+                            if ($configuration['embedded'] && !$attribute->getInclude()) {
+                                switch ($attribute->getFormat()) {
+                                    case 'uuid':
+                                        $array[$attribute->getName()] = $object->getId()->toString();
+                                        break;
+                                    case 'url':
+                                        $array[$attribute->getName()] = $object->getUri();
+                                        break;
+                                    case 'json':
+                                        $array[$attribute->getName()] = $objectToArray;
+                                        break;
+                                    case 'iri':
+                                    default:
+                                        $array[$attribute->getName()] = $object->getSelf();
+                                        $embedded[$attribute->getName()] = $objectToArray;
+                                        break;
+                                }
+                                continue;
+                            }
+                            $array[$attribute->getName()] = $objectToArray; // getValue will return a single ObjectEntity
+                        }
+                        // If we don't set the full object then we want to set self
+                        else {
+                            // $array[$attribute->getName()] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
+                            $array[$attribute->getName()] = $object->getSelf();
+                        }
+                    }
+                } elseif ($configuration['level'] < $configuration['maxdepth']) {
+                    if (count($valueObject->getObjects()) === 0) {
+                        $array[$attribute->getName()] = [];
+                    } else {
+                        $currentObjects[] = $valueObject->getObjects()->toArray();
+                        foreach ($valueObject->getObjects() as $coupler) {
+
+                            $object = $this->entityManager->getRepository($coupler->getEntity())->find($coupler->getObjectId);
+
+                            // Only add an object if it hasn't bean added yet
+                            if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
+                                $config = $configuration;
+                                $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
+                                $config['level'] = $config['level'] + 1;
+                                $objectToArray = $this->toArray($object, $config);
+
+                                // Check if we want an embedded array
+                                if ($configuration['embedded'] && !$attribute->getInclude()) {
+                                    switch ($attribute->getFormat()) {
+                                        case 'uuid':
+                                            $array[$attribute->getName()][] = $object->getId()->toString();
+                                            break;
+                                        case 'url':
+                                        case 'uri':
+                                            $array[$attribute->getName()][] = $object->getUri();
+                                            break;
+                                        case 'json':
+                                            $array[$attribute->getName()][] = $objectToArray;
+                                            break;
+                                        case 'iri':
+                                        default:
+                                            $array[$attribute->getName()][] = $object->getSelf();
+                                            $embedded[$attribute->getName()][] = $objectToArray;
+                                            break;
+                                    }
+                                    continue;
+                                }
+                                $array[$attribute->getName()][] = $objectToArray;
+                            }
+                            // If we don't set the full object then we want to set self
+                            else {
+                                // $array[$attribute->getName()][] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
+                                $array[$attribute->getName()][] = $object->getSelf();
+                            }
+                        }
+                    }
+                }
+                // But normal values are simple
+            } else {
+                $array[$attribute->getName()] = $valueObject->getValue();
+            }
+        }
+
+        if (!empty($embedded)) {
+            // todo: this should be _embedded
+            $array['embedded'] = $embedded;
+        }
+
+        return $array;
     }
 }

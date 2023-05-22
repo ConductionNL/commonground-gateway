@@ -162,14 +162,14 @@ class ObjectEntity
      */
     private ?array $externalResult = [];
 
-    /**
-     * @Groups({"read"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"})
-     */
-    private $subresourceOf;
+//    /**
+//     * @Groups({"read"})
+//     *
+//     * @MaxDepth(1)
+//     *
+//     * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"})
+//     */
+//    private $subresourceOf;
 
     /**
      * If this is a subresource part of a list of subresources of another ObjectEntity this represents the index of this ObjectEntity in that list.
@@ -513,19 +513,19 @@ class ObjectEntity
         return $this->hasErrors;
     }
 
-    public function setHasErrors(bool $hasErrors, int $level = 1): self
-    {
-        $this->hasErrors = $hasErrors;
-
-        // Do the same for resources above this one if set to true
-        if ($hasErrors == true && !$this->getSubresourceOf()->isEmpty() && $level < 5) {
-            foreach ($this->getSubresourceOf() as $resource) {
-                $resource->getObjectEntity()->setHasErrors($hasErrors, $level + 1);
-            }
-        }
-
-        return $this;
-    }
+//    public function setHasErrors(bool $hasErrors, int $level = 1): self
+//    {
+//        $this->hasErrors = $hasErrors;
+//
+//        // Do the same for resources above this one if set to true
+//        if ($hasErrors == true && !$this->getSubresourceOf()->isEmpty() && $level < 5) {
+//            foreach ($this->getSubresourceOf() as $resource) {
+//                $resource->getObjectEntity()->setHasErrors($hasErrors, $level + 1);
+//            }
+//        }
+//
+//        return $this;
+//    }
 
     public function getErrors(): ?array
     {
@@ -625,19 +625,19 @@ class ObjectEntity
         return $this->hasErrors;
     }
 
-    public function setHasPromises(bool $hasPromises, int $level = 1): self
-    {
-        $this->hasPromises = $hasPromises;
-
-        // Do the same for resources above this one if set to true
-        if ($hasPromises == true && !$this->getSubresourceOf()->isEmpty() && $level < 5) {
-            foreach ($this->getSubresourceOf() as $resource) {
-                $resource->getObjectEntity()->setHasPromises($hasPromises, $level + 1);
-            }
-        }
-
-        return $this;
-    }
+//    public function setHasPromises(bool $hasPromises, int $level = 1): self
+//    {
+//        $this->hasPromises = $hasPromises;
+//
+//        // Do the same for resources above this one if set to true
+//        if ($hasPromises == true && !$this->getSubresourceOf()->isEmpty() && $level < 5) {
+//            foreach ($this->getSubresourceOf() as $resource) {
+//                $resource->getObjectEntity()->setHasPromises($hasPromises, $level + 1);
+//            }
+//        }
+//
+//        return $this;
+//    }
 
     public function getPromises(): ?array
     {
@@ -862,7 +862,7 @@ class ObjectEntity
         // Change Cascade
         if (!$dateModified) {
             $dateModified = new DateTime();
-            $this->changeCascade($dateModified);
+//            $this->changeCascade($dateModified);
         }
 
         // Note down that the object has been hydrated
@@ -1295,10 +1295,10 @@ class ObjectEntity
     /**
      * @return Collection|Value[]
      */
-    public function getSubresourceOf(): Collection
-    {
-        return $this->subresourceOf;
-    }
+//    public function getSubresourceOf(): Collection
+//    {
+//        return $this->subresourceOf;
+//    }
 
     /**
      * Try to find a Value this ObjectEntity is a child of. Searching/filtering these values by a specific Attribute.
@@ -1332,7 +1332,7 @@ class ObjectEntity
         }
         // Lets make this twoway
         if (!$subresourceOf->getObjects()->contains($this)) {
-            $subresourceOf->addObject($this);
+            $subresourceOf->addObject(new Coupler($this));
         }
 
         return $this;

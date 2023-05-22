@@ -29,7 +29,7 @@
         "guzzlehttp/psr7": "1.9",
         "hautelook/alice-bundle": "^2.9.0",
         "jwadhams/json-logic-php": "^1.4",
-        "larping-base/larping-bundle": "^1.0.100",
+        "larping-base/larping-bundle": "^1.0",
         "league/flysystem-bundle": "^2.4",
         "league/flysystem-ftp": "^2.4",
         "mongodb/mongodb": "^1.15",

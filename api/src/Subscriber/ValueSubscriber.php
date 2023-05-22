@@ -2,6 +2,7 @@
 
 namespace App\Subscriber;
 
+use App\Entity\Coupler;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
 use App\Entity\Value;
@@ -175,7 +176,7 @@ class ValueSubscriber implements EventSubscriberInterface
                 foreach ($valueObject->getArrayValue() as $identifier) {
                     $subobject = $this->findSubobject($identifier, $valueObject);
                     if ($subobject !== null) {
-                        $valueObject->addObject($subobject);
+                        $valueObject->addObject(new Coupler($subobject));
                     }
                 }
                 $valueObject->setArrayValue([]);
@@ -184,8 +185,9 @@ class ValueSubscriber implements EventSubscriberInterface
                     $valueObject->removeObject($object);
                 }
                 $subobject = $this->findSubobject($identifier, $valueObject);
+
                 if ($subobject !== null) {
-                    $valueObject->addObject($subobject);
+                    $valueObject->addObject(new Coupler($subobject));
                 }
             }
             $valueObject->getObjectEntity()->setDateModified(new \DateTime());

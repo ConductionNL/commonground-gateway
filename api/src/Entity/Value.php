@@ -187,7 +187,7 @@ class Value
     /**
      * @MaxDepth(1)
      *
-     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="LAZY", cascade={"persist"})
+     * @ORM\ManyToMany(targetEntity=Coupler::class, inversedBy="subresourceOf"), fetch="LAZY", cascade={"persist"})
      */
     private $objects; // sub objects
 
@@ -212,7 +212,6 @@ class Value
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
-
     public function __toString()
     {
         return $this->getStringValue();
@@ -230,6 +229,7 @@ class Value
         if ($objectEntity) {
             $this->setObjectEntity($objectEntity);
         }
+        $this->objectsNew = new ArrayCollection();
     }
 
     public function getId(): ?UuidInterface
@@ -442,7 +442,7 @@ class Value
                 return $input->getId();
             case 'object':
                 // if object
-                $this->addObject($input);
+                $this->addObject(new Coupler($input));
 
                 return $input->getId();
         }
@@ -478,7 +478,7 @@ class Value
         return $this->objects;
     }
 
-    public function addObject(ObjectEntity $object): self
+    public function addObject(Coupler $object): self
     {
         // Make sure we can only add a child ObjectEntity if the Entity of that ObjectEntity has this Value->Attribute configured as a possible child Attribute.
         // TODO: This check should be here, but because we have some ZGW attributes that want to be connected to multiple entities, this will break stuff for now...
@@ -500,17 +500,17 @@ class Value
         // TODO: see https://conduction.atlassian.net/browse/CON-2030
         // todo: bij inversedby setten, validate ook de opgegeven value voor de inversedBy Attribute. hiermee kunnen we json logic naar boven checken.
         // Handle inversed by
-        if ($this->getAttribute()->getInversedBy()) {
-            $inversedByValue = $object->getValueObject($this->getAttribute()->getInversedBy());
-            if (!$inversedByValue->getObjects()->contains($this->getObjectEntity())) {
-                $inversedByValue->addObject($this->getObjectEntity());
-            }
-        }
+//        if ($this->getAttribute()->getInversedBy()) {
+//            $inversedByValue = $object->getValueObject($this->getAttribute()->getInversedBy());
+//            if (!$inversedByValue->getObjects()->contains($this->getObjectEntity())) {
+//                $inversedByValue->addObject($this->getObjectEntity());
+//            }
+//        }
 
         return $this;
     }
 
-    public function removeObject(ObjectEntity $object): self
+    public function removeObject(Coupler $object): self
     {
         // handle subresources
         if ($object->getSubresourceOf()->contains($this)) {
@@ -521,13 +521,13 @@ class Value
             $this->objects->removeElement($object);
         }
 
-        // Remove inversed by
-        if ($this->getAttribute()->getInversedBy()) {
-            $inversedByValue = $object->getValueObject($this->getAttribute()->getInversedBy());
-            if ($inversedByValue->getObjects()->contains($this->getObjectEntity())) {
-                $inversedByValue->removeObject($this->getObjectEntity());
-            }
-        }
+//        // Remove inversed by
+//        if ($this->getAttribute()->getInversedBy()) {
+//            $inversedByValue = $object->getValueObject($this->getAttribute()->getInversedBy());
+//            if ($inversedByValue->getObjects()->contains($this->getObjectEntity())) {
+//                $inversedByValue->removeObject($this->getObjectEntity());
+//            }
+//        }
 
         return $this;
     }
@@ -620,8 +620,8 @@ class Value
     }
 
     /**
-     * @param $value The value to set
-     * @param bool $unsafe Wheter the setter can also remove values
+     * @param mixed $value  The value to set
+     * @param bool  $unsafe Wheter the setter can also remove values
      *
      * @throws Exception
      */
@@ -657,7 +657,7 @@ class Value
                         $object->setApplication($this->getObjectEntity()->getApplication());
                         $object->setOrganization($this->getObjectEntity()->getOrganization());
                         $object->hydrate($value, $unsafe, $dateModified);
-                        $value = $object;
+                        $value = new Coupler($object);
                         $this->hydratedObjects[] = $object;
                     }
 
@@ -665,7 +665,7 @@ class Value
                         $idArray[] = $value;
                     } elseif (!$value) {
                         continue;
-                    } elseif ($value instanceof ObjectEntity) {
+                    } elseif ($value instanceof Coupler) {
                         $this->addObject($value);
                     }
                 }
@@ -747,7 +747,7 @@ class Value
                         }
 
                         $object->hydrate($value, $unsafe, $dateModified);
-                        $value = $object;
+                        $value = new Coupler($object);
                     } elseif (is_array($value)) {
                         return $this;
                     }
@@ -894,5 +894,32 @@ class Value
 
         // And the we can set the result
         $this->setValue($defaultValue);
+    }
+
+    /**
+     * @return Collection|Coupler[]
+     */
+    public function getObjectsNew(): Collection
+    {
+        return $this->objectsNew;
+    }
+
+    public function addObjectsNew(Coupler $objectsNew): self
+    {
+        if (!$this->objectsNew->contains($objectsNew)) {
+            $this->objectsNew[] = $objectsNew;
+            $objectsNew->addSubresourceOf($this);
+        }
+
+        return $this;
+    }
+
+    public function removeObjectsNew(Coupler $objectsNew): self
+    {
+        if ($this->objectsNew->removeElement($objectsNew)) {
+            $objectsNew->removeSubresourceOf($this);
+        }
+
+        return $this;
     }
 }

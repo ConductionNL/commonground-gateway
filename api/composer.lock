@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c63f69a8e0799a0fd4fa46c093735b4b",
+    "content-hash": "3406f95d242ae435ce896b6a23a77e26",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -698,16 +698,16 @@
         },
         {
             "name": "commongateway/corebundle",
-            "version": "1.0.62",
+            "version": "1.0.82",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "7f4f2ec4ade405c0bf49f48e521e8ffcccb0a08b"
+                "reference": "6b1bb47b04f015979df8ac412b4b96734808d9c4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/7f4f2ec4ade405c0bf49f48e521e8ffcccb0a08b",
-                "reference": "7f4f2ec4ade405c0bf49f48e521e8ffcccb0a08b",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/6b1bb47b04f015979df8ac412b4b96734808d9c4",
+                "reference": "6b1bb47b04f015979df8ac412b4b96734808d9c4",
                 "shasum": ""
             },
             "require": {
@@ -767,7 +767,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-04-12T11:34:12+00:00"
+            "time": "2023-05-09T12:43:09+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -4428,16 +4428,16 @@
         },
         {
             "name": "larping-base/larping-bundle",
-            "version": "1.0.100",
+            "version": "1.0.111",
             "source": {
                 "type": "git",
                 "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "0dee9345a0c19dd9a02b18b1284cf67eb659b1fc"
+                "reference": "6f6af5601e97d1d81e9cee618bc8e7032468d4fa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/0dee9345a0c19dd9a02b18b1284cf67eb659b1fc",
-                "reference": "0dee9345a0c19dd9a02b18b1284cf67eb659b1fc",
+                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/6f6af5601e97d1d81e9cee618bc8e7032468d4fa",
+                "reference": "6f6af5601e97d1d81e9cee618bc8e7032468d4fa",
                 "shasum": ""
             },
             "require": {
@@ -4470,9 +4470,9 @@
             ],
             "support": {
                 "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.100"
+                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.111"
             },
-            "time": "2023-03-27T10:16:20+00:00"
+            "time": "2023-04-11T11:52:23+00:00"
         },
         {
             "name": "league/flysystem",

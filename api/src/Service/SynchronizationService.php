@@ -1103,7 +1103,7 @@ class SynchronizationService
 
         $this->entityManager->persist($objectEntity);
 
-        $this->event->setData(['response' => $objectEntity->toArray(), 'entity' => $objectEntity->getEntity()->getId()->toString()]);
+        $this->event->setData(['response' => $this->objectEntityService->toArray($objectEntity), 'entity' => $objectEntity->getEntity()->getId()->toString()]);
         $this->eventDispatcher->dispatch($this->event, $this->event->getType());
 
         return $objectEntity;
@@ -1377,7 +1377,7 @@ class SynchronizationService
             return $synchronization;
         }
         $object = $synchronization->getObject();
-        $objectArray = $object->toArray();
+        $objectArray = $this->objectEntityService->toArray($object);
 
         //        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
         // todo: maybe move this to foreach in getAllFromSource() (nice to have)

@@ -190,7 +190,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $auditTrail = $this->createAuditTrail($object, $config);
 
         $auditTrail->setAmendments([
-            'new' => $object->toArray(),
+            'new' => $this->objectEntityService->toArray($object),
             'old' => $this->cacheService->getObject($object->getId()),
         ]);
         $this->entityManager->persist($auditTrail);
@@ -218,7 +218,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
 
         $auditTrail = $this->createAuditTrail($object, $config);
         $auditTrail->setAmendments([
-            'new' => $object->toArray(),
+            'new' => $this->objectEntityService->toArray($object),
             'old' => null,
         ]);
 
@@ -242,7 +242,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $auditTrail = $this->createAuditTrail($object, $config);
         $auditTrail->setAmendments([
             'new' => null,
-            'old' => $object->toArray(),
+            'old' => $this->objectEntityService->toArray($object),
         ]);
 
         $this->entityManager->persist($auditTrail);
