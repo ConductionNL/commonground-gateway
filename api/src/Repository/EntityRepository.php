@@ -70,4 +70,12 @@ class EntityRepository extends ServiceEntityRepository
 
         return $query->getResult();
     }
+
+    public function findAllSelect(string $select = '*', string $alias = 'e'): array
+    {
+        $qb = $this->createQueryBuilder($alias)
+            ->select($select);
+
+        return $qb->getQuery()->getResult();
+    }
 }

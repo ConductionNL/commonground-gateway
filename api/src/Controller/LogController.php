@@ -135,7 +135,7 @@ class LogController extends AbstractController
 
         $content = json_encode([
             'results' => $collection->find($filter, ['limit' => $limit, 'skip' => $start, 'sort' => $order])->toArray(),
-            'page'    => ((int) $completeFilter['_page'] ?? 1),
+            'page'    => (int) ($completeFilter['_page'] ?? 1),
             'count'   => $total = $collection->countDocuments($filter),
             'pages'   => ceil($total / $limit),
         ]);

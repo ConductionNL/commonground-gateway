@@ -83,7 +83,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
             Events::postUpdate,
             Events::postPersist,
             Events::preRemove,
-//            Events::postLoad,
+            //            Events::postLoad,
         ];
     }//end getSubscribedEvents()
 
@@ -97,7 +97,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
     public function createAuditTrail(ObjectEntity $object, array $config): AuditTrail
     {
         $userId = null;
-        $user   = null;
+        $user = null;
 
         if ($this->security->getUser() !== null) {
             $userId = $this->security->getUser()->getUserIdentifier();
@@ -145,7 +145,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $object = $args->getObject();
         if ($object instanceof ObjectEntity === false) {
             return;
-        } else if ($object->getEntity() === null || $object->getEntity()->getCreateAuditTrails() === false) {
+        } elseif ($object->getEntity() === null || $object->getEntity()->getCreateAuditTrails() === false) {
             return;
         }
 
@@ -169,7 +169,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
 
         if ($object instanceof ObjectEntity === false) {
             return;
-        } else if ($object->getEntity()->getCreateAuditTrails() === false) {
+        } elseif ($object->getEntity()->getCreateAuditTrails() === false) {
             return;
         }
 
@@ -207,7 +207,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $object = $args->getObject();
         if ($object instanceof ObjectEntity === false) {
             return;
-        } else if ($object->getEntity()->getCreateAuditTrails() === false) {
+        } elseif ($object->getEntity()->getCreateAuditTrails() === false) {
             return;
         }
 
@@ -231,7 +231,7 @@ class AuditTrailSubscriber implements EventSubscriberInterface
         $object = $args->getObject();
         if ($object instanceof ObjectEntity === false) {
             return;
-        } else if ($object->getEntity()->getCreateAuditTrails() === false) {
+        } elseif ($object->getEntity()->getCreateAuditTrails() === false) {
             return;
         }
 

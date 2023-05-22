@@ -846,7 +846,6 @@ class SynchronizationService
         return $synchronization;
     }
 
-
     /**
      * Sets default owner on objectEntity.
      *
@@ -856,12 +855,10 @@ class SynchronizationService
     {
         $defaultUser = $this->entityManager->getRepository('App:User')->findOneBy(['reference' => $this->synchronizationDefault['owner']]);
         if ($defaultUser instanceof User === false) {
-
             return $object;
         }
 
-        return $object->setOwner($defaultUser->getId()->toString());;
-
+        return $object->setOwner($defaultUser->getId()->toString());
     }//end setDefaultOwner()
 
     /**
