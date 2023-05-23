@@ -11,6 +11,7 @@ use Exception;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
+use MongoDB\Driver\Exception\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -52,7 +53,17 @@ class LogController extends AbstractController
         $completeFilter = $filter;
 
         if (isset($filter['_id'])) {
-            $filter['_id'] = new ObjectId($filter['_id']);
+            try {
+                $filter['_id'] = new ObjectId($filter['_id']);
+            } catch (InvalidArgumentException $exception) {
+//                $content = json_encode([
+//                    'message' => "Invalid _id given, please give a valid 24-character hexadecimal string. ".$exception->getMessage(),
+//                    'type'    => 'Bad Request',
+//                    'path'    => '/amdin/monologs',
+//                    'data'    => ['_id' => $filter['_id']],
+//                ]);
+//                return new Response($content, 400, ['Content-type' => 'application/json']);
+            }
         }
 
         unset($filter['_start'], $filter['_offset'], $filter['_limit'], $filter['_page'],
