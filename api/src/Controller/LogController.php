@@ -90,8 +90,9 @@ class LogController extends AbstractController
      * @param $key
      * @param $value
      *
-     * @return bool
      * @throws Exception
+     *
+     * @return bool
      */
     private function handleFilterArray($key, &$value): bool
     {
