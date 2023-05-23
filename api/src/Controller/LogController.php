@@ -45,10 +45,6 @@ class LogController extends AbstractController
      */
     public function logAction(Request $request): Response
     {
-//        $date = new \DateTime();
-//        var_dump($date->getTimestamp() * 1000);
-//        var_dump($date->format("Y-m-d H:i:s"));
-
         $status = 200;
         $client = new Client($this->getParameter('cache_url'));
         $filter = $this->requestService->realRequestQueryAll('get', $request->getQueryString());
@@ -75,7 +71,6 @@ class LogController extends AbstractController
 
         $collection = $client->logs->logs;
 
-        var_dump($filter);
         $results = $collection->find($filter, ['limit' => $limit, 'skip' => $start, 'sort' => $order])->toArray();
         $total = $collection->countDocuments($filter);
 
