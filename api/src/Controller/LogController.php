@@ -56,13 +56,13 @@ class LogController extends AbstractController
             try {
                 $filter['_id'] = new ObjectId($filter['_id']);
             } catch (InvalidArgumentException $exception) {
-//                $content = json_encode([
-//                    'message' => "Invalid _id given, please give a valid 24-character hexadecimal string. ".$exception->getMessage(),
-//                    'type'    => 'Bad Request',
-//                    'path'    => '/amdin/monologs',
-//                    'data'    => ['_id' => $filter['_id']],
-//                ]);
-//                return new Response($content, 400, ['Content-type' => 'application/json']);
+                $content = json_encode([
+                    'message' => "Invalid _id given, please give a valid 24-character hexadecimal string. ".$exception->getMessage(),
+                    'type'    => 'Bad Request',
+                    'path'    => '/amdin/monologs',
+                    'data'    => ['_id' => $filter['_id']],
+                ]);
+                return new Response($content, 400, ['Content-type' => 'application/json']);
             }
         }
 
