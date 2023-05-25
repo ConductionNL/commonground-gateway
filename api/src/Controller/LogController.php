@@ -106,21 +106,28 @@ class LogController extends AbstractController
         if (is_array($value)) {
             // after, before, strictly_after,strictly_before
             if (!empty(array_intersect_key($value, array_flip(['after', 'before', 'strictly_after', 'strictly_before'])))) {
+                // Todo: re-use the CacheService code to do this, but add in someway an option for comparing string datetime or mongoDB datetime.
+                // In CoreBundle CacheService we do this instead:
+//                $value = ["$compareKey" => "{$compareDate->format('c')}"];
+
+                $newValue = null;
                 // Compare datetime
                 if (!empty(array_intersect_key($value, array_flip(['after', 'strictly_after'])))) {
                     $after = array_key_exists('strictly_after', $value) ? 'strictly_after' : 'after';
                     $compareDate = new DateTime($value[$after]);
                     $compareKey = $after === 'strictly_after' ? '$gt' : '$gte';
-                } else {
+
+                    $newValue["$compareKey"] = new UTCDateTime($compareDate);
+                }
+                if (!empty(array_intersect_key($value, array_flip(['before', 'strictly_before'])))) {
                     $before = array_key_exists('strictly_before', $value) ? 'strictly_before' : 'before';
                     $compareDate = new DateTime($value[$before]);
                     $compareKey = $before === 'strictly_before' ? '$lt' : '$lte';
+
+                    $newValue["$compareKey"] = new UTCDateTime($compareDate);
                 }
 
-                // Todo: re-use the CacheService code to do this, but add in someway an option for comparing string datetime and mongoDB datetime.
-                // In CoreBundle CacheService we do this instead:
-//                $value = ["$compareKey" => "{$compareDate->format('c')}"];
-                $value = ["$compareKey" => new UTCDateTime($compareDate)];
+                $value = $newValue;
 
                 return true;
             }
