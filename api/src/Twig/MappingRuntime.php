@@ -2,6 +2,7 @@
 
 namespace App\Twig;
 
+use Adbar\Dot;
 use CommonGateway\CoreBundle\Service\MappingService;
 use Doctrine\ORM\EntityManagerInterface;
 use Twig\Extension\RuntimeExtensionInterface;
@@ -24,5 +25,12 @@ class MappingRuntime implements RuntimeExtensionInterface
         $value = $this->mappingService->mapping($mapping, $data, $list);
 
         return $value;
+    }
+
+    public function dotToArray(array $array): array
+    {
+        $dotArray = new Dot($array, true);
+
+        return $dotArray->all();
     }
 }
