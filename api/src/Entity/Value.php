@@ -187,7 +187,7 @@ class Value
     /**
      * @MaxDepth(1)
      *
-     * @ORM\ManyToMany(targetEntity=Coupler::class, inversedBy="subresourceOf"), fetch="LAZY", cascade={"persist"})
+     * @ORM\ManyToMany(targetEntity=Coupler::class, inversedBy="subresourceOf", fetch="LAZY", cascade={"persist"})
      */
     private $objects; // sub objects
 

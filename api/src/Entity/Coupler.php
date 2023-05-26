@@ -47,9 +47,9 @@ class Coupler
     private ?\DateTime $dateModified = null;
 
     /**
-     * @ORM\ManyToMany(targetEntity=Value::class, mappedBy="objects", cascade={"persist"})
+     * @ORM\ManyToMany(targetEntity=Value::class, mappedBy="objects")
      */
-    private ArrayCollection $subresourceOf;
+    private Collection $subresourceOf;
 
     public function __construct(?object $object = null)
     {
@@ -114,7 +114,7 @@ class Coupler
         return $this;
     }
 
-    public function getSubresourceOf(): ?ArrayCollection
+    public function getSubresourceOf(): ?Collection
     {
         return $this->subresourceOf;
     }

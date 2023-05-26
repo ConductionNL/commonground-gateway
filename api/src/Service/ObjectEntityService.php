@@ -2213,7 +2213,7 @@ class ObjectEntityService
                     } else {
                         $coupler = $valueObject->getObjects()->first();
 
-                        $object = $this->entityManager->getRepository($coupler->getEntity())->find($coupler->getObjectId);
+                        $object = $this->entityManager->getRepository($coupler->getEntity())->find($coupler->getObjectId());
 
                         $currentObjects[] = $object;
                         // Only add an object if it hasn't bean added yet
