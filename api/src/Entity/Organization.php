@@ -162,9 +162,15 @@ class Organization
      */
     private $dateModified;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Template::class, mappedBy="organization", orphanRemoval=true)
+     */
+    private $templates;
+
     public function __construct()
     {
         $this->users = new ArrayCollection();
+        $this->templates = new ArrayCollection();
     }
 
     /**
@@ -354,6 +360,36 @@ class Organization
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Template[]
+     */
+    public function getTemplates(): Collection
+    {
+        return $this->templates;
+    }
+
+    public function addTemplate(Template $template): self
+    {
+        if (!$this->templates->contains($template)) {
+            $this->templates[] = $template;
+            $template->setOrganization($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTemplate(Template $template): self
+    {
+        if ($this->templates->removeElement($template)) {
+            // set the owning side to null (unless already changed)
+            if ($template->getOrganization() === $this) {
+                $template->setOrganization(null);
+            }
+        }
 
         return $this;
     }
