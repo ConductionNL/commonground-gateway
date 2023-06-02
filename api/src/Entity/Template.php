@@ -2,60 +2,145 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\TemplateRepository;
+use DateTime;
 use Doctrine\ORM\Mapping as ORM;
+use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\MaxDepth;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @ApiResource()
+ * A template to create custom renders of an object
+ *
+ * @ApiResource(
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  itemOperations={
+ *      "get"={"path"="/admin/templates/{id}"},
+ *      "put"={"path"="/admin/templates/{id}"},
+ *      "delete"={"path"="/admin/templates/{id}"}
+ *  },
+ *  collectionOperations={
+ *      "get"={"path"="/admin/templates"},
+ *      "post"={"path"="/admin/templates"}
+ *  }))
  * @ORM\Entity(repositoryClass=TemplateRepository::class)
+ * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ *
+ * @ApiFilter(BooleanFilter::class)
+ * @ApiFilter(OrderFilter::class)
+ * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "supportedSchemas": "exact",
+ *     "name": "exact"
+ * })
  */
 class Template
 {
     /**
+     * @var UuidInterface The UUID identifier of this object
+     *
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
+     *
+     * @Groups({"read"})
+     *
+     * @Assert\Uuid
+     *
      * @ORM\Id
-     * @ORM\GeneratedValue
-     * @ORM\Column(type="integer")
+     *
+     * @ORM\Column(type="uuid", unique=true)
+     *
+     * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
+     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private $id;
+    private UuidInterface $id;
 
     /**
+     * @var string The name of this Template
+     *
+     * @Gedmo\Versioned
+     *
+     * @Assert\Length(
+     *     max = 255
+     * )
+     *
+     * @Assert\NotNull
+     *
+     * @Groups({"read","write"})
      * @ORM\Column(type="string", length=255)
      */
-    private $name;
+    private string $name = '';
 
     /**
+     * @var string|null The description of this Template
+     *
+     * @Gedmo\Versioned
+     *
+     * @Groups({"read","write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $description;
+    private ?string $description = null;
 
     /**
+     * @var string|null The .html.twig template
+     *
+     * @Gedmo\Versioned
+     *
+     * @Groups({"read","write"})
      * @ORM\Column(type="text", nullable=true)
      */
-    private $content;
+    private ?string $content = null;
 
     /**
+     * @var Organization|null the organization this template belongs to
+     *
+     * @Groups({"read","write"})
+     *
      * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="templates")
      * @ORM\JoinColumn(nullable=false)
      */
-    private $organization;
+    private ?Organization $organization = null;
 
     /**
+     * @var array The schemas supported by this template
+     *
+     * @Groups({"read","write"})
      * @ORM\Column(type="array")
      */
     private $supportedSchemas = [];
 
     /**
+     * @var Datetime|null The moment this resource was created
+     *
+     * @Groups({"read"})
+     *
+     * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private $dateCreated;
+    private ?DateTime $dateCreated = null;
 
     /**
+     * @var Datetime|null The moment this resource was last Modified
+     *
+     * @Groups({"read"})
+     *
+     * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private $dateModified;
+    private ?DateTime $dateModified = null;
 
-    public function getId(): ?int
+    public function getId(): ?UuidInterface
     {
         return $this->id;
     }
