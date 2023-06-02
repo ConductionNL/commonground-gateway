@@ -14,11 +14,10 @@ use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * A template to create custom renders of an object
+ * A template to create custom renders of an object.
  *
  * @ApiResource(
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
@@ -32,7 +31,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get"={"path"="/admin/templates"},
  *      "post"={"path"="/admin/templates"}
  *  }))
+ *
  * @ORM\Entity(repositoryClass=TemplateRepository::class)
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -76,6 +77,7 @@ class Template
      * @Assert\NotNull
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $name = '';
@@ -86,6 +88,7 @@ class Template
      * @Gedmo\Versioned
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $description = null;
@@ -96,6 +99,7 @@ class Template
      * @Gedmo\Versioned
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $content = null;
@@ -106,6 +110,7 @@ class Template
      * @Groups({"read","write"})
      *
      * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="templates")
+     *
      * @ORM\JoinColumn(nullable=false)
      */
     private ?Organization $organization = null;
@@ -114,6 +119,7 @@ class Template
      * @var array The schemas supported by this template
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="array")
      */
     private $supportedSchemas = [];

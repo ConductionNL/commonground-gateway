@@ -42,14 +42,17 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  })
  *
  * @ORM\Entity(repositoryClass=AttributeRepository::class)
+ *
  * @ORM\Table(
  *     name="attribute",
  *     uniqueConstraints={
+ *
  *      @ORM\UniqueConstraint(
  *          name="entity_attribute_unique",
  *          columns={"name", "entity_id"}
  *     )
  * })
+ *
  * @UniqueEntity(
  *     fields={"name", "entity"},
  *     message="Attribute->name for given Entity already exists in database."
