@@ -25,7 +25,7 @@ class SynchronizationPushHandler implements ActionHandlerInterface
     public function getConfiguration(): array
     {
         return [
-            '$id'        => 'https://example.com/person.schema.json',
+            '$id'        => 'https://commongateway.nl/ActionHandler/SynchronizationPushHandler.ActionHandler.json',
             '$schema'    => 'https://docs.commongateway.nl/schemas/ActionHandler.schema.json',
             'title'      => 'SynchronizationPushHandler',
             'description'=> '',
