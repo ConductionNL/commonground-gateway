@@ -318,13 +318,13 @@ class Gateway
      *      max = 255
      * )
      *
-     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256", "vrijbrp-jwt", "pink-jwt"})
+     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256", "vrijbrp-jwt", "pink-jwt", "oauth"})
      *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
      *             "type"="string",
-     *             "enum"={"apikey", "jwt", "username-password","none", "jwt-HS256", "vrijbrp-jwt", "pink-jwt"},
+     *             "enum"={"apikey", "jwt", "username-password","none", "jwt-HS256", "vrijbrp-jwt", "pink-jwt", "oauth"},
      *             "example"="apikey"
      *         }
      *     }
@@ -337,6 +337,16 @@ class Gateway
     private string $auth = 'none';
 
     /**
+     * @var array|null The configuration for certain types of authentication methods.
+     *
+     * @Groups({"read","read_secure","write"})
+     *
+     * @ORM\Column(type="array", nullable=true)
+     *
+     */
+    private ?array $authenticationConfig = [];
+
+    /**
      * @var string The method used for authentication to the Gateway
      *
      * @Assert\NotNull
@@ -345,13 +355,13 @@ class Gateway
      *      max = 255
      * )
      *
-     * @Assert\Choice({"header", "query"})
+     * @Assert\Choice({"header", "query", "form_params", "json"})
      *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
      *             "type"="string",
-     *             "enum"={"header", "query"},
+     *             "enum"={"header", "query", "form_params", "json"},
      *             "example"="header"
      *         }
      *     }
@@ -958,6 +968,18 @@ class Gateway
     public function setAuthorizationHeader(string $authorizationHeader): self
     {
         $this->authorizationHeader = $authorizationHeader;
+
+        return $this;
+    }
+
+    public function getAuthenticationConfig(): ?array
+    {
+        return $this->authenticationConfig;
+    }
+
+    public function setAuthenticationConfig(?array $authenticationConfig = []): self
+    {
+        $this->authenticationConfig = $authenticationConfig;
 
         return $this;
     }
