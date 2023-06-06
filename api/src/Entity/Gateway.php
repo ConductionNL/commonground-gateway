@@ -339,7 +339,7 @@ class Gateway
     /**
      * @var array|null The configuration for certain types of authentication methods.
      *
-     * @description This contains configuration for e.g. oauth authentication. For oauth the following fields are available: `case` to set if the credential fields have to be in camelCase or snake_case, `additionalFields` for fields that the api requires on top of clientId and clientSecret, `tokenPath` for the path on the api where the token can be requested and `tokenField` for the response field containing the token.
+     * This contains configuration for e.g. oauth authentication. For oauth the following fields are available: `case` to set if the credential fields have to be in camelCase or snake_case, `additionalFields` for fields that the api requires on top of clientId and clientSecret, `tokenPath` for the path on the api where the token can be requested and `tokenField` for the response field containing the token.
      *
      * @Groups({"read","read_secure","write"})
      *
