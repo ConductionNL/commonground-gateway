@@ -344,7 +344,6 @@ class Gateway
      * @Groups({"read","read_secure","write"})
      *
      * @ORM\Column(type="array", nullable=true)
-     *
      */
     private ?array $authenticationConfig = [];
 
