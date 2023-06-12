@@ -453,6 +453,15 @@ class Entity
      */
     private bool $createAuditTrails = false;
 
+    /**
+     * @var Source|null The default source to synchronise to.
+     *
+     * @Groups({"read", "write"})
+     *
+     * @ORM\ManyToOne(targetEntity=Gateway::class, cascade={"persist", "remove"})
+     */
+    private ?Source $defaultSource = null;
+
     public function __toString()
     {
         return $this->getName().' ('.$this->getId().')';
@@ -1329,6 +1338,18 @@ class Entity
     public function setCreateAuditTrails(bool $createAuditTrails): self
     {
         $this->createAuditTrails = $createAuditTrails;
+
+        return $this;
+    }
+
+    public function getDefaultSource(): ?Source
+    {
+        return $this->defaultSource;
+    }
+
+    public function setDefaultSource(?Source $defaultSource): self
+    {
+        $this->defaultSource = $defaultSource;
 
         return $this;
     }

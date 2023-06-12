@@ -318,13 +318,13 @@ class Gateway
      *      max = 255
      * )
      *
-     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256", "vrijbrp-jwt", "pink-jwt"})
+     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256", "vrijbrp-jwt", "pink-jwt", "oauth"})
      *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
      *             "type"="string",
-     *             "enum"={"apikey", "jwt", "username-password","none", "jwt-HS256", "vrijbrp-jwt", "pink-jwt"},
+     *             "enum"={"apikey", "jwt", "username-password","none", "jwt-HS256", "vrijbrp-jwt", "pink-jwt", "oauth"},
      *             "example"="apikey"
      *         }
      *     }
@@ -337,6 +337,17 @@ class Gateway
     private string $auth = 'none';
 
     /**
+     * @var array|null The configuration for certain types of authentication methods.
+     *
+     * This contains configuration for e.g. oauth authentication. For oauth the following fields are available: `case` to set if the credential fields have to be in camelCase or snake_case, `additionalFields` for fields that the api requires on top of clientId and clientSecret, `tokenPath` for the path on the api where the token can be requested and `tokenField` for the response field containing the token.
+     *
+     * @Groups({"read","read_secure","write"})
+     *
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $authenticationConfig = [];
+
+    /**
      * @var string The method used for authentication to the Gateway
      *
      * @Assert\NotNull
@@ -345,13 +356,13 @@ class Gateway
      *      max = 255
      * )
      *
-     * @Assert\Choice({"header", "query"})
+     * @Assert\Choice({"header", "query", "form_params", "json"})
      *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
      *             "type"="string",
-     *             "enum"={"header", "query"},
+     *             "enum"={"header", "query", "form_params", "json"},
      *             "example"="header"
      *         }
      *     }
@@ -958,6 +969,18 @@ class Gateway
     public function setAuthorizationHeader(string $authorizationHeader): self
     {
         $this->authorizationHeader = $authorizationHeader;
+
+        return $this;
+    }
+
+    public function getAuthenticationConfig(): ?array
+    {
+        return $this->authenticationConfig;
+    }
+
+    public function setAuthenticationConfig(?array $authenticationConfig = []): self
+    {
+        $this->authenticationConfig = $authenticationConfig;
 
         return $this;
     }
