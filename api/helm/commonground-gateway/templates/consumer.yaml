@@ -176,6 +176,11 @@ spec:
                 configMapKeyRef:
                   key: url
                   name: {{ include "commonground-gateway.fullname" . }}
+            - name: APP_SESSION_DURATION
+              valueFrom:
+                configMapKeyRef:
+                  key: session-duration
+                  name: {{ include "commonground-gateway.fullname" . }}
             - name: READ_ONLY
               value: {{ .Values.config.readOnly | quote }}
             - name: CRON_RUNNER_ENABLED
