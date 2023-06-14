@@ -460,6 +460,10 @@ class UserController extends AbstractController
 
         $redirectUrl = $request->getSchemeAndHttpHost().$this->generateUrl('app_user_authenticate', ['method' => $method, 'identifier' => $identifier]);
 
+        if($request->getSchemeAndHttpHost() !== 'http://localhost' && $request->getSchemeAndHttpHost() !== 'http://localhost') {
+            $redirectUrl = str_replace('http', 'https', $redirectUrl);
+        }
+
         $this->session->set('redirectUrl', $redirectUrl);
 
         return $this->redirect($this->authenticationService->handleAuthenticationUrl($method, $identifier, $redirectUrl));
