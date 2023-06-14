@@ -612,8 +612,8 @@ class ValidatorService
      * Gets the correct Rule for a specific validation of the given Attribute.
      *
      * @param Attribute $attribute
-     * @param $validation
-     * @param $config
+     * @param           $validation
+     * @param           $config
      *
      * @throws ComponentException|GatewayException|Exception
      *

@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use App\Entity\Endpoint;
 use App\Entity\Log;
 use App\Entity\ObjectEntity;
 use Doctrine\ORM\EntityManagerInterface;
@@ -78,7 +77,7 @@ class LogService
 
         if ($content) {
             $callLog->setResponseContent($content);
-        // @todo Cant set response content if content is pdf
+            // @todo Cant set response content if content is pdf
         } elseif ($response && !(is_string($response->getContent()) && strpos($response->getContent(), 'PDF'))) {
             $callLog->setResponseContent($response->getContent());
         }

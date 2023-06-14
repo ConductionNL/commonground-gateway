@@ -24,7 +24,6 @@ use GuzzleHttp\Exception\GuzzleException;
 use Monolog\Logger;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
-use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -338,11 +337,12 @@ class SynchronizationService
             if ($config['collectionDelete'] && ($key = array_search($synchronization, $config['existingSynchronizations'])) !== false) {
                 unset($config['existingSynchronizations'][$key]);
             }
+            $config['totalResultsSynced'] = $config['totalResultsSynced'] + 1;
             if (isset($this->io)) {
-                $this->io->text('totalResultsSynced +1 = '.++$config['totalResultsSynced']);
+                $this->io->text('totalResultsSynced +1 = '.$config['totalResultsSynced']);
                 $this->io->newLine();
             }
-            $this->logger->debug('totalResultsSynced +1 = '.++$config['totalResultsSynced']);
+            $this->logger->debug('totalResultsSynced +1 = '.$config['totalResultsSynced']);
         }
 
         return [

@@ -80,6 +80,7 @@ security:
       ljr/Q8Pw+OfUZTzKg4PVDQVfFqKtyosv
       -----END CERTIFICATE-----
   authEnabled: true
+  sessionDuration: 900
   certificate:
     existingSecret: ''
     privateKey: ''

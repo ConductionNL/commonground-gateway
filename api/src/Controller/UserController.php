@@ -4,7 +4,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Application;
 use App\Entity\User;
 use App\Security\User\AuthenticationUser;
 use App\Service\AuthenticationService;
