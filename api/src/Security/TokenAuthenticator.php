@@ -2,10 +2,8 @@
 
 namespace App\Security;
 
-use App\Entity\Application;
 use App\Entity\Authentication;
 use App\Entity\SecurityGroup;
-use App\Entity\User;
 use App\Exception\GatewayException;
 use App\Security\User\AuthenticationUser;
 use App\Service\ApplicationService;
