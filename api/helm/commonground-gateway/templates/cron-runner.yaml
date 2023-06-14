@@ -188,7 +188,7 @@ spec:
                           valueFrom:
                             configMapKeyRef:
                               key: session-duration
-                              name: { { include "commonground-gateway.fullname" . } }
+                              name: {{ include "commonground-gateway.fullname" . }}
                         - name: READ_ONLY
                           value: {{ .Values.config.readOnly | quote }}
                         - name: CRON_RUNNER_ENABLED
