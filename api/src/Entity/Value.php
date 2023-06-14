@@ -502,7 +502,8 @@ class Value
         // Handle inversed by
         if ($this->getAttribute()->getInversedBy()) {
             $inversedByValue = $object->getValueObject($this->getAttribute()->getInversedBy());
-            if (!$inversedByValue->getObjects()->contains($this->getObjectEntity())) {
+            if ($this->getObjectEntity() !== null && $inversedByValue->getObjects()->contains($this->getObjectEntity()) === false) {
+                // TODO: should it be possible for a value to not have an ObjectEntity connected? and if so how do we log an error for this?
                 $inversedByValue->addObject($this->getObjectEntity());
             }
         }
@@ -589,12 +590,19 @@ class Value
 
     public function getAttribute(): ?Attribute
     {
-        return isset($this->attribute) ? $this->attribute : null;
+        return $this->attribute ?? null;
     }
 
+    /**
+     * @throws Exception
+     */
     public function setAttribute(?Attribute $attribute): self
     {
-        // If we have an atribute we can deal with default values
+        if ($this->getObjectEntity() !== null && $this->getObjectEntity()->getEntity() !== $attribute->getEntity()) {
+            return $this;
+        }
+
+        // If we have an attribute we can deal with default values
         $this->setDefaultValue();
 
         $this->attribute = $attribute;
@@ -610,7 +618,7 @@ class Value
     public function setObjectEntity(?ObjectEntity $objectEntity): self
     {
         // Make sure we can only add a parent ObjectEntity if the Attribute of this Value has the ObjectEntity->Entity configured as a possible parent Entity.
-        if ($objectEntity !== null && $objectEntity->getEntity() !== $this->getAttribute()->getEntity()) {
+        if ($objectEntity !== null && $this->getAttribute() !== null && $objectEntity->getEntity() !== $this->getAttribute()->getEntity()) {
             return $this;
         }
 
@@ -620,8 +628,8 @@ class Value
     }
 
     /**
-     * @param      $value  The value to set
-     * @param bool $unsafe Wheter the setter can also remove values
+     * @param mixed $value  The value to set
+     * @param bool  $unsafe Whether the setter can also remove values
      *
      * @throws Exception
      */
@@ -876,6 +884,8 @@ class Value
     /**
      * Set the default value for this object.
      *
+     * @throws Exception
+     *
      * @return $this
      */
     public function setDefaultValue(): self
@@ -894,5 +904,7 @@ class Value
 
         // And the we can set the result
         $this->setValue($defaultValue);
+
+        return $this;
     }
 }
