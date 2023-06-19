@@ -12,7 +12,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use phpDocumentor\Reflection\Types\This;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Yaml\Yaml;
 
 /**
@@ -432,8 +431,8 @@ class OasDocumentationService
      * This function adds the properties to metadata.
      *
      * @param array $schema
-     * @param $items
-     * @param $entity
+     * @param       $items
+     * @param       $entity
      *
      * @return array
      */
@@ -561,8 +560,8 @@ class OasDocumentationService
      *
      * @param Attribute $attribute
      * @param array     $schema
-     * @param $last_part
-     * @param $value
+     * @param           $last_part
+     * @param           $value
      *
      * @return array
      */
@@ -899,7 +898,7 @@ class OasDocumentationService
      * This function returns the serialized response schema.
      *
      * @param Handler $handler
-     * @param $responseType
+     * @param         $responseType
      *
      * @return array
      */

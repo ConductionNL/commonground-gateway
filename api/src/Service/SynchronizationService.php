@@ -24,7 +24,6 @@ use GuzzleHttp\Exception\GuzzleException;
 use Monolog\Logger;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
-use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -222,63 +221,6 @@ class SynchronizationService
     }
 
     /**
-     * @todo
-     *
-     * @param array $data
-     * @param array $configuration
-     *
-     * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError
-     *
-     * @return array
-     */
-    public function SynchronizationWebhookHandler(array $data, array $configuration): array
-    {
-        $this->configuration = $configuration;
-        $this->data = $data;
-
-        if ($this->session->get('io')) {
-            $this->io = $this->session->get('io');
-            $this->io->note('SynchronizationService->SynchronizationWebhookHandler()');
-        }
-        $this->logger->debug('SynchronizationService->SynchronizationWebhookHandler()');
-
-        $source = $this->getSourceFromConfig();
-        $entity = $this->getEntityFromConfig();
-
-        if (!($entity instanceof Entity) || !($source instanceof Source)) {
-            return $this->data;
-        }
-
-        $sourceObject = [];
-        $responseData = $data['response'];
-
-        // Dot the data array and try to find id in it
-        $dot = new Dot($responseData);
-        $id = $dot->get($this->configuration['apiSource']['webhook']['idField']);
-        if (array_key_exists('idFieldFromUrl', $this->configuration['apiSource']['webhook']) &&
-            $this->configuration['apiSource']['webhook']['idFieldFromUrl']) {
-            $ifUrl = explode('/', $id);
-            $id = end($ifUrl);
-        }
-
-        // If we have a complete object we can use that to sync
-        if (array_key_exists('object', $this->configuration['apiSource']['webhook'])) {
-            $sourceObject = $dot->get($this->configuration['apiSource']['webhook']['object'], $responseData); // todo should default be $data or [] ?
-        }
-
-        // Lets grab the sync object, if we don't find an existing one, this will create a new one: via config
-        $synchronization = $this->findSyncBySource($source, $entity, $id);
-
-        // Lets sync (returns the Synchronization object), will do a get on the source with $id if $sourceObject = []
-        $synchronization = $this->handleSync($synchronization, $sourceObject);
-
-        $this->entityManager->persist($synchronization);
-        $this->entityManager->flush();
-
-        return $responseData;
-    }
-
-    /**
      * Gets all objects from the source according to configuration.
      *
      * @param array $data          Data from the request running
@@ -395,11 +337,12 @@ class SynchronizationService
             if ($config['collectionDelete'] && ($key = array_search($synchronization, $config['existingSynchronizations'])) !== false) {
                 unset($config['existingSynchronizations'][$key]);
             }
+            $config['totalResultsSynced'] = $config['totalResultsSynced'] + 1;
             if (isset($this->io)) {
-                $this->io->text('totalResultsSynced +1 = '.++$config['totalResultsSynced']);
+                $this->io->text('totalResultsSynced +1 = '.$config['totalResultsSynced']);
                 $this->io->newLine();
             }
-            $this->logger->debug('totalResultsSynced +1 = '.++$config['totalResultsSynced']);
+            $this->logger->debug('totalResultsSynced +1 = '.$config['totalResultsSynced']);
         }
 
         return [

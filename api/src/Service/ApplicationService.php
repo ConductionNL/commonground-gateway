@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use App\Entity\Application;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;

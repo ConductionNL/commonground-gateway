@@ -25,7 +25,7 @@ class EmailHandler implements ActionHandlerInterface
     public function getConfiguration(): array
     {
         return [
-            '$id'        => 'https://example.com/person.schema.json',
+            '$id'        => 'https://commongateway.nl/ActionHandler/EmailHandler.ActionHandler.json',
             '$schema'    => 'https://docs.commongateway.nl/schemas/ActionHandler.schema.json',
             'title'      => 'EmailHandler',
             'required'   => ['ServiceDNS', 'template', 'sender', 'receiver', 'subject'],

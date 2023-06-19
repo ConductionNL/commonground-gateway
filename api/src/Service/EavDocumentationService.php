@@ -904,8 +904,8 @@ class EavDocumentationService
         // The attribute might be a scheme on its own
         if ($attribute->getObject() && $attribute->getCascade()) {
             $schema['properties'][$attribute->getName()] = ['$ref'=>'#/components/schemas/'.ucfirst($this->toCamelCase($attribute->getObject()->getName()))];
-        // that also means that we don't have to do the rest
-        //continue;
+            // that also means that we don't have to do the rest
+            //continue;
         } elseif ($attribute->getObject() && !$attribute->getCascade()) {
             $schema['properties'][$attribute->getName()]['type'] = 'string';
             $schema['properties'][$attribute->getName()]['format'] = 'uuid';

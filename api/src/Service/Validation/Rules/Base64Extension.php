@@ -46,7 +46,7 @@ final class Base64Extension extends AbstractRule
     /**
      * Converts a mime type to an extension (or find all mime_types with an extension).
      *
-     * @param $mime
+     * @param      $mime
      * @param null $ext
      *
      * @return array|false|string

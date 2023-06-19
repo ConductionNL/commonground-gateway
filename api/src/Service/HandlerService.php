@@ -8,7 +8,6 @@ use App\Entity\Handler;
 use App\Event\ActionEvent;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\RequestService;
-use CommonGateway\FormIOBundle\Service\FormIOService;
 use Doctrine\ORM\EntityManagerInterface;
 use JWadhams\JsonLogic;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
