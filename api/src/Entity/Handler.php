@@ -19,7 +19,9 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * An handler.
+ * A handler. This Entity is DEPRECATED! We should remove it.
+ *
+ * @deprecated
  *
  * @ApiResource(
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
@@ -80,6 +82,7 @@ class Handler
      * @Groups({"read","write"})
      *
      * @ORM\Column(type="string", length=255)
+     * @deprecated
      */
     private string $name;
 
@@ -89,6 +92,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="text", nullable=true)
+     * @deprecated
      */
     private ?string $description = null;
 
@@ -98,6 +102,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="array")
+     * @deprecated
      */
     private $methods = [];
 
@@ -109,6 +114,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="integer")
+     * @deprecated
      */
     private int $sequence;
 
@@ -122,6 +128,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="string", options={"default": "{}"})
+     * @deprecated
      */
     private string $conditions;
 
@@ -131,6 +138,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="array", nullable=true)
+     * @deprecated
      */
     private ?array $translationsIn = [];
 
@@ -140,6 +148,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="array", nullable=true)
+     * @deprecated
      */
     private ?array $mappingIn = [];
 
@@ -149,6 +158,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="array", nullable=true)
+     * @deprecated
      */
     private ?array $skeletonIn = [];
 
@@ -167,6 +177,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="array", nullable=true)
+     * @deprecated
      */
     private ?array $skeletonOut = [];
 
@@ -176,6 +187,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="array", nullable=true)
+     * @deprecated
      */
     private ?array $mappingOut = [];
 
@@ -185,6 +197,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="array", nullable=true)
+     * @deprecated
      */
     private ?array $translationsOut = [];
 
@@ -200,6 +213,7 @@ class Handler
      * @Assert\Choice({"twig", "markdown", "restructuredText"})
      *
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @deprecated
      */
     private ?string $templateType;
 
@@ -209,6 +223,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="text", nullable=true)
+     * @deprecated
      */
     private ?string $template;
 
@@ -220,6 +235,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="handlers")
+     * @deprecated
      */
     private ?Entity $entity = null;
 
@@ -231,6 +247,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="handlers", cascade={"persist"})
+     * @deprecated
      */
     private ?Collection $endpoints;
 
@@ -240,6 +257,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @deprecated
      */
     private ?string $proxyGateway = null;
 
@@ -251,6 +269,7 @@ class Handler
      * @Gedmo\Timestampable(on="create")
      *
      * @ORM\Column(type="datetime", nullable=true)
+     * @deprecated
      */
     private $dateCreated;
 
@@ -262,6 +281,7 @@ class Handler
      * @Gedmo\Timestampable(on="update")
      *
      * @ORM\Column(type="datetime", nullable=true)
+     * @deprecated
      */
     private $dateModified;
 
@@ -269,6 +289,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="array", nullable=true)
+     * @deprecated
      */
     private $methodOverrides = [];
 
@@ -276,6 +297,7 @@ class Handler
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @deprecated
      */
     private $prefix;
 
@@ -283,6 +305,7 @@ class Handler
      * @ORM\OneToMany(targetEntity=Log::class, mappedBy="handler", fetch="EXTRA_LAZY", cascade={"remove"}, orphanRemoval=true)
      *
      * @MaxDepth(1)
+     * @deprecated
      */
     private Collection $logs;
 
