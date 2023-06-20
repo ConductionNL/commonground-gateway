@@ -23,7 +23,7 @@ services:
             - api
     
     ui:
-        image: ghcr.io/conductionnl/gateway-ui:stag
+        image: ghcr.io/conductionnl/gateway-ui:dev
         depends_on:
             - api
         ports:

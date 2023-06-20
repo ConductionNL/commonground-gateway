@@ -17,7 +17,9 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * An possible attribute on an Entity.
+ * A possible attribute on an Entity. This Entity is DEPRECATED! We should remove it.
+ *
+ * @deprecated
  *
  * @category Entity
  *
@@ -70,6 +72,7 @@ class Soap
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="string", length=255)
+     * @deprecated
      */
     private $name;
 
@@ -79,6 +82,7 @@ class Soap
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="text", nullable=true)
+     * @deprecated
      */
     private $description;
 
@@ -88,6 +92,7 @@ class Soap
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="string", length=255)
+     * @deprecated
      */
     private $type;
 
@@ -97,6 +102,7 @@ class Soap
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="fromSoap")
      *
      * @ORM\JoinColumn( referencedColumnName="id", nullable=true)
+     * @deprecated
      */
     private $toEntity;
 
@@ -106,6 +112,7 @@ class Soap
      * @ORM\OneToOne(targetEntity=Entity::class, inversedBy="toSoap")
      *
      * @ORM\JoinColumn( referencedColumnName="id", nullable=true)
+     * @deprecated
      */
     private $fromEntity;
 
@@ -115,6 +122,7 @@ class Soap
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="text", nullable=true)
+     * @deprecated
      */
     private $request;
 
@@ -124,6 +132,7 @@ class Soap
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="array")
+     * @deprecated
      */
     private $requestSkeleton = [];
 
@@ -133,6 +142,7 @@ class Soap
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="array", nullable=true)
+     * @deprecated
      */
     private $requestHydration = [];
 
@@ -142,6 +152,7 @@ class Soap
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="text", nullable=true)
+     * @deprecated
      */
     private $response;
 
@@ -151,6 +162,7 @@ class Soap
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="array")
+     * @deprecated
      */
     private $responseSkeleton = [];
 
@@ -160,6 +172,7 @@ class Soap
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="array", nullable=true)
+     * @deprecated
      */
     private $responseHydration = [];
 
@@ -169,6 +182,7 @@ class Soap
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @deprecated
      */
     private $zaaktype;
 
@@ -180,6 +194,7 @@ class Soap
      * @Gedmo\Timestampable(on="create")
      *
      * @ORM\Column(type="datetime", nullable=true)
+     * @deprecated
      */
     private $dateCreated;
 
@@ -191,6 +206,7 @@ class Soap
      * @Gedmo\Timestampable(on="update")
      *
      * @ORM\Column(type="datetime", nullable=true)
+     * @deprecated
      */
     private $dateModified;
 

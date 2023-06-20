@@ -1150,6 +1150,7 @@ class ObjectEntity
         }
 
         // Let loop trough al the values
+        // TODO: we need to clean this up, at least move duplicate code to functions
         foreach ($this->getEntity()->getAttributes() as $attribute) {
             $valueObject = $this->getValueObject($attribute);
             // Subobjects are a bit complicated
