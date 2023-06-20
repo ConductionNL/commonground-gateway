@@ -84,6 +84,11 @@ class ExportService
         return $array;
     }
 
+    /**
+     * @deprecated
+     *
+     * @return array
+     */
     public function exportSoap()
     {
         $array['App\Entity\Soap'] = [];
