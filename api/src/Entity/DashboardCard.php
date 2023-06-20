@@ -11,8 +11,6 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\DashboardCardRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
-use phpDocumentor\Reflection\Types\Integer;
-use phpDocumentor\Reflection\Types\This;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -30,13 +28,17 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *     "get"={"path"="/admin/dashboardCards"},
  *     "post"={"path"="/admin/dashboardCards"}
  *  })
+ *
  * @ORM\Entity(repositoryClass=DashboardCardRepository::class)
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class)
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "name": "exact"
+ * })
  */
 class DashboardCard
 {
@@ -44,9 +46,13 @@ class DashboardCard
      * @var UuidInterface The UUID identifier of this Entity.
      *
      * @Groups({"read"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -55,17 +61,19 @@ class DashboardCard
      * The name of the dashboard card.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
 
     /**
-     * The description of the dashboard.
+     * @var string|null The description of the dashboard.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
-    private ?string $description;
+    private ?string $description = null;
 
     /**
      * The type of the card.
@@ -73,6 +81,7 @@ class DashboardCard
      * @todo enum on schema etc
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $type;
@@ -81,6 +90,7 @@ class DashboardCard
      * The entity of the schema e.g. Gateway.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $entity;
@@ -96,12 +106,14 @@ class DashboardCard
      * The UUID of the object stored in Dashboard Card.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="uuid")
      */
     private Uuid $entityId;
 
     /**
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="integer")
      */
     private int $ordering = 1;
@@ -117,26 +129,47 @@ class DashboardCard
             $class = get_class($object);
             $this->setEntity($class);
 
-            // Lets set the type
+            // Let's set the type
             switch ($class) {
-            case 'App\Entity\Entity':
-                $this->setType('schema');
-                break;
-           case 'App\Entity\Gateway':
-               $this->setType('gateway');
-               break;
-           case 'App\Entity\Endpoint':
-               $this->setType('endpoint');
-               break;
-           case 'App\Entity\Action':
-               $this->setType('action');
-               break;
-           case 'App\Entity\Cronjob':
-               $this->setType('cronjob');
-               break;
-               default:
-                echo 'i equals 2';
-                break;
+                case 'App\Entity\Action':
+                    $this->setType('action');
+                    break;
+                case 'App\Entity\Application':
+                    $this->setType('application');
+                    break;
+                case 'App\Entity\CollectionEntity':
+                    $this->setType('collection');
+                    break;
+                case 'App\Entity\Cronjob':
+                    $this->setType('cronjob');
+                    break;
+                case 'App\Entity\Endpoint':
+                    $this->setType('endpoint');
+                    break;
+                case 'App\Entity\Entity':
+                    $this->setType('schema');
+                    break;
+                case 'App\Entity\Gateway':
+                    $this->setType('gateway');
+                    break;
+                case 'App\Entity\Mapping':
+                    $this->setType('mapping');
+                    break;
+                case 'App\Entity\ObjectEntity':
+                    $this->setType('object');
+                    break;
+                case 'App\Entity\Organization':
+                    $this->setType('organization');
+                    break;
+//                case 'App\Entity\SecurityGroup':
+//                    $this->setType('securityGroup');
+//                    break;
+//                case 'App\Entity\User':
+//                    $this->setType('user');
+//                    break;
+                default:
+                    $this->setType('Unknown class type: '.$class);
+                    break;
             }
         }
     }

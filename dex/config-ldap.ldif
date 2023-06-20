@@ -32,23 +32,8 @@ dn: ou=Groups,dc=example,dc=org
 objectClass: organizationalUnit
 ou: Groups
 
-dn: cn=GET.admin,ou=Groups,dc=example,dc=org
+dn: cn=Default Admin,ou=Groups,dc=example,dc=org
 objectClass: groupOfNames
-cn: GET.admin
+cn: Default Admin
 member: cn=john,ou=People,dc=example,dc=org
-member: cn=jane,ou=People,dc=example,dc=org
-
-dn: cn=POST.admin,ou=Groups,dc=example,dc=org
-objectClass: groupOfNames
-cn: POST.admin
-member: cn=jane,ou=People,dc=example,dc=org
-
-dn: cn=DELETE.admin,ou=Groups,dc=example,dc=org
-objectClass: groupOfNames
-cn: DELETE.admin
-member: cn=jane,ou=People,dc=example,dc=org
-
-dn: cn=PUT.admin,ou=Groups,dc=example,dc=org
-objectClass: groupOfNames
-cn: PUT.admin
 member: cn=jane,ou=People,dc=example,dc=org

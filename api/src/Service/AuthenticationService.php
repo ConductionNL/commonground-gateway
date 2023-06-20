@@ -20,6 +20,13 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Security;
 use Twig\Environment;
 
+/**
+ * @Author Gino Kok, Robert Zondervan <robert@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
+ */
 class AuthenticationService
 {
     private SessionInterface $session;
@@ -168,6 +175,7 @@ class AuthenticationService
         }
 
         $authentication = $this->retrieveAuthentication($identifier);
+        $this->session->set('authenticator', $authentication->getId()->toString());
 
         return $this->retrieveData($method, $code, $authentication);
     }
@@ -186,6 +194,29 @@ class AuthenticationService
             default:
                 throw new BadRequestException('Authentication method not supported');
         }
+    }
+
+    public function refreshAccessToken(string $refreshToken, string $authenticator): array
+    {
+        $authentication = $this->entityManager->getRepository('App:Authentication')->find($authenticator);
+        if ($authentication instanceof Authentication === false) {
+            return [];
+        }
+        $body = [
+            'client_id'         => $authentication->getClientId(),
+            'grant_type'        => 'refresh_token',
+            'refresh_token'     => $refreshToken,
+            'client_secret'     => $authentication->getSecret(),
+        ];
+
+        $response = $this->client->request('POST', $authentication->getTokenUrl(), [
+            'form_params'  => $body,
+            'content_type' => 'application/x-www-form-urlencoded',
+        ]);
+
+        $accessToken = json_decode($response->getBody()->getContents(), true);
+
+        return $accessToken;
     }
 
     public function retrieveAdfsData(string $code, Authentication $authentication, string $redirectUrl): array

@@ -9,6 +9,13 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
+/**
+ * Authors: Robert Zondervan <robert@conduction.nl>.
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Controller
+ */
 class WsdlController extends AbstractController
 {
     private SerializerInterface $serializer;
@@ -174,7 +181,7 @@ class WsdlController extends AbstractController
 </wsdl:binding>
 <wsdl:service name="Conductor_x0020_Intake_x0020_Service">
 <wsdl:port name="IntakeService" binding="tns:IntakeService">
-<soap:address location="'.$this->getParameter('app_url').'/api/simxml/zaken"/>
+<soap:address location="'.trim($this->getParameter('app_url'), '/').'/api/simxml"/>
 </wsdl:port>
 <wsdl:port name="IntakeService1" binding="tns:IntakeService1">
 <soap12:address location="https://109.109.118.17:443/opentunnel/00000001853051549000/sim/eform" />

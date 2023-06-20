@@ -9,7 +9,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Gateway as Source;
-use DateTime;
+use App\Repository\SynchronizationRepository;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
@@ -33,8 +33,11 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get"={"path"="/admin/synchronizations"},
  *      "post"={"path"="/admin/synchronizations"}
  *  })
- * @ORM\Entity(repositoryClass="App\Repository\SynchronizationRepository")
+ *
+ * @ORM\Entity(repositoryClass=SynchronizationRepository::class)
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ *
  * @ORM\HasLifecycleCallbacks
  *
  * @ApiFilter(BooleanFilter::class)
@@ -55,10 +58,15 @@ class Synchronization
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private UuidInterface $id;
@@ -67,7 +75,9 @@ class Synchronization
      * @var Entity The entity of this resource
      *
      * @Groups({"read","write"})
+     *
      * @ORM\ManyToOne(targetEntity=Entity::class)
+     *
      * @ORM\JoinColumn(nullable=false)
      */
     private Entity $entity;
@@ -76,6 +86,7 @@ class Synchronization
      * @var ?ObjectEntity The object of this resource
      *
      * @Groups({"read","write"})
+     *
      * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="synchronizations", fetch="EAGER")
      */
     private ?ObjectEntity $object = null;
@@ -84,6 +95,7 @@ class Synchronization
      * @var Action|null The action of this resource
      *
      * @Groups({"read","write"})
+     *
      * @ORM\ManyToOne(targetEntity=Action::class)
      */
     private ?Action $action = null;
@@ -94,7 +106,9 @@ class Synchronization
      * @var Source The Source of this resource
      *
      * @Groups({"read","write"})
+     *
      * @ORM\ManyToOne(targetEntity=Gateway::class, cascade={"persist"}, inversedBy="synchronizations")
+     *
      * @ORM\JoinColumn(nullable=true)
      */
     private ?Source $gateway = null;
@@ -105,7 +119,9 @@ class Synchronization
      * @var Source The Source of this resource
      *
      * @Groups({"read","write"})
+     *
      * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="sourceOfSynchronizations")
+     *
      * @ORM\JoinColumn(nullable=true)
      */
     private ?ObjectEntity $sourceObject = null;
@@ -114,6 +130,7 @@ class Synchronization
      * @var string|null
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $endpoint = null;
@@ -122,6 +139,7 @@ class Synchronization
      * @var string The id of object in the related source
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $sourceId = null;
@@ -130,6 +148,7 @@ class Synchronization
      * @var ?string The hash of this resource
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $hash = '';
@@ -138,6 +157,7 @@ class Synchronization
      * @var bool Whether or not the synchronization is blocked
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="boolean", options={"default": true})
      */
     private bool $blocked = false;
@@ -146,6 +166,7 @@ class Synchronization
      * @var ?DateTimeInterface The moment the source of this resource was last changed
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private ?DateTimeInterface $sourceLastChanged = null;
@@ -154,6 +175,7 @@ class Synchronization
      * @var ?DateTimeInterface The moment this resource was last checked
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private ?DateTimeInterface $lastChecked = null;
@@ -162,6 +184,7 @@ class Synchronization
      * @var ?DateTimeInterface The moment this resource was last synced
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private ?DateTimeInterface $lastSynced = null;
@@ -170,7 +193,9 @@ class Synchronization
      * @var ?DateTimeInterface The moment this resource was created
      *
      * @Groups({"read","write"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private ?DateTimeInterface $dateCreated;
@@ -179,7 +204,9 @@ class Synchronization
      * @var ?DateTimeInterface The moment this resource last Modified
      *
      * @Groups({"read","write"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private ?DateTimeInterface $dateModified;

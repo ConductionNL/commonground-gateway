@@ -4,13 +4,14 @@
 
 namespace App\Controller;
 
-use App\Entity\Application;
 use App\Entity\User;
+use App\Security\User\AuthenticationUser;
 use App\Service\AuthenticationService;
 use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Exception\ClientException;
+use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,11 +19,18 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
 use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * Class LoginController.
  *
+ * Authors: Gino Kok, Robert Zondervan <robert@conduction.nl>, Ruben van der Linde <ruben@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Controller
  *
  * @Route("/")
  */
@@ -48,9 +56,137 @@ class UserController extends AbstractController
     }
 
     /**
+     * @Route("api/users/reset_token", methods={"GET"})
+     */
+    public function resetTokenAction(SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService, SessionInterface $session): Response
+    {
+        if ($session->has('refresh_token') === true && $session->has('authenticator') === true) {
+            $accessToken = $this->authenticationService->refreshAccessToken($session->get('refresh_token'), $session->get('authenticator'));
+            $user = $this->getUser();
+            if ($user instanceof AuthenticationUser === false) {
+                return new Response('User not found', 401);
+            }
+
+            $serializeUser = new User();
+            $serializeUser->setJwtToken($accessToken['access_token']);
+            $serializeUser->setName($user->getEmail());
+            $serializeUser->setEmail($user->getEmail());
+            $serializeUser->setPassword('');
+            $session->set('refresh_token', $accessToken['refresh_token']);
+            $this->entityManager->persist($serializeUser);
+
+            return new Response($serializer->serialize($serializeUser, 'json'), 200, ['Content-type' => 'application/json']);
+        }//end if
+
+        // If the token is in the session because we are redirected, return the token here.
+        if ($session->has('jwtToken') === true) {
+            $serializeUser = new User();
+            $serializeUser->setJwtToken($session->get('jwtToken'));
+            $serializeUser->setPassword('');
+            $serializeUser->setName('');
+            $serializeUser->setEmail('');
+            $session->remove('jwtToken');
+            $this->entityManager->persist($serializeUser);
+
+            return new Response($serializer->serialize($serializeUser, 'json'), 200, ['Content-type' => 'application/json']);
+        }//end if
+        $this->denyAccessUnlessGranted('IS_AUTHENTICATED_FULLY');
+
+        $status = 200;
+        $user = $this->getUser();
+        if ($user instanceof AuthenticationUser === false) {
+            return new Response('User not found', 401);
+        }
+
+        $user = $this->entityManager->getRepository('App:User')->find($user->getUserIdentifier());
+
+        if ($user->getOrganisation() !== null) {
+            $organizations[] = $user->getOrganisation();
+        }
+        foreach ($user->getApplications() as $application) {
+            if ($application->getOrganization() !== null) {
+                $organizations[] = $application->getOrganization();
+            }
+        }
+
+        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
+        $this->session->set('activeOrganization', $user->getOrganisation()->getId()->toString());
+
+        $user->setJwtToken($authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session)));
+
+        return new Response($serializer->serialize($user, 'json'), $status, ['Content-type' => 'application/json']);
+    }
+
+    /**
+     * Create an authentication user from a entity user.
+     *
+     * @param User $user The user to log in.
+     *
+     * @return AuthenticationUser The resulting authentication user.
+     */
+    public function createAuthenticationUser(User $user): AuthenticationUser
+    {
+        $roleArray = [];
+        foreach ($user->getSecurityGroups() as $securityGroup) {
+            $roleArray['roles'][] = "Role_{$securityGroup->getName()}";
+            $roleArray['roles'] = array_merge($roleArray['roles'], $securityGroup->getScopes());
+        }
+
+        if (in_array('ROLE_USER', $roleArray['roles']) === false) {
+            $roleArray['roles'][] = 'ROLE_USER';
+        }
+        foreach ($roleArray['roles'] as $key => $role) {
+            if (strpos($role, 'ROLE_') !== 0) {
+                $roleArray['roles'][$key] = "ROLE_$role";
+            }
+        }
+
+        $userArray = [
+            'id'           => $user->getId()->toString(),
+            'email'        => $user->getEmail(),
+            'locale'       => $user->getLocale(),
+            'organization' => $user->getOrganisation()->getId()->toString(),
+            'roles'        => $roleArray['roles'],
+        ];
+
+        return new AuthenticationUser(
+            $userArray['id'],
+            $userArray['email'],
+            '',
+            '',
+            '',
+            $userArray['email'],
+            '',
+            $userArray['roles'],
+            $userArray['email'],
+            $userArray['locale'],
+            $userArray['organization'],
+            null
+        );
+    }
+
+    /**
+     * Add the logged in user to session.
+     *
+     * @param User                     $user            The user to log in.
+     * @param EventDispatcherInterface $eventDispatcher The event dispatcher.
+     *
+     * @return void
+     */
+    public function addUserToSession(User $user, EventDispatcherInterface $eventDispatcher, Request $request): void
+    {
+        $authUser = $this->createAuthenticationUser($user);
+        $authToken = new UsernamePasswordToken($authUser, $user->getPassword(), 'public', $authUser->getRoles());
+        $this->get('security.token_storage')->setToken($authToken);
+
+        $event = new InteractiveLoginEvent($request, $authToken);
+        $eventDispatcher->dispatch($event);
+    }
+
+    /**
      * @Route("api/users/login", methods={"POST"})
      */
-    public function apiLoginAction(Request $request, UserPasswordHasherInterface $hasher, SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService)
+    public function apiLoginAction(Request $request, UserPasswordHasherInterface $hasher, SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService, EventDispatcherInterface $eventDispatcher)
     {
         $status = 200;
         $data = json_decode($request->getContent(), true);
@@ -79,7 +215,21 @@ class UserController extends AbstractController
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
         $this->session->set('activeOrganization', $user->getOrganisation()->getId()->toString());
 
-        $user->setJwtToken($authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session)));
+        $token = $authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session));
+
+        $user->setJwtToken($token);
+
+        $this->addUserToSession($user, $eventDispatcher, $request);
+
+        if (isset($data['redirectUrl']) === true) {
+            $this->session->set('jwtToken', $token);
+
+            return $this->redirect($data['redirectUrl']);
+        } elseif ($request->query->has('redirectUrl') === true) {
+            $this->session->set('jwtToken', $token);
+
+            return $this->redirect($request->query->get('redirectUrl'));
+        }
 
         return new Response($serializer->serialize($user, 'json'), $status, ['Content-type' => 'application/json']);
     }
@@ -221,11 +371,9 @@ class UserController extends AbstractController
      */
     public function ApiLogoutAction(Request $request, CommonGroundService $commonGroundService)
     {
-        if ($request->headers->has('Authorization')) {
-            $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
-            $user = $commonGroundService->createResource(['jwtToken' => $token], ['component' => 'uc', 'type' => 'logout'], false, false, false, false);
-        }
+        $request->getSession()->clear();
         $request->getSession()->invalidate();
+
         $response = new Response(
             json_encode(['status' => 'logout successful']),
             200,
@@ -233,7 +381,13 @@ class UserController extends AbstractController
                 'Content-type' => 'application/json',
             ]
         );
+
+        $response->headers->remove('Set-Cookie');
         $response->headers->clearCookie('PHPSESSID', '/', null, true, true, $this->getParameter('samesite'));
+
+        if ($request->query->has('redirectUrl') === true) {
+            return $this->redirect($request->query->get('redirectUrl'));
+        }
 
         return $response;
     }
@@ -299,11 +453,15 @@ class UserController extends AbstractController
             throw new BadRequestException('Missing authentication method or identifier');
         }
 
-        $this->session->set('backUrl', $request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
+        $this->session->set('backUrl', $request->query->get('redirecturl') ?? $request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
         $this->session->set('method', $method);
         $this->session->set('identifier', $identifier);
 
         $redirectUrl = $request->getSchemeAndHttpHost().$this->generateUrl('app_user_authenticate', ['method' => $method, 'identifier' => $identifier]);
+
+        if ($request->getSchemeAndHttpHost() !== 'http://localhost' && $request->getSchemeAndHttpHost() !== 'http://localhost') {
+            $redirectUrl = str_replace('http://', 'https://', $redirectUrl);
+        }
 
         $this->session->set('redirectUrl', $redirectUrl);
 

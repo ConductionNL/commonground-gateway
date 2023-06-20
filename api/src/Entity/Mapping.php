@@ -10,7 +10,6 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Exception\GatewayException;
 use App\Repository\MappingRepository;
-use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -33,14 +32,17 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/admin/mappings"}
  *  })
  * )
+ *
  * @ORM\Entity(repositoryClass=MappingRepository::class)
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class, properties={
- *     "name": "exact"
+ *     "name": "exact",
+ *     "reference": "exact"
  * })
  */
 class Mapping
@@ -51,30 +53,38 @@ class Mapping
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private UuidInterface $id;
+    private $id;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     *
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private $reference;
+    private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     *
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private $version;
+    private ?string $version = null;
 
     /**
      * @var string The name of the mapping
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(max=255)
      *
      * @Groups({"read","read_secure","write"})
@@ -139,7 +149,9 @@ class Mapping
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -148,7 +160,9 @@ class Mapping
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
@@ -170,19 +184,19 @@ class Mapping
 
     public function fromSchema(array $schema): self
     {
-        if (!isset($schema['$schema']) || $schema['$schema'] != 'https://json-schema.org/draft/2020-12/mapping') {
+        if (!isset($schema['$schema']) || $schema['$schema'] != 'https://docs.commongateway.nl/schemas/Mapping.schema.json') {
             // todo: throw exception on wron schema (requieres design desigin on referencese
-           // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://json-schema.org/draft/2020-12/mapping is required');
+            // throw new GatewayException('The given schema is of the wrong type. It is '.$schema['$schema'].' but https://docs.commongateway.nl/schemas/Mapping.schema.json is required');
         }
 
-        (isset($schema['$id']) ? $this->setReference($schema['$id']) : '');
-        (isset($schema['title']) ? $this->setName($schema['title']) : '');
-        (isset($schema['description']) ? $this->setDescription($schema['description']) : '');
-        (isset($schema['version']) ? $this->setVersion($schema['version']) : '');
-        (isset($schema['passTrough']) ? $this->setPassTrough($schema['passTrough']) : '');
-        (isset($schema['mapping']) ? $this->setMapping($schema['mapping']) : '');
-        (isset($schema['unset']) ? $this->setUnset($schema['unset']) : '');
-        (isset($schema['cast']) ? $this->setCast($schema['cast']) : '');
+        isset($schema['$id']) ? $this->setReference($schema['$id']) : '';
+        isset($schema['title']) ? $this->setName($schema['title']) : '';
+        isset($schema['description']) ? $this->setDescription($schema['description']) : '';
+        isset($schema['version']) ? $this->setVersion($schema['version']) : '';
+        isset($schema['passTrough']) ? $this->setPassTrough($schema['passTrough']) : '';
+        isset($schema['mapping']) ? $this->setMapping($schema['mapping']) : '';
+        isset($schema['unset']) ? $this->setUnset($schema['unset']) : '';
+        isset($schema['cast']) ? $this->setCast($schema['cast']) : '';
 
         return  $this;
     }
@@ -191,7 +205,7 @@ class Mapping
     {
         $schema = [
             '$id'              => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema'          => 'https://json-schema.org/draft/2020-12/mapping',
+            '$schema'          => 'https://docs.commongateway.nl/schemas/Mapping.schema.json',
             'title'            => $this->getName(),
             'description'      => $this->getDescription(),
             'version'          => $this->getVersion(),
@@ -216,12 +230,12 @@ class Mapping
         return $this;
     }
 
-    public function getversion(): ?string
+    public function getVersion(): ?string
     {
         return $this->version;
     }
 
-    public function setversion(string $version): self
+    public function setVersion(?string $version): self
     {
         $this->version = $version;
 

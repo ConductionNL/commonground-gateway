@@ -9,7 +9,6 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\PropertyRepository;
-use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
@@ -31,7 +30,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/admin/properties"}
  *  })
  * )
+ *
  * @ORM\Entity(repositoryClass=PropertyRepository::class)
+ *
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
@@ -45,10 +46,15 @@ class Property
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -57,8 +63,11 @@ class Property
      * @var string Type of where this property is in a Endpoint.path
      *
      * @Assert\NotNull
+     *
      * @Assert\Choice({"enum", "query", "path"})
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=5)
      */
     private string $inType;
@@ -67,7 +76,9 @@ class Property
      * @var string The name of this Property
      *
      * @Assert\NotNull
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
@@ -76,14 +87,16 @@ class Property
      * @var string|null The description of this Property
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $description;
+    private ?string $description = null;
 
     /**
      * @var bool|null Whether this Property is required or not
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="boolean", nullable=true)
      */
     private ?bool $required;
@@ -92,6 +105,7 @@ class Property
      * @var array|null Schema of this property
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", length=255, nullable=true)
      */
     private ?array $schemaArray;
@@ -100,6 +114,7 @@ class Property
      * @var int|null Order of this Property if there are more Properties in a Endpoint
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="integer", nullable=true)
      */
     private ?int $pathOrder;
@@ -108,6 +123,7 @@ class Property
      * @var Endpoint|null Endpoint of this Property
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\ManyToOne(targetEntity=Endpoint::class, inversedBy="properties")
      */
     private ?Endpoint $endpoint;
@@ -116,7 +132,9 @@ class Property
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -125,7 +143,9 @@ class Property
      * @var Datetime The moment this resource last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;

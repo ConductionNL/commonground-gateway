@@ -9,6 +9,13 @@ use Monolog\Logger;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * @Author Sarai Misidjan <sarai@conduction.nl>, Ruben van der Linde <ruben@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
+ */
 class ActionService
 {
     private ContainerInterface $container;

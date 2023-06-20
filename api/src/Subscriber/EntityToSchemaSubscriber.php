@@ -3,8 +3,6 @@
 namespace App\Subscriber;
 
 use ApiPlatform\Core\EventListener\EventPriorities;
-use App\Entity\Entity;
-use App\Entity\ObjectEntity;
 use App\Exception\GatewayException;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -32,13 +30,16 @@ final class EntityToSchemaSubscriber implements EventSubscriberInterface
     /**
      * This function returns the schema of an objectEntity or entity.
      *
+     * @param RequestEvent $event The event object
+     *
      * @throws GatewayException
      */
     public function toSchema(RequestEvent $event)
     {
         $request = $event->getRequest();
 
-        if ($request->headers->get('Accept') != 'application/json+schema') {
+        // Let not do anything if a schema is not requested
+        if ($request->headers->get('Accept') !== 'application/json+schema' && $request->headers->get('Accept') !== 'application/schema+json') {
             return;
         }
 
@@ -51,11 +52,19 @@ final class EntityToSchemaSubscriber implements EventSubscriberInterface
         }
 
         if ($objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($objectId)) {
-            $event->setResponse(new Response(json_encode($objectEntity->getEntity()->toSchema($objectEntity)), Response::HTTP_OK, ['content-type' => 'application/json+schema']));
+            $schema = $objectEntity->getEntity()->toSchema($objectEntity);
+            if (isset($schema['required']) === false) {
+                $schema['required'] = [];
+            }
+            $event->setResponse(new Response(json_encode($schema), Response::HTTP_OK, ['content-type' => 'application/json+schema']));
         }
 
         if ($entity = $this->entityManager->getRepository('App:Entity')->find($objectId)) {
-            $event->setResponse(new Response(json_encode($entity->toSchema(null)), Response::HTTP_OK, ['content-type' => 'application/json+schema']));
+            $schema = $entity->toSchema(null);
+            if (isset($schema['required']) === false) {
+                $schema['required'] = [];
+            }
+            $event->setResponse(new Response(json_encode($schema), Response::HTTP_OK, ['content-type' => 'application/json+schema']));
         }
     }
 }

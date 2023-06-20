@@ -22,6 +22,13 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
+/**
+ * @Author Ruben van der Linde <ruben@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>, Robert Zondervan <robert@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Command
+ */
 class InitializationCommand extends Command
 {
     private InputInterface $input;
@@ -96,6 +103,7 @@ class InitializationCommand extends Command
             $io->info('No organization found, creating a new one');
             $organization = new Organization();
             $organization->setName('Default Organization');
+            $organization->setReference('https://docs.commongateway.nl/organization/default.organization.json');
 
             // Set default id to this id for now (backwards compatibility)
             $id = 'a1c8e0b6-2f78-480d-a9fb-9792142f4761';
@@ -122,6 +130,7 @@ class InitializationCommand extends Command
             $io->info('No application found, creating a new one');
             $application = new Application();
             $application->setName('Default Application');
+            $application->setReference('https://docs.commongateway.nl/application/default.application.json');
             $application->setDescription('Created during auto configuration');
             $domains = ['localhost'];
             $parsedAppUrl = parse_url($this->parameterBag->get('app_url'));
@@ -201,6 +210,7 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
 
             $securityGroupAnonymous = new SecurityGroup();
             $securityGroupAnonymous->setName('Default Anonymous');
+            $securityGroupAnonymous->setReference('https://docs.commongateway.nl/securityGroup/default.anonymous.securityGroup.json');
             $securityGroupAnonymous->setDescription('Created during auto configuration');
             $securityGroupAnonymous->setAnonymous(true);
 
@@ -208,6 +218,7 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
 
             $securityGroupUser = new SecurityGroup();
             $securityGroupUser->setName('Default User');
+            $securityGroupUser->setReference('https://docs.commongateway.nl/securityGroup/default.user.securityGroup.json');
             $securityGroupUser->setDescription('Created during auto configuration');
             $securityGroupUser->setParent($securityGroupAnonymous);
 
@@ -215,6 +226,7 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
 
             $securityGroupAdmin = new SecurityGroup();
             $securityGroupAdmin->setName('Default Admin');
+            $securityGroupAdmin->setReference('https://docs.commongateway.nl/securityGroup/default.admin.securityGroup.json');
             $securityGroupAdmin->setDescription('Created during auto configuration');
             $securityGroupAdmin->setParent($securityGroupUser);
             $securityGroupAdmin->setScopes(
@@ -239,6 +251,7 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
             $io->info('No User found, creating a new one');
             $user = new User();
             $user->setName('Default User');
+            $user->setReference('https://docs.commongateway.nl/user/default.user.json');
             $user->setDescription('Created during auto configuration');
             $user->setEmail('no-reply@test.com');
             $user->setPassword($this->hasher->hashPassword($user, '!ChangeMe!'));
@@ -260,8 +273,7 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
         // In dev we also want to run the installer
         //if( getenv("APP_ENV") == "dev"){
         $io->section('Running installer');
-        $this->installationService->setStyle(new SymfonyStyle($input, $output));
-        $this->installationService->composerupdate($config);
+        $this->installationService->update($config, $io);
         //}
 
         $io->success('Successfully finished setting basic configuration');

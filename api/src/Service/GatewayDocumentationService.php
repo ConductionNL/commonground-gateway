@@ -7,6 +7,13 @@ use Doctrine\ORM\EntityManagerInterface;
 use GuzzleHttp\Client;
 use Symfony\Component\Yaml\Yaml;
 
+/**
+ * @Author Ruben van der Linde <ruben@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
+ */
 class GatewayDocumentationService
 {
     private EntityManagerInterface $em;
@@ -209,7 +216,6 @@ class GatewayDocumentationService
         foreach ($schema['properties'] as $key => $property) {
             // Lets see if we have main stuf
             if (array_key_exists('$ref', $property)) {
-
                 // we only go 5 levels deep
                 if ($level > 3) {
                     unset($schema['properties'][$key]);
@@ -219,7 +225,6 @@ class GatewayDocumentationService
             }
             // The schema might also be in an array
             if (array_key_exists('items', $property) && array_key_exists('$ref', $property['items'])) {
-
                 // we only go 5 levels deep
                 if ($level > 3) {
                     unset($schema['properties'][$key]['items']);

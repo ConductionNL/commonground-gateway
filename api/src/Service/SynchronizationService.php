@@ -5,13 +5,16 @@ namespace App\Service;
 use Adbar\Dot;
 use App\Entity\Application;
 use App\Entity\Entity;
+use App\Entity\Gateway;
 use App\Entity\Gateway as Source;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
+use App\Entity\User;
 use App\Event\ActionEvent;
 use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
+use CommonGateway\CoreBundle\Service\FileSystemHandleService;
 use CommonGateway\CoreBundle\Service\MappingService;
 use DateInterval;
 use DateTime;
@@ -21,7 +24,6 @@ use GuzzleHttp\Exception\GuzzleException;
 use Monolog\Logger;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
-use Ramsey\Uuid\Uuid;
 use Respect\Validation\Exceptions\ComponentException;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -33,9 +35,18 @@ use Twig\Environment;
 use Twig\Error\LoaderError;
 use Twig\Error\SyntaxError;
 
+/**
+ * @Author Robert Zondervan <robert@conduction.nl>, Ruben van der Linde <ruben@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>, Sarai Misidjan <sarai@conduction.nl>, Barry Brands <barry@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
+ */
 class SynchronizationService
 {
     private CallService $callService;
+    private FileSystemHandleService $fileSystemService;
+
     private EntityManagerInterface $entityManager;
     private SessionInterface $session;
     private GatewayService $gatewayService;
@@ -56,25 +67,52 @@ class SynchronizationService
     private EventDispatcherInterface $eventDispatcher;
     private Logger $logger;
 
+    /**
+     * Default user for synchronizations.
+     * Note that owner => reference is replaces with an uuid of that User object.
+     *
+     * @var array|string[]
+     */
+    private array $synchronizationDefault = [
+        'owner' => 'https://docs.commongateway.nl/user/default.user.json',
+    ];
+
     private bool $asyncError = false;
 
     /**
-     * @param CallService            $callService
-     * @param EntityManagerInterface $entityManager
-     * @param SessionInterface       $session
-     * @param GatewayService         $gatewayService
-     * @param FunctionService        $functionService
-     * @param LogService             $logService
-     * @param MessageBusInterface    $messageBus
-     * @param TranslationService     $translationService
-     * @param ObjectEntityService    $objectEntityService
-     * @param ValidatorService       $validatorService
-     * @param EavService             $eavService
-     * @param Environment            $twig
-     * @param MappingService         $mappingService
+     * @param CallService              $callService
+     * @param EntityManagerInterface   $entityManager
+     * @param SessionInterface         $session
+     * @param GatewayService           $gatewayService
+     * @param FunctionService          $functionService
+     * @param LogService               $logService
+     * @param MessageBusInterface      $messageBus
+     * @param TranslationService       $translationService
+     * @param ObjectEntityService      $objectEntityService
+     * @param ValidatorService         $validatorService
+     * @param EavService               $eavService
+     * @param Environment              $twig
+     * @param EventDispatcherInterface $eventDispatcher
+     * @param MappingService           $mappingService
+     * @param FileSystemHandleService  $fileSystemService
      */
-    public function __construct(CallService $callService, EntityManagerInterface $entityManager, SessionInterface $session, GatewayService $gatewayService, FunctionService $functionService, LogService $logService, MessageBusInterface $messageBus, TranslationService $translationService, ObjectEntityService $objectEntityService, ValidatorService $validatorService, EavService $eavService, Environment $twig, EventDispatcherInterface $eventDispatcher, MappingService $mappingService)
-    {
+    public function __construct(
+        CallService $callService,
+        EntityManagerInterface $entityManager,
+        SessionInterface $session,
+        GatewayService $gatewayService,
+        FunctionService $functionService,
+        LogService $logService,
+        MessageBusInterface $messageBus,
+        TranslationService $translationService,
+        ObjectEntityService $objectEntityService,
+        ValidatorService $validatorService,
+        EavService $eavService,
+        Environment $twig,
+        EventDispatcherInterface $eventDispatcher,
+        MappingService $mappingService,
+        FileSystemHandleService $fileSystemService
+    ) {
         $this->callService = $callService;
         $this->entityManager = $entityManager;
         $this->session = $session;
@@ -94,6 +132,7 @@ class SynchronizationService
         $this->eventDispatcher = $eventDispatcher;
         $this->logger = new Logger('installation');
         $this->mappingService = $mappingService;
+        $this->fileSystemService = $fileSystemService;
     }
 
     /**
@@ -179,63 +218,6 @@ class SynchronizationService
         }
 
         return $this->data;
-    }
-
-    /**
-     * @todo
-     *
-     * @param array $data
-     * @param array $configuration
-     *
-     * @throws CacheException|ComponentException|GatewayException|GuzzleException|InvalidArgumentException|LoaderError|SyntaxError
-     *
-     * @return array
-     */
-    public function SynchronizationWebhookHandler(array $data, array $configuration): array
-    {
-        $this->configuration = $configuration;
-        $this->data = $data;
-
-        if ($this->session->get('io')) {
-            $this->io = $this->session->get('io');
-            $this->io->note('SynchronizationService->SynchronizationWebhookHandler()');
-        }
-        $this->logger->debug('SynchronizationService->SynchronizationWebhookHandler()');
-
-        $source = $this->getSourceFromConfig();
-        $entity = $this->getEntityFromConfig();
-
-        if (!($entity instanceof Entity) || !($source instanceof Source)) {
-            return $this->data;
-        }
-
-        $sourceObject = [];
-        $responseData = $data['response'];
-
-        // Dot the data array and try to find id in it
-        $dot = new Dot($responseData);
-        $id = $dot->get($this->configuration['apiSource']['webhook']['idField']);
-        if (array_key_exists('idFieldFromUrl', $this->configuration['apiSource']['webhook']) &&
-            $this->configuration['apiSource']['webhook']['idFieldFromUrl']) {
-            $ifUrl = explode('/', $id);
-            $id = end($ifUrl);
-        }
-
-        // If we have a complete object we can use that to sync
-        if (array_key_exists('object', $this->configuration['apiSource']['webhook'])) {
-            $sourceObject = $dot->get($this->configuration['apiSource']['webhook']['object'], $responseData); // todo should default be $data or [] ?
-        }
-
-        // Lets grab the sync object, if we don't find an existing one, this will create a new one: via config
-        $synchronization = $this->findSyncBySource($source, $entity, $id);
-
-        // Lets sync (returns the Synchronization object), will do a get on the source with $id if $sourceObject = []
-        $synchronization = $this->handleSync($synchronization, $sourceObject);
-
-        $this->entityManager->persist($synchronization);
-        $this->entityManager->flush();
-
-        return $responseData;
     }
 
     /**
@@ -331,6 +313,7 @@ class SynchronizationService
             $id = $dot->get($this->configuration['apiSource']['location']['idField']);
 
             // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
+            // Todo: this should be 'objects' not 'object'... 'object' is for finding a single object not an array of objects!
             array_key_exists('object', $this->configuration['apiSource']['location']) && $result = $dot->get($this->configuration['apiSource']['location']['object'], $result);
 
             // Lets grab the sync object, if we don't find an existing one, this will create a new one:
@@ -347,16 +330,19 @@ class SynchronizationService
             $updatedSynchronization = $this->handleSync($synchronization, $result);
 
             $this->entityManager->persist($updatedSynchronization);
+
+            $this->entityManager->flush();
             $this->entityManager->flush();
 
             if ($config['collectionDelete'] && ($key = array_search($synchronization, $config['existingSynchronizations'])) !== false) {
                 unset($config['existingSynchronizations'][$key]);
             }
+            $config['totalResultsSynced'] = $config['totalResultsSynced'] + 1;
             if (isset($this->io)) {
-                $this->io->text('totalResultsSynced +1 = '.++$config['totalResultsSynced']);
+                $this->io->text('totalResultsSynced +1 = '.$config['totalResultsSynced']);
                 $this->io->newLine();
             }
-            $this->logger->debug('totalResultsSynced +1 = '.++$config['totalResultsSynced']);
+            $this->logger->debug('totalResultsSynced +1 = '.$config['totalResultsSynced']);
         }
 
         return [
@@ -476,7 +462,7 @@ class SynchronizationService
             'query'     => $this->getCallServiceOverwrite('query') ?? $this->getQueryForCallService($id), //todo maybe array_merge instead of ??
             'headers'   => array_merge(
                 ['Content-Type' => 'application/json'],
-                ($this->getCallServiceOverwrite('headers') ?? $source->getHeaders()) //todo maybe array_merge instead of ??
+                $this->getCallServiceOverwrite('headers') ?? $source->getHeaders() //todo maybe array_merge instead of ??
             ),
             'method'    => $this->getCallServiceOverwrite('method'),
         ];
@@ -536,7 +522,6 @@ class SynchronizationService
      */
     private function getQueryForCallService(string $id = null): array
     {
-
         // What if we do not have an action?
         if (!isset($this->configuration['apiSource'])) {
             return [];
@@ -692,42 +677,49 @@ class SynchronizationService
      *
      * @return array|null The resulting object
      */
-    private function getSingleFromSource(Synchronization $synchronization): ?array
+    public function getSingleFromSource(Synchronization $synchronization): ?array
     {
         $callServiceConfig = $this->getCallServiceConfig($synchronization->getSource(), $synchronization->getSourceId());
 
-        // Get object form source with callservice
-        try {
-            if (isset($this->io)) {
-                $this->io->text("getSingleFromSource with Synchronization->sourceId = {$synchronization->getSourceId()}");
+        $url = \Safe\parse_url($synchronization->getSource()->getLocation());
+
+        if ($url['scheme'] === 'http' || $url['scheme'] === 'https') {
+            // Get object form source with callservice
+            try {
+                $this->logger->info("getSingleFromSource with Synchronization->sourceId = {$synchronization->getSourceId()}");
+                $response = $this->callService->call(
+                    $callServiceConfig['source'],
+                    $synchronization->getEndpoint() ?? $callServiceConfig['endpoint'],
+                    $callServiceConfig['method'] ?? 'GET',
+                    [
+                        'body'    => '',
+                        'query'   => $callServiceConfig['query'],
+                        'headers' => $callServiceConfig['headers'],
+                    ]
+                );
+            } catch (Exception|GuzzleException $exception) {
+                $this->ioCatchException($exception, ['line', 'file', 'message' => [
+                    'preMessage' => 'Error while doing getSingleFromSource: ',
+                ]]);
+
+                //todo: error, log this
+                return null;
             }
-
-            $response = $this->callService->call(
-                $callServiceConfig['source'],
-                $synchronization->getEndpoint() ?? $callServiceConfig['endpoint'],
-                $callServiceConfig['method'] ?? 'GET',
-                [
-                    'body'    => '',
-                    'query'   => $callServiceConfig['query'],
-                    'headers' => $callServiceConfig['headers'],
-                ]
-            );
-        } catch (Exception|GuzzleException $exception) {
-            $this->ioCatchException($exception, ['line', 'file', 'message' => [
-                'preMessage' => 'Error while doing getSingleFromSource: ',
-            ]]);
-
-            //todo: error, log this
-            return null;
+            $result = $this->callService->decodeResponse($callServiceConfig['source'], $response);
+        } elseif ($url['scheme'] === 'ftp') {
+            // This only works if a file data equals a single Object(Entity). Or if the mapping on the Source or Synchronization results in data for just a single Object.
+            $result = $this->fileSystemService->call($synchronization->getSource(), $synchronization->getEndpoint() ?? $callServiceConfig['endpoint']);
         }
-
-        $result = $this->callService->decodeResponse($callServiceConfig['source'], $response);
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
         //        $id = $dot->get($this->configuration['locationIdField']); // todo, not sure if we need this here or later?
 
-        // The place where we can find an object when we walk through the list of objects, from $result root, by object (dot notation)
-        return $dot->get($this->configuration['apiSource']['location']['object'], $result);
+        // The place where we can find the object, from $result root, by object (dot notation)
+        if (isset($this->configuration['apiSource']['location']['object'])) {
+            return $dot->get($this->configuration['apiSource']['location']['object'], $result);
+        }
+
+        return $dot->jsonSerialize();
     }
 
     /**
@@ -798,6 +790,21 @@ class SynchronizationService
     }
 
     /**
+     * Sets default owner on objectEntity.
+     *
+     * @return ObjectEntity $object
+     */
+    private function setDefaultOwner(ObjectEntity $object): ObjectEntity
+    {
+        $defaultUser = $this->entityManager->getRepository('App:User')->findOneBy(['reference' => $this->synchronizationDefault['owner']]);
+        if ($defaultUser instanceof User === false) {
+            return $object;
+        }
+
+        return $object->setOwner($defaultUser->getId()->toString());
+    }//end setDefaultOwner()
+
+    /**
      * Adds a new ObjectEntity to a synchronization object.
      *
      * @param Synchronization $synchronization The synchronization object without object
@@ -808,6 +815,7 @@ class SynchronizationService
     {
         if (!$synchronization->getObject()) {
             $object = new ObjectEntity();
+            $object = $this->setDefaultOwner($object);
             $synchronization->getSourceId() && $object->setExternalId($synchronization->getSourceId());
             $object->setEntity($synchronization->getEntity());
             $object = $this->setApplicationAndOrganization($object);
@@ -939,6 +947,7 @@ class SynchronizationService
      *
      * @param Synchronization $synchronization The synchronization to update
      * @param array           $sourceObject    The object in the source
+     * @param bool            $unsafe          Unset attributes that are not included in the hydrator array when calling the hydrate function
      *
      * @throws GuzzleException
      * @throws LoaderError
@@ -946,7 +955,7 @@ class SynchronizationService
      *
      * @return Synchronization The updated synchronization
      */
-    public function synchronize(Synchronization $synchronization, array $sourceObject = []): Synchronization
+    public function synchronize(Synchronization $synchronization, array $sourceObject = [], bool $unsafe = false): Synchronization
     {
         if (isset($this->io)) {
             $this->io->text("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
@@ -957,6 +966,7 @@ class SynchronizationService
         if (!$synchronization->getObject()) {
             isset($this->io) && $this->io->text('creating new objectEntity');
             $object = new ObjectEntity($synchronization->getEntity());
+            $object = $this->setDefaultOwner($object);
             $object->addSynchronization($synchronization);
             $this->entityManager->persist($object);
             $this->entityManager->persist($synchronization);
@@ -964,7 +974,6 @@ class SynchronizationService
         } else {
             $oldDateModified = $synchronization->getObject()->getDateModified()->getTimestamp();
         }
-
         $sourceObject = $sourceObject ?: $this->getSingleFromSource($synchronization);
 
         if ($sourceObject === null) {
@@ -978,6 +987,10 @@ class SynchronizationService
         // Let check
         $now = new DateTime();
         $synchronization->setLastChecked($now);
+
+        // Todo: we never check if we actually have to sync anything... see handleSync functie for an example:
+        // if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() >= $synchronization->getObject()->getDateModified())) {
+        // Todo: @ruben i heard from @robert we wanted to do this check somewhere else?
 
         // Counter
         $counter = $synchronization->getTryCounter() + 1;
@@ -995,7 +1008,7 @@ class SynchronizationService
         if ($synchronization->getMapping()) {
             $sourceObject = $this->mappingService->mapping($synchronization->getMapping(), $sourceObject);
         }
-        $synchronization->getObject()->hydrate($sourceObject);
+        $synchronization->getObject()->hydrate($sourceObject, $unsafe);
         $this->entityManager->persist($synchronization);
 
         if ($oldDateModified !== $synchronization->getObject()->getDateModified()->getTimestamp()) {
@@ -1414,7 +1427,6 @@ class SynchronizationService
         $sourceObjectDot = new Dot($sourceObject);
 
         $object = $this->populateObject($sourceObject, $object, $method);
-        $object->setUri($synchronization->getSource()->getLocation().$this->getCallServiceEndpoint($synchronization->getSourceId()));
 
         if (isset($this->configuration['apiSource']['location']['dateCreatedField'])) {
             $object->setDateCreated(new DateTime($sourceObjectDot->get($this->configuration['apiSource']['location']['dateCreatedField'])));
@@ -1434,5 +1446,51 @@ class SynchronizationService
     private function syncThroughComparing(Synchronization $synchronization): Synchronization
     {
         return $synchronization;
+    }
+
+    /**
+     * Find an object by URL, and synchronize it if it does not exist in the gateway.
+     *
+     * @param string $url    The URL of the object
+     * @param Entity $entity The schema the object should fit into
+     *
+     * @return ObjectEntity|null
+     */
+    public function aquireObject(string $url, Entity $entity): ?ObjectEntity
+    {
+        // 1. Get the domain from the url
+        $parse = \Safe\parse_url($url);
+        $location = $parse['scheme'].'://'.$parse['host'];
+
+        // 2.c Try to establich a source for the domain
+        $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
+
+        // 2.b The source might be on a path e.g. /v1 so if whe cant find a source let try to cycle
+        foreach (explode('/', $parse['path']) as $pathPart) {
+            if ($pathPart !== '') {
+                $location = $location.'/'.$pathPart;
+            }
+            $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
+            if ($source !== null) {
+                break;
+            }
+        }
+        if ($source instanceof Gateway === false) {
+            return null;
+        }
+
+        // 3 If we have a source we can establich an endpoint.
+        $endpoint = str_replace($location, '', $url);
+
+        // 4 Create sync
+        $synchronization = new Synchronization($source, $entity);
+        $synchronization->setSourceId($url);
+        $synchronization->setEndpoint($endpoint);
+
+        $this->entityManager->persist($synchronization);
+
+        $this->synchronize($synchronization);
+
+        return $synchronization->getObject();
     }
 }

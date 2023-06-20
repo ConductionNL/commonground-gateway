@@ -135,13 +135,19 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          },
  *     },
  * )
+ *
  * @ORM\Entity(repositoryClass="App\Repository\GatewayRepository")
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class)
+ * @ApiFilter(SearchFilter::class, properties={
+ *     "name": "exact",
+ *     "reference": "exact"
+ * })
+ *
  * @UniqueEntity("name")
  */
 class Gateway
@@ -152,21 +158,28 @@ class Gateway
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private UuidInterface $id;
+    private $id;
 
     /**
      * @var string The Name of the Gateway which is used in the commonGround service
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -175,13 +188,15 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $name = '';
 
     /**
-     * @var string The description of the Gateway which is used in the commonGround service
+     * @var string|null The description of the Gateway which is used in the commonGround service
      *
      * @ApiProperty(
      *     attributes={
@@ -191,18 +206,36 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
-    private ?string $description = '';
+    private ?string $description = null;
+
+    /**
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     */
+    private ?string $reference = null;
+
+    /**
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     */
+    private ?string $version = null;
 
     /**
      * @var string The location where the Gateway needs to be accessed
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -211,15 +244,18 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
-     * @ORM\Column(type="string", length=255)
+     *
+     * @ORM\Column(type="string", length=255, options={"default": ""})
      */
-    private string $location;
+    private string $location = '';
 
     /**
      * @var bool true if this Source is enabled and can be used.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="boolean", options={"default": true})
      */
     private bool $isEnabled = true;
@@ -228,10 +264,13 @@ class Gateway
      * @var string The type of this gatewat
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @Assert\Choice({"json", "xml", "soap", "ftp", "sftp"})
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -241,7 +280,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(nullable=true, type="string", length=255)
      */
     private string $type = 'json';
@@ -252,6 +293,7 @@ class Gateway
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -260,7 +302,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $authorizationHeader = 'Authorization';
@@ -269,42 +313,63 @@ class Gateway
      * @var string The method used for authentication to the Gateway
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *      max = 255
      * )
-     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256", "vrijbrp-jwt"})
+     *
+     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256", "vrijbrp-jwt", "pink-jwt", "oauth"})
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
      *             "type"="string",
-     *             "enum"={"apikey", "jwt", "username-password","none", "jwt-HS256"},
+     *             "enum"={"apikey", "jwt", "username-password","none", "jwt-HS256", "vrijbrp-jwt", "pink-jwt", "oauth"},
      *             "example"="apikey"
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $auth = 'none';
 
     /**
+     * @var array|null The configuration for certain types of authentication methods.
+     *
+     * This contains configuration for e.g. oauth authentication. For oauth the following fields are available: `case` to set if the credential fields have to be in camelCase or snake_case, `additionalFields` for fields that the api requires on top of clientId and clientSecret, `tokenPath` for the path on the api where the token can be requested and `tokenField` for the response field containing the token.
+     *
+     * @Groups({"read","read_secure","write"})
+     *
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $authenticationConfig = [];
+
+    /**
      * @var string The method used for authentication to the Gateway
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *      max = 255
      * )
-     * @Assert\Choice({"header", "query"})
+     *
+     * @Assert\Choice({"header", "query", "form_params", "json"})
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
      *             "type"="string",
-     *             "enum"={"header", "query"},
+     *             "enum"={"header", "query", "form_params", "json"},
      *             "example"="header"
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $authorizationPassthroughMethod = 'header';
@@ -315,6 +380,7 @@ class Gateway
      * @Assert\Length(
      *      max = 10
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -323,7 +389,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=10, nullable=true)
      */
     private ?string $locale = null;
@@ -334,6 +402,7 @@ class Gateway
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -342,7 +411,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $accept = null;
@@ -358,7 +429,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $jwt = null;
@@ -374,7 +447,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $jwtId = null;
@@ -390,7 +465,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $secret = null;
@@ -401,6 +478,7 @@ class Gateway
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -409,7 +487,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $username = null;
@@ -420,6 +500,7 @@ class Gateway
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -428,7 +509,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $password = null;
@@ -439,6 +522,7 @@ class Gateway
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -447,7 +531,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $apikey = null;
@@ -456,6 +542,7 @@ class Gateway
      * @var ?string The documentation url for this gateway
      *
      * @Assert\Url
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -464,7 +551,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", nullable=true)
      */
     private ?string $documentation = null;
@@ -480,6 +569,7 @@ class Gateway
      * @var array ...
      *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private $oas = [];
@@ -488,6 +578,7 @@ class Gateway
      * @var array ...
      *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private $paths = [];
@@ -496,6 +587,7 @@ class Gateway
      * Headers that are required to be added for every request.
      *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private $headers = [];
@@ -504,13 +596,16 @@ class Gateway
      * @var array Config to translate specific calls to a different method or endpoint. When changing the endpoint, if you want, you can use {id} to specify the location of the id in the endpoint.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private array $translationConfig = [];
 
     /**
      * @Groups({"read", "write"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\OneToMany(targetEntity=CollectionEntity::class, mappedBy="source")
      */
     private ?Collection $collections;
@@ -519,9 +614,19 @@ class Gateway
      * @var array|null The guzzle configuration of the source
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $configuration = [];
+
+    /**
+     * @var array|null The configuration for endpoints on this source, mostly mapping for now.
+     *
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $endpointsConfig = [];
 
     /**
      * @var string The status from the last call made to this source
@@ -534,7 +639,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", nullable=true, options={"default":"No calls have been made yet to this source"})
      */
     private string $status = 'No calls have been made yet to this source';
@@ -550,7 +657,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="datetime", nullable=true, options={"default":null})
      */
     private ?Datetime $lastCall = null;
@@ -566,7 +675,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="datetime", nullable=true, options={"default":null})
      */
     private ?Datetime $lastSync = null;
@@ -582,7 +693,9 @@ class Gateway
      *         }
      *     }
      * )
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="integer", options={"default":0})
      */
     private int $objectCount = 0;
@@ -591,6 +704,7 @@ class Gateway
      * @var Collection The synchronizations of this source
      *
      * @Groups({"write"})
+     *
      * @ORM\OneToMany(targetEntity=Synchronization::class, fetch="EXTRA_LAZY", mappedBy="gateway", orphanRemoval=true)
      */
     private Collection $synchronizations;
@@ -599,7 +713,9 @@ class Gateway
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -608,7 +724,9 @@ class Gateway
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
@@ -617,6 +735,7 @@ class Gateway
      * @var bool Whether the source is in test mode
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="boolean", options={"default": false})
      */
     private bool $test = false;
@@ -638,34 +757,82 @@ class Gateway
         $this->proxies = new ArrayCollection();
 
         if ($configuration) {
-            $this->fromArray($configuration);
+            $this->fromSchema($configuration);
         }
     }
 
     /**
-     * Uses given $configuration array to set the properties of this Gateway.
+     * Create or update this Source from an external schema array.
      *
-     * @param array $configuration An array with data.
+     * This function is used to update and create sources form source.json objects.
      *
-     * @return void
+     * @param array $schema The schema to load.
+     *
+     * @return $this This Source.
      */
-    public function fromArray(array $configuration)
+    public function fromSchema(array $schema): self
     {
+        // Basic stuff
+        if (array_key_exists('$id', $schema)) {
+            $this->setReference($schema['$id']);
+        }
+        if (array_key_exists('version', $schema)) {
+            $this->setVersion($schema['version']);
+        }
+
         // Do not set jwt, secret, password or apikey this way!
-        array_key_exists('name', $configuration) ? $this->setName($configuration['name']) : '';
-        array_key_exists('location', $configuration) ? $this->setLocation($configuration['location']) : '';
-        array_key_exists('authorizationHeader', $configuration) ? $this->setAuthorizationHeader($configuration['authorizationHeader']) : '';
-        array_key_exists('auth', $configuration) ? $this->setAuth($configuration['auth']) : '';
-        array_key_exists('authorizationPassthroughMethod', $configuration) ? $this->setAuthorizationPassthroughMethod($configuration['authorizationPassthroughMethod']) : '';
-        array_key_exists('locale', $configuration) ? $this->setLocale($configuration['locale']) : '';
-        array_key_exists('accept', $configuration) ? $this->setAccept($configuration['accept']) : '';
-        array_key_exists('jwtId', $configuration) ? $this->setJwtId($configuration['jwtId']) : '';
-        array_key_exists('username', $configuration) ? $this->setUsername($configuration['username']) : '';
-        array_key_exists('documentation', $configuration) ? $this->setDocumentation($configuration['documentation']) : '';
-        array_key_exists('headers', $configuration) ? $this->setHeaders($configuration['headers']) : '';
-        array_key_exists('translationConfig', $configuration) ? $this->setTranslationConfig($configuration['translationConfig']) : '';
-        array_key_exists('type', $configuration) ? $this->setType($configuration['type']) : '';
-        array_key_exists('configuration', $configuration) ? $this->setConfiguration($configuration['configuration']) : '';
+        array_key_exists('title', $schema) ? $this->setName($schema['title']) : '';
+        array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
+        array_key_exists('location', $schema) ? $this->setLocation($schema['location']) : '';
+        array_key_exists('authorizationHeader', $schema) ? $this->setAuthorizationHeader($schema['authorizationHeader']) : '';
+        array_key_exists('auth', $schema) ? $this->setAuth($schema['auth']) : '';
+        array_key_exists('authorizationPassthroughMethod', $schema) ? $this->setAuthorizationPassthroughMethod($schema['authorizationPassthroughMethod']) : '';
+        array_key_exists('locale', $schema) ? $this->setLocale($schema['locale']) : '';
+        array_key_exists('accept', $schema) ? $this->setAccept($schema['accept']) : '';
+        array_key_exists('jwtId', $schema) ? $this->setJwtId($schema['jwtId']) : '';
+        array_key_exists('username', $schema) ? $this->setUsername($schema['username']) : '';
+        array_key_exists('documentation', $schema) ? $this->setDocumentation($schema['documentation']) : '';
+        array_key_exists('headers', $schema) ? $this->setHeaders($schema['headers']) : '';
+        array_key_exists('translationConfig', $schema) ? $this->setTranslationConfig($schema['translationConfig']) : '';
+        array_key_exists('type', $schema) ? $this->setType($schema['type']) : '';
+        array_key_exists('configuration', $schema) ? $this->setConfiguration($schema['configuration']) : '';
+        array_key_exists('endpointsConfig', $schema) ? $this->setEndpointsConfig($schema['endpointsConfig']) : '';
+        array_key_exists('isEnabled', $schema) ? $this->setIsEnabled($schema['isEnabled']) : '';
+
+        return $this;
+    }
+
+    /**
+     * Convert this Gateway to a schema.
+     *
+     * @return array Schema array.
+     */
+    public function toSchema(): array
+    {
+        // Do not return jwt, secret, password or apikey this way!
+        return [
+            '$id'                            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'                        => 'https://docs.commongateway.nl/schemas/Gateway.schema.json',
+            'title'                          => $this->getName(),
+            'description'                    => $this->getDescription(),
+            'version'                        => $this->getVersion(),
+            'name'                           => $this->getName(),
+            'location'                       => $this->getLocation(),
+            'authorizationHeader'            => $this->getAuthorizationHeader(),
+            'auth'                           => $this->getAuth(),
+            'authorizationPassthroughMethod' => $this->getAuthorizationPassthroughMethod(),
+            'locale'                         => $this->getLocale(),
+            'accept'                         => $this->getAccept(),
+            'jwtId'                          => $this->getJwtId(),
+            'username'                       => $this->getUsername(),
+            'documentation'                  => $this->getDocumentation(),
+            'headers'                        => $this->getHeaders(),
+            'translationConfig'              => $this->getTranslationConfig(),
+            'type'                           => $this->getType(),
+            'configuration'                  => $this->getConfiguration(),
+            'endpointsConfig'                => $this->getEndpointsConfig(),
+            'isEnabled'                      => $this->getIsEnabled(),
+        ];
     }
 
     public function __toString()
@@ -703,9 +870,9 @@ class Gateway
         return $this->id;
     }
 
-    public function setId(UuidInterface $id): self
+    public function setId(string $id): self
     {
-        $this->id = $id;
+        $this->id = Uuid::fromString($id);
 
         return $this;
     }
@@ -746,6 +913,30 @@ class Gateway
         return $this;
     }
 
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getVersion(): ?string
+    {
+        return $this->version;
+    }
+
+    public function setVersion(?string $version): self
+    {
+        $this->version = $version;
+
+        return $this;
+    }
+
     public function getLocation(): ?string
     {
         return $this->location;
@@ -778,6 +969,18 @@ class Gateway
     public function setAuthorizationHeader(string $authorizationHeader): self
     {
         $this->authorizationHeader = $authorizationHeader;
+
+        return $this;
+    }
+
+    public function getAuthenticationConfig(): ?array
+    {
+        return $this->authenticationConfig;
+    }
+
+    public function setAuthenticationConfig(?array $authenticationConfig = []): self
+    {
+        $this->authenticationConfig = $authenticationConfig;
 
         return $this;
     }
@@ -1121,6 +1324,18 @@ class Gateway
     public function setConfiguration(?array $configuration = []): self
     {
         $this->configuration = $configuration;
+
+        return $this;
+    }
+
+    public function getEndpointsConfig(): ?array
+    {
+        return $this->endpointsConfig;
+    }
+
+    public function setEndpointsConfig(?array $endpointsConfig = []): self
+    {
+        $this->endpointsConfig = $endpointsConfig;
 
         return $this;
     }

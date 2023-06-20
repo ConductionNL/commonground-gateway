@@ -19,7 +19,6 @@ use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\EntityManagerInterface;
-use EasyRdf\Literal\Date;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\Utils;
@@ -42,6 +41,13 @@ use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Twig\Environment;
 
+/**
+ * @Author Wilco Louwerse <wilco@conduction.nl>, Robert Zondervan <robert@conduction.nl>, Sarai Misidjan <sarai@conduction.nl>, Barry Brands <barry@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
+ */
 class ObjectEntityService
 {
     private Security $security;
@@ -710,8 +716,8 @@ class ObjectEntityService
         // Get filters from query parameters
         $filters = $this->getFilterFromParameters();
 
-        array_key_exists('id', ($filters)) && $id = $filters['id'];
-        !isset($id) && array_key_exists('uuid', ($filters)) && $id = $filters['uuid'];
+        array_key_exists('id', $filters) && $id = $filters['id'];
+        !isset($id) && array_key_exists('uuid', $filters) && $id = $filters['uuid'];
 
         $validationErrors = null;
         switch ($method) {
@@ -931,7 +937,7 @@ class ObjectEntityService
      *
      * @param ObjectEntity $objectEntity
      * @param Attribute    $attribute
-     * @param $value
+     * @param              $value
      *
      * @throws Exception|InvalidArgumentException
      *
@@ -993,7 +999,7 @@ class ObjectEntityService
      * Saves a subObject using saveObject. Will also set the owner, uri, organization and application. And check for a Entity function.
      *
      * @param ObjectEntity $subObject
-     * @param $object
+     * @param              $object
      *
      * @throws InvalidArgumentException
      *
@@ -1032,7 +1038,7 @@ class ObjectEntityService
      * @param ObjectEntity $objectEntity
      * @param Attribute    $attribute
      * @param Value        $valueObject
-     * @param $value
+     * @param              $value
      *
      * @throws InvalidArgumentException
      *
@@ -1170,7 +1176,7 @@ class ObjectEntityService
      * @param ObjectEntity $objectEntity
      * @param Attribute    $attribute
      * @param Value        $valueObject
-     * @param $value
+     * @param              $value
      *
      * @throws Exception
      *
@@ -1193,7 +1199,7 @@ class ObjectEntityService
 //                        if ($value == $attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/'.$this->commonGroundService->getUuidFromUrl($value)) {
 //                            $value = $this->commonGroundService->getUuidFromUrl($value);
 //                        } else {
-////                            var_dump('The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
+                        ////                            var_dump('The given value ('.$value.') is not a valid object, a valid uuid or a valid uri ('.$attribute->getObject()->getSource()->getLocation().'/'.$attribute->getObject()->getEndpoint().'/uuid).');
 //                            break;
 //                        }
                     }
@@ -1322,7 +1328,7 @@ class ObjectEntityService
     /**
      * Converts a mime type to an extension (or find all mime_types with an extension).
      *
-     * @param $mime
+     * @param      $mime
      * @param null $ext
      *
      * @return array|false|string
@@ -1916,7 +1922,7 @@ class ObjectEntityService
     /**
      * Decodes the response of a successful promise to update an object in a source outside the gateway.
      *
-     * @param $response
+     * @param              $response
      * @param ObjectEntity $objectEntity
      *
      * @throws Exception
@@ -2000,7 +2006,7 @@ class ObjectEntityService
      * Handle successful/ok response of a promise to update an object in a source outside the gateway.
      * Includes updating the Gateway ObjectEntity, Gateway Cache and sending an async notification.
      *
-     * @param $response
+     * @param              $response
      * @param ObjectEntity $objectEntity
      * @param string       $url
      * @param string       $method
@@ -2032,7 +2038,7 @@ class ObjectEntityService
     /**
      * Handle error response of a promise to update an object in a source outside the gateway.
      *
-     * @param $error
+     * @param              $error
      * @param ObjectEntity $objectEntity
      *
      * @return void

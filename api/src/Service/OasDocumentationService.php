@@ -12,9 +12,15 @@ use Doctrine\ORM\EntityManagerInterface;
 use phpDocumentor\Reflection\Types\This;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Yaml\Yaml;
 
+/**
+ * @Author Ruben van der Linde <ruben@conduction.nl>, Sarai Misidjan <sarai@conduction.nl>, Robert Zondervan <robert@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
+ */
 class OasDocumentationService
 {
     private ParameterBagInterface $params;
@@ -425,8 +431,8 @@ class OasDocumentationService
      * This function adds the properties to metadata.
      *
      * @param array $schema
-     * @param $items
-     * @param $entity
+     * @param       $items
+     * @param       $entity
      *
      * @return array
      */
@@ -554,8 +560,8 @@ class OasDocumentationService
      *
      * @param Attribute $attribute
      * @param array     $schema
-     * @param $last_part
-     * @param $value
+     * @param           $last_part
+     * @param           $value
      *
      * @return array
      */
@@ -586,7 +592,6 @@ class OasDocumentationService
     {
         // Let do mapping (changing of property names)
         foreach ($mapping as $key => $value) {
-
             // Get first and last part of the string
             $last_part = substr(strrchr($value, '.'), 1);
 
@@ -893,7 +898,7 @@ class OasDocumentationService
      * This function returns the serialized response schema.
      *
      * @param Handler $handler
-     * @param $responseType
+     * @param         $responseType
      *
      * @return array
      */

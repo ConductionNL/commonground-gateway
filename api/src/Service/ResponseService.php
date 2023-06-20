@@ -16,11 +16,17 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Core\Security;
 
+/**
+ * @Author Wilco Louwerse <wilco@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
+ */
 class ResponseService
 {
     private EntityManagerInterface $em;
@@ -487,9 +493,9 @@ class ResponseService
      * Adds a key and value to the given $metadata array. But only if all or the $key is present in $this->xCommongatewayMetadata.
      * If $key contains dateRead this will also trigger some specific BL we only want to do if specifically asked for.
      *
-     * @param array  $metadata
-     * @param string $key
-     * @param $value
+     * @param array       $metadata
+     * @param string      $key
+     * @param             $value
      * @param string|null $overwriteKey Default = null, if a string is given this will be used instead of $key, for the key to add to the $metadata array.
      *
      * @return void

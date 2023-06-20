@@ -6,17 +6,13 @@ use Adbar\Dot;
 use App\Entity\Application;
 use App\Entity\Attribute;
 use App\Entity\Entity;
-use App\Entity\File;
 use App\Entity\ObjectEntity;
-use App\Entity\Value;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
-use function GuzzleHttp\json_decode;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
@@ -31,6 +27,15 @@ use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
 
+use function GuzzleHttp\json_decode;
+
+/**
+ * @Author Ruben van der Linde <ruben@conduction.nl>, Robert Zondervan <robert@conduction.nl>, Wilco Louwerse <wilco@conduction.nl>, Gino Kok, Barry Brands <barry@conduction.nl>
+ *
+ * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
+ *
+ * @category Service
+ */
 class EavService
 {
     private EntityManagerInterface $em;
@@ -818,7 +823,7 @@ class EavService
      *
      * @param ObjectEntity $object
      * @param array        $body
-     * @param $fields
+     * @param              $fields
      *
      * @throws Exception
      *
@@ -945,9 +950,9 @@ class EavService
      * @param Request    $request
      * @param array|null $fields
      * @param array|null $extend
-     * @param $extension
-     * @param null   $filters
-     * @param string $acceptType
+     * @param            $extension
+     * @param null       $filters
+     * @param string     $acceptType
      *
      * @throws CacheException
      * @throws InvalidArgumentException

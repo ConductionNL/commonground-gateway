@@ -10,17 +10,14 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Gateway as Source;
 use App\Exception\GatewayException;
-use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
-use EasyRdf\Literal\Boolean;
 use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
 use phpDocumentor\Reflection\Types\This;
-use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
@@ -35,20 +32,31 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  itemOperations={
  *     "get"={"path"="/admin/entities/{id}"},
  *     "put"={"path"="/admin/entities/{id}"},
+ *      "delete_objects"={
+ *          "path"="/admin/entities/{id}/delete_objects",
+ *          "method"="put",
+ *          "openapi_context" = {
+ *              "summary"="Delete Objects",
+ *              "description"="Deletes all objects that belong to this schema"
+ *              }
+ *     },
  *     "delete"={"path"="/admin/entities/{id}"}
  *  },
  *  collectionOperations={
  *     "get"={"path"="/admin/entities"},
  *     "post"={"path"="/admin/entities"}
  *  })
+ *
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class, properties={
- *     "name": "exact"
+ *     "name": "exact",
+ *     "reference": "exact"
  * })
  */
 class Entity
@@ -57,17 +65,24 @@ class Entity
      * @var UuidInterface The UUID identifier of this Entity.
      *
      * @Groups({"read"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
 
     /**
      * @Groups({"read","write"})
+     *
      * @ORM\ManyToOne(targetEntity=Gateway::class, fetch="EAGER")
+     *
      * @ORM\JoinColumn(nullable=true)
+     *
      * @MaxDepth(1)
      *
      * @deprecated
@@ -78,10 +93,13 @@ class Entity
      * @var string The type of this Entity
      *
      * @Gedmo\Versioned
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      *
      * @deprecated
@@ -90,7 +108,9 @@ class Entity
 
     /**
      * @Groups({"read","write"})
+     *
      * @ORM\OneToOne(targetEntity=Soap::class, fetch="EAGER", mappedBy="fromEntity")
+     *
      * @MaxDepth(1)
      *
      * @deprecated
@@ -108,11 +128,15 @@ class Entity
      * @var string The name of this Entity
      *
      * @Gedmo\Versioned
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Assert\NotNull
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private $name;
@@ -121,7 +145,9 @@ class Entity
      * @var string The description of this Entity
      *
      * @Gedmo\Versioned
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private $description = '';
@@ -132,7 +158,9 @@ class Entity
      * @example organization
      *
      * @Assert\Choice({"noFunction","organization", "person", "user", "userGroup", "processingLog"})
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", options={"default":"noFunction"}, name="function_column")
      *
      * @deprecated
@@ -143,6 +171,7 @@ class Entity
      * @var bool whether the properties of the original object are automatically include.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $extend = false;
@@ -151,6 +180,7 @@ class Entity
      * Whether objects created from this entity should be available to child organisations.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $inherited = false;
@@ -159,7 +189,9 @@ class Entity
      * The attributes of this Entity.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="entity", cascade={"persist"}, orphanRemoval=true, fetch="EAGER")
+     *
      * @MaxDepth(1)
      */
     private Collection $attributes;
@@ -168,7 +200,9 @@ class Entity
      * @var Collection|null The attributes allowed to partial search on using the search query parameter.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="searchPartial", fetch="EAGER")
+     *
      * @MaxDepth(1)
      *
      * @deprecated
@@ -177,21 +211,27 @@ class Entity
 
     /**
      * @Groups({"write"})
+     *
      * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="entity", cascade={"remove"}, fetch="EXTRA_LAZY")
+     *
      * @ORM\OrderBy({"dateCreated" = "DESC"})
+     *
      * @MaxDepth(1)
      */
     private Collection $objectEntities;
 
     /**
      * @Groups({"write"})
+     *
      * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="object", fetch="EXTRA_LAZY")
+     *
      * @MaxDepth(1)
      */
     private Collection $usedIn;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -202,6 +242,7 @@ class Entity
      * @var string|null The route this entity can be found easier
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      *
      * @deprecated
@@ -212,6 +253,7 @@ class Entity
      * @var array|null The properties available for this entity (for all CRUD calls) if null all properties will be used. This affects which properties are written to / retrieved from external api's.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -222,6 +264,7 @@ class Entity
      * @var array|null The properties used for this entity (for all CRUD calls) if null all properties will be used. This affects which properties will be written / shown.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -232,6 +275,7 @@ class Entity
      * @var array Used for ConvertToGatewayService. Config to translate specific calls to a different method or endpoint. When changing the endpoint, if you want, you can use {id} to specify the location of the id in the endpoint.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -242,6 +286,7 @@ class Entity
      * @var array Used for ConvertToGatewayService. Config for getting the results out of a get collection on this endpoint (results and id are required!). "results" for where to find all items, "envelope" for where to find a single item in results, "id" for where to find the id of in a single item and "paginationPages" for where to find the total amount of pages or a reference to the last page (from root). (both envelope and id are from the root of results! So if id is in the envelope example: envelope = instance, id = instance.id)
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -252,6 +297,7 @@ class Entity
      * @var array Used for ConvertToGatewayService. Config for getting the body out of a get item on this endpoint. "envelope" for where to find the body. example: envelope => result.instance
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -262,6 +308,7 @@ class Entity
      * @var array|null Used for ConvertToGatewayService. The mapping in from extern source to gateway.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -272,6 +319,7 @@ class Entity
      * @var array|null Used for ConvertToGatewayService. The mapping out from gateway to extern source.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      *
      * @deprecated
@@ -282,7 +330,9 @@ class Entity
      * @var array|null The handlers used for this entity.
      *
      * @MaxDepth(1)
+     *
      * @Groups({"write"})
+     *
      * @ORM\OneToMany(targetEntity=Handler::class, mappedBy="entity", fetch="EXTRA_LAZY")
      *
      * @deprecated
@@ -293,8 +343,11 @@ class Entity
      * @var ?Collection The collections of this Entity
      *
      * @Groups({"write", "read"})
+     *
      * @MaxDepth(1)
+     *
      * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="entities")
+     *
      * @ORM\OrderBy({"dateCreated" = "DESC"})
      */
     private ?Collection $collections;
@@ -303,6 +356,7 @@ class Entity
      * @var ?string The uri to a schema.org object
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default":null}, name="schema_column")
      *
      * @deprecated Replaced by reference
@@ -313,7 +367,9 @@ class Entity
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -322,7 +378,9 @@ class Entity
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
@@ -331,6 +389,7 @@ class Entity
      * @var array|null The properties used to set the name for ObjectEntities created linked to this Entity.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", length=255, nullable=true, options={"default": null})
      */
     private ?array $nameProperties = [];
@@ -339,21 +398,24 @@ class Entity
      * @var int The maximum depth that should be used when casting objects of this entity to array
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="integer", length=1, options={"default": 3})
      */
     private int $maxDepth = 3;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     *
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private $reference;
+    private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
-     * @ORM\Column(type="string", length=255, nullable=true)
+     *
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private $version;
+    private ?string $version = null;
 
     //todo: do we want read/write groups here?
     /**
@@ -363,11 +425,39 @@ class Entity
 
     /**
      * @var bool Whether the entity should be excluded from rendering as sub object
+     *
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="boolean", options={"default": false}, nullable=true)
      */
     private bool $exclude = false;
+
+    /**
+     * @var bool Whether the object of the entity should be persisted to the database
+     *
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="boolean", options={"default": true}, nullable=true)
+     */
+    private bool $persist = true;
+
+    /**
+     * @var bool Whether audittrails have to be created for the entity
+     *
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="boolean", options={"default": false}, nullable=true)
+     */
+    private bool $createAuditTrails = false;
+
+    /**
+     * @var Source|null The default source to synchronise to.
+     *
+     * @Groups({"read", "write"})
+     *
+     * @ORM\ManyToOne(targetEntity=Gateway::class, cascade={"persist", "remove"})
+     */
+    private ?Source $defaultSource = null;
 
     public function __toString()
     {
@@ -941,17 +1031,15 @@ class Entity
     /**
      * Create or update this schema from an external schema array.
      *
-     * This function is ussed to update and create schema's form schema.json objects
+     * This function is used to update and create schema's form schema.json objects
      *
-     * @param array $schema the schema to load
+     * @param array $schema The schema to load.
      *
-     * @throws GatewayException
-     *
-     * @return $this This schema
+     * @return $this This schema.
      */
     public function fromSchema(array $schema): self
     {
-        // Basic stuff
+        // Basic stuff.
         if (array_key_exists('$id', $schema)) {
             $this->setReference($schema['$id']);
             $this->setSchema($schema['$id']);
@@ -975,36 +1063,41 @@ class Entity
             $this->setNameProperties($schema['nameProperties']);
         }
 
-        // Properties
-        foreach ($schema['properties'] as $name => $property) {
-            // Some properties are considerd forbidden
-            if (in_array($name, ['id']) || str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
-                continue;
-            }
+        // Properties.
+        if (array_key_exists('properties', $schema)) {
+            foreach ($schema['properties'] as $name => $property) {
+                // Some properties are considered forbidden.
+                if (str_starts_with($name, '_') || str_starts_with($name, '$') || str_starts_with($name, '@')) {
+                    continue;
+                }
 
-            // Let see if the attribute exists
-            if (!$attribute = $this->getAttributeByName($name)) {
-                $attribute = new Attribute();
-                $attribute->setName($name);
+                // Let see if the attribute exists.
+                if (!$attribute = $this->getAttributeByName($name)) {
+                    $attribute = new Attribute();
+                    $attribute->setName($name);
+                }
+                $this->addAttribute($attribute->fromSchema($property));
             }
-            $this->addAttribute($attribute->fromSchema($property));
         }
 
-        // Required stuff
+        // Required stuff.
         if (array_key_exists('required', $schema)) {
             foreach ($schema['required'] as $required) {
                 $attribute = $this->getAttributeByName($required);
-                $attribute->setRequired(true);
+                //We can only set the attribute on required if it exists so.
+                if ($attribute instanceof Attribute === true) {
+                    $attribute->setRequired(true);
+                }
             }
         }
 
-        // Bit of cleanup
+        // A bit of cleanup.
         foreach ($this->getAttributes() as $attribute) {
-            // Remove Required if no longer valid
+            // Remove Required if no longer valid.
             if (array_key_exists('required', $schema) && !in_array($attribute->getName(), $schema['required']) && $attribute->getRequired() == true) {
                 $attribute->setRequired(false);
             }
-            // Remove atribute if no longer present
+            // Remove attribute if no longer present.
             if (!array_key_exists($attribute->getName(), $schema['properties'])) {
                 $this->removeAttribute($attribute);
             }
@@ -1014,13 +1107,17 @@ class Entity
     }
 
     /**
+     * Convert this Entity to a schema.
+     *
      * @throws GatewayException
+     *
+     * @return array Schema array.
      */
-    public function toSchema(?ObjectEntity $objectEntity): array
+    public function toSchema(?ObjectEntity $objectEntity = null): array
     {
         $schema = [
             '$id'               => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema'           => 'https://json-schema.org/draft/2020-12/schema',
+            '$schema'           => 'https://docs.commongateway.nl/schemas/Entity.schema.json',
             'title'             => $this->getName(),
             'description'       => $this->getDescription(),
             'version'           => $this->getVersion(),
@@ -1032,49 +1129,76 @@ class Entity
         ];
 
         if ($objectEntity && $objectEntity->getEntity() !== $this) {
-            throw new GatewayException('The given objectEntity has not have the same entity as this entity');
+            throw new GatewayException('The given objectEntity has not have the same entity as this entity.');
         }
 
+        // Set the schema type to an object.
+        $schema['type'] = 'object';
+
         foreach ($this->getAttributes() as $attribute) {
-            // Zetten van required
+            // Zetten van required.
             if ($attribute->getRequired()) {
                 $schema['required'][] = $attribute->getName();
             }
 
             $property = [];
 
-            // Aanmaken property
+            // Aanmaken property.
             // @todo ik laad dit nu in als array maar eigenlijk wil je testen en alleen zetten als er waardes in zitten
 
-            // Create a url to fetch the objects from the schema this property refers to
+            // Create an url to fetch the objects from the schema this property refers to.
             if ($attribute->getType() == 'object' && $attribute->getObject() !== null) {
                 $property['_list'] = '/admin/objects?_self.schema.id='.$attribute->getObject()->getId()->toString();
             }
 
-            $attribute->getType() && $property['type'] = $attribute->getType();
-            $attribute->getFormat() && $property['format'] = $attribute->getFormat();
-            $attribute->getDescription() && $property['description'] = $attribute->getDescription();
+            if ($attribute->getType() === 'datetime' || $attribute->getType() === 'date') {
+                $property['type'] = 'string';
+                $property['format'] = $attribute->getType();
+            } elseif ($attribute->getType()) {
+                $property['type'] = $attribute->getType();
+                $attribute->getFormat() && $property['format'] = $attribute->getFormat();
+            }
+
+            $stringReplace = str_replace('“', "'", $attribute->getDescription());
+            $decodedDescription = str_replace('”', "'", $stringReplace);
+
+            $attribute->getDescription() && $property['description'] = $decodedDescription;
             $attribute->getExample() && $property['example'] = $attribute->getExample();
 
-            // What if we have an $object entity
-            if ($objectEntity) {
+            // What if we have an $object entity.
+            if ($objectEntity instanceof ObjectEntity === true) {
                 if ($attribute->getType() != 'object') {
                     $property['value'] = $objectEntity->getValue($attribute);
                 } elseif ($attribute->getMultiple()) {
-                    $property['value'] = $objectEntity->getValueObject($attribute)->getSimpleArrayValue();
+                    foreach ($objectEntity->getValueObject($attribute)->getObjects() as $object) {
+                        $property['value'][] = $object->getId()->toString();
+                    }
+                } else {
+                    $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
                 }
-                $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
             }
 
-            // Zetten van de property
+            // What if the attribute is hooked to an object.
+            if ($attribute->getType() === 'object' && $attribute->getObject() === true) {
+                $property['$ref'] = '#/components/schemas/'.$attribute->getObject()->getName();
+            }
+
+            // Zetten van de property.
             $schema['properties'][$attribute->getName()] = $property;
 
-            // Add the validators
+            // Add the validators.
             foreach ($attribute->getValidations() as $validator => $validation) {
                 if (!array_key_exists($validator, Entity::SUPPORTED_VALIDATORS) && $validation != null) {
+                    if ($validator === 'required') {
+                        continue;
+                    }
                     $schema['properties'][$attribute->getName()][$validator] = $validation;
                 }
             }
+        }
+
+        if (empty($schema['required']) === true) {
+            unset($schema['required']);
         }
 
         return $schema;
@@ -1171,6 +1295,58 @@ class Entity
     public function setExclude(bool $exclude): self
     {
         $this->exclude = $exclude;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getPersist(): bool
+    {
+        return $this->persist;
+    }
+
+    /**
+     * @param bool $persist
+     *
+     * @return Entity
+     */
+    public function setPersist(bool $persist): self
+    {
+        $this->persist = $persist;
+
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getCreateAuditTrails(): bool
+    {
+        return $this->createAuditTrails;
+    }
+
+    /**
+     * @param bool $createAuditTrails
+     *
+     * @return Entity
+     */
+    public function setCreateAuditTrails(bool $createAuditTrails): self
+    {
+        $this->createAuditTrails = $createAuditTrails;
+
+        return $this;
+    }
+
+    public function getDefaultSource(): ?Source
+    {
+        return $this->defaultSource;
+    }
+
+    public function setDefaultSource(?Source $defaultSource): self
+    {
+        $this->defaultSource = $defaultSource;
 
         return $this;
     }

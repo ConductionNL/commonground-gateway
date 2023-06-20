@@ -8,7 +8,6 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
-use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -34,8 +33,11 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get"={"path"="/admin/handlers"},
  *      "post"={"path"="/admin/handlers"}
  *  })
+ *
  * @ORM\Entity(repositoryClass="App\Repository\HandlerRepository")
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
+ *
  * @ApiFilter(BooleanFilter::class)
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
@@ -53,10 +55,15 @@ class Handler
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private string $id;
@@ -65,10 +72,13 @@ class Handler
      * @var string The name of this Handler.
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
@@ -77,13 +87,16 @@ class Handler
      * @var string|null The description of this Handler.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
-    private ?string $description;
+    private ?string $description = null;
 
     /**
      * @Assert\Choice({"*", "GET", "POST", "PUT", "PATCH", "DELETE", "get", "post", "put", "patch", "delete"}, multiple=true)
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array")
      */
     private $methods = [];
@@ -94,6 +107,7 @@ class Handler
      * @Assert\NotNull
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="integer")
      */
     private int $sequence;
@@ -102,9 +116,11 @@ class Handler
      * @var array The JSON conditions of this Handler.
      *
      * @Assert\Json
+     *
      * @Assert\NotNull
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", options={"default": "{}"})
      */
     private string $conditions;
@@ -113,6 +129,7 @@ class Handler
      * @var array|null The translations of this Handler.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $translationsIn = [];
@@ -121,6 +138,7 @@ class Handler
      * @var array|null The mapping of this Handler.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $mappingIn = [];
@@ -129,6 +147,7 @@ class Handler
      * @var array|null The mapping of this Handler.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $skeletonIn = [];
@@ -146,6 +165,7 @@ class Handler
      * @var array|null The skeleton of this Handler.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $skeletonOut = [];
@@ -154,6 +174,7 @@ class Handler
      * @var array|null The mappingOut of this Handler.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $mappingOut = [];
@@ -162,6 +183,7 @@ class Handler
      * @var array|null The translationsOut of this Handler.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private ?array $translationsOut = [];
@@ -172,8 +194,11 @@ class Handler
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read", "write"})
+     *
      * @Assert\Choice({"twig", "markdown", "restructuredText"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $templateType;
@@ -182,6 +207,7 @@ class Handler
      * @var string|null The template of this Handler.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private ?string $template;
@@ -190,7 +216,9 @@ class Handler
      * @var Entity The entity of this Handler.
      *
      * @MaxDepth(1)
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="handlers")
      */
     private ?Entity $entity = null;
@@ -199,7 +227,9 @@ class Handler
      * @var Collection|null The entity of this Handler.
      *
      * @MaxDepth(1)
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="handlers", cascade={"persist"})
      */
     private ?Collection $endpoints;
@@ -208,6 +238,7 @@ class Handler
      * @var string|null The gateway to proxy to
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $proxyGateway = null;
@@ -216,7 +247,9 @@ class Handler
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -225,25 +258,30 @@ class Handler
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private $methodOverrides = [];
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $prefix;
 
     /**
      * @ORM\OneToMany(targetEntity=Log::class, mappedBy="handler", fetch="EXTRA_LAZY", cascade={"remove"}, orphanRemoval=true)
+     *
      * @MaxDepth(1)
      */
     private Collection $logs;

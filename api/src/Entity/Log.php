@@ -10,7 +10,6 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Gateway as Source;
-use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
@@ -35,7 +34,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "post"={"path"="/admin/logs"}
  *  })
  * )
+ *
  * @ORM\Entity(repositoryClass="App\Repository\LogRepository")
+ *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
  * @ApiFilter(BooleanFilter::class)
@@ -60,10 +61,15 @@ class Log
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
      * @Assert\Uuid
+     *
      * @Groups({"read","read_secure"})
+     *
      * @ORM\Id
+     *
      * @ORM\Column(type="uuid", unique=true)
+     *
      * @ORM\GeneratedValue(strategy="CUSTOM")
+     *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
     private $id;
@@ -72,10 +78,13 @@ class Log
      * @var string The type of this Log.
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *      max = 255
      * )
+     *
      * @Assert\Choice({"in", "out"})
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -85,7 +94,9 @@ class Log
      *         }
      *     }
      * )
+     *
      * @Groups({"read","read_secure","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private $type;
@@ -94,7 +105,9 @@ class Log
      * @var UuidInterface The call id of this Log.
      *
      * @Assert\NotNull
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="uuid")
      */
     private $callId;
@@ -103,10 +116,13 @@ class Log
      * @var string The request method of this Log.
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private $requestMethod;
@@ -115,7 +131,9 @@ class Log
      * @var array The request headers of this Log.
      *
      * @Assert\NotNull
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array")
      */
     private $requestHeaders = [];
@@ -124,7 +142,9 @@ class Log
      * @var array The request query of this Log.
      *
      * @Assert\NotNull
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array")
      */
     private $requestQuery = [];
@@ -133,10 +153,13 @@ class Log
      * @var string The request path info of this Log.
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private $requestPathInfo;
@@ -145,7 +168,9 @@ class Log
      * @var array The request languages of this Log.
      *
      * @Assert\NotNull
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array")
      */
     private $requestLanguages;
@@ -154,7 +179,9 @@ class Log
      * @var array The request server of this Log.
      *
      * @Assert\NotNull
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array")
      */
     private $requestServer = [];
@@ -163,6 +190,7 @@ class Log
      * @var string The request content for this Log.
      *
      * @Assert\NotNull
+     *
      * @ApiProperty(
      *     attributes={
      *         "openapi_context"={
@@ -171,7 +199,9 @@ class Log
      *         }
      *     }
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="text")
      */
     private $requestContent;
@@ -182,7 +212,9 @@ class Log
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $responseStatus;
@@ -191,6 +223,7 @@ class Log
      * @var int The response status code of this Log.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="integer", nullable=true)
      */
     private $responseStatusCode;
@@ -199,6 +232,7 @@ class Log
      * @var array The response headers of this Log.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private $responseHeaders = [];
@@ -207,6 +241,7 @@ class Log
      * @var string The response content of this Log.
      *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="text", nullable=true)
      */
     private $responseContent;
@@ -217,7 +252,9 @@ class Log
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $userId;
@@ -226,10 +263,13 @@ class Log
      * @var string The session of this Log.
      *
      * @Assert\NotNull
+     *
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255)
      */
     private $session;
@@ -238,7 +278,9 @@ class Log
      * @var array The session values of this Log.
      *
      * @Assert\NotNull
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array")
      */
     private $sessionValues = [];
@@ -247,7 +289,9 @@ class Log
      * @var int The endpoint of this Log.
      *
      * @Assert\NotNull
+     *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="integer")
      */
     private $responseTime;
@@ -258,7 +302,9 @@ class Log
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private $routeName;
@@ -267,35 +313,45 @@ class Log
      * @var array The route parameters of this Log.
      *
      * @Groups({"read", "write"})
+     *
      * @ORM\Column(type="array", nullable=true)
      */
     private $routeParameters;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\ManyToOne(targetEntity=Entity::class)
+     *
      * @MaxDepth(1)
      */
     private $entity;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\ManyToOne(targetEntity=Endpoint::class)
+     *
      * @MaxDepth(1)
      */
     private $endpoint;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\ManyToOne(targetEntity=Gateway::class)
+     *
      * @MaxDepth(1)
      */
     private ?Source $gateway;
 
     /**
      * @Groups({"read", "write"})
+     *
      * @ORM\ManyToOne(targetEntity=Handler::class, inversedBy="logs")
+     *
      * @ORM\JoinColumn(nullable=true)
+     *
      * @MaxDepth(1)
      */
     private ?Handler $handler;
@@ -315,7 +371,9 @@ class Log
      * @Assert\Length(
      *     max = 255
      * )
+     *
      * @Groups({"read","write"})
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $objectId;
@@ -324,7 +382,9 @@ class Log
      * @var Datetime The moment this resource was created
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="create")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateCreated;
@@ -333,7 +393,9 @@ class Log
      * @var Datetime The moment this resource was last Modified
      *
      * @Groups({"read"})
+     *
      * @Gedmo\Timestampable(on="update")
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $dateModified;
