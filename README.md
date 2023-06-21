@@ -26,6 +26,10 @@ $ docker compose up --build
 
 The common gateway control panel can be found on http://localhost:8000 on default setups.
 
+The default credentials for the common gateway are:
+Username: no-reply@test.com
+Password: !ChangeMe!
+
 > **Using Ubuntu?**<br>
 > It might be wise to run the following commands:
 >
