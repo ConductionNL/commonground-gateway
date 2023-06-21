@@ -26,6 +26,13 @@ $ docker compose up --build
 
 The common gateway control panel can be found on http://localhost:8000 on default setups.
 
+> **Using Ubuntu?**<br>
+> It might be wise to run the following commands:
+>
+> `chmod 777 -R api/vendor api/public api/var api/config`
+> `chmod 777 api/composer.lock api/composer.json api/src/Logger/SessionDataProcessor.php`
+>
+> Docker and Ubuntu manage to create some permission collisions on the gateway unfortunately.
 
 ## Quick start (for kubernetes)
 > **Dependencies**
