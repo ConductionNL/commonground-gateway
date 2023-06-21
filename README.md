@@ -31,7 +31,7 @@ Username: no-reply@test.com<br>
 Password: !ChangeMe!
 
 > **Using Ubuntu?**<br>
-> It might be wise to run the following commands:
+> Create the folder vendor in the api folder and run the following commands:
 >
 > `chmod 777 -R api/vendor api/public api/var api/config`<br>
 > `chmod 777 api/composer.lock api/composer.json api/src/Logger/SessionDataProcessor.php`
