@@ -24,6 +24,8 @@ $ docker compose up --build
 
 (the --build flag can be ignored the next time you want to run the application)
 
+The common gateway control panel can be found on http://localhost:8000 on default setups.
+
 
 ## Quick start (for kubernetes)
 > **Dependencies**
