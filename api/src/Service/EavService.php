@@ -888,6 +888,7 @@ class EavService
      * @param string $method The method of the Request
      *
      * @return array An array with all query parameters.
+     * @deprecated (see CoreBundle RequestService!)
      */
     public function realRequestQueryAll(string $method = 'get'): array
     {
