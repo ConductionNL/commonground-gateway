@@ -8,6 +8,7 @@ metadata:
   {{- include "commonground-gateway.labels" . | nindent 4 }}
 data:
   auth-enabled: {{ .Values.security.authEnabled | default "true" | quote }}
+  session-duration: {{ .Values.security.sessionDuration | default "900" | quote }}
   app-version: {{ .Values.config.version | quote }}
   app-cors-allow-origin: {{ .Values.config.corsAllowOrigin | quote }}
   cache: {{ .Values.config.cache | quote }}

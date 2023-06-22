@@ -6,10 +6,10 @@ use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\ExistsFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Gateway as Source;
-use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -50,7 +50,12 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "reference": "exact",
  *     "operationType": "exact",
  *     "pathRegex": "ipartial",
- *     "entities.id": "exact"
+ *     "entities.id": "exact",
+ *     "proxy.id": "exact"
+ * })
+ * @ApiFilter(ExistsFilter::class, properties={
+ *     "entities",
+ *     "proxy"
  * })
  */
 class Endpoint
@@ -409,7 +414,7 @@ class Endpoint
         }
 
         // Set the pathRegex
-        $pathRegex = array_key_exists('pathRegex', $schema) ? $schema['pathRegex'] : "^$path/{$default['pathRegexEnd']}$";
+        $pathRegex = array_key_exists('pathRegex', $schema) ? $schema['pathRegex'] : "^$path{$default['pathRegexEnd']}$";
         $this->setPathRegex($pathRegex);
 
         // Create Path array (add default pathArrayEnd to this, different depending on if we create en Endpoint for $entity or $source.)
@@ -491,7 +496,7 @@ class Endpoint
         return [
             'path'         => mb_strtolower(str_replace(' ', '_', $entity->getName())),
             'pathArrayEnd' => 'id',
-            'pathRegexEnd' => '?([a-z0-9-]+)?',
+            'pathRegexEnd' => '/?([a-z0-9-]+)?',
         ];
     }
 
@@ -512,7 +517,7 @@ class Endpoint
         return [
             'path'         => mb_strtolower(str_replace(' ', '_', $source->getName())),
             'pathArrayEnd' => '{route}',
-            'pathRegexEnd' => '[^.*]*',
+            'pathRegexEnd' => '?[^.*]*?', // Do not add a starting slash symbol here!
         ];
     }
 

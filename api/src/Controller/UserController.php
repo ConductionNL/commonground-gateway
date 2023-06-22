@@ -4,7 +4,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Application;
 use App\Entity\User;
 use App\Security\User\AuthenticationUser;
 use App\Service\AuthenticationService;
@@ -23,7 +22,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
 use Symfony\Component\Serializer\SerializerInterface;
-
 
 /**
  * Class LoginController.
@@ -120,7 +118,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * Create an authentication user from a entity user
+     * Create an authentication user from a entity user.
      *
      * @param User $user The user to log in.
      *
@@ -178,8 +176,8 @@ class UserController extends AbstractController
     public function addUserToSession(User $user, EventDispatcherInterface $eventDispatcher, Request $request): void
     {
         $authUser = $this->createAuthenticationUser($user);
-        $authToken = new UsernamePasswordToken($authUser, $user->getPassword(), "public", $authUser->getRoles());
-        $this->get("security.token_storage")->setToken($authToken);
+        $authToken = new UsernamePasswordToken($authUser, $user->getPassword(), 'public', $authUser->getRoles());
+        $this->get('security.token_storage')->setToken($authToken);
 
         $event = new InteractiveLoginEvent($request, $authToken);
         $eventDispatcher->dispatch($event);
@@ -460,6 +458,10 @@ class UserController extends AbstractController
         $this->session->set('identifier', $identifier);
 
         $redirectUrl = $request->getSchemeAndHttpHost().$this->generateUrl('app_user_authenticate', ['method' => $method, 'identifier' => $identifier]);
+
+        if ($request->getSchemeAndHttpHost() !== 'http://localhost' && $request->getSchemeAndHttpHost() !== 'http://localhost') {
+            $redirectUrl = str_replace('http://', 'https://', $redirectUrl);
+        }
 
         $this->session->set('redirectUrl', $redirectUrl);
 

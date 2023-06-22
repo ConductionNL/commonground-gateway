@@ -12,7 +12,7 @@ dependencies:
   repository: https://charts.bitnami.com/bitnami
   version: 13.4.4
 - name: gateway-ui
-  repository: https://raw.githubusercontent.com/ConductionNL/gateway-ui/refinement-demo-branch/helm/
+  repository: https://raw.githubusercontent.com/ConductionNL/gateway-ui/development/helm/
   version: 0.1.7
-digest: sha256:26a99dce811f80ca30c88b2d61abd148bae9666e859657bf9bcf932154f9a91c
-generated: "2023-02-20T14:53:19.441438753+01:00"
+digest: sha256:b774470aa312ce9b2cba5bf4488a3062705fc00c7d995fe885409f5e41576954
+generated: "2023-06-14T14:04:18.793796+02:00"

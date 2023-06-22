@@ -12,6 +12,7 @@ use CommonGateway\CoreBundle\Service\RequestService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -42,10 +43,10 @@ class ZZController extends AbstractController
         ?string $id,
         Request $request,
         SerializerInterface $serializer,
-        HandlerService $handlerService,
         RequestService $requestService
     ): Response {
         $parameters = $this->getParametersFromRequest([], $request);
+        $parameters['accept'] = $this->getAcceptType($request);
 
         // We should check if we have an id
         if ($id) {
@@ -116,4 +117,49 @@ class ZZController extends AbstractController
 
         return $parameters;
     }
+
+    private function getAcceptType(Request $request): string
+    {
+        // Lets first look at the accept header.
+        $acceptHeader = $request->headers->get('accept');
+
+        // As a backup we look at any file extenstion.
+        $path = $request->getPathInfo();
+        $pathparts = explode('.', $path);
+        if (count($pathparts) >= 2) {
+            $extension = end($pathparts);
+            switch ($extension) {
+                case 'pdf':
+                    return 'pdf';
+            }//end switch
+        }
+
+        // Determine the accept type.
+        switch ($acceptHeader) {
+            case 'application/pdf':
+                return 'pdf';
+            case 'application/json':
+                return 'json';
+            case 'application/json+hal':
+            case 'application/hal+json':
+                return 'jsonhal';
+            case 'application/json+ld':
+            case 'application/ld+json':
+                return 'jsonld';
+            case 'application/json+fromio':
+            case 'application/formio+json':
+                return 'formio';
+            case 'application/json+schema':
+            case 'application/schema+json':
+                return 'schema';
+            case 'application/json+graphql':
+            case 'application/graphql+json':
+                return 'graphql';
+            case 'text/xml':
+            case 'application/xml':
+                return 'xml';
+        }//end switch
+
+        throw new BadRequestHttpException('No proper accept could be determined');
+    }//end getAcceptType()
 }

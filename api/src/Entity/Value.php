@@ -589,12 +589,19 @@ class Value
 
     public function getAttribute(): ?Attribute
     {
-        return isset($this->attribute) ? $this->attribute : null;
+        return $this->attribute ?? null;
     }
 
+    /**
+     * @throws Exception
+     */
     public function setAttribute(?Attribute $attribute): self
     {
-        // If we have an atribute we can deal with default values
+        if ($this->getObjectEntity() !== null && $this->getObjectEntity()->getEntity() !== $attribute->getEntity()) {
+            return $this;
+        }
+
+        // If we have an attribute we can deal with default values
         $this->setDefaultValue();
 
         $this->attribute = $attribute;
@@ -610,7 +617,7 @@ class Value
     public function setObjectEntity(?ObjectEntity $objectEntity): self
     {
         // Make sure we can only add a parent ObjectEntity if the Attribute of this Value has the ObjectEntity->Entity configured as a possible parent Entity.
-        if ($objectEntity !== null && $objectEntity->getEntity() !== $this->getAttribute()->getEntity()) {
+        if ($objectEntity !== null && $this->getAttribute() !== null && $objectEntity->getEntity() !== $this->getAttribute()->getEntity()) {
             return $this;
         }
 
@@ -876,6 +883,8 @@ class Value
     /**
      * Set the default value for this object.
      *
+     * @throws Exception
+     *
      * @return $this
      */
     public function setDefaultValue(): self
@@ -894,6 +903,8 @@ class Value
 
         // And the we can set the result
         $this->setValue($defaultValue);
+
+        return $this;
     }
 
     /**

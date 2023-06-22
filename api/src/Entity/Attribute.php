@@ -18,6 +18,7 @@ use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -41,6 +42,21 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  })
  *
  * @ORM\Entity(repositoryClass=AttributeRepository::class)
+ *
+ * @ORM\Table(
+ *     name="attribute",
+ *     uniqueConstraints={
+ *
+ *      @ORM\UniqueConstraint(
+ *          name="entity_attribute_unique",
+ *          columns={"name", "entity_id"}
+ *     )
+ * })
+ *
+ * @UniqueEntity(
+ *     fields={"name", "entity"},
+ *     message="Attribute->name for given Entity already exists in database."
+ * )
  *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *

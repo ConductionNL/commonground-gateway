@@ -4,9 +4,14 @@
 
 namespace App\Controller;
 
+use CommonGateway\CoreBundle\Service\CacheService;
 use CommonGateway\CoreBundle\Service\RequestService;
+use DateTime;
+use Exception;
 use MongoDB\BSON\ObjectId;
+use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
+use MongoDB\Driver\Exception\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,7 +20,7 @@ use Symfony\Component\Routing\Annotation\Route;
 /**
  * Fires the cronjon service from an api endpoint.
  *
- * Authors: Wilco Louwerse <wilco@conduction.nl>
+ * Authors: Wilco Louwerse <wilco@conduction.nl>, Robert Zondervan <robert@conduction.nl>
  *
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *
@@ -25,87 +30,13 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class LogController extends AbstractController
 {
-    /**
-     * @TODO: This is duplicate code from the corebundle, once moving logging to core, reuse code from there
-     *
-     * @param string      $method
-     * @param string|null $queryString
-     *
-     * @return array
-     */
-    private function realRequestQueryAll(string $method = 'get', ?string $queryString = ''): array
+    private CacheService $cacheService;
+    private RequestService $requestService;
+
+    public function __construct(CacheService $cacheService, RequestService $requestService)
     {
-        $vars = [];
-        if (strtolower($method) === 'get' && empty($queryString)) {
-            return $vars;
-        }
-
-        $pairs = explode('&', $_SERVER['QUERY_STRING']);
-        foreach ($pairs as $pair) {
-            $nv = explode('=', $pair);
-            $name = urldecode($nv[0]);
-            $value = '';
-            if (count($nv) == 2) {
-                $value = urldecode($nv[1]);
-            }
-
-            $this->recursiveRequestQueryKey($vars, $name, explode('[', $name)[0], $value);
-        }
-
-        return $vars;
-    }
-
-    /**
-     * @TODO: This is duplicate code from the corebundle, once moving logging to core, reuse code from there
-     *
-     * @param array  $vars
-     * @param string $name
-     * @param string $nameKey
-     * @param string $value
-     */
-    private function recursiveRequestQueryKey(array &$vars, string $name, string $nameKey, string $value)
-    {
-        $matchesCount = preg_match('/(\[[^[\]]*])/', $name, $matches);
-        if ($matchesCount > 0) {
-            $key = $matches[0];
-            $name = str_replace($key, '', $name);
-            $key = trim($key, '[]');
-            if (!empty($key)) {
-                $vars[$nameKey] = $vars[$nameKey] ?? [];
-                $this->recursiveRequestQueryKey($vars[$nameKey], $name, $key, $value);
-            } else {
-                $vars[$nameKey][] = $value;
-            }
-        } else {
-            $vars[$nameKey] = $value;
-        }
-    }
-
-    /**
-     * @TODO: This is duplicate code from the corebundle, once moving logging to core, reuse code from there
-     *
-     * @param $limit
-     * @param $start
-     * @param array $filters
-     *
-     * @return array
-     */
-    public function setPagination(&$limit, &$start, array $filters): array
-    {
-        if (isset($filters['_limit'])) {
-            $limit = intval($filters['_limit']);
-        } else {
-            $limit = 30;
-        }
-        if (isset($filters['_start']) || isset($filters['_offset'])) {
-            $start = isset($filters['_start']) ? intval($filters['_start']) : intval($filters['_offset']);
-        } elseif (isset($filters['_page'])) {
-            $start = (intval($filters['_page']) - 1) * $limit;
-        } else {
-            $start = 0;
-        }
-
-        return $filters;
+        $this->cacheService = $cacheService;
+        $this->requestService = $requestService;
     }
 
     /**
@@ -113,33 +44,96 @@ class LogController extends AbstractController
      *
      * @Route("/monologs", methods={"GET"})
      */
-    public function logAction(Request $request, RequestService $requestService)
+    public function logAction(Request $request): Response
     {
         $status = 200;
-
         $client = new Client($this->getParameter('cache_url'));
+        $filter = $this->requestService->realRequestQueryAll('get', $request->getQueryString());
 
-        $collection = $client->logs->logs;
-        $filter = $this->realRequestQueryAll('get', $request->getQueryString());
         $completeFilter = $filter;
+
         if (isset($filter['_id'])) {
-            $filter['_id'] = new ObjectId($filter['_id']);
+            try {
+                $filter['_id'] = new ObjectId($filter['_id']);
+            } catch (InvalidArgumentException $exception) {
+                $content = json_encode([
+                    'message' => 'Invalid _id given, please give a valid 24-character hexadecimal string. '.$exception->getMessage(),
+                    'type'    => 'Bad Request',
+                    'path'    => '/amdin/monologs',
+                    'data'    => ['_id' => $filter['_id']],
+                ]);
+
+                return new Response($content, 400, ['Content-type' => 'application/json']);
+            }
         }
 
         unset($filter['_start'], $filter['_offset'], $filter['_limit'], $filter['_page'],
             $filter['_extend'], $filter['_search'], $filter['_order'], $filter['_fields']);
-        $completeFilter = $this->setPagination($limit, $start, $completeFilter);
+
+        // 'normal' Filters (not starting with _ )
+        foreach ($filter as $key => &$value) {
+            // todo: maybe re-use cacheService->handleFilter somehow... ?
+            $this->handleFilterArray($key, $value);
+        }
+
+        $completeFilter = $this->cacheService->setPagination($limit, $start, $completeFilter);
 
         $order = isset($completeFilter['_order']) === true ? str_replace(['ASC', 'asc', 'DESC', 'desc'], [1, 1, -1, -1], $completeFilter['_order']) : [];
         !empty($order) && $order[array_keys($order)[0]] = (int) $order[array_keys($order)[0]];
 
-        $content = json_encode([
-            'results' => $collection->find($filter, ['limit' => $limit, 'skip' => $start, 'sort' => $order])->toArray(),
-            'page'    => ((int) $completeFilter['_page'] ?? 1),
-            'count'   => $total = $collection->countDocuments($filter),
-            'pages'   => ceil($total / $limit),
-        ]);
+        $collection = $client->logs->logs;
+
+        $results = $collection->find($filter, ['limit' => $limit, 'skip' => $start, 'sort' => $order])->toArray();
+        $total = $collection->countDocuments($filter);
+
+        $content = json_encode($this->cacheService->handleResultPagination($completeFilter, $results, $total));
 
         return new Response($content, $status, ['Content-type' => 'application/json']);
+    }
+
+    /**
+     * Handles a single filter used on a get collection api call. Specifically a filter where the value is an array.
+     *
+     * @param $key
+     * @param $value
+     *
+     * @throws Exception
+     *
+     * @return bool
+     */
+    private function handleFilterArray($key, &$value): bool
+    {
+        // Handle filters that expect $value to be an array
+        if (is_array($value)) {
+            // after, before, strictly_after,strictly_before
+            if (!empty(array_intersect_key($value, array_flip(['after', 'before', 'strictly_after', 'strictly_before'])))) {
+                $newValue = null;
+                // Compare datetime
+                if (!empty(array_intersect_key($value, array_flip(['after', 'strictly_after'])))) {
+                    $after = array_key_exists('strictly_after', $value) ? 'strictly_after' : 'after';
+                    $compareDate = new DateTime($value[$after]);
+                    $compareKey = $after === 'strictly_after' ? '$gt' : '$gte';
+
+                    // Todo: re-use the CacheService code to do this, but add in someway an option for comparing string datetime or mongoDB datetime.
+                    // $newValue["$compareKey"] = "{$compareDate->format('c')}";
+                    $newValue["$compareKey"] = new UTCDateTime($compareDate);
+                }
+                if (!empty(array_intersect_key($value, array_flip(['before', 'strictly_before'])))) {
+                    $before = array_key_exists('strictly_before', $value) ? 'strictly_before' : 'before';
+                    $compareDate = new DateTime($value[$before]);
+                    $compareKey = $before === 'strictly_before' ? '$lt' : '$lte';
+
+                    // Todo: re-use the CacheService code to do this, but add in someway an option for comparing string datetime or mongoDB datetime.
+                    // $newValue["$compareKey"] = "{$compareDate->format('c')}";
+                    $newValue["$compareKey"] = new UTCDateTime($compareDate);
+                }
+
+                $value = $newValue;
+
+                return true;
+            }
+        }
+
+        return false;
     }
 }

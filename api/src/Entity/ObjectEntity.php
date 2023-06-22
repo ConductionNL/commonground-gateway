@@ -794,8 +794,8 @@ class ObjectEntity
      * Sets a value based on the attribute string name or atribute object.
      *
      * @param string|Attribute $attribute
-     * @param $value
-     * @param bool $unsafe
+     * @param                  $value
+     * @param bool             $unsafe
      *
      * @throws Exception
      *
@@ -1150,6 +1150,7 @@ class ObjectEntity
         }
 
         // Let loop trough al the values
+        // TODO: we need to clean this up, at least move duplicate code to functions
         foreach ($this->getEntity()->getAttributes() as $attribute) {
             $valueObject = $this->getValueObject($attribute);
             // Subobjects are a bit complicated
@@ -1244,7 +1245,7 @@ class ObjectEntity
                         }
                     }
                 }
-            // But normal values are simple
+                // But normal values are simple
             } else {
                 $array[$attribute->getName()] = $valueObject->getValue();
             }

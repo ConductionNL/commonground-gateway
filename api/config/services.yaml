@@ -49,6 +49,7 @@ services:
             #       - !php/const Redis::OPT_PREFIX
             #       - 'my_prefix'
 
+    # TODO: test if we still need this here, might be deprecated
     App\Subscriber\ValueDatabaseSubscriber:
         tags:
             - name: 'doctrine.event_subscriber'
@@ -57,6 +58,7 @@ services:
               # you can also restrict listeners to a specific Doctrine connection
               connection: 'default'
     
+    # TODO: test if we still need this here, might be deprecated
     CommonGateway\CoreBundle\Subscriber\ObjectUriSubscriber:
         tags:
             - name: 'doctrine.event_subscriber'

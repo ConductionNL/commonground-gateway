@@ -31,7 +31,7 @@ class SynchronizationCollectionHandler implements ActionHandlerInterface
     public function getConfiguration(): array
     {
         return [
-            '$id'         => 'https://example.com/person.schema.json',
+            '$id'         => 'https://commongateway.nl/ActionHandler/SynchronizationCollectionHandler.ActionHandler.json',
             '$schema'     => 'https://docs.commongateway.nl/schemas/ActionHandler.schema.json',
             'title'       => 'SynchronizationCollectionHandler',
             'description' => '',

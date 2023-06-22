@@ -261,7 +261,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Transform dot filters (learningNeed.student.id = "uuid") into an array ['learningNeed' => ['student' => ['id' => "uuid"]]].
      *
      * @param array $key
-     * @param $value
+     * @param       $value
      * @param array $result
      *
      * @return array The transformed array.
@@ -593,8 +593,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @param QueryBuilder $query
      * @param array        $filterKey
-     * @param $value
-     * @param string $prefix
+     * @param              $value
+     * @param string       $prefix
      *
      * @throws Exception
      *
@@ -623,8 +623,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @param QueryBuilder $query          The existing QueryBuilder.
      * @param string       $sqlFriendlyKey
-     * @param $value
-     * @param string $prefix
+     * @param              $value
+     * @param string       $prefix
      *
      * @throws Exception
      *
@@ -659,8 +659,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @param QueryBuilder $query
      * @param string       $sqlFriendlyKey
-     * @param $value
-     * @param string $prefix
+     * @param              $value
+     * @param string       $prefix
      *
      * @return QueryBuilder
      */
@@ -687,8 +687,8 @@ class ObjectEntityRepository extends ServiceEntityRepository
      *
      * @param QueryBuilder $query
      * @param array        $filterKey
-     * @param $value
-     * @param string $prefix
+     * @param              $value
+     * @param string       $prefix
      *
      * @return QueryBuilder
      */

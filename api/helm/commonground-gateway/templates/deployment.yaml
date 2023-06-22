@@ -211,9 +211,9 @@ spec:
                   name: {{ include "commonground-gateway.fullname" . }}
             - name: CACHE_URL
               valueFrom:
-                  secretKeyRef:
-                      key: mongodb-url
-                      name: {{ include "commonground-gateway.fullname" . }}
+                secretKeyRef:
+                  key: mongodb-url
+                  name: {{ include "commonground-gateway.fullname" . }}
             - name: GLOBAL_DOMAIN
               valueFrom:
                 configMapKeyRef:
@@ -224,34 +224,39 @@ spec:
                 configMapKeyRef:
                   key: url
                   name: {{ include "commonground-gateway.fullname" . }}
+            - name: APP_SESSION_DURATION
+              valueFrom:
+                configMapKeyRef:
+                  key: session-duration
+                  name: {{ include "commonground-gateway.fullname" . }}
             - name: READ_ONLY
               value: {{ .Values.config.readOnly | quote }}
-            -   name: CRON_RUNNER_ENABLED
-                valueFrom:
-                    configMapKeyRef:
-                        key: cron-runner-enabled
-                        name: {{ include "commonground-gateway.fullname" . }}
+            - name: CRON_RUNNER_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  key: cron-runner-enabled
+                  name: {{ include "commonground-gateway.fullname" . }}
             {{- if .Values.config.cronRunner.enabled }}
-            -   name: CRON_RUNNER_CRONTAB
-                valueFrom:
-                    configMapKeyRef:
-                        key: cron-runner-crontab
-                        name: {{ include "commonground-gateway.fullname" . }}
-            -   name: CRON_RUNNER_CONCURRENCY_POLICY
-                valueFrom:
-                    configMapKeyRef:
-                        key: cron-runner-concurrencyPolicy
-                        name: {{ include "commonground-gateway.fullname" . }}
-            -   name: CRON_RUNNER_ACTIVE_DEADLINE_SECONDS
-                valueFrom:
-                    configMapKeyRef:
-                        key: cron-runner-activeDeadlineSeconds
-                        name: {{ include "commonground-gateway.fullname" . }}
-            -   name: CRON_RUNNER_APP_AUTH
-                valueFrom:
-                    configMapKeyRef:
-                        key: cron-runner-appAuth
-                        name: {{ include "commonground-gateway.fullname" . }}
+            - name: CRON_RUNNER_CRONTAB
+              valueFrom:
+                configMapKeyRef:
+                  key: cron-runner-crontab
+                  name: {{ include "commonground-gateway.fullname" . }}
+            - name: CRON_RUNNER_CONCURRENCY_POLICY
+              valueFrom:
+                configMapKeyRef:
+                  key: cron-runner-concurrencyPolicy
+                  name: {{ include "commonground-gateway.fullname" . }}
+            - name: CRON_RUNNER_ACTIVE_DEADLINE_SECONDS
+              valueFrom:
+                configMapKeyRef:
+                  key: cron-runner-activeDeadlineSeconds
+                  name: {{ include "commonground-gateway.fullname" . }}
+            - name: CRON_RUNNER_APP_AUTH
+              valueFrom:
+                configMapKeyRef:
+                  key: cron-runner-appAuth
+                  name: {{ include "commonground-gateway.fullname" . }}
             {{- end}}
             - name: APP_DEFAULT_REDIRECT_URL
               {{- if contains "useDomain" .Values.config.defaultRedirectUrl }}
@@ -268,24 +273,24 @@ spec:
           #RabbitMQ
             - name: RABBITMQ_HOST
               valueFrom:
-                  configMapKeyRef:
-                      name: {{ template "commonground-gateway.fullname" . }}
-                      key: rabbitmq-host
+                configMapKeyRef:
+                  name: {{ template "commonground-gateway.fullname" . }}
+                  key: rabbitmq-host
             - name: RABBITMQ_PORT
               valueFrom:
-                  configMapKeyRef:
-                      name: {{ template "commonground-gateway.fullname" . }}
-                      key: rabbitmq-port
+                configMapKeyRef:
+                  name: {{ template "commonground-gateway.fullname" . }}
+                  key: rabbitmq-port
             - name: RABBITMQ_USERNAME
               valueFrom:
-                  secretKeyRef:
-                      name: {{ template "commonground-gateway.fullname" . }}
-                      key: rabbitmq-username
+                secretKeyRef:
+                  name: {{ template "commonground-gateway.fullname" . }}
+                  key: rabbitmq-username
             - name: RABBITMQ_PASSWORD
               valueFrom:
-                  secretKeyRef:
-                      name: {{ template "commonground-gateway.fullname" . }}
-                      key: rabbitmq-password
+                secretKeyRef:
+                  name: {{ template "commonground-gateway.fullname" . }}
+                  key: rabbitmq-password
             {{- if or (and .Values.security.certificate.certificate .Values.security.certificate.privateKey) .Values.security.certificate.existingSecret }}
             - name: APP_CERT
               value: '/var/run/certs/tls.crt'
@@ -336,8 +341,8 @@ spec:
             - name: GITHUB_KEY
               valueFrom:
                 secretKeyRef:
-                    key: githubKey
-                    name: {{ include "commonground-gateway.fullname" . }}
+                  key: githubKey
+                  name: {{ include "commonground-gateway.fullname" . }}
             {{- if .Values.security.digid.enabled }}
             - name: DIGID_METADATA_LOCATION
               valueFrom:
@@ -351,14 +356,14 @@ spec:
                   name: {{ include "commonground-gateway.fullname" . }}
             - name: DIGID_SIGN_ON_URL
               valueFrom:
-                  secretKeyRef:
-                      key: digid-single-sign-on-url
-                      name: {{ include "commonground-gateway.fullname" . }}
+                secretKeyRef:
+                  key: digid-single-sign-on-url
+                  name: {{ include "commonground-gateway.fullname" . }}
             - name: DIGID_LOGOUT_URL
               valueFrom:
-                  secretKeyRef:
-                      key: digid-logout-url
-                      name: {{ include "commonground-gateway.fullname" . }}
+                secretKeyRef:
+                  key: digid-logout-url
+                  name: {{ include "commonground-gateway.fullname" . }}
             - name: DIGID_IDP_CERT
               value: '/var/run/idp/digid_idp.crt'
             {{-  if and .Values.security.digid.certificate .Values.security.digid.privateKey }}

@@ -7,6 +7,7 @@ use App\Entity\Entity;
 use CommonGateway\CoreBundle\Service\EavService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
@@ -52,7 +53,7 @@ final class EntityDeleteObjectsSubscriber implements EventSubscriberInterface
 
         // Only trigger when we want to.
         if (
-            $route !== 'api_entities_delete_objects_item'
+            $route !== 'api_entities_delete_objects_collection'
         ) {
             return;
         }
@@ -60,10 +61,12 @@ final class EntityDeleteObjectsSubscriber implements EventSubscriberInterface
         // Let's see if we have the proper info on our route.
         $entity = $this->entityManager->getRepository('App:Entity')->find($event->getRequest()->attributes->get('id'));
         $method = $event->getRequest()->getMethod();
-        if ($entity instanceof Entity === false || $method !== 'PUT') {
+        if ($entity instanceof Entity === false || $method !== 'POST') {
             return;
         }
 
-        $this->eavService->deleteAllObjects($entity);
+        $result = $this->eavService->deleteAllObjects($entity);
+
+        $event->setResponse(new Response(json_encode(['Amount of objects deleted' => $result]), 200, []));
     }//end entityDeleteObjects()
 }

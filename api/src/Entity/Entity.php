@@ -10,24 +10,21 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Entity\Gateway as Source;
 use App\Exception\GatewayException;
-use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\Mapping as ORM;
-use EasyRdf\Literal\Boolean;
 use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
 use phpDocumentor\Reflection\Types\This;
-use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * An schema that functions a an object template for objects that might be stored in the EAV database.
+ * A schema that functions as an object template for objects that might be stored in the EAV database.
  *
  * @ApiResource(
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
@@ -35,19 +32,24 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  itemOperations={
  *     "get"={"path"="/admin/entities/{id}"},
  *     "put"={"path"="/admin/entities/{id}"},
- *      "delete_objects"={
- *          "path"="/admin/entities/{id}/delete_objects",
- *          "method"="put",
- *          "openapi_context" = {
- *              "summary"="Delete Objects",
- *              "description"="Deletes all objects that belong to this schema"
- *              }
- *     },
  *     "delete"={"path"="/admin/entities/{id}"}
  *  },
  *  collectionOperations={
  *     "get"={"path"="/admin/entities"},
- *     "post"={"path"="/admin/entities"}
+ *     "post"={"path"="/admin/entities"},
+ *     "delete_objects"={
+ *          "path"="/admin/entities/{id}/delete_objects",
+ *          "method"="POST",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "requirements"={
+ *              "id"=".+"
+ *          },
+ *          "openapi_context"={
+ *              "summary"="Delete Objects for this Schema",
+ *              "description"="Deletes all objects that belong to this schema"
+ *          }
+ *      },
  *  })
  *
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")
@@ -452,6 +454,15 @@ class Entity
      * @ORM\Column(type="boolean", options={"default": false}, nullable=true)
      */
     private bool $createAuditTrails = false;
+
+    /**
+     * @var Source|null The default source to synchronise to.
+     *
+     * @Groups({"read", "write"})
+     *
+     * @ORM\ManyToOne(targetEntity=Gateway::class, cascade={"persist", "remove"})
+     */
+    private ?Source $defaultSource = null;
 
     public function __toString()
     {
@@ -1164,8 +1175,9 @@ class Entity
                 if ($attribute->getType() != 'object') {
                     $property['value'] = $objectEntity->getValue($attribute);
                 } elseif ($attribute->getMultiple()) {
-                    foreach($objectEntity->getValueObject($attribute)->getObjects() as $object)
+                    foreach ($objectEntity->getValueObject($attribute)->getObjects() as $object) {
                         $property['value'][] = $object->getId()->toString();
+                    }
                 } else {
                     $property['value'] = $objectEntity->getValueObject($attribute)->getStringValue();
                 }
@@ -1328,6 +1340,18 @@ class Entity
     public function setCreateAuditTrails(bool $createAuditTrails): self
     {
         $this->createAuditTrails = $createAuditTrails;
+
+        return $this;
+    }
+
+    public function getDefaultSource(): ?Source
+    {
+        return $this->defaultSource;
+    }
+
+    public function setDefaultSource(?Source $defaultSource): self
+    {
+        $this->defaultSource = $defaultSource;
 
         return $this;
     }
