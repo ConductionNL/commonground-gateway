@@ -35,6 +35,8 @@ use function GuzzleHttp\json_decode;
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *
  * @category Service
+ * @deprecated todo: Carefully take a look at all code before deleting this service, we might want to keep some BL.
+ * todo: (and we might use some functions from CoreBundle?)
  */
 class EavService
 {
@@ -88,6 +90,7 @@ class EavService
      * @param string $entityName
      *
      * @return Entity|array
+     * @deprecated
      */
     public function getEntity(string $entityName)
     {
@@ -116,24 +119,6 @@ class EavService
         return $entity;
     }
 
-    // TODO: REMOVE? not used anywhere?
-    public function getId(array $body, ?string $id): ?string
-    {
-        if (!$id && array_key_exists('id', $body)) {
-            $id = $body['id'];
-        }
-        //elseif(!$id && array_key_exists('uuid', $body) ){ // this catches zgw api's
-        //    $id = $body['uuid'];
-        //)
-        elseif (!$id && array_key_exists('@id', $body)) {
-            $id = $this->commonGroundService->getUuidFromUrl($body['@id']);
-        } elseif (!$id && array_key_exists('@self', $body)) {
-            $id = $this->commonGroundService->getUuidFromUrl($body['@self']);
-        }
-
-        return $id;
-    }
-
     /**
      * Looks for a ObjectEntity using an id or creates a new ObjectEntity if no ObjectEntity was found with that id or if no id is given at all.
      *
@@ -144,6 +129,7 @@ class EavService
      * @throws Exception
      *
      * @return ObjectEntity|array|null
+     * @deprecated
      */
     public function getObject(?string $id, string $method, Entity $entity)
     {
@@ -207,6 +193,7 @@ class EavService
      * @throws Exception
      *
      * @return Response
+     * @deprecated
      */
     public function handleRequest(Request $request): Response
     {
@@ -362,6 +349,7 @@ class EavService
      * @throws Exception
      *
      * @return Response
+     * @deprecated
      */
     public function generateResult(Request $request, Entity $entity, array $requestBase, ?array $body = []): array
     {
@@ -513,6 +501,7 @@ class EavService
      * @param Request $request
      *
      * @return array
+     * @deprecated
      */
     private function getRequestBase(Request $request): array
     {
@@ -551,6 +540,7 @@ class EavService
      * @param string $path
      *
      * @return array|null
+     * @deprecated
      */
     private function checkAllowedRenderTypes(string $renderType, string $path): ?array
     {
@@ -568,6 +558,13 @@ class EavService
         return null;
     }
 
+    /**
+     * @param Request $request
+     * @param string $extension
+     *
+     * @return string
+     * @deprecated
+     */
     private function getRequestContentType(Request $request, string $extension): string
     {
         // This should be moved to the commonground service and callded true $this->serializerService->getRenderType($contentType);
@@ -600,6 +597,7 @@ class EavService
      * @param Entity  $entity
      *
      * @return array
+     * @deprecated
      */
     private function handleFormDataBody(Request $request, Entity $entity): array
     {
@@ -624,6 +622,7 @@ class EavService
      * @param ObjectEntity $objectEntity
      *
      * @throws Exception
+     * @deprecated
      */
     private function handleFormDataFiles(Request $request, Entity $entity, ObjectEntity $objectEntity)
     {
@@ -672,6 +671,7 @@ class EavService
      * @param Request $request
      *
      * @return array
+     * @deprecated
      */
     public function getRequestFields(Request $request): ?array
     {
@@ -701,6 +701,7 @@ class EavService
      * @param Request $request
      *
      * @return array
+     * @deprecated
      */
     public function getRequestExtend(Request $request): ?array
     {
@@ -733,6 +734,7 @@ class EavService
      * @throws Exception
      *
      * @return array
+     * @deprecated
      */
     public function handleEntityEndpoint(Request $request, array $info): array
     {
@@ -784,6 +786,7 @@ class EavService
      * @throws Exception
      *
      * @return array
+     * @deprecated
      */
     public function handleCollectionEndpoint(Request $request, array $info): array
     {
@@ -828,6 +831,7 @@ class EavService
      * @throws Exception
      *
      * @return array
+     * @deprecated
      */
     public function handleMutation(ObjectEntity $object, array $body, $fields, Request $request): array
     {
@@ -875,6 +879,7 @@ class EavService
      * @throws CacheException|InvalidArgumentException
      *
      * @return array
+     * @deprecated
      */
     public function handleGet(ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType = 'json'): array
     {
@@ -888,7 +893,7 @@ class EavService
      * @param string $method The method of the Request
      *
      * @return array An array with all query parameters.
-     * @deprecated (see CoreBundle RequestService!)
+     * @deprecated (see CoreBundle RequestService->realRequestQueryAll()!)
      */
     public function realRequestQueryAll(string $method = 'get'): array
     {
@@ -925,6 +930,7 @@ class EavService
      * @param string $value   The full $value of the query param, like this: ?$name=$value
      *
      * @return void
+     * @deprecated
      */
     private function recursiveRequestQueryKey(array &$vars, string $name, string $nameKey, string $value)
     {
@@ -947,18 +953,20 @@ class EavService
     /**
      * Handles a search (collection) api call.
      *
-     * @param Entity     $entity
-     * @param Request    $request
+     * @param Entity $entity
+     * @param Request $request
      * @param array|null $fields
      * @param array|null $extend
      * @param            $extension
-     * @param null       $filters
-     * @param string     $acceptType
+     * @param null $filters
+     * @param string $acceptType
+     * @param array|null $query
      *
      * @throws CacheException
      * @throws InvalidArgumentException
      *
      * @return array|array[]
+     * @deprecated
      */
     public function handleSearch(Entity $entity, Request $request, ?array $fields, ?array $extend, $extension, $filters = null, string $acceptType = 'json', ?array $query = null): array
     {
@@ -1098,6 +1106,7 @@ class EavService
      * @param ObjectEntity $object The object to check.
      *
      * @return bool true by default, false if filtering wasn't done correctly and this object should not be shown in the results.
+     * @deprecated
      */
     private function checkIfFilteredCorrectly(array $query, ObjectEntity $object): bool
     {
@@ -1133,6 +1142,7 @@ class EavService
      * @param int    $offset
      *
      * @return array[]
+     * @deprecated
      */
     private function handlePagination(string $acceptType, Entity $entity, array $results, int $total, int $limit, int $offset): array
     {
@@ -1162,6 +1172,13 @@ class EavService
         return $paginationResult;
     }
 
+    /**
+     * @param Entity $entity
+     * @param array $data
+     *
+     * @return array
+     * @deprecated
+     */
     private function handleJsonHal(Entity $entity, array $data): array
     {
         $path = $entity->getName();
@@ -1186,6 +1203,13 @@ class EavService
         return $paginationResult;
     }
 
+    /**
+     * @param array $paginationResult
+     * @param array $data
+     *
+     * @return array
+     * @deprecated
+     */
     private function handleDefaultPagination(array $paginationResult, array $data): array
     {
         $paginationResult['count'] = count($data['results']);
@@ -1207,6 +1231,7 @@ class EavService
      * @throws InvalidArgumentException
      *
      * @return array
+     * @deprecated
      */
     public function handleDelete(ObjectEntity $object, ArrayCollection $maxDepth = null): array
     {
@@ -1285,6 +1310,7 @@ class EavService
      * @param ObjectEntity|null $motherObject
      *
      * @return void
+     * @deprecated
      */
     private function handleDeleteObjectOnError(ObjectEntity $createdObject)
     {
@@ -1337,6 +1363,7 @@ class EavService
      * @param ObjectEntity $objectEntity
      *
      * @return array
+     * @deprecated
      */
     public function returnErrors(ObjectEntity $objectEntity): array
     {

@@ -57,6 +57,7 @@ class AuthorizationService
      * @param array $info An array that can contain the following "keys"(=>Default): "method"=>"GET", "entity"=>null, "attribute"=>null, "object"=>null & "value"=>null.
      *
      * @return array
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     private function getValidInfoArray(array $info): array
     {
@@ -81,6 +82,7 @@ class AuthorizationService
      * @throws AccessDeniedException
      *
      * @return void
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     public function checkAuthorization(array $info): void
     {
@@ -124,6 +126,7 @@ class AuthorizationService
      * @param array $info Can contain the following "keys": "method", "entity", "attribute". Should contain Method and either Entity or Attribute.
      *
      * @return array The scopes required to {method} the given Entity or Attribute.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     private function getRequiredScopes(array $info): array
     {
@@ -165,6 +168,7 @@ class AuthorizationService
      * @throws CacheException|InvalidArgumentException
      *
      * @return array|string[] The scopes granted to the current user.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     private function getGrantedScopes(): array
     {
@@ -198,6 +202,7 @@ class AuthorizationService
      * @param array $roles An array with all the roles of a user.
      *
      * @return string[] The scopes that match the given roles.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     private function getScopesFromRoles(array $roles): array
     {
@@ -218,6 +223,7 @@ class AuthorizationService
      * @throws CacheException|InvalidArgumentException
      *
      * @return array The scopes of an anonymous user.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     public function getScopesForAnonymous(): array
     {
@@ -262,6 +268,7 @@ class AuthorizationService
      * @TODO
      *
      * @return array
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     private function getContractScopes(): array
     {
@@ -287,6 +294,7 @@ class AuthorizationService
      * @param array $info          Can contain the following "keys": "method", "entity", "attribute", "object" & "value". Should always contain an Object (with an Entity or an Attribute) OR a Value (with an Attribute) in order to check for and handle 'valueScopes'.
      *
      * @return bool True if the current user is granted one or more 'valueScopes' AND the user is allowed to view or edit the given Entity or Attribute in combination with the given Object or Value. If the user is not allowed to view or edit an AccessDeniedException will be thrown. False if there are no 'valueScopes' found.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     private function handleValueScopes(array $grantedScopes, array $info): bool
     {
@@ -323,6 +331,7 @@ class AuthorizationService
      * @param bool  $matchValueScopes True if the given Object or Value match the required value(s) of the 'valueScopes' (grantedScope(s) with = value) for the given Entity or Attribute.
      *
      * @return array An array with the expected return context for the checkValueScopes() & loopGrantedScopes() functions.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     private function checkValueScopesReturn(array $errorArray = [], bool $hasValueScopes = false, bool $matchValueScopes = false): array
     {
@@ -343,6 +352,7 @@ class AuthorizationService
      * @param Attribute|null $attribute   The attribute of the scope that the user failed to 'match' $failedScope.
      *
      * @return array An array with the expected return context for the error array of the checkValueScopesReturn() function.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     private function checkValueScopesReturnError(string $message = 'Something went wrong', array $scopeValues = null, $failedValue = null, string $failedScope = null, ?Attribute $attribute = null): array
     {
@@ -361,6 +371,7 @@ class AuthorizationService
      * @param array $info The $info array. Can contain the following "keys": "method", "entity", "attribute", "object" & "value". Should always contain an Object (with an Entity or an Attribute) OR a Value (with an Attribute) in order to check for and handle 'valueScopes'.
      *
      * @return array The updated $info array or a checkValueScopesReturn() array containing an error message (also see checkValueScopesReturnError() function).
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     private function handleInfoArray(array $info): array
     {
@@ -399,6 +410,7 @@ class AuthorizationService
      * @param array $info          The $info array. Can contain the following "keys": "method", "entity", "attribute", "object" & "value". Should always contain an Object (with an Entity or an Attribute) OR a Value (with an Attribute) in order to check for and handle 'valueScopes'.
      *
      * @return array An array generated with the checkValueScopesReturn() function.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     private function checkValueScopes(array $grantedScopes, array $info): array
     {
@@ -442,6 +454,7 @@ class AuthorizationService
      * @param array $info          The $info array. Can contain the following "keys": "method", "entity", "attribute", "object" & "value". Should always contain an Entity, with an Object OR a Value and can contain an Attribute, used in order to check for and handle 'valueScopes'.
      *
      * @return array An array generated with the checkValueScopesReturn() function.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     private function loopGrantedScopes(array $grantedScopes, array $info): array
     {
@@ -481,6 +494,7 @@ class AuthorizationService
      * @param array  $info         The $info array. Can contain the following "keys": "method", "entity", "attribute", "object" & "value". Should always contain an Entity, with an Object OR a Value and can contain an Attribute, used in order to check for and handle a 'valueScope'.
      *
      * @return array|null If this returns an array and not null: (hasValueScopes = true) we have a = value scope, and we are sure the given input ($info) Entity (+Object) or Attribute (+Value) matches this scope. If an array is returned it will always contain the bool matchValueScopes, if matchValueScopes == false this array will also contain the following keys: scopeValues, failedValue & scopeAttribute.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     private function checkForValueScope(string $grantedScope, array $info): ?array
     {
@@ -529,6 +543,7 @@ class AuthorizationService
      * @param array $info                 The $info array. Can contain the following "keys": "method", "entity", "attribute". Should contain Method and Entity, can also contain an Attribute.
      *
      * @return array|null Null if $grantedScopeExploded data doesn't match the $info data or if data in $info array is incorrect. Will return an array with sub_scope & scopeAttribute (default=null) if successful.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     private function getSubScope(array $grantedScopeExploded, array $info): ?array
     {
@@ -579,6 +594,7 @@ class AuthorizationService
      * @throws AccessDeniedException
      *
      * @return array
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for checking authorization!
      */
     public function valueScopesToFilters(Entity $entity): array
     {

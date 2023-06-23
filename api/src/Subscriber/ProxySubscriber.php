@@ -130,7 +130,7 @@ class ProxySubscriber implements EventSubscriberInterface
                     $method,
                     [
                         'headers' => $headers,
-                        'query'   => $this->requestService->realRequestQueryAll($method, $event->getRequest()->getQueryString()),
+                        'query'   => $this->requestService->realRequestQueryAll($event->getRequest()->getQueryString()),
                         'body'    => $event->getRequest()->getContent(),
                     ]
                 );
