@@ -2257,7 +2257,7 @@ class ObjectEntityService
                         $currentObjects[] = $valueObject->getObjects()->toArray();
                         foreach ($valueObject->getObjects() as $coupler) {
 
-                            $object = $this->entityManager->getRepository($coupler->getEntity())->find($coupler->getObjectId);
+                            $object = $this->entityManager->getRepository($coupler->getEntity())->find($coupler->getObjectId());
 
                             // Only add an object if it hasn't bean added yet
                             if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {

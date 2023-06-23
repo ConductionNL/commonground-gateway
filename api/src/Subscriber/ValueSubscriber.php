@@ -8,6 +8,8 @@ use App\Entity\Synchronization;
 use App\Entity\Value;
 use App\Service\SynchronizationService;
 use Doctrine\Bundle\DoctrineBundle\EventSubscriber\EventSubscriberInterface;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Events;
 use Doctrine\ORM\NonUniqueResultException;
@@ -40,9 +42,9 @@ class ValueSubscriber implements EventSubscriberInterface
 
     /**
      * @param EntityManagerInterface $entityManager
-     * @param LoggerInterface        $valueSubscriberLogger
+     * @param LoggerInterface $valueSubscriberLogger
      * @param SynchronizationService $synchronizationService
-     * @param ParameterBagInterface  $parameterBag
+     * @param ParameterBagInterface $parameterBag
      */
     public function __construct(EntityManagerInterface $entityManager, LoggerInterface $valueSubscriberLogger, SynchronizationService $synchronizationService, ParameterBagInterface $parameterBag)
     {
@@ -69,8 +71,8 @@ class ValueSubscriber implements EventSubscriberInterface
     /**
      * Gets a subobject by uuid.
      *
-     * @param string $uuid        The id of the subobject
-     * @param Value  $valueObject The valueObject to add the subobject to
+     * @param string $uuid The id of the subobject
+     * @param Value $valueObject The valueObject to add the subobject to
      *
      * @return ObjectEntity|null The found subobject
      */
@@ -91,15 +93,15 @@ class ValueSubscriber implements EventSubscriberInterface
             $this->logger->error(
                 "No subObjectEntity found with uuid ($uuid) or with a synchronization with sourceId = uuid for ParentObject",
                 [
-                    'uuid'         => $uuid,
+                    'uuid' => $uuid,
                     'ParentObject' => [
-                        'id'     => $parentObject->getId()->toString(),
+                        'id' => $parentObject->getId()->toString(),
                         'entity' => $parentObject->getEntity() ? [
-                            'id'   => $parentObject->getEntity()->getId()->toString(),
+                            'id' => $parentObject->getEntity()->getId()->toString(),
                             'name' => $parentObject->getEntity()->getName(),
                         ] : null,
                         '_self' => $parentObject->getSelf(),
-                        'name'  => $parentObject->getName(),
+                        'name' => $parentObject->getName(),
                     ],
                 ]
             );
@@ -113,8 +115,8 @@ class ValueSubscriber implements EventSubscriberInterface
     /**
      * Gets a subobject by url.
      *
-     * @param string $url         The url of the subobject
-     * @param Value  $valueObject The value object to add the subobject to
+     * @param string $url The url of the subobject
+     * @param Value $valueObject The value object to add the subobject to
      *
      * @return ObjectEntity|null The resulting subobject
      */
@@ -146,8 +148,8 @@ class ValueSubscriber implements EventSubscriberInterface
     /**
      * Finds subobjects by identifiers.
      *
-     * @param string $identifier  The identifier to find the object for
-     * @param Value  $valueObject The value object to add objects to
+     * @param string $identifier The identifier to find the object for
+     * @param Value $valueObject The value object to add objects to
      *
      * @return ObjectEntity|null The found object
      */
@@ -161,6 +163,71 @@ class ValueSubscriber implements EventSubscriberInterface
 
         return null;
     }//end findSubObject()
+
+    public function getInverses(Coupler $coupler, Value $value, ObjectEntity &$object = null): ArrayCollection
+    {
+        $targetObjectId = $coupler->getObjectId();
+        $sourceObjectId = $value->getObjectEntity()->getId()->toString();
+
+        $object = $this->entityManager->find("App:ObjectEntity", $targetObjectId);
+
+        if ($object instanceof ObjectEntity === false) {
+            return new ArrayCollection([]);
+        }
+
+        $inverseValue = $object->getValueObject($value->getAttribute()->getInversedBy());
+
+        $criteria = Criteria::create()->where(Criteria::expr()->eq('objectId', $sourceObjectId));
+
+        $inverses = new ArrayCollection($inverseValue->getObjects()->toArray());
+
+        return $inverses->matching($criteria);
+    }
+
+    public function inverseRelation(Value $value)
+    {
+
+        if ($value->getAttribute()->getInversedBy() !== null) {
+            foreach ($value->getObjects() as $coupler) {
+                $inverses = $this->getInverses($coupler, $value, $object);
+
+                $inverseValue = $object->getValueObject($value->getAttribute()->getInversedBy());
+
+                if ($inverses->count() === 0) {
+                    $inverseCoupler = new Coupler($value->getObjectEntity());
+
+                    $inverseValue->addObject($inverseCoupler);
+                    $this->entityManager->persist($inverseValue);
+                }
+
+            }
+        }
+    }
+
+    public function removeInverses(Coupler $coupler, Value $value)
+    {
+        $inverses = $this->getInverses($coupler, $value, $object);
+
+        foreach ($inverses as $inverse) {
+            $this->entityManager->remove($inverse);
+        }
+
+    }
+
+    public function preDelete(LifecycleEventArgs $value)
+    {
+        $valueObject = $value->getObject();
+
+        if ($valueObject instanceof Value === true
+            && $valueObject->getAttribute()->getType() === 'object'
+            && $valueObject->getAttribute()->getInversedBy() !== null
+        ) {
+
+            foreach ($valueObject->getObjects() as $coupler) {
+                $this->removeInverses($coupler, $valueObject);
+            }
+        }
+    }
 
     /**
      * Adds object resources from identifier.
@@ -190,6 +257,8 @@ class ValueSubscriber implements EventSubscriberInterface
                     $valueObject->addObject(new Coupler($subobject));
                 }
             }
+            $this->inverseRelation($valueObject);
+
             $valueObject->getObjectEntity()->setDateModified(new \DateTime());
         }
     }//end preUpdate()
@@ -204,7 +273,18 @@ class ValueSubscriber implements EventSubscriberInterface
         $this->preUpdate($args);
     }//end prePersist()
 
-    public function preRemove(LifecycleEventArgs $args): void
+    public function preRemove(LifecycleEventArgs $value): void
     {
+        $valueObject = $value->getObject();
+
+        if ($valueObject instanceof Value === true
+            && $valueObject->getAttribute()->getType() === 'object'
+            && $valueObject->getAttribute()->getInversedBy() !== null
+        ) {
+
+            foreach ($valueObject->getObjects() as $coupler) {
+                $this->removeInverses($coupler, $valueObject);
+            }
+        }
     }//end preRemove()
 }//end class
