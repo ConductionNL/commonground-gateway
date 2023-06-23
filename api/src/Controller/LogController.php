@@ -48,7 +48,7 @@ class LogController extends AbstractController
     {
         $status = 200;
         $client = new Client($this->getParameter('cache_url'));
-        $filter = $this->requestService->realRequestQueryAll('get', $request->getQueryString());
+        $filter = $this->requestService->realRequestQueryAll($request->getQueryString());
 
         $completeFilter = $filter;
 
