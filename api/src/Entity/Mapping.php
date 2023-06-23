@@ -283,7 +283,7 @@ class Mapping
         return $this->unset;
     }
 
-    public function setUnset(?array $unset): self
+    public function setUnset(array $unset): self
     {
         $this->unset = $unset;
 
@@ -295,7 +295,7 @@ class Mapping
         return $this->cast;
     }
 
-    public function setCast(?array $cast): self
+    public function setCast(array $cast): self
     {
         $this->cast = $cast;
 
