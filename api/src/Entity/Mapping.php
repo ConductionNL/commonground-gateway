@@ -266,7 +266,7 @@ class Mapping
         return $this;
     }
 
-    public function getMapping(): ?array
+    public function getMapping(): array
     {
         return $this->mapping;
     }
@@ -278,7 +278,7 @@ class Mapping
         return $this;
     }
 
-    public function getUnset(): ?array
+    public function getUnset(): array
     {
         return $this->unset;
     }
@@ -290,7 +290,7 @@ class Mapping
         return $this;
     }
 
-    public function getCast(): ?array
+    public function getCast(): array
     {
         return $this->cast;
     }
