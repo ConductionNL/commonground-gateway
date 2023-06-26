@@ -278,6 +278,7 @@ class ObjectEntityService
      * @param ObjectEntity $result The object entity
      *
      * @return bool
+     * @deprecated
      */
     public function checkOwner(ObjectEntity $result): bool
     {
@@ -413,6 +414,7 @@ class ObjectEntityService
      * This function get the filters array from the parameters.
      *
      * @return array
+     * @deprecated
      */
     private function getFilterFromParameters(): array
     {
@@ -444,6 +446,7 @@ class ObjectEntityService
      * @throws GatewayException
      *
      * @return ObjectEntity|array|mixed|null
+     * @deprecated
      */
     public function checkGetObject(?string $id, string $method, Entity $entity)
     {
@@ -541,6 +544,7 @@ class ObjectEntityService
      * Gets fields and extend from the query params used in the request.
      *
      * @return array An array containing 2 keys: 'fields' & 'extend'.
+     * @deprecated
      */
     private function getRequestQueryParams(): array
     {
@@ -574,6 +578,7 @@ class ObjectEntityService
      * @throws InvalidArgumentException
      *
      * @return array
+     * @deprecated
      */
     public function getCase(?string $id, ?array &$data, string $method, Entity $entity, ?Endpoint $endpoint, string $acceptType): array
     {
@@ -711,6 +716,7 @@ class ObjectEntityService
      * @throws InvalidArgumentException
      *
      * @return string[]|void
+     * @deprecated
      */
     public function switchMethod(?array &$data, ?Endpoint $endpoint, Entity $entity, string $id = null, string $method = 'GET', string $acceptType = 'json')
     {
@@ -766,6 +772,7 @@ class ObjectEntityService
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
      *
      * @return array $data
+     * @deprecated
      */
     public function handleObject(Handler $handler, Endpoint $endpoint, ?array $data = null, string $method = null, string $acceptType = 'json'): array
     {
