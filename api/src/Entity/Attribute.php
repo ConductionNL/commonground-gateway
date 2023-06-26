@@ -734,7 +734,7 @@ class Attribute
     private bool $triggerParentEvents = false;
 
     /**
-     * Only works if this attribute has type 'object'. Whether or not the object of this property will be deleted if the parent object is deleted.
+     * Only works if this attribute has type 'object'. Whether the object of this property will be deleted if the parent object is deleted.
      *
      * @Assert\Type("bool")
      *
@@ -745,15 +745,15 @@ class Attribute
     private bool $cascadeDelete = false;
 
     /**
-     * Only works if this attribute has type 'object'. Whether or not this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
+     * Only works if this attribute has type 'object'. Whether this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
      *
      * @Assert\Type("bool")
      *
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="boolean", nullable=true, name="allow_cascade")
+     * @ORM\Column(type="boolean", nullable=true, options={"default":true}, name="allow_cascade")
      */
-    private $cascade = false;
+    private bool $cascade = true;
 
     /**
      * @var array Config for getting the object result info from the correct places (id is required!). "envelope" for where to find this item and "id" for where to find the id. (both from the root! So if id is in the envelope example: envelope = instance, id = instance.id)
