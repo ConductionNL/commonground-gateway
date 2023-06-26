@@ -750,9 +750,9 @@ class ObjectEntityService
                 $owner = $this->checkAndUnsetOwner($data);
 
                 // validate
-                if ($validationErrors = $this->validatorService->validateData($data, $entity, $method)) {
-                    return $validationErrors;
-                }
+//                if ($validationErrors = $this->validatorService->validateData($data, $entity, $method)) {
+//                    return $validationErrors;
+//                }
 
                 $data = $this->createOrUpdateCase($data, $object, $owner, $method, $acceptType);
                 // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
