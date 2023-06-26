@@ -26,7 +26,7 @@ use Symfony\Component\Security\Core\Security;
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *
  * @category Service
- * @deprecated TODO: This service still contains some logic used by the CoreBundle for DateRead!
+ * @deprecated TODO: This service still contains some logic used by the CoreBundle->RequestService for DateRead!
  */
 class ResponseService
 {

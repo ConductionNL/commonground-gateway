@@ -47,6 +47,8 @@ use Twig\Environment;
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *
  * @category Service
+ * @deprecated TODO: This service still contains some logic used by the CoreBundle->RequestService for DateRead! (& CoreBundle->ObjectSyncSubscriber)
+ * todo: this service is also used by the UserService for showing data when calling the /me endpoint.
  */
 class ObjectEntityService
 {
@@ -221,6 +223,7 @@ class ObjectEntityService
      * @param EavService $eavService
      *
      * @return $this
+     * @deprecated
      */
     public function addServices(EavService $eavService): ObjectEntityService
     {
@@ -239,6 +242,7 @@ class ObjectEntityService
      * @param string|null  $owner  The owner of the object - defaulted to owner
      *
      * @return ObjectEntity|array
+     * @deprecated
      */
     public function handleOwner(ObjectEntity $result, ?string $owner = 'owner')
     {
@@ -301,6 +305,7 @@ class ObjectEntityService
      * @throws CacheException|InvalidArgumentException
      *
      * @return array
+     * @deprecated
      */
     public function getObjectByUri(string $uri, ?array $fields = null, ?array $extend = null): array
     {
@@ -323,6 +328,7 @@ class ObjectEntityService
      * @throws CacheException|InvalidArgumentException
      *
      * @return array
+     * @deprecated
      */
     public function getObject(Entity $entity, string $id, ?array $fields = null, ?array $extend = null): array
     {
@@ -494,6 +500,7 @@ class ObjectEntityService
      * @throws GatewayException
      *
      * @return ObjectEntity|string[]|void
+     * @deprecated
      */
     public function checkGetOperationTypeExceptions(Endpoint $endpoint, Entity $entity, array &$data)
     {
@@ -522,6 +529,7 @@ class ObjectEntityService
      * @throws InvalidArgumentException
      *
      * @return string[]
+     * @deprecated
      */
     public function checkGetObjectExceptions(?array &$data, ?ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType): array
     {
@@ -806,6 +814,7 @@ class ObjectEntityService
      * @throws Exception|InvalidArgumentException
      *
      * @return ObjectEntity
+     * @deprecated
      */
     public function saveObject(ObjectEntity $objectEntity, array $post): ObjectEntity
     {
@@ -884,6 +893,10 @@ class ObjectEntityService
         }
     }
 
+    /**
+     * @return string
+     * @deprecated
+     */
     private function getUserName(): string
     {
         $user = $this->security->getUser();
@@ -904,6 +917,7 @@ class ObjectEntityService
      * @throws Exception
      *
      * @return ObjectEntity
+     * @deprecated
      */
     private function handleAttributeFunction(ObjectEntity $objectEntity, Attribute $attribute): ObjectEntity
     {
@@ -952,6 +966,7 @@ class ObjectEntityService
      * @throws Exception|InvalidArgumentException
      *
      * @return ObjectEntity
+     * @deprecated
      */
     private function saveAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
@@ -1014,6 +1029,7 @@ class ObjectEntityService
      * @throws InvalidArgumentException
      *
      * @return ObjectEntity
+     * @deprecated
      */
     private function saveSubObject(ObjectEntity $subObject, $object): ObjectEntity
     {
@@ -1053,6 +1069,7 @@ class ObjectEntityService
      * @throws InvalidArgumentException
      *
      * @return ObjectEntity
+     * @deprecated
      */
     private function saveAttributeMultiple(ObjectEntity $objectEntity, Attribute $attribute, Value $valueObject, $value): ObjectEntity
     {
@@ -1191,6 +1208,7 @@ class ObjectEntityService
      * @throws Exception
      *
      * @return ObjectEntity
+     * @deprecated
      */
     private function saveAttributeType(ObjectEntity $objectEntity, Attribute $attribute, Value $valueObject, $value): ObjectEntity
     {
@@ -1635,6 +1653,7 @@ class ObjectEntityService
      * @param ObjectEntity $objectEntity
      *
      * @return string
+     * @deprecated
      */
     public function createUri(ObjectEntity $objectEntity): string
     {
@@ -1660,6 +1679,7 @@ class ObjectEntityService
      * @param ObjectEntity $objectEntity
      *
      * @return string
+     * @deprecated
      */
     public function createSelf(ObjectEntity $objectEntity): string
     {
@@ -1685,6 +1705,7 @@ class ObjectEntityService
      *
      * @param ObjectEntity $objectEntity
      * @param string       $method
+     * @deprecated
      */
     public function notify(ObjectEntity $objectEntity, string $method)
     {
@@ -1732,6 +1753,7 @@ class ObjectEntityService
      * @param Attribute  $attribute
      *
      * @return array|mixed|null
+     * @deprecated
      */
     public function renderSubObjects(Collection $objects, Attribute $attribute)
     {
@@ -1763,6 +1785,7 @@ class ObjectEntityService
      * @param Attribute  $attribute
      *
      * @return array|mixed|string|null
+     * @deprecated
      */
     public function getSubObjectIris(Collection $objects, Attribute $attribute)
     {
@@ -1791,6 +1814,7 @@ class ObjectEntityService
      * @param Attribute $attribute
      *
      * @return File[]|Value[]|array|bool|Collection|float|int|mixed|string|void|null
+     * @deprecated
      */
     public function renderValue(Value $value, Attribute $attribute)
     {
@@ -1817,6 +1841,7 @@ class ObjectEntityService
      * @param ObjectEntity $objectEntity
      *
      * @return array
+     * @deprecated
      */
     public function renderPostBody(ObjectEntity $objectEntity): array
     {
@@ -1843,6 +1868,7 @@ class ObjectEntityService
      * @throws Exception
      *
      * @return string
+     * @deprecated
      */
     public function encodeBody(ObjectEntity $objectEntity, array $body, array &$headers): string
     {
