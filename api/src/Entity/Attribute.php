@@ -870,20 +870,11 @@ class Attribute
         if (array_key_exists('format', $property)) {
             $this->setFormat($property['format']);
         }
-        if (array_key_exists('example', $property)) {
-            $this->setExample($property['example']);
-        }
-        if (array_key_exists('readOnly', $property)) {
-            $this->setReadOnly($property['readOnly']);
-        }
-        if (array_key_exists('searchable', $property)) {
-            $this->setSearchable($property['searchable']);
-        }
-        if (array_key_exists('sortable', $property)) {
-            $this->setSortable($property['sortable']);
-        }
         if (array_key_exists('description', $property)) {
             $this->setDescription($property['description']);
+        }
+        if (array_key_exists('example', $property)) {
+            $this->setExample($property['example']);
         }
         if (array_key_exists('$ref', $property)) {
             $this->setSchema($property['$ref']);
@@ -892,8 +883,26 @@ class Attribute
             $this->setSchema($property['items']['$ref']);
             $this->setMultiple(true);
         }
-        if (array_key_exists('maxLength', $property)) {
-            $this->setMaxLength($property['maxLength']);
+        if (array_key_exists('inversedBy', $property)) {
+            $this->setInversedByPropertyName($property['inversedBy']);
+        }
+        if (array_key_exists('cascade', $property)) {
+            $this->setCascade($property['cascade']);
+        }
+        if (array_key_exists('cascadeDelete', $property)) {
+            $this->setCascadeDelete($property['cascadeDelete']);
+        }
+        if (array_key_exists('required', $property)) {
+            $this->setRequired($property['required']);
+        }
+        if (array_key_exists('requiredIf', $property)) {
+            $this->setRequiredIf($property['requiredIf']);
+        }
+        if (array_key_exists('forbiddenIf', $property)) {
+            $this->setForbiddenIf($property['forbiddenIf']);
+        }
+        if (array_key_exists('nullable', $property)) {
+            $this->setNullable($property['nullable']);
         }
         if (array_key_exists('enum', $property)) {
             $this->setEnum($property['enum']);
@@ -901,8 +910,92 @@ class Attribute
         if (array_key_exists('default', $property)) {
             $this->setDefaultValue($property['default']);
         }
-        if (array_key_exists('inversedBy', $property)) {
-            $this->setInversedByPropertyName($property['inversedBy']);
+        if (array_key_exists('defaultValue', $property)) {
+            $this->setDefaultValue($property['defaultValue']);
+        }
+        if (array_key_exists('readOnly', $property)) {
+            $this->setReadOnly($property['readOnly']);
+        }
+        if (array_key_exists('immutable', $property)) {
+            $this->setImmutable($property['immutable']);
+        }
+        if (array_key_exists('unsetable', $property)) {
+            $this->setUnsetable($property['unsetable']);
+        }
+        if (array_key_exists('searchable', $property)) {
+            $this->setSearchable($property['searchable']);
+        }
+        if (array_key_exists('sortable', $property)) {
+            $this->setSortable($property['sortable']);
+        }
+        if (array_key_exists('maxLength', $property)) {
+            $this->setMaxLength($property['maxLength']);
+        }
+        if (array_key_exists('minLength', $property)) {
+            $this->setMinLength($property['minLength']);
+        }
+        if (array_key_exists('pattern', $property)) {
+            $this->setPattern($property['pattern']);
+        }
+        if (array_key_exists('multipleOf', $property)) {
+            $this->setMultipleOf($property['multipleOf']);
+        }
+        if (array_key_exists('maximum', $property)) {
+            $this->setMaximum($property['maximum']);
+        }
+        if (array_key_exists('exclusiveMaximum', $property)) {
+            $this->setExclusiveMaximum($property['exclusiveMaximum']);
+        }
+        if (array_key_exists('minimum', $property)) {
+            $this->setMinimum($property['minimum']);
+        }
+        if (array_key_exists('exclusiveMinimum', $property)) {
+            $this->setExclusiveMinimum($property['exclusiveMinimum']);
+        }
+        if (array_key_exists('maxItems', $property)) {
+            $this->setMaxItems($property['maxItems']);
+        }
+        if (array_key_exists('minItems', $property)) {
+            $this->setMinItems($property['minItems']);
+        }
+        if (array_key_exists('uniqueItems', $property)) {
+            $this->setUniqueItems($property['uniqueItems']);
+        }
+        if (array_key_exists('maxProperties', $property)) {
+            $this->setMaxProperties($property['maxProperties']);
+        }
+        if (array_key_exists('minProperties', $property)) {
+            $this->setMinProperties($property['minProperties']);
+        }
+        if (array_key_exists('allOf', $property)) {
+            $this->setAllOf($property['allOf']);
+        }
+        if (array_key_exists('anyOf', $property)) {
+            $this->setAnyOf($property['anyOf']);
+        }
+        if (array_key_exists('oneOf', $property)) {
+            $this->setOneOf($property['oneOf']);
+        }
+        if (array_key_exists('mustBeUnique', $property)) {
+            $this->setMustBeUnique($property['mustBeUnique']);
+        }
+        if (array_key_exists('maxDate', $property)) {
+            $this->setMaxDate($property['maxDate']);
+        }
+        if (array_key_exists('minDate', $property)) {
+            $this->setMinDate($property['minDate']);
+        }
+        if (array_key_exists('maxFileSize', $property)) {
+            $this->setMaxFileSize($property['maxFileSize']);
+        }
+        if (array_key_exists('minFileSize', $property)) {
+            $this->setMinFileSize($property['minFileSize']);
+        }
+        if (array_key_exists('fileTypes', $property)) {
+            $this->setFileTypes($property['fileTypes']);
+        }
+        if (array_key_exists('caseSensitive', $property)) {
+            $this->setCaseSensitive($property['caseSensitive']);
         }
 
         $this->setDateModified(new DateTime());

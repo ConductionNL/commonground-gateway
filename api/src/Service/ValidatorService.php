@@ -87,9 +87,9 @@ class ValidatorService
      * Gets a Validator for the given Entity, uses caching.
      *
      * @param Entity $entity
+     * @param int $level
      *
-     * @throws CacheException
-     * @throws CacheException|GatewayException|InvalidArgumentException|ComponentException
+     * @throws CacheException|ComponentException|GatewayException|InvalidArgumentException
      *
      * @return Validator
      */
