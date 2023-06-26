@@ -12,7 +12,6 @@ use App\Entity\Unread;
 use App\Entity\Value;
 use App\Event\ActionEvent;
 use App\Exception\GatewayException;
-use App\Message\PromiseMessage;
 use App\Security\User\AuthenticationUser;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
@@ -22,7 +21,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\Utils;
-use phpDocumentor\Reflection\Types\This;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
@@ -56,7 +54,7 @@ class ObjectEntityService
     private Request $request;
     private AuthorizationService $authorizationService;
     private ApplicationService $applicationService;
-    private ValidatorService $validatorService;
+//    private ValidatorService $validatorService;
     private SessionInterface $session;
     private ?EavService $eavService;
     private EntityManagerInterface $entityManager;
@@ -77,7 +75,7 @@ class ObjectEntityService
         RequestStack $requestStack,
         AuthorizationService $authorizationService,
         ApplicationService $applicationService,
-        ValidatorService $validatorService,
+//        ValidatorService $validatorService,
         SessionInterface $session,
         EntityManagerInterface $entityManager,
         CommonGroundService $commonGroundService,
@@ -94,7 +92,7 @@ class ObjectEntityService
         $this->request = $requestStack->getCurrentRequest() ?: new Request();
         $this->authorizationService = $authorizationService;
         $this->applicationService = $applicationService;
-        $this->validatorService = $validatorService;
+//        $this->validatorService = $validatorService;
         $this->session = $session;
         $this->entityManager = $entityManager;
         $this->commonGroundService = $commonGroundService;
