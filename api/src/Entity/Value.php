@@ -674,6 +674,8 @@ class Value
                         continue;
                     } elseif ($value instanceof Coupler) {
                         $this->addObject($value);
+                    } elseif ($value instanceof ObjectEntity) {
+                        $this->addObject(new Coupler($value));
                     }
                 }
 
