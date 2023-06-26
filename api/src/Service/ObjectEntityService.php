@@ -611,6 +611,7 @@ class ObjectEntityService
      * @param array $data Data to be set into the eav
      *
      * @return string|null
+     * @deprecated
      */
     public function checkAndUnsetOwner(array &$data): ?string
     {
@@ -639,6 +640,7 @@ class ObjectEntityService
      * @throws InvalidArgumentException
      *
      * @return string[]
+     * @deprecated
      */
     public function createOrUpdateCase(array &$data, ObjectEntity $object, string $owner, string $method, string $acceptType): array
     {
@@ -679,6 +681,7 @@ class ObjectEntityService
      * @throws InvalidArgumentException
      *
      * @return string[]
+     * @deprecated
      */
     public function deleteCase(string $id, ?array &$data, string $method, Entity $entity): array
     {
