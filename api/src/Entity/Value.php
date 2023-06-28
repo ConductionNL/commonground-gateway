@@ -187,7 +187,7 @@ class Value
     /**
      * @MaxDepth(1)
      *
-     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="LAZY", cascade={"persist"})
+     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="EXTRA_LAZY", cascade={"persist"})
      */
     private $objects; // sub objects
 

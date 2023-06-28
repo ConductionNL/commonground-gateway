@@ -208,7 +208,7 @@ class Attribute
     /**
      * @Groups({"read","write"})
      *
-     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="usedIn", fetch="EAGER")
+     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="usedIn")
      *
      * @ORM\JoinColumn(nullable=true)
      *
@@ -402,7 +402,7 @@ class Attribute
      *
      * @Groups({"read","write"})
      *
-     * @ORM\OneToOne(targetEntity=Attribute::class)
+     * @ORM\OneToOne(targetEntity=Attribute::class, fetch="EXTRA_LAZY")
      *
      * @MaxDepth(1)
      */
