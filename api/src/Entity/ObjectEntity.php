@@ -167,7 +167,7 @@ class ObjectEntity
      *
      * @MaxDepth(1)
      *
-     * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"})
+     * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"}, fetch="EXTRA_LAZY")
      */
     private $subresourceOf;
 
