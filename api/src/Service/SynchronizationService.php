@@ -24,7 +24,6 @@ use GuzzleHttp\Exception\GuzzleException;
 use Monolog\Logger;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
-use Respect\Validation\Exceptions\ComponentException;
 use Safe\Exceptions\UrlException;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -56,7 +55,6 @@ class SynchronizationService
     private MessageBusInterface $messageBus;
     private TranslationService $translationService;
     private ObjectEntityService $objectEntityService;
-    private ValidatorService $validatorService;
     private EavService $eavService;
     public array $configuration;
     private array $data;
@@ -90,7 +88,6 @@ class SynchronizationService
      * @param MessageBusInterface      $messageBus
      * @param TranslationService       $translationService
      * @param ObjectEntityService      $objectEntityService
-     * @param ValidatorService         $validatorService
      * @param EavService               $eavService
      * @param Environment              $twig
      * @param EventDispatcherInterface $eventDispatcher
@@ -107,7 +104,6 @@ class SynchronizationService
         MessageBusInterface $messageBus,
         TranslationService $translationService,
         ObjectEntityService $objectEntityService,
-        ValidatorService $validatorService,
         EavService $eavService,
         Environment $twig,
         EventDispatcherInterface $eventDispatcher,
@@ -124,7 +120,6 @@ class SynchronizationService
         $this->translationService = $translationService;
         $this->objectEntityService = $objectEntityService;
         $this->objectEntityService->addServices($eavService);
-        $this->validatorService = $validatorService;
         $this->eavService = $eavService;
         $this->configuration = [];
         $this->data = [];
