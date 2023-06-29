@@ -413,12 +413,12 @@ spec:
             httpGet:
               path: /
               port: http
-            initialDelaySeconds: 30
+            initialDelaySeconds: 300
           readinessProbe:
             httpGet:
               path: /
               port: http
-            initialDelaySeconds: 30
+            initialDelaySeconds: 300
           resources:
             {{- toYaml .Values.nginx.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
