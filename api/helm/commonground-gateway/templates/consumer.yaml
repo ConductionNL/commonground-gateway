@@ -6,7 +6,7 @@ metadata:
     {{- include "commonground-gateway.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.consumer.replicaCount }}
   {{- end }}
   selector:
     matchLabels:

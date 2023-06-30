@@ -15,7 +15,7 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 1.4.5
+version: 1.4.6
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
@@ -25,13 +25,13 @@ appVersion: "2.2"
 
 dependencies:
   -   name: postgresql
+      repository: https://charts.bitnami.com/bitnami
       version: 12.1.2
       condition: postgresql.enabled
-      repository: https://charts.bitnami.com/bitnami
   -   name: redis
+      repository: https://charts.bitnami.com/bitnami
       version: 17.3.11
       condition: redis.enabled
-      repository: https://charts.bitnami.com/bitnami
   -   name: rabbitmq
       repository: https://charts.bitnami.com/bitnami
       version: 11.9.1
