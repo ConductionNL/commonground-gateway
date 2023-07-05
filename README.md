@@ -2,56 +2,56 @@
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/commonground-gateway)](https://artifacthub.io/packages/search?repo=commonground-gateway)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/b6de6f6071044e1783a145afa27f1829)](https://www.codacy.com/gh/CommonGateway/CoreBundle/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=CommonGateway/CoreBundle&amp;utm_campaign=Badge_Grade)
 
-The common gateway repository gives a quick kubernetes wrapper of the [common gateway symfony bundle](https://github.com/CommonGateway/CoreBundle). In other words it doesn't aim to be its own code base but simply contains the files needed to create kubernetes images and helm installers for the core bundle.
+The Common Gateway repository provides a quick Kubernetes wrapper for the Common Gateway Symfony Bundle. In other words, it doesn't aim to be its own code base but simply contains the files needed to create Kubernetes images and Helm installers for the core bundle.
 
-If you are looking for the common gateway code base please look at the core bundle repository instead, that is place where you will find al the appropriate documentation.
+If you are looking for the Common Gateway code base, please refer to the Core Bundle repository instead, as that's where you will find all the appropriate documentation.
 
 ## Quick start (for local development)
 > **Dependencies**
-> - To clone the codebase to your locale machine you will need git
-> - To run the gateway your local machine you will need docker desktop.
+> - To clone the codebase to your locale machine you will need Git
+> - To run the gateway on your local machine, you will need Docker Desktop.
 
-You can start up the commongatway locally by cloning the repository to you machine
+You can start up the Common Gateway locally by cloning the repository to your machine
 ````cli
 $ git clone https://github.com/ConductionNL/commonground-gateway
 ````
 
-After that you need to spin up your local docker setup 
+After that, you need to spin up your local Docker setup
 
 ````cli
 $ docker compose up --build
 ````
 
-(the --build flag can be ignored the next time you want to run the application)
+(the `--build` flag can be ignored the next time you want to run the application)
 
 
-## Quick start (for kubernetes)
+## Quick start (for Kubernetes)
 > **Dependencies**
-> - For installations on kubernetes you will need to install [helm](https://helm.sh/docs/intro/install/) on your local machine.
-> - If you need to install lets encrypt you will also need to install [kubectl](https://kubernetes.io/docs/tasks/tools/), but if you previously installed docker desktop then kubectl is already present on your machine (so no installation needed).
+> - For installations on Kubernetes, you will need to install Helm on your local machine.
+> - If you need to install LetsEncrypt, you will also need to install `kubectl`, but if you previously installed Docker Desktop then `kubectl` is already present on your machine (so no installation needed).
 
 ### Haven installations
-If you are installing the common gateway on a [haven](https://haven.commonground.nl/) environment you can just run the provided helm installer. Before installing the common gateway you need to add it to your helm repositories.
+If you are installing the Common Gateway on a Haven environment, you can just run the provided Helm installer. Before installing the Common Gateway, you need to add it to your Helm repositories.
 
 ````helm
 $ helm repo add common-gateway https://raw.githubusercontent.com/ConductionNL/gateway-ui/refinement-demo-branch/helm/
 ````
 
-Or if you want to install the gateway as a headless application (without user interfaces)
+Or if you want to install the Gateway as a headless application (without user interfaces)
 
 ````helm
 $ helm repo add common-gateway https://raw.githubusercontent.com/ConductionNL/commonground-gateway/master/api/helm/
 ````
 
 
-After that you can simply install the gateway to your cluster by using the helm installer, if you are using a kubeconfig file to authenticate your self you need to add that as a `--kubeconfig` flag. But if you are using another authentication route you can omit the flag. When installing an application to helm always choice a name that helps you identify the application and put that in place of `[my-installation]`
+After that, you can simply install the Gateway to your cluster using the Helm installer. If you are using a kubeconfig file to authenticate yourself, you need to add that as a --kubeconfig flag. However, if you are using another authentication method, you can omit the flag. When installing an application to Helm, always choose a name that helps you identify the application and put that in place of [my-installation].
 
 
 ````helm
 $ helm install [my-gateway] common-gateway/gateway-ui --kubeconfig=[path-to-your-kubeconfig]
 ````
 
-This will install the gateway in a bare-bone and production setup on the latest version (you can log versions through the version flag e.g. `--version 2.2`). To further configure the gateway we need to set somme environmental values. A full option list can be found [here](). Lets for now assume that you want to switch your gateway from prod to dev-mode, enable cron-runners for asynchronous resource handling, add a domain name to make the gateway publicly accessible and last but not least, use letsencrypt to provide a ssl/https connection. In helm we use the `--set` flag to set values. So the total upgrade command would look like: 
+This will install the Gateway in a bare-bones and production setup on the latest version (you can lock versions through the version flag e.g. `--version 2.2)`. To further configure the Gateway, we need to set some environmental values. A full option list can be found [here](). Let's for now assume that you want to switch your Gateway from prod to dev-mode, enable cron-runners for asynchronous resource handling, add a domain name to make the Gateway publicly accessible, and last but not least, use LetsEncrypt to provide an SSL/HTTPS connection. In Helm, we use the `--set` flag to set values. So the total upgrade command would look like:
 
 ````helm
 $ helm upgrade [my-gateway] --kubeconfig=[path-to-your-kubeconfig] --set  gateway.enabled=true, pwa.apiUrl=https://[your-domain]/api, pwa.meUrl=https://[your-domain]/me, pwa.baseUrl=https://[your-domain], pwa.frontendUrl=https://[your-domain], pwa.adminUrl=https://[your-domain], ingress.enabled=true, global.domain=[your-domain], ingress.hostname=[your-domain], ingress.annotations.cert-manager\.io/cluster-manager=letsencrypt-prod, ingress.tls.0.hosts.0=[your-domain], ingress.tls.0.secretName=[your-domain but replace . with -]-tls, gateway.cronrunner.enabled=true
@@ -63,28 +63,29 @@ Or for the headless version
 $ helm upgrade [my-gateway] --kubeconfig=[path-to-your-kubeconfig] --set cronrunner.enabled=true,php.tag=dev,nginx.tag=dev,ingress.enabled=true,global.domain=[my-domain.com],tls.0.hosts.0=[my-domain.com],tls.0.secretName=[my-domain]-tls,ingress.annotations.cert-manager\.io/cluster-manager=letsencrypt-prod
 ````
 
-Alternatively you can just use kubernetes dashboard to change the helm values file.
+Alternatively, you can use the Kubernetes dashboard to change the Helm values file.
 
-For more information on installing the application trough helm read the [helm documentation](https://helm.sh/docs/helm/).
+For more information on installing the application through Helm, read the [Helm documentation](https://helm.sh/docs/helm/).
 
-### Non-haven installations
-If however your environment is not compliant with the haven standard (and we suggest that you follow it) then you should keep in mind that you need the following dependencies on your kubernetes clusters
+### Non-Haven installations
+If however, your environment is not compliant with the Haven standard (and we suggest that you follow it), then keep in mind that you need the following dependencies on your Kubernetes clusters:
 
 **MUST have**
 - [nfs](https://artifacthub.io/packages/helm/kvaps/nfs-server-provisioner) 
 - [Ingress-nginx](https://artifacthub.io/packages/helm/ingress-nginx/ingress-nginx)
 
 **Should have**
-- [Cert manager](https://artifacthub.io/packages/helm/cert-manager/cert-manager) (add `--set installCRDs=true` to the command if using helm, you will need them for letsencrypt)
-- Letsencrypt (see details below)
+- [Cert manager](https://artifacthub.io/packages/helm/cert-manager/cert-manager) (add `--set installCRDs=true` to the command if using Helm, you will need them for LetsEncrypt)
+- LetsEncrypt (see details below)
 - Prometheus
 - Loki
 
 
-### Activating lets encrypt. 
-If you want your cluster to be able to set up its own certificates for ssl/https (and save yourself the hustle of manually loading certificates) you can install lets encrypt. Keep in mind that this wil profile low level certificates. If you need higher lever certificates you still need to manually obtain them.
+### Activating LetsEncrypt. 
 
-**Note: Make sure to install cert manager before lets encrypt**
+If you want your cluster to be able to set up its own certificates for SSL/HTTPS (and save yourself the hassle of manually loading certificates), you can install LetsEncrypt. Keep in mind that this will provide low-level certificates. If you need higher-level certificates, you will still need to manually obtain them.
+
+**Note: Make sure to install Cert Manager before LetsEncrypt**
 
 ````helm
 $ kubectl apply -f letsencrypt-ci.yaml --kubeconfig=[path-to-your-kubeconfig]
