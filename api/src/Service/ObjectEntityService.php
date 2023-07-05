@@ -12,7 +12,6 @@ use App\Entity\Unread;
 use App\Entity\Value;
 use App\Event\ActionEvent;
 use App\Exception\GatewayException;
-use App\Message\PromiseMessage;
 use App\Security\User\AuthenticationUser;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use DateTime;
@@ -22,7 +21,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Promise\PromiseInterface;
 use GuzzleHttp\Promise\Utils;
-use phpDocumentor\Reflection\Types\This;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
 use Ramsey\Uuid\Uuid;
@@ -47,6 +45,8 @@ use Twig\Environment;
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *
  * @category Service
+ * @deprecated TODO: This service still contains some logic used by the CoreBundle->RequestService for DateRead! (& CoreBundle->ObjectSyncSubscriber)
+ * todo: this service is also used by the UserService for showing data when calling the /me endpoint.
  */
 class ObjectEntityService
 {
@@ -54,7 +54,7 @@ class ObjectEntityService
     private Request $request;
     private AuthorizationService $authorizationService;
     private ApplicationService $applicationService;
-    private ValidatorService $validatorService;
+//    private ValidatorService $validatorService;
     private SessionInterface $session;
     private ?EavService $eavService;
     private EntityManagerInterface $entityManager;
@@ -75,7 +75,7 @@ class ObjectEntityService
         RequestStack $requestStack,
         AuthorizationService $authorizationService,
         ApplicationService $applicationService,
-        ValidatorService $validatorService,
+//        ValidatorService $validatorService,
         SessionInterface $session,
         EntityManagerInterface $entityManager,
         CommonGroundService $commonGroundService,
@@ -92,7 +92,7 @@ class ObjectEntityService
         $this->request = $requestStack->getCurrentRequest() ?: new Request();
         $this->authorizationService = $authorizationService;
         $this->applicationService = $applicationService;
-        $this->validatorService = $validatorService;
+//        $this->validatorService = $validatorService;
         $this->session = $session;
         $this->entityManager = $entityManager;
         $this->commonGroundService = $commonGroundService;
@@ -221,6 +221,7 @@ class ObjectEntityService
      * @param EavService $eavService
      *
      * @return $this
+     * @deprecated
      */
     public function addServices(EavService $eavService): ObjectEntityService
     {
@@ -239,6 +240,7 @@ class ObjectEntityService
      * @param string|null  $owner  The owner of the object - defaulted to owner
      *
      * @return ObjectEntity|array
+     * @deprecated
      */
     public function handleOwner(ObjectEntity $result, ?string $owner = 'owner')
     {
@@ -277,6 +279,7 @@ class ObjectEntityService
      * @param ObjectEntity $result The object entity
      *
      * @return bool
+     * @deprecated
      */
     public function checkOwner(ObjectEntity $result): bool
     {
@@ -300,6 +303,7 @@ class ObjectEntityService
      * @throws CacheException|InvalidArgumentException
      *
      * @return array
+     * @deprecated
      */
     public function getObjectByUri(string $uri, ?array $fields = null, ?array $extend = null): array
     {
@@ -322,6 +326,7 @@ class ObjectEntityService
      * @throws CacheException|InvalidArgumentException
      *
      * @return array
+     * @deprecated
      */
     public function getObject(Entity $entity, string $id, ?array $fields = null, ?array $extend = null): array
     {
@@ -412,6 +417,7 @@ class ObjectEntityService
      * This function get the filters array from the parameters.
      *
      * @return array
+     * @deprecated
      */
     private function getFilterFromParameters(): array
     {
@@ -443,6 +449,7 @@ class ObjectEntityService
      * @throws GatewayException
      *
      * @return ObjectEntity|array|mixed|null
+     * @deprecated
      */
     public function checkGetObject(?string $id, string $method, Entity $entity)
     {
@@ -491,6 +498,7 @@ class ObjectEntityService
      * @throws GatewayException
      *
      * @return ObjectEntity|string[]|void
+     * @deprecated
      */
     public function checkGetOperationTypeExceptions(Endpoint $endpoint, Entity $entity, array &$data)
     {
@@ -519,6 +527,7 @@ class ObjectEntityService
      * @throws InvalidArgumentException
      *
      * @return string[]
+     * @deprecated
      */
     public function checkGetObjectExceptions(?array &$data, ?ObjectEntity $object, ?array $fields, ?array $extend, string $acceptType): array
     {
@@ -540,6 +549,7 @@ class ObjectEntityService
      * Gets fields and extend from the query params used in the request.
      *
      * @return array An array containing 2 keys: 'fields' & 'extend'.
+     * @deprecated
      */
     private function getRequestQueryParams(): array
     {
@@ -573,6 +583,7 @@ class ObjectEntityService
      * @throws InvalidArgumentException
      *
      * @return array
+     * @deprecated
      */
     public function getCase(?string $id, ?array &$data, string $method, Entity $entity, ?Endpoint $endpoint, string $acceptType): array
     {
@@ -606,6 +617,7 @@ class ObjectEntityService
      * @param array $data Data to be set into the eav
      *
      * @return string|null
+     * @deprecated
      */
     public function checkAndUnsetOwner(array &$data): ?string
     {
@@ -634,6 +646,7 @@ class ObjectEntityService
      * @throws InvalidArgumentException
      *
      * @return string[]
+     * @deprecated
      */
     public function createOrUpdateCase(array &$data, ObjectEntity $object, string $owner, string $method, string $acceptType): array
     {
@@ -674,6 +687,7 @@ class ObjectEntityService
      * @throws InvalidArgumentException
      *
      * @return string[]
+     * @deprecated
      */
     public function deleteCase(string $id, ?array &$data, string $method, Entity $entity): array
     {
@@ -710,6 +724,7 @@ class ObjectEntityService
      * @throws InvalidArgumentException
      *
      * @return string[]|void
+     * @deprecated
      */
     public function switchMethod(?array &$data, ?Endpoint $endpoint, Entity $entity, string $id = null, string $method = 'GET', string $acceptType = 'json')
     {
@@ -733,9 +748,9 @@ class ObjectEntityService
                 $owner = $this->checkAndUnsetOwner($data);
 
                 // validate
-                if ($validationErrors = $this->validatorService->validateData($data, $entity, $method)) {
-                    return $validationErrors;
-                }
+//                if ($validationErrors = $this->validatorService->validateData($data, $entity, $method)) {
+//                    return $validationErrors;
+//                }
 
                 $data = $this->createOrUpdateCase($data, $object, $owner, $method, $acceptType);
                 // todo: this dispatch should probably be moved to the createOrUpdateCase function!?
@@ -765,6 +780,7 @@ class ObjectEntityService
      * @throws GatewayException|CacheException|InvalidArgumentException|ComponentException|Exception
      *
      * @return array $data
+     * @deprecated
      */
     public function handleObject(Handler $handler, Endpoint $endpoint, ?array $data = null, string $method = null, string $acceptType = 'json'): array
     {
@@ -796,6 +812,7 @@ class ObjectEntityService
      * @throws Exception|InvalidArgumentException
      *
      * @return ObjectEntity
+     * @deprecated
      */
     public function saveObject(ObjectEntity $objectEntity, array $post): ObjectEntity
     {
@@ -874,6 +891,10 @@ class ObjectEntityService
         }
     }
 
+    /**
+     * @return string
+     * @deprecated
+     */
     private function getUserName(): string
     {
         $user = $this->security->getUser();
@@ -894,6 +915,7 @@ class ObjectEntityService
      * @throws Exception
      *
      * @return ObjectEntity
+     * @deprecated
      */
     private function handleAttributeFunction(ObjectEntity $objectEntity, Attribute $attribute): ObjectEntity
     {
@@ -942,6 +964,7 @@ class ObjectEntityService
      * @throws Exception|InvalidArgumentException
      *
      * @return ObjectEntity
+     * @deprecated
      */
     private function saveAttribute(ObjectEntity $objectEntity, Attribute $attribute, $value): ObjectEntity
     {
@@ -1004,6 +1027,7 @@ class ObjectEntityService
      * @throws InvalidArgumentException
      *
      * @return ObjectEntity
+     * @deprecated
      */
     private function saveSubObject(ObjectEntity $subObject, $object): ObjectEntity
     {
@@ -1043,6 +1067,7 @@ class ObjectEntityService
      * @throws InvalidArgumentException
      *
      * @return ObjectEntity
+     * @deprecated
      */
     private function saveAttributeMultiple(ObjectEntity $objectEntity, Attribute $attribute, Value $valueObject, $value): ObjectEntity
     {
@@ -1181,6 +1206,7 @@ class ObjectEntityService
      * @throws Exception
      *
      * @return ObjectEntity
+     * @deprecated
      */
     private function saveAttributeType(ObjectEntity $objectEntity, Attribute $attribute, Value $valueObject, $value): ObjectEntity
     {
@@ -1625,6 +1651,7 @@ class ObjectEntityService
      * @param ObjectEntity $objectEntity
      *
      * @return string
+     * @deprecated
      */
     public function createUri(ObjectEntity $objectEntity): string
     {
@@ -1650,6 +1677,7 @@ class ObjectEntityService
      * @param ObjectEntity $objectEntity
      *
      * @return string
+     * @deprecated
      */
     public function createSelf(ObjectEntity $objectEntity): string
     {
@@ -1675,6 +1703,7 @@ class ObjectEntityService
      *
      * @param ObjectEntity $objectEntity
      * @param string       $method
+     * @deprecated
      */
     public function notify(ObjectEntity $objectEntity, string $method)
     {
@@ -1722,6 +1751,7 @@ class ObjectEntityService
      * @param Attribute  $attribute
      *
      * @return array|mixed|null
+     * @deprecated
      */
     public function renderSubObjects(Collection $objects, Attribute $attribute)
     {
@@ -1753,6 +1783,7 @@ class ObjectEntityService
      * @param Attribute  $attribute
      *
      * @return array|mixed|string|null
+     * @deprecated
      */
     public function getSubObjectIris(Collection $objects, Attribute $attribute)
     {
@@ -1781,6 +1812,7 @@ class ObjectEntityService
      * @param Attribute $attribute
      *
      * @return File[]|Value[]|array|bool|Collection|float|int|mixed|string|void|null
+     * @deprecated
      */
     public function renderValue(Value $value, Attribute $attribute)
     {
@@ -1807,6 +1839,7 @@ class ObjectEntityService
      * @param ObjectEntity $objectEntity
      *
      * @return array
+     * @deprecated
      */
     public function renderPostBody(ObjectEntity $objectEntity): array
     {
@@ -1833,6 +1866,7 @@ class ObjectEntityService
      * @throws Exception
      *
      * @return string
+     * @deprecated
      */
     public function encodeBody(ObjectEntity $objectEntity, array $body, array &$headers): string
     {

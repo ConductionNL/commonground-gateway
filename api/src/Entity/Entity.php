@@ -24,7 +24,7 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * An schema that functions a an object template for objects that might be stored in the EAV database.
+ * A schema that functions as an object template for objects that might be stored in the EAV database.
  *
  * @ApiResource(
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
@@ -32,19 +32,24 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  itemOperations={
  *     "get"={"path"="/admin/entities/{id}"},
  *     "put"={"path"="/admin/entities/{id}"},
- *      "delete_objects"={
- *          "path"="/admin/entities/{id}/delete_objects",
- *          "method"="put",
- *          "openapi_context" = {
- *              "summary"="Delete Objects",
- *              "description"="Deletes all objects that belong to this schema"
- *              }
- *     },
  *     "delete"={"path"="/admin/entities/{id}"}
  *  },
  *  collectionOperations={
  *     "get"={"path"="/admin/entities"},
- *     "post"={"path"="/admin/entities"}
+ *     "post"={"path"="/admin/entities"},
+ *     "delete_objects"={
+ *          "path"="/admin/entities/{id}/delete_objects",
+ *          "method"="POST",
+ *          "read"=false,
+ *          "validate"=false,
+ *          "requirements"={
+ *              "id"=".+"
+ *          },
+ *          "openapi_context"={
+ *              "summary"="Delete Objects for this Schema",
+ *              "description"="Deletes all objects that belong to this schema"
+ *          }
+ *      },
  *  })
  *
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")

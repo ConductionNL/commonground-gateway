@@ -26,6 +26,7 @@ use Symfony\Component\Security\Core\Security;
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *
  * @category Service
+ * @deprecated TODO: This service still contains some logic used by the CoreBundle->RequestService for DateRead!
  */
 class ResponseService
 {
@@ -59,6 +60,7 @@ class ResponseService
      * @param ObjectEntity $objectEntity
      *
      * @return string
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     public function createSelf(ObjectEntity $objectEntity): string
     {
@@ -77,20 +79,6 @@ class ResponseService
         }
 
         return '/api'.($objectEntity->getEntity()->getRoute() ?? $objectEntity->getEntity()->getName()).'/'.$objectEntity->getId();
-    }
-
-    // todo remove responseService from the ObjectEntityService, so we can use the ObjectEntityService->checkOwner() function here
-    // todo if we do this^ maybe move the getDateRead function to ObjectEntityService as well
-    private function checkOwner(ObjectEntity $result): bool
-    {
-        // TODO: what if somehow the owner of this ObjectEntity is null? because of ConvertToGateway ObjectEntities for example?
-        $user = $this->security->getUser();
-
-        if ($user && $result->getOwner() === $user->getUserIdentifier()) {
-            return true;
-        }
-
-        return false;
     }
 
     /**
@@ -131,6 +119,7 @@ class ResponseService
      * @param bool         $skipAuthCheck Whether the authorization should be checked
      *
      * @return array The resulting response
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     public function filterResult(array $response, ObjectEntity $result, bool $skipAuthCheck): array
     {
@@ -168,6 +157,7 @@ class ResponseService
      * @throws CacheException|InvalidArgumentException
      *
      * @return array|string[]|string Only returns a string if $level is higher than 3 and acceptType is not jsonld.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     public function renderResult(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType = 'json', bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
     {
@@ -294,6 +284,7 @@ class ResponseService
      * @param array        $embedded
      *
      * @return array
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     private function handleAcceptType(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType, int $level, array $response, array $embedded): array
     {
@@ -336,6 +327,7 @@ class ResponseService
      * @param array        $embedded
      *
      * @return array
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     private function handleJsonLd(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response, array $embedded): array
     {
@@ -387,6 +379,7 @@ class ResponseService
      * @param array        $embedded
      *
      * @return array
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     private function handleJsonHal(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response, array $embedded): array
     {
@@ -442,6 +435,7 @@ class ResponseService
      * @param array        $response
      *
      * @return array
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     private function handleXCommongatewayMetadata(ObjectEntity $result, ?array $fields, ?array $extend, int $level, array $response): array
     {
@@ -499,6 +493,7 @@ class ResponseService
      * @param string|null $overwriteKey Default = null, if a string is given this will be used instead of $key, for the key to add to the $metadata array.
      *
      * @return void
+     * @deprecated TODO: This function is still used for dateRead! maybe move it to somewhere else? be careful with deleting this!
      */
     public function addToMetadata(array &$metadata, string $key, $value, ?string $overwriteKey = null)
     {
@@ -528,6 +523,7 @@ class ResponseService
      * @throws CacheException|InvalidArgumentException
      *
      * @return array
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     private function renderValues(ObjectEntity $result, ?array $fields, ?array $extend, string $acceptType, bool $skipAuthCheck = false, bool $flat = false, int $level = 0): array
     {
@@ -612,6 +608,7 @@ class ResponseService
      * @param string     $acceptType  The acceptType used in the api-call.
      *
      * @return bool Will return true if the attribute should be extended and false if not.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     private function checkExtendAttribute(array &$response, Attribute $attribute, Value $valueObject, ?array $extend, string $acceptType): bool
     {
@@ -638,6 +635,7 @@ class ResponseService
      * @param string    $acceptType  The acceptType used in the api-call.
      *
      * @return void
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     private function renderObjectReference(array &$response, Attribute $attribute, Value $valueObject, string $acceptType)
     {
@@ -660,6 +658,7 @@ class ResponseService
      * @param string    $acceptType  The acceptType used in the api-call.
      *
      * @return void
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     private function renderObjectReferences(array &$response, Attribute $attribute, Value $valueObject, string $acceptType)
     {
@@ -681,6 +680,7 @@ class ResponseService
      * @param string       $acceptType The acceptType that will influence the way this 'self' is rendered.
      *
      * @return string|string[] The 'self' string or array with this string in it, depending on acceptType.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     private function renderObjectSelf(ObjectEntity $object, string $acceptType)
     {
@@ -701,6 +701,7 @@ class ResponseService
      * @param Attribute $attribute The attribute we are checking if it needs extending.
      *
      * @return array|null Will return the subExtend array for rendering the subresources if they should be extended. Will return empty array if attribute should not be extended.
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     private function attributeSubExtend(array $extend, Attribute $attribute): ?array
     {
@@ -730,6 +731,7 @@ class ResponseService
      * @throws InvalidArgumentException
      *
      * @return string|array|null
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     private function renderObjects(ObjectEntity $result, array $embedded, Value $value, ?array $fields, ?array $extend, string $acceptType, bool $skipAuthCheck = false, bool $flat = false, int $level = 0)
     {
@@ -803,6 +805,7 @@ class ResponseService
      * @param Value $value
      *
      * @return array|null
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     private function renderFiles(Value $value): ?array
     {
@@ -829,6 +832,7 @@ class ResponseService
      * @param File $file
      *
      * @return array
+     * @deprecated Make sure we do not lose any BL used here, we are just currently not using this function for rendering the result!
      */
     private function renderFileResult(File $file): array
     {

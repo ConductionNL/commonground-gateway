@@ -31,6 +31,8 @@ use Twig\Environment;
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *
  * @category Service
+ *
+ * @deprecated
  */
 class HandlerService
 {

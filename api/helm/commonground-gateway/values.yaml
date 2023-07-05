@@ -202,8 +202,14 @@ mongodb:
 gateway-ui:
     enabled: true
 
+consumer:
+    replicaCount: 5
 
-podAnnotations: {}
+podAnnotations:
+    prometheus.io/path: /metrics
+    prometheus.io/port: '8080'
+    prometheus.io/scrape: 'true'
+    prometheus.io/interval: '600s'
 
 podSecurityContext: {}
 

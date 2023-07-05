@@ -24,7 +24,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use Monolog\Logger;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
-use Respect\Validation\Exceptions\ComponentException;
+use Safe\Exceptions\UrlException;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -55,7 +55,6 @@ class SynchronizationService
     private MessageBusInterface $messageBus;
     private TranslationService $translationService;
     private ObjectEntityService $objectEntityService;
-    private ValidatorService $validatorService;
     private EavService $eavService;
     public array $configuration;
     private array $data;
@@ -89,7 +88,6 @@ class SynchronizationService
      * @param MessageBusInterface      $messageBus
      * @param TranslationService       $translationService
      * @param ObjectEntityService      $objectEntityService
-     * @param ValidatorService         $validatorService
      * @param EavService               $eavService
      * @param Environment              $twig
      * @param EventDispatcherInterface $eventDispatcher
@@ -106,7 +104,6 @@ class SynchronizationService
         MessageBusInterface $messageBus,
         TranslationService $translationService,
         ObjectEntityService $objectEntityService,
-        ValidatorService $validatorService,
         EavService $eavService,
         Environment $twig,
         EventDispatcherInterface $eventDispatcher,
@@ -123,7 +120,6 @@ class SynchronizationService
         $this->translationService = $translationService;
         $this->objectEntityService = $objectEntityService;
         $this->objectEntityService->addServices($eavService);
-        $this->validatorService = $validatorService;
         $this->eavService = $eavService;
         $this->configuration = [];
         $this->data = [];
@@ -593,6 +589,8 @@ class SynchronizationService
             $errorMessage = ($config['message']['preMessage'] ?? '').$exception->getMessage().($config['message']['postMessage'] ?? '');
             (isset($config['message']['type']) && $config['message']['type'] === 'error') ?
                 $this->io->error($errorMessage) : $this->io->warning($errorMessage);
+            (isset($config['message']['type']) && $config['message']['type'] === 'error') ?
+                $this->logger->error($errorMessage) : $this->logger->warning($errorMessage);
             isset($config['file']) && $this->io->block("File: {$exception->getFile()}");
             isset($config['line']) && $this->io->block("Line: {$exception->getLine()}");
             isset($config['trace']) && $this->io->block("Trace: {$exception->getTraceAsString()}");
@@ -623,6 +621,7 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->text("fetchObjectsFromSource with \$page = $page");
             }
+            $this->logger->debug("fetchObjectsFromSource with \$page = $page");
             $response = $this->callService->call(
                 $callServiceConfig['source'],
                 $callServiceConfig['endpoint'],
@@ -642,8 +641,6 @@ class SynchronizationService
 
                 return [];
             }
-
-            //todo: error, log this
 
             $this->ioCatchException($exception, ['line', 'file', 'message' => [
                 'preMessage' => "Failed fetching page $page ",
@@ -702,7 +699,6 @@ class SynchronizationService
                     'preMessage' => 'Error while doing getSingleFromSource: ',
                 ]]);
 
-                //todo: error, log this
                 return null;
             }
             $result = $this->callService->decodeResponse($callServiceConfig['source'], $response);
@@ -739,6 +735,7 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->text("findSyncBySource() Found existing Synchronization with SourceId = $sourceId");
             }
+            $this->logger->debug("findSyncBySource() Found existing Synchronization with SourceId = $sourceId");
 
             return $synchronization;
         }
@@ -751,6 +748,7 @@ class SynchronizationService
         if (isset($this->io)) {
             $this->io->text("findSyncBySource() Created new Synchronization with SourceId = $sourceId");
         }
+        $this->logger->debug("findSyncBySource() Created new Synchronization with SourceId = $sourceId");
 
         return $synchronization;
     }
@@ -771,6 +769,7 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->text("findSyncByObject() Found existing Synchronization with object = {$objectEntity->getId()->toString()}");
             }
+            $this->logger->debug("findSyncByObject() Found existing Synchronization with object = {$objectEntity->getId()->toString()}");
 
             return $synchronization;
         }
@@ -785,6 +784,7 @@ class SynchronizationService
         if (isset($this->io)) {
             $this->io->text("findSyncByObject() Created new Synchronization with object = {$objectEntity->getId()->toString()}");
         }
+        $this->logger->debug("findSyncByObject() Created new Synchronization with object = {$objectEntity->getId()->toString()}");
 
         return $synchronization;
     }
@@ -824,6 +824,7 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->text("Created new ObjectEntity for Synchronization with id = {$synchronization->getId()->toString()}");
             }
+            $this->logger->debug("Created new ObjectEntity for Synchronization with id = {$synchronization->getId()->toString()}");
             $this->event = new ActionEvent('commongateway.object.create', []);
 
             return 'POST';
@@ -897,7 +898,8 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->warning("Can not handleSync for Synchronization with id = {$synchronization->getId()->toString()} if \$sourceObject === null");
             }
-            //todo: error, user feedback and log this? (see getSingleFromSource function)
+            $this->logger->warning("Can not handleSync for Synchronization with id = {$synchronization->getId()->toString()} if \$sourceObject === null");
+
             return $synchronization;
         }
 
@@ -965,6 +967,7 @@ class SynchronizationService
         //create new object if no object exists
         if (!$synchronization->getObject()) {
             isset($this->io) && $this->io->text('creating new objectEntity');
+            $this->logger->info('creating new objectEntity');
             $object = new ObjectEntity($synchronization->getEntity());
             $object = $this->setDefaultOwner($object);
             $object->addSynchronization($synchronization);
@@ -980,7 +983,8 @@ class SynchronizationService
             if (isset($this->io)) {
                 $this->io->warning("Can not handleSync for Synchronization with id = {$synchronization->getId()->toString()} if \$sourceObject === null");
             }
-            //todo: error, user feedback and log this? (see getSingleFromSource function)
+            $this->logger->warning("Can not handleSync for Synchronization with id = {$synchronization->getId()->toString()} if \$sourceObject === null");
+
             return $synchronization;
         }
 
@@ -1226,9 +1230,6 @@ class SynchronizationService
             $this->ioCatchException($exception, ['line', 'file', 'message' => [
                 'preMessage' => 'Error while doing syncToSource: ',
             ]]);
-
-            // todo: error, log this
-            //            return $synchronization;
         }
 
         $body = new Dot($body);
@@ -1343,7 +1344,6 @@ class SynchronizationService
             ]]);
             $this->asyncError = true;
 
-            //todo: error, log this
             return $synchronization;
         }
         $contentType = $result->getHeader('content-type')[0];
@@ -1442,7 +1442,12 @@ class SynchronizationService
         return $synchronization->setObject($object);
     }
 
-    // todo: docs
+    /**
+     * This function doesn't do anything right now.
+     *
+     * @param Synchronization $synchronization
+     * @return Synchronization
+     */
     private function syncThroughComparing(Synchronization $synchronization): Synchronization
     {
         return $synchronization;
@@ -1451,8 +1456,10 @@ class SynchronizationService
     /**
      * Find an object by URL, and synchronize it if it does not exist in the gateway.
      *
-     * @param string $url    The URL of the object
+     * @param string $url The URL of the object
      * @param Entity $entity The schema the object should fit into
+     *
+     * @throws GuzzleException|LoaderError|SyntaxError|UrlException
      *
      * @return ObjectEntity|null
      */
