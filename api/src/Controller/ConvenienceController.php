@@ -9,7 +9,7 @@ use App\Service\OasParserService;
 use App\Service\ObjectEntityService;
 use App\Service\PackagesService;
 use App\Service\ParseDataService;
-use App\Subscriber\ActionSubscriber;
+use CommonGateway\CoreBundle\Subscriber\ActionSubscriber;
 use CommonGateway\CoreBundle\Service\MappingService;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;

@@ -5,7 +5,7 @@ namespace App\MessageHandler;
 use App\Entity\Action;
 use App\Message\ActionMessage;
 use App\Repository\ActionRepository;
-use App\Subscriber\ActionSubscriber;
+use CommonGateway\CoreBundle\Subscriber\ActionSubscriber;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
