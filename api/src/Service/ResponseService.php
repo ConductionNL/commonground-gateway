@@ -87,6 +87,7 @@ class ResponseService
      * @param ObjectEntity $objectEntity
      *
      * @return DateTimeInterface|null
+     * @deprecated moved this function to CoreBundle->ReadUnreadService->getDateRead()
      */
     private function getDateRead(ObjectEntity $objectEntity): ?DateTimeInterface
     {
@@ -493,7 +494,7 @@ class ResponseService
      * @param string|null $overwriteKey Default = null, if a string is given this will be used instead of $key, for the key to add to the $metadata array.
      *
      * @return void
-     * @deprecated TODO: This function is still used for dateRead! maybe move it to somewhere else? be careful with deleting this!
+     * @deprecated moved this function for dateRead only to CoreBundle->ReadUnreadService->addDateRead()
      */
     public function addToMetadata(array &$metadata, string $key, $value, ?string $overwriteKey = null)
     {

@@ -874,6 +874,7 @@ class ObjectEntityService
      * @param ObjectEntity $objectEntity
      *
      * @return void
+     * @deprecated moved this function to CoreBundle->ReadUnreadService->setUnread()
      */
     public function setUnread(ObjectEntity $objectEntity)
     {
