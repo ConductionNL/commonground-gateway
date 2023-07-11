@@ -18,6 +18,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *
  * @category Service
+ * @deprecated todo: move removeUnreads function to coreBundle before we delete this service
  */
 class LogService
 {
