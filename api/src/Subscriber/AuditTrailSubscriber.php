@@ -91,8 +91,9 @@ class AuditTrailSubscriber implements EventSubscriberInterface
      * Passes the result of prePersist to preUpdate.
      *
      * @param ObjectEntity $object
+     * @param array $config
      *
-     * @return array
+     * @return AuditTrail
      */
     public function createAuditTrail(ObjectEntity $object, array $config): AuditTrail
     {
