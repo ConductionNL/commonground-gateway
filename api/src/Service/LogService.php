@@ -18,7 +18,7 @@ use Symfony\Component\Stopwatch\Stopwatch;
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *
  * @category Service
- * @deprecated todo: move removeUnreads function to coreBundle before we delete this service
+ * @deprecated moved removeUnreads function to coreBundle
  */
 class LogService
 {
@@ -50,6 +50,7 @@ class LogService
      * @param string        $type
      *
      * @return Log
+     * @deprecated
      */
     public function saveLog(Request $request, Response $response = null, int $stopWatchNumber = 0, string $content = null, bool $finalSave = null, string $type = 'in'): Log
     {
@@ -174,6 +175,7 @@ class LogService
      * @param Log $callLog
      *
      * @return void
+     * @deprecated moved to CoreBundle->ReadUnreadService->removeUnreads()
      */
     private function removeUnreads(Log $callLog)
     {
@@ -197,6 +199,10 @@ class LogService
         }
     }
 
+    /**
+     * @return Request
+     * @deprecated
+     */
     public function makeRequest(): Request
     {
         return new Request(
@@ -209,6 +215,11 @@ class LogService
         );
     }
 
+    /**
+     * @param int $statusCode
+     * @return string|null
+     * @deprecated
+     */
     public function getStatusWithCode(int $statusCode): ?string
     {
         $reflectionClass = new ReflectionClass(Response::class);

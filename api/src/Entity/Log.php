@@ -52,6 +52,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "type": "exact",
  *     "objectId": "exact",
  * })
+ * @deprecated
  */
 class Log
 {
