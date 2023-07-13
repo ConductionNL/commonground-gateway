@@ -10,6 +10,7 @@ use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use App\Repository\AuditTrailRepository;
 use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
@@ -185,9 +186,11 @@ class AuditTrail
     private ?string $resourceView;
 
     /**
-     * @var ?DateTime The creation date of the audit trail
+     * @var ?Datetime The creation date of the audit trail
      *
-     * @Groups({"read", "write"})
+     * @Groups({"read"})
+     *
+     * @Gedmo\Timestampable(on="create")
      *
      * @ORM\Column(type="datetime", nullable=true)
      */
@@ -370,12 +373,12 @@ class AuditTrail
         return $this;
     }
 
-    public function getCreationDate(): ?\DateTimeInterface
+    public function getCreationDate(): ?DateTimeInterface
     {
         return $this->creationDate;
     }
 
-    public function setCreationDate(?\DateTimeInterface $creationDate): self
+    public function setCreationDate(?DateTimeInterface $creationDate): self
     {
         $this->creationDate = $creationDate;
 
