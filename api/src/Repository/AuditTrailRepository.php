@@ -29,18 +29,18 @@ class AuditTrailRepository extends ServiceEntityRepository
      */
     public function findDateRead(string $objectId, string $userId): array
     {
-        $query = $this->createQueryBuilder()
-            ->where('resource = :objectId')
-            ->andWhere('userId = :userId')
-            ->andWhere('result = :responseStatusCode')
-            ->andWhere('LOWER(action) = :method')
+        $query = $this->createQueryBuilder('a')
+            ->where('a.resource = :objectId')
+            ->andWhere('a.userId = :userId')
+            ->andWhere('a.result = :responseStatusCode')
+            ->andWhere('LOWER(a.action) = :method')
             ->setParameters([
                 'objectId'           => $objectId,
                 'userId'             => $userId,
                 'responseStatusCode' => 200,
-                'method'             => 'get',
+                'method'             => 'retrieve',
             ])
-            ->orderBy('creationDate', 'DESC')
+            ->orderBy('a.creationDate', 'DESC')
             ->distinct();
 
         return $query
