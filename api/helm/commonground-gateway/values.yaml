@@ -248,6 +248,7 @@ service:
 ingress:
   enabled: true
   className: "nginx"
+  maxRequestSize: 50m
   path: /
   pathType: ImplementationSpecific
   annotations: {}
