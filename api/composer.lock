@@ -4394,54 +4394,6 @@
             "time": "2021-09-02T17:10:53+00:00"
         },
         {
-            "name": "larping-base/larping-bundle",
-            "version": "1.0.100",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/LarpingBase/LarpingBundle.git",
-                "reference": "0dee9345a0c19dd9a02b18b1284cf67eb659b1fc"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/LarpingBase/LarpingBundle/zipball/0dee9345a0c19dd9a02b18b1284cf67eb659b1fc",
-                "reference": "0dee9345a0c19dd9a02b18b1284cf67eb659b1fc",
-                "shasum": ""
-            },
-            "require": {
-                "commongateway/corebundle": ">=0.0.1",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "symfony/dependency-injection": "~3.4|~4.1|~5.0"
-            },
-            "type": "symfony-bundle",
-            "autoload": {
-                "psr-4": {
-                    "LarpingBase\\LarpingBundle\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "EUPL-1.2"
-            ],
-            "description": "An Commong Gateay bundle for the larping application",
-            "homepage": "https://commongateway.nl",
-            "keywords": [
-                "common",
-                "common-gateway-plugin",
-                "commongateway",
-                "conduction",
-                "gateway",
-                "larping",
-                "symfony"
-            ],
-            "support": {
-                "issues": "https://github.com/LarpingBase/LarpingBundle/issues",
-                "source": "https://github.com/LarpingBase/LarpingBundle/tree/1.0.100"
-            },
-            "time": "2023-03-27T10:16:20+00:00"
-        },
-        {
             "name": "league/flysystem",
             "version": "2.5.0",
             "source": {
