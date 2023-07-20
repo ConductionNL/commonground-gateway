@@ -846,6 +846,15 @@ class Attribute
      */
     private $reference = null;
 
+    /**
+     * @var Boolean Whether sub-objects in this value should be re-cached.
+     *
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="boolean", options={"default": false})
+     */
+    private bool $cacheSubObjects = false;
+
     public function __construct()
     {
         $this->attributeValues = new ArrayCollection();
@@ -2037,6 +2046,18 @@ class Attribute
     public function setInversedByPropertyName(?string $inversedByPropertyName): self
     {
         $this->inversedByPropertyName = $inversedByPropertyName;
+
+        return $this;
+    }
+
+    public function getCacheSubObjects(): ?bool
+    {
+        return $this->cacheSubObjects;
+    }
+
+    public function setCacheSubObjects(bool $cacheSubObjects): self
+    {
+        $this->cacheSubObjects = $cacheSubObjects;
 
         return $this;
     }

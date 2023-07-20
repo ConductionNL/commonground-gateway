@@ -1472,10 +1472,16 @@ class ObjectEntity
      */
     public function changeCascade(DateTimeInterface $dateModified): self
     {
-        $this->setDateCreated($dateModified);
+        $this->setDateModified($dateModified);
+
+        $values = $this->subresourceOf->filter(
+            function(Value $subresource) {
+                return $subresource->getAttribute()->getCacheSubObjects();
+            }
+        );
 
         // Lets update the date created of parent resources
-        foreach ($this->subresourceOf as $mainResourceValue) {
+        foreach ($values as $mainResourceValue) {
             $mainresource = $mainResourceValue->getObjectEntity();
             if ($mainresource->getDateModified() < $this->getDateModified()) {
                 $mainresource->changeCascade($dateModified);
