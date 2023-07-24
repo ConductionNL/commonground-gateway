@@ -46,7 +46,11 @@ RUN set -eux; \
 		gd \
 		gmp \
 	; \
+        pear config-set http_proxy $(printenv http_proxy); \
+        pear config-set https_proxy $(printenv https_proxy); \
         pear update-channels; \
+        pecl config-set http_proxy $(printenv http_proxy); \
+        pecl config-set https_proxy $(printenv https_proxy); \
         pecl update-channels; \
 	pecl install \
 		apcu-${APCU_VERSION} \
