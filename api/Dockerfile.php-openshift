@@ -46,6 +46,8 @@ RUN set -eux; \
 		gd \
 		gmp \
 	; \
+        pear update-channels; \
+        pecl update-channels; \
 	pecl install \
 		apcu-${APCU_VERSION} \
 		redis \
