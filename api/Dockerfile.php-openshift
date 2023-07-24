@@ -141,6 +141,8 @@ RUN chown -R 1001:0 bin && chmod -R ug+rwX bin
 RUN chown -R 1001:0 var && chmod -R ug+rwX var
 RUN chown -R 1001:0 /cert && chmod -R ug+rwX /cert
 RUN chown -R 1001:0 vendor && chmod -R ug+rwX vendor
+RUN chown -R 1001:0 $PHP_INI_DIR && chmod -R ug+rwX $PHP_INI_DIR
+
 VOLUME /srv/api/var
 USER 1001
 
