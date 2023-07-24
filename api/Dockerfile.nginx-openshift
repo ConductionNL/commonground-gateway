@@ -1,0 +1,23 @@
+#########################################
+# 		"nginx" stage 		#
+#########################################
+# depends on the "php" stage above, and with an litle bit of help from https://github.com/shiphp/nginx-env
+FROM nginx:alpine AS api_platform_nginx
+
+# Due to our config we need a copy of the public folder for serving static content
+COPY docker/nginx/conf.d/default.conf.template /etc/nginx/templates/default.conf.template
+COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
+WORKDIR /srv/api
+COPY public public/
+
+RUN chown -R 1001:0 /srv/api && chmod -R ug+rwX /srv/api && \
+        chown -R 1001:0 /var/cache/nginx && \
+        chmod -R ug+rwX /var/cache/nginx && \
+        chown -R 1001:0 /var/log/nginx && \
+        chmod -R ug+rwX /var/log/nginx && \
+        chown -R 1001:0 /etc/nginx/conf.d && \
+        chmod -R ug+rwX /etc/nginx/conf.d
+RUN touch /var/run/nginx.pid && \
+        chown -R 1001:0 /var/run/nginx.pid
+USER 1001
+EXPOSE 8080
