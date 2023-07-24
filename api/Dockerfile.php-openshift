@@ -1,8 +1,5 @@
 FROM php:7.4-fpm-alpine AS api_platform_php
 
-# Create a user
-RUN addgroup -S -g 101 commonground-gateway && adduser -S -D -u 101 commonground-gateway
-
 RUN curl -O https://download.microsoft.com/download/b/9/f/b9f3cce4-3925-46d4-9f46-da08869c6486/msodbcsql18_18.1.1.1-1_amd64.apk; \
     curl -O https://download.microsoft.com/download/b/9/f/b9f3cce4-3925-46d4-9f46-da08869c6486/mssql-tools18_18.1.1.1-1_amd64.apk; \
     apk add --allow-untrusted  \
@@ -118,10 +115,8 @@ RUN apk add --no-cache $PHPIZE_DEPS \
 RUN mkdir -p /cert
 RUN mkdir -p /srv/api/vendor
 COPY docker/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
-RUN chown -R commonground-gateway:commonground-gateway /usr/local/bin/docker-entrypoint
-RUN chown -R commonground-gateway:commonground-gateway /usr/local/etc/php
-
-
+RUN chown -R 1001:0 /usr/local/bin/docker-entrypoint
+RUN chown -R 1001:0 /usr/local/etc/php
 
 # copy only specifically what we need
 COPY .env ./
@@ -139,12 +134,12 @@ RUN set -eux; \
 	composer dump-autoload --classmap-authoritative --no-dev; \
     sync
 
-RUN chown -R commonground-gateway:commonground-gateway bin
-RUN chown -R commonground-gateway:commonground-gateway var
-RUN chown -R commonground-gateway:commonground-gateway /cert
-RUN chown -R commonground-gateway:commonground-gateway vendor
+RUN chown -R 1001:0 bin && chmod -R ug+rwX bin
+RUN chown -R 1001:0 var && chmod -R ug+rwX var
+RUN chown -R 1001:0 /cert && chmod -R ug+rwX /cert
+RUN chown -R 1001:0 vendor && chmod -R ug+rwX vendor
 VOLUME /srv/api/var
-USER commonground-gateway
+USER 1001
 
 RUN chmod +x /usr/local/bin/docker-entrypoint; \
 	chmod +x bin/console
