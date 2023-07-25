@@ -42,8 +42,6 @@ class LoginController extends AbstractController
      */
     public function MeAction(Request $request, CommonGroundService $commonGroundService, ObjectEntityService $objectEntityService)
     {
-        $this->cache->invalidateTags(['grantedScopes']);
-
         $userService = new UserService($commonGroundService, $objectEntityService);
         if ($this->getUser()) {
             $result = [
