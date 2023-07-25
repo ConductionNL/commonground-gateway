@@ -372,6 +372,13 @@ class AuditTrail
         return $this;
     }
 
+    /**
+     * Getter for creationDate.
+     * CoreBundle->ReadUnreadService->getDateRead() return type requires this to have return type DateTime. Not DateTimeInterface!
+     * Please test it if you want to change this.
+     *
+     * @return DateTime|null
+     */
     public function getCreationDate(): ?DateTime
     {
         return $this->creationDate;
