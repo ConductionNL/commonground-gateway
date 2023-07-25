@@ -811,7 +811,7 @@ class SynchronizationService
      *
      * @return string The method for populateObject, POST or PUT depending on if we created a new ObjectEntity.
      */
-    private function checkObjectEntity(Synchronization $synchronization): string
+    public function checkObjectEntity(Synchronization $synchronization): string
     {
         if (!$synchronization->getObject()) {
             $object = new ObjectEntity();

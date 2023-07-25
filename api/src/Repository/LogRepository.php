@@ -27,6 +27,7 @@ class LogRepository extends ServiceEntityRepository
      * @param string $userId
      *
      * @return array
+     * @deprecated
      */
     public function findDateRead(string $objectId, string $userId): array
     {

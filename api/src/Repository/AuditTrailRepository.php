@@ -19,6 +19,35 @@ class AuditTrailRepository extends ServiceEntityRepository
         parent::__construct($registry, AuditTrail::class);
     }
 
+    /**
+     * Returns all get item audit trails on the given ObjectEntity by the given user, ordered by creation date of the audit trail. (and only audit trails where response was a 200).
+     *
+     * @param string $objectId The id of an ObjectEntity.
+     * @param string $userId The id of a User.
+     *
+     * @return array An array of audit trails found, or empty array.
+     */
+    public function findDateRead(string $objectId, string $userId): array
+    {
+        $query = $this->createQueryBuilder('a')
+            ->where('a.resource = :objectId')
+            ->andWhere('a.userId = :userId')
+            ->andWhere('a.result = :responseStatusCode')
+            ->andWhere('LOWER(a.action) = :method')
+            ->setParameters([
+                'objectId'           => $objectId,
+                'userId'             => $userId,
+                'responseStatusCode' => 200,
+                'method'             => 'retrieve',
+            ])
+            ->orderBy('a.creationDate', 'DESC')
+            ->distinct();
+
+        return $query
+            ->getQuery()
+            ->getResult();
+    }
+
     // /**
     //  * @return AuditTrail[] Returns an array of AuditTrail objects
     //  */
