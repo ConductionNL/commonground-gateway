@@ -218,6 +218,7 @@ class Attribute
 
     /**
      * @var bool whether the properties of the original object are automatically include.
+     * @deprecated
      *
      * @Groups({"read","write"})
      *
