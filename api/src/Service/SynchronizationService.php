@@ -5,7 +5,6 @@ namespace App\Service;
 use Adbar\Dot;
 use App\Entity\Application;
 use App\Entity\Entity;
-use App\Entity\Gateway;
 use App\Entity\Gateway as Source;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
@@ -389,7 +388,7 @@ class SynchronizationService
      *
      * @param string $configKey The key to use when looking for an uuid of a Source in the Action->Configuration.
      *
-     * @return Gateway|null The found source for the configuration
+     * @return Source|null The found source for the configuration
      */
     private function getSourceFromConfig(string $configKey = 'source'): ?Source
     {
@@ -1469,24 +1468,26 @@ class SynchronizationService
         $parse = \Safe\parse_url($url);
         $location = $parse['scheme'].'://'.$parse['host'];
 
-        // 2.c Try to establich a source for the domain
+        // 2.c Try to establish a source for the domain
         $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
 
         // 2.b The source might be on a path e.g. /v1 so if whe cant find a source let try to cycle
-        foreach (explode('/', $parse['path']) as $pathPart) {
-            if ($pathPart !== '') {
-                $location = $location.'/'.$pathPart;
-            }
-            $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
-            if ($source !== null) {
-                break;
+        if ($source instanceof Source === false && isset($parse['path']) === true) {
+            foreach (explode('/', $parse['path']) as $pathPart) {
+                if ($pathPart !== '') {
+                    $location = $location.'/'.$pathPart;
+                }
+                $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
+                if ($source !== null) {
+                    break;
+                }
             }
         }
-        if ($source instanceof Gateway === false) {
+        if ($source instanceof Source === false) {
             return null;
         }
 
-        // 3 If we have a source we can establich an endpoint.
+        // 3 If we have a source we can establish an endpoint.
         $endpoint = str_replace($location, '', $url);
 
         // 4 Create sync
