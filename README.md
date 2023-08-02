@@ -60,7 +60,7 @@ $ helm upgrade [my-gateway] common-gateway/commonground-gateway --kubeconfig=[pa
 The helm install and upgrade commandos can also be put together:
 
 ````helm
-$ helm upgrade [my-gateway] common-gateway/commonground-gateway --kubeconfig=[path-to-your-kubeconfig] --set cronrunner.enabled=true,php.tag=dev,nginx.tag=dev,ingress.enabled=true,global.domain=[my-domain.com] -n gateway --install
+$ helm upgrade [my-gateway] common-gateway/commonground-gateway --kubeconfig=[path-to-your-kubeconfig] --set cronrunner.enabled=true,php.tag=dev,nginx.tag=dev,ingress.enabled=true,global.domain=[my-domain.com] --namespace [namespace] --install
 ````
 
 Alternatively, you can use the Kubernetes dashboard to change the Helm values file.
