@@ -34,13 +34,7 @@ $ docker compose up --build
 If you are installing the Common Gateway on a Haven environment, you can just run the provided Helm installer. Before installing the Common Gateway, you need to add it to your Helm repositories.
 
 ````helm
-$ helm repo add common-gateway https://raw.githubusercontent.com/ConductionNL/gateway-ui/refinement-demo-branch/helm/
-````
-
-Or if you want to install the Gateway as a headless application (without user interfaces)
-
-````helm
-$ helm repo add common-gateway https://raw.githubusercontent.com/ConductionNL/commonground-gateway/master/api/helm/
+$ helm repo add common-gateway https://raw.githubusercontent.com/ConductionNL/commonground-gateway/main/api/helm/
 ````
 
 
@@ -48,7 +42,7 @@ After that, you can simply install the Gateway to your cluster using the Helm in
 
 
 ````helm
-$ helm install [my-gateway] common-gateway/gateway-ui --kubeconfig=[path-to-your-kubeconfig]
+$ helm install [my-gateway] common-gateway/commonground-gateway --kubeconfig=[path-to-your-kubeconfig] --namespace [namespace]
 ````
 
 This will install the Gateway in a bare-bones and production setup on the latest version (you can lock versions through the version flag e.g. `--version 2.2)`. To further configure the Gateway, we need to set some environmental values. A full option list can be found [here](). Let's for now assume that you want to switch your Gateway from prod to dev-mode, enable cron-runners for asynchronous resource handling, add a domain name to make the Gateway publicly accessible, and last but not least, use LetsEncrypt to provide an SSL/HTTPS connection. In Helm, we use the `--set` flag to set values. So the total upgrade command would look like:
@@ -60,7 +54,13 @@ $ helm upgrade [my-gateway] --kubeconfig=[path-to-your-kubeconfig] --set  gatewa
 Or for the headless version
 
 ````helm
-$ helm upgrade [my-gateway] --kubeconfig=[path-to-your-kubeconfig] --set cronrunner.enabled=true,php.tag=dev,nginx.tag=dev,ingress.enabled=true,global.domain=[my-domain.com],tls.0.hosts.0=[my-domain.com],tls.0.secretName=[my-domain]-tls,ingress.annotations.cert-manager\.io/cluster-manager=letsencrypt-prod
+$ helm upgrade [my-gateway] common-gateway/commonground-gateway --kubeconfig=[path-to-your-kubeconfig] --set cronrunner.enabled=true,php.tag=dev,nginx.tag=dev,ingress.enabled=true,global.domain=[my-domain.com]
+````
+
+The helm install and upgrade commandos can also be put together:
+
+````helm
+$ helm upgrade [my-gateway] common-gateway/commonground-gateway --kubeconfig=[path-to-your-kubeconfig] --set cronrunner.enabled=true,php.tag=dev,nginx.tag=dev,ingress.enabled=true,global.domain=[my-domain.com] -n gateway --install
 ````
 
 Alternatively, you can use the Kubernetes dashboard to change the Helm values file.
