@@ -29,8 +29,6 @@ metadata:
 {{/*        nginx.ingress.kubernetes.io/auth-tls-verify: optional_no_ca*/}}
 {{/*        nginx.ingress.kubernetes.io/auth-tls-verify-depth: '4'*/}}
         {{- if not .Values.ingress.annotations }}
-        nginx.ingress.kubernetes.io/cors-allow-origin: https://admin.{{ .Values.global.domain }}
-        nginx.ingress.kubernetes.io/enable-cors: "true"
         nginx.ingress.kubernetes.io/proxy-body-size: {{ .Values.ingress.maxRequestSize }}
         {{- end }}
     {{ end }}
