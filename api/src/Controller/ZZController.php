@@ -139,6 +139,7 @@ class ZZController extends AbstractController
             case 'application/pdf':
                 return 'pdf';
             case 'application/json':
+            case '*/*':
                 return 'json';
             case 'application/json+hal':
             case 'application/hal+json':
