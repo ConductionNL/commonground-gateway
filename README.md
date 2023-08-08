@@ -5,7 +5,7 @@
 
 The Common Gateway repository provides a quick Kubernetes wrapper for the Common Gateway Symfony Bundle. In other words, it doesn't aim to be its own code base but simply contains the files needed to create Kubernetes images and Helm installers for the core bundle.
 
-If you are looking for the Common Gateway code base, please refer to the Core Bundle repository instead, as that's where you will find all the appropriate documentation.
+If you are looking for the Common Gateway code base, please refer to the [Core Bundle repository](https://github.com/CommonGateway/coreBundle) instead, as that's where you will find all the appropriate documentation.
 
 ## Quick start (for local development)
 > **Warning**
