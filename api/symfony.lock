@@ -40,6 +40,18 @@
     "brick/reflection": {
         "version": "0.4.1"
     },
+    "common-gateway/brk-bundle": {
+        "version": "0.2.16"
+    },
+    "common-gateway/klanten-bundle": {
+        "version": "0.1.8"
+    },
+    "common-gateway/referentielijsten-bundle": {
+        "version": "0.1.0"
+    },
+    "common-gateway/zgw-bundle": {
+        "version": "dev-fix/XZ-152/bestandsdelen"
+    },
     "commongateway/corebundle": {
         "version": "dev-master"
     },
