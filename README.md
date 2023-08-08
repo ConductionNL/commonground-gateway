@@ -2,11 +2,16 @@
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/commonground-gateway)](https://artifacthub.io/packages/search?repo=commonground-gateway)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/b6de6f6071044e1783a145afa27f1829)](https://www.codacy.com/gh/CommonGateway/CoreBundle/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=CommonGateway/CoreBundle&amp;utm_campaign=Badge_Grade)
 
+
 The Common Gateway repository provides a quick Kubernetes wrapper for the Common Gateway Symfony Bundle. In other words, it doesn't aim to be its own code base but simply contains the files needed to create Kubernetes images and Helm installers for the core bundle.
 
 If you are looking for the Common Gateway code base, please refer to the Core Bundle repository instead, as that's where you will find all the appropriate documentation.
 
 ## Quick start (for local development)
+> **Warning**
+> The most recent documentation for setting up your common gateway is maintained in [this document](https://github.com/CommonGateway/CoreBundle/blob/master/docs/features/Installation.md). The documentation in this document might or might not be up to date with this documentation.
+
+
 > **Dependencies**
 > - To clone the codebase to your locale machine you will need Git
 > - To run the gateway on your local machine, you will need Docker Desktop.
