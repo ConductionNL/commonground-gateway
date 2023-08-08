@@ -1275,11 +1275,12 @@ class ObjectEntity
             foreach ($this->getSynchronizations() as $synchronization) {
                 $synchronizations[] = [
                     'id'      => $synchronization->getId()->toString(),
-                    'gateway' => [
-                        'id'       => $synchronization->getSource()->getId()->toString(),
-                        'name'     => $synchronization->getSource()->getName(),
-                        'ref'      => $synchronization->getSource()->getReference(),
-                        'location' => $synchronization->getSource()->getLocation(),
+                    'source' => [
+                        'id'            => $synchronization->getSource()->getId()->toString(),
+                        'ref'           => $synchronization->getSource()->getReference(),
+                        'name'          => $synchronization->getSource()->getName(),
+                        'description'   => $synchronization->getSource()->getDescription(),
+                        'location'      => $synchronization->getSource()->getLocation(),
                     ],
                     'endpoint'          => $synchronization->getEndpoint(),
                     'sourceId'          => $synchronization->getSourceId(),
