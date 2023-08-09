@@ -78,6 +78,8 @@ parameters:
   env(DOCUMENTATION_LICENCE_URL): "https://www.apache.org/licenses/LICENSE-2.0.html"
   env(DOCUMENTATION_VERSION): "1.0.1"
   
+  env(LOG_LEVEL): "warning"
+  
   env(APP_DEFAULT_REDIRECT_URL): "http://localhost"
   env(APP_DEFAULT_BACK_URL): "http://localhost"
 
@@ -142,6 +144,7 @@ parameters:
   app_shasign: "%env(APP_SHASIGN)%"
 
   mode: "%env(APP_MODE)%"
+  log_level: "%env(LOG_LEVEL)%"
 
   # Busnes Engine
   env(APP_COMMONGROUND_BE_LOCATION): "https://ac.%env(APP_DOMAIN)%"
