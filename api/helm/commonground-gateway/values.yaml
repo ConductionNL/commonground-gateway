@@ -31,8 +31,10 @@ config:
     crontab: '*/5 * * * *' # https://crontab.guru/
     appAuth: false # If we should check and care about authorization in the cronRunner pods.
   defaultRedirectUrl: useDomain
-  defaultBackUrl: useDomain
+  defaultBackUrl: useDomain  
+  logLevel: warning
   documentation_description: "This documentation contains the endpoints on your commonground gateway.
+
 
 # Authentication
 
