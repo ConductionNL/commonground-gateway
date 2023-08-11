@@ -793,7 +793,7 @@ class SynchronizationService
      *
      * @return ObjectEntity $object
      */
-    private function setDefaultOwner(ObjectEntity $object): ObjectEntity
+    public function setDefaultOwner(ObjectEntity $object): ObjectEntity
     {
         $defaultUser = $this->entityManager->getRepository('App:User')->findOneBy(['reference' => $this->synchronizationDefault['owner']]);
         if ($defaultUser instanceof User === false) {
@@ -1012,6 +1012,7 @@ class SynchronizationService
             $sourceObject = $this->mappingService->mapping($synchronization->getMapping(), $sourceObject);
         }
         $synchronization->getObject()->hydrate($sourceObject, $unsafe);
+        $this->entityManager->persist($synchronization->getObject());
         $this->entityManager->persist($synchronization);
 
         if ($oldDateModified !== $synchronization->getObject()->getDateModified()->getTimestamp()) {

@@ -1390,7 +1390,9 @@ class ObjectEntity
     {
         if (!$this->synchronizations->contains($synchronization)) {
             $this->synchronizations[] = $synchronization;
-            $synchronization->setObject($this);
+            if ($synchronization->getObject() !== $this) {
+                $synchronization->setObject($this);
+            }
         }
 
         return $this;
