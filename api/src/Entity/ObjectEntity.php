@@ -1100,7 +1100,7 @@ class ObjectEntity
     {
         // Let's default the config array
         !isset($configuration['level']) ? $configuration['level'] = 1 : '';
-        !isset($configuration['maxdepth']) ? $configuration['maxdepth'] = $this->getEntity()->getMaxDepth() : '';
+        !isset($configuration['maxDepth']) ? $configuration['maxDepth'] = $this->getEntity()->getMaxDepth() : '';
         !isset($configuration['renderedObjects']) ? $configuration['renderedObjects'] = [] : '';
         !isset($configuration['embedded']) ? $configuration['embedded'] = false : '';
         !isset($configuration['onlyMetadata']) ? $configuration['onlyMetadata'] = false : '';
@@ -1160,16 +1160,22 @@ class ObjectEntity
                     $array[$attribute->getName()] = "Attribute {$attribute->getId()->toString()} of type 'object' has not Entity connected through Attribute->object";
                 } elseif ($valueObject->getValue() == null) {
                     $array[$attribute->getName()] = null;
-                } elseif (!$attribute->getMultiple() && $configuration['level'] < $configuration['maxdepth']) {
+                } elseif (!$attribute->getMultiple()) {
                     if (count($valueObject->getObjects()) === 0) {
                         $array[$attribute->getName()][] = null;
                     } else {
                         $object = $valueObject->getObjects()->first();
                         $currentObjects[] = $object;
-                        // Only add an object if it hasn't bean added yet
-                        if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
+                        // Only add an object if it hasn't been added yet and max depth hasn't been reached
+                        if (!in_array($object, $configuration['renderedObjects'])
+                            && !$attribute->getObject()->isExcluded()
+                            && $configuration['level'] < $configuration['maxDepth']
+                        ) {
                             $config = $configuration;
                             $config['renderedObjects'][] = $object;
+                            if ($attribute->getObject()->getMaxDepth() + $config['level'] < $config['maxDepth']) {
+                                $config['maxDepth'] = $attribute->getObject()->getMaxDepth() + $config['level'];
+                            }
                             $config['level'] = $config['level'] + 1;
                             $objectToArray = $object->toArray($config);
 
@@ -1203,49 +1209,53 @@ class ObjectEntity
                             $array[$attribute->getName()] = $object->getSelf();
                         }
                     }
-                } elseif ($configuration['level'] < $configuration['maxdepth']) {
-                    if (count($valueObject->getObjects()) === 0) {
-                        $array[$attribute->getName()] = [];
-                    } else {
-                        $currentObjects[] = $valueObject->getObjects()->toArray();
-                        foreach ($valueObject->getObjects() as $object) {
-                            // Only add an object if it hasn't bean added yet
-                            if (!in_array($object, $configuration['renderedObjects']) && !$attribute->getObject()->isExcluded()) {
-                                $config = $configuration;
-                                $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
-                                $config['level'] = $config['level'] + 1;
-                                $objectToArray = $object->toArray($config);
+                } elseif (count($valueObject->getObjects()) === 0) {
+                    $array[$attribute->getName()] = [];
+                } else {
+                    $currentObjects[] = $valueObject->getObjects()->toArray();
+                    foreach ($valueObject->getObjects() as $object) {
+                        // Only add an object if it hasn't been added yet and max depth hans't been reached
+                        if (!in_array($object, $configuration['renderedObjects'])
+                            && !$attribute->getObject()->isExcluded()
+                            && $configuration['level'] < $configuration['maxDepth']
+                        ) {
+                            $config = $configuration;
+                            $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
+                            if ($attribute->getObject()->getMaxDepth() + $config['level'] < $config['maxDepth']) {
+                                $config['maxDepth'] = $attribute->getObject()->getMaxDepth() + $config['level'];
+                            }
+                            $config['level'] = $config['level'] + 1;
+                            $objectToArray = $object->toArray($config);
 
-                                // Check if we want an embedded array
-                                if ($configuration['embedded'] && !$attribute->getInclude()) {
-                                    switch ($attribute->getFormat()) {
-                                        case 'uuid':
-                                            $array[$attribute->getName()][] = $object->getId()->toString();
-                                            $embedded[$attribute->getName()] = $objectToArray;
-                                            break;
-                                        case 'url':
-                                        case 'uri':
-                                            $array[$attribute->getName()][] = $object->getUri();
-                                            $embedded[$attribute->getName()] = $objectToArray;
-                                            break;
-                                        case 'json':
-                                            $array[$attribute->getName()][] = $objectToArray;
-                                            break;
-                                        case 'iri':
-                                        default:
-                                            $array[$attribute->getName()][] = $object->getSelf();
-                                            $embedded[$attribute->getName()][] = $objectToArray;
-                                            break;
-                                    }
-                                    continue;
+                            // Check if we want an embedded array
+                            if ($configuration['embedded'] && !$attribute->getInclude()) {
+                                switch ($attribute->getFormat()) {
+                                    case 'uuid':
+                                        $array[$attribute->getName()][] = $object->getId()->toString();
+                                        $embedded[$attribute->getName()] = $objectToArray;
+                                        break;
+                                    case 'url':
+                                    case 'uri':
+                                        $array[$attribute->getName()][] = $object->getUri();
+                                        $embedded[$attribute->getName()] = $objectToArray;
+                                        break;
+                                    case 'json':
+                                        $array[$attribute->getName()][] = $objectToArray;
+                                        break;
+                                    case 'iri':
+                                    default:
+                                        $array[$attribute->getName()][] = $object->getSelf();
+                                        $embedded[$attribute->getName()][] = $objectToArray;
+                                        break;
                                 }
-                                $array[$attribute->getName()][] = $objectToArray;
+                                continue;
                             }
-                            // If we don't set the full object then we want to set self
-                            else {
-                                // $array[$attribute->getName()][] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
-                                $array[$attribute->getName()][] = $object->getSelf();
-                            }
+                            $array[$attribute->getName()][] = $objectToArray;
+                        }
+                        // If we don't set the full object then we want to set self
+                        else {
+                            // $array[$attribute->getName()][] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
+                            $array[$attribute->getName()][] = $object->getSelf();
                         }
                     }
                 }
