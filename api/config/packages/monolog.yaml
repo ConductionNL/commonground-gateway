@@ -26,7 +26,7 @@ when@dev:
             nested:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.log"
-                level: debug
+                level: "%log_level%"
                 mongo:
                     host: "%cache_url%"
                     database: logs
@@ -35,7 +35,7 @@ when@dev:
             endpointLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.endpoint.log"
-                level: debug
+                level: "%log_level%"
                 channels: ["endpoint"]
                 mongo:
                     host: "%cache_url%"
@@ -45,7 +45,7 @@ when@dev:
             requestLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.request.log"
-                level: debug
+                level: "%log_level%"
                 channels: ["request"]
                 mongo:
                     host: "%cache_url%"
@@ -55,7 +55,7 @@ when@dev:
             schemaLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.schema.log"
-                level: debug
+                level: "%log_level%"
                 channels: ["schema"]
                 mongo:
                     host: "%cache_url%"
@@ -65,7 +65,7 @@ when@dev:
             cronjobLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.cronjob.log"
-                level: debug
+                level: "%log_level%"
                 channels: ["cronjob"]
                 mongo:
                     host: "%cache_url%"
@@ -74,7 +74,7 @@ when@dev:
                     id: monolog.logger.mongo
             actionLog:
                 type: mongo
-                level: debug
+                level: "%log_level%"
                 channels: ["action"]
                 mongo:
                     host: "%cache_url%"
@@ -86,7 +86,7 @@ when@dev:
             objectLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.object.log"
-                level: debug
+                level: "%log_level%"
                 formatter: monolog.formatter.json
                 channels: ["object"]
                 mongo:
@@ -97,7 +97,7 @@ when@dev:
             synchronizationLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.synchronization.log"
-                level: debug
+                level: "%log_level%"
                 channels: ["synchronization"]
                 mongo:
                     host: "%cache_url%"
@@ -107,7 +107,7 @@ when@dev:
             pluginLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.synchronization.log"
-                level: debug
+                level: "%log_level%"
                 channels: ["plugin"]
                 mongo:
                     host: "%cache_url%"
@@ -117,7 +117,7 @@ when@dev:
             cacheLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.cache.log"
-                level: debug
+                level: "%log_level%"
                 channels: ["cache"]
                 mongo:
                     host: "%cache_url%"
@@ -127,7 +127,7 @@ when@dev:
             mappingLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.cache.log"
-                level: debug
+                level: "%log_level%"
                 channels: ["mapping"]
                 mongo:
                     host: "%cache_url%"
@@ -137,7 +137,7 @@ when@dev:
             callLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.call.log"
-                level: debug
+                level: "%log_level%"
                 channels: ["call"]
                 mongo:
                     host: "%cache_url%"
@@ -169,7 +169,7 @@ when@test:
             nested:
                 type: stream
                 path: "%kernel.logs_dir%/%kernel.environment%.log"
-                level: debug
+                level: "%log_level%"
 
 when@prod:
     monolog:
@@ -196,7 +196,7 @@ when@prod:
             endpointLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.endpoint.log"
-                level: warning
+                level: "%log_level%"
                 channels: ["endpoint"]
                 mongo:
                     host: "%cache_url%"
@@ -206,7 +206,7 @@ when@prod:
             requestLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.request.log"
-                level: warning
+                level: "%log_level%"
                 channels: ["request"]
                 mongo:
                     host: "%cache_url%"
@@ -216,7 +216,7 @@ when@prod:
             schemaLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.schema.log"
-                level: warning
+                level: "%log_level%"
                 channels: ["schema"]
                 mongo:
                     host: "%cache_url%"
@@ -226,7 +226,7 @@ when@prod:
             cronjobLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.cronjob.log"
-                level: warning
+                level: "%log_level%"
                 channels: ["cronjob"]
                 mongo:
                     host: "%cache_url%"
@@ -235,7 +235,7 @@ when@prod:
                     id: monolog.logger.mongo
             actionLog:
                 type: mongo
-                level: warning
+                level: "%log_level%"
                 channels: ["action"]
                 mongo:
                     host: "%cache_url%"
@@ -247,7 +247,7 @@ when@prod:
             objectLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.object.log"
-                level: warning
+                level: "%log_level%"
                 formatter: monolog.formatter.json
                 channels: ["object"]
                 mongo:
@@ -258,7 +258,7 @@ when@prod:
             synchronizationLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.synchronization.log"
-                level: warning
+                level: "%log_level%"
                 channels: ["synchronization"]
                 mongo:
                     host: "%cache_url%"
@@ -268,7 +268,7 @@ when@prod:
             pluginLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.synchronization.log"
-                level: warning
+                level: "%log_level%"
                 channels: ["plugin"]
                 mongo:
                     host: "%cache_url%"
@@ -278,7 +278,7 @@ when@prod:
             cacheLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.cache.log"
-                level: warning
+                level: "%log_level%"
                 channels: ["cache"]
                 mongo:
                     host: "%cache_url%"
@@ -288,7 +288,7 @@ when@prod:
             mappingLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.cache.log"
-                level: warning
+                level: "%log_level%"
                 channels: ["mapping"]
                 mongo:
                     host: "%cache_url%"
@@ -298,7 +298,7 @@ when@prod:
             callLog:
                 type: mongo
                 path: "%kernel.logs_dir%/%kernel.environment%.call.log"
-                level: warning
+                level: "%log_level%"
                 channels: ["call"]
                 mongo:
                     host: "%cache_url%"
