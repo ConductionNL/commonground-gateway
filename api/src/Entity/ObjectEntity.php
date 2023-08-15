@@ -518,9 +518,11 @@ class ObjectEntity
         $this->hasErrors = $hasErrors;
 
         // Do the same for resources above this one if set to true
-        if ($hasErrors == true && !$this->getSubresourceOf()->isEmpty() && $level < 5) {
+        if ($hasErrors === true && !$this->getSubresourceOf()->isEmpty() && $level < 5) {
             foreach ($this->getSubresourceOf() as $resource) {
-                $resource->getObjectEntity()->setHasErrors($hasErrors, $level + 1);
+                if ($resource->getObjectEntity() instanceof ObjectEntity) {
+                    $resource->getObjectEntity()->setHasErrors(true, $level + 1);
+                }
             }
         }
 
