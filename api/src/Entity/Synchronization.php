@@ -271,9 +271,22 @@ class Synchronization
 
     public function setObject(?ObjectEntity $object): self
     {
-        $this->object = $object;
+        if ($object !== null) {
+            $this->setEntity($object->getEntity());
 
-        $this->setEntity($object->getEntity());
+            if ($object->getSynchronizations()->contains($this) === false) {
+                $object->addSynchronization($this);
+            }
+        }
+        if ($object === null) {
+            $this->setEntity(null);
+
+            if ($this->object->getSynchronizations()->contains($this) === true) {
+                $this->object->removeSynchronization($this);
+            }
+        }
+
+        $this->object = $object;
 
         return $this;
     }

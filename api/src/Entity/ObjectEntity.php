@@ -518,9 +518,11 @@ class ObjectEntity
         $this->hasErrors = $hasErrors;
 
         // Do the same for resources above this one if set to true
-        if ($hasErrors == true && !$this->getSubresourceOf()->isEmpty() && $level < 5) {
+        if ($hasErrors === true && !$this->getSubresourceOf()->isEmpty() && $level < 5) {
             foreach ($this->getSubresourceOf() as $resource) {
-                $resource->getObjectEntity()->setHasErrors($hasErrors, $level + 1);
+                if ($resource->getObjectEntity() instanceof ObjectEntity) {
+                    $resource->getObjectEntity()->setHasErrors(true, $level + 1);
+                }
             }
         }
 
@@ -1285,11 +1287,12 @@ class ObjectEntity
             foreach ($this->getSynchronizations() as $synchronization) {
                 $synchronizations[] = [
                     'id'      => $synchronization->getId()->toString(),
-                    'gateway' => [
-                        'id'       => $synchronization->getSource()->getId()->toString(),
-                        'name'     => $synchronization->getSource()->getName(),
-                        'ref'      => $synchronization->getSource()->getReference(),
-                        'location' => $synchronization->getSource()->getLocation(),
+                    'source' => [
+                        'id'            => $synchronization->getSource()->getId()->toString(),
+                        'ref'           => $synchronization->getSource()->getReference(),
+                        'name'          => $synchronization->getSource()->getName(),
+                        'description'   => $synchronization->getSource()->getDescription(),
+                        'location'      => $synchronization->getSource()->getLocation(),
                     ],
                     'endpoint'          => $synchronization->getEndpoint(),
                     'sourceId'          => $synchronization->getSourceId(),
@@ -1399,7 +1402,9 @@ class ObjectEntity
     {
         if (!$this->synchronizations->contains($synchronization)) {
             $this->synchronizations[] = $synchronization;
-            $synchronization->setObject($this);
+            if ($synchronization->getObject() !== $this) {
+                $synchronization->setObject($this);
+            }
         }
 
         return $this;
