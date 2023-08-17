@@ -997,6 +997,9 @@ class SynchronizationService
 
         // Counter
         $counter = $synchronization->getTryCounter() + 1;
+        if ($counter > 10000) {
+            $counter = 10000;
+        }
         $synchronization->setTryCounter($counter);
 
         // Set dont try before, expensional so in minutes  1,8,27,64,125,216,343,512,729,1000
