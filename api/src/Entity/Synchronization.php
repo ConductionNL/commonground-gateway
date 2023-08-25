@@ -87,7 +87,7 @@ class Synchronization
      *
      * @Groups({"read","write"})
      *
-     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="synchronizations", fetch="EAGER")
+     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, cascade={"persist"}, inversedBy="synchronizations", fetch="EAGER")
      */
     private ?ObjectEntity $object = null;
 
