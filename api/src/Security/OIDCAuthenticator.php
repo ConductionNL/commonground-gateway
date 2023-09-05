@@ -5,6 +5,7 @@ namespace App\Security;
 use App\Security\User\AuthenticationUser;
 use App\Service\AuthenticationService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -26,12 +27,31 @@ class OIDCAuthenticator extends AbstractAuthenticator
     private EntityManagerInterface $entityManager;
     private ParameterBagInterface $parameterBag;
 
-    public function __construct(AuthenticationService $authenticationService, SessionInterface $session, EntityManagerInterface $entityManager, ParameterBagInterface $parameterBag)
+    /**
+     * @var LoggerInterface The logger for this service.
+     */
+    private LoggerInterface $logger;
+
+    /**
+     * @param AuthenticationService $authenticationService
+     * @param SessionInterface $session
+     * @param EntityManagerInterface $entityManager
+     * @param ParameterBagInterface $parameterBag
+     * @param LoggerInterface $callLogger
+     */
+    public function __construct(
+        AuthenticationService $authenticationService,
+        SessionInterface $session,
+        EntityManagerInterface $entityManager,
+        ParameterBagInterface $parameterBag,
+        LoggerInterface $callLogger
+    )
     {
         $this->authenticationService = $authenticationService;
         $this->session = $session;
         $this->entityManager = $entityManager;
         $this->parameterBag = $parameterBag;
+        $this->logger = $callLogger;
     }
 
     public function supports(Request $request): ?bool
@@ -58,6 +78,15 @@ class OIDCAuthenticator extends AbstractAuthenticator
 
         $accessToken = $this->authenticationService->authenticate($method, $identifier, $code);
         $result = json_decode(base64_decode(explode('.', $accessToken['access_token'])[1]), true);
+
+        $this->logger->notice('Received result from OIDC connector', ['authResult' => $result]);
+
+        // Make sure groups is always an array, even if there are no groups.
+        if(is_array($result['groups']) === false && $result['groups'] !== null) {
+            $result['groups'] = [$result['groups']]
+        } else if (is_array($result['groups']) === false) {
+            $result['groups'] = [];
+        }
 
         // Set default organization in session for multitenancy (see how this is done in other Authenticators, this can be different for each one!)
         $defaultOrganization = $this->getDefaultOrganization();
