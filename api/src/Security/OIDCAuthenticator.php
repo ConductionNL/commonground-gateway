@@ -86,7 +86,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
 
         // Make sure groups is always an array, even if there are no groups.
         if (is_array($result['groups']) === false && $result['groups'] !== null) {
-            $result['groups'] = [$result['groups']]
+            $result['groups'] = [$result['groups']];
         } else if (is_array($result['groups']) === false) {
             $result['groups'] = [];
         }
