@@ -32,12 +32,15 @@ class OIDCAuthenticator extends AbstractAuthenticator
      */
     private LoggerInterface $logger;
 
+
     /**
-     * @param AuthenticationService $authenticationService
-     * @param SessionInterface $session
-     * @param EntityManagerInterface $entityManager
-     * @param ParameterBagInterface $parameterBag
-     * @param LoggerInterface $callLogger
+     * Constructor
+     *
+     * @param AuthenticationService  $authenticationService The authentication service
+     * @param SessionInterface       $session               The session interface
+     * @param EntityManagerInterface $entityManager         The entity manager
+     * @param ParameterBagInterface  $parameterBag          The Parameter Bag
+     * @param LoggerInterface        $callLogger            The call logger
      */
     public function __construct(
         AuthenticationService $authenticationService,
@@ -82,7 +85,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
         $this->logger->notice('Received result from OIDC connector', ['authResult' => $result]);
 
         // Make sure groups is always an array, even if there are no groups.
-        if(is_array($result['groups']) === false && $result['groups'] !== null) {
+        if (is_array($result['groups']) === false && $result['groups'] !== null) {
             $result['groups'] = [$result['groups']]
         } else if (is_array($result['groups']) === false) {
             $result['groups'] = [];
