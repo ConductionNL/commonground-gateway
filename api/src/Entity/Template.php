@@ -146,6 +146,31 @@ class Template
      */
     private ?DateTime $dateModified = null;
 
+    /**
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     */
+    private ?string $reference = null;
+
+    public function __construct(array $data) {
+        if (isset($data['organization']) === true) {
+            $this->setOrganization($data['organization']);
+        }
+        if (isset($data['name']) === true) {
+            $this->setName($data['name']);
+        }
+        if (isset($data['content']) === true) {
+            $this->setContent($data['content']);
+        }
+        if (isset($data['description'])) {
+            $this->setDescription($data['description']);
+        }
+        if (isset($data['supportedSchemas']) === true) {
+            $this->setSupportedSchemas($data['supportedSchemas']);
+        }
+    }
+
     public function setId(UuidInterface $id): self
     {
         $this->id = $id;
@@ -238,6 +263,18 @@ class Template
     public function setDateModified(?\DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
 
         return $this;
     }
