@@ -1234,12 +1234,12 @@ class ObjectEntity
                                 switch ($attribute->getFormat()) {
                                     case 'uuid':
                                         $array[$attribute->getName()][] = $object->getId()->toString();
-                                        $embedded[$attribute->getName()] = $objectToArray;
+                                        $embedded[$attribute->getName()][] = $objectToArray;
                                         break;
                                     case 'url':
                                     case 'uri':
                                         $array[$attribute->getName()][] = $object->getUri();
-                                        $embedded[$attribute->getName()] = $objectToArray;
+                                        $embedded[$attribute->getName()][] = $objectToArray;
                                         break;
                                     case 'json':
                                         $array[$attribute->getName()][] = $objectToArray;
