@@ -111,7 +111,7 @@ class Template
      *
      * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="templates")
      *
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=true)
      */
     private ?Organization $organization = null;
 
@@ -122,7 +122,21 @@ class Template
      *
      * @ORM\Column(type="array")
      */
-    private $supportedSchemas = [];
+    private array $supportedSchemas = [];
+
+    /**
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $reference = null;
+
+    /**
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $version = null;
 
     /**
      * @var Datetime|null The moment this resource was created
@@ -145,6 +159,77 @@ class Template
      * @ORM\Column(type="datetime", nullable=true)
      */
     private ?DateTime $dateModified = null;
+
+
+    /**
+     * Constructor for creating an Template.
+     *
+     * @param array|null   $configuration A configuration array used to correctly create a Template. The following keys are supported:
+     *
+     */
+    public function __construct(?array $configuration = [])
+    {
+        if ($configuration) {
+            $this->fromSchema($configuration);
+        }
+    }
+
+    /**
+     * Uses given $configuration array to set the properties of this Template.
+     *
+     * @param array $schema  The schema to load.
+     *
+     * @return void
+     */
+    public function fromSchema(array $schema)
+    {
+        if (key_exists('$id', $schema) === true) {
+            $this->setReference($schema['$id']);
+        }
+        if (key_exists('version', $schema) === true) {
+            $this->setVersion($schema['version']);
+        }
+
+        if (key_exists('name', $schema) === true) {
+            $this->setName($schema['name']);
+        }
+
+        if (key_exists('description', $schema) === true) {
+            $this->setDescription($schema['description']);
+        }
+
+        if (key_exists('content', $schema) === true) {
+            $this->setContent($schema['content']);
+        }
+
+        if (key_exists('organization', $schema) === true) {
+            $this->setOrganization($schema['organization']);
+        }
+
+        // @TODO set the supported schemas from the given reference.
+        if (key_exists('supportedSchemas', $schema) === true) {
+            $this->setSupportedSchemas($schema['supportedSchemas']);
+        }
+    }
+
+    /**
+     * Convert this Template to a schema.
+     *
+     * @return array Schema array.
+     */
+    public function toSchema(): array
+    {
+        return [
+            '$id'              => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
+            '$schema'          => 'https://docs.commongateway.nl/schemas/Template.schema.json',
+            'name'             => $this->getName(),
+            'description'      => $this->getDescription(),
+            'content'          => $this->getContent(),
+            'version'          => $this->getVersion(),
+            'organization'     => $this->getOrganization(),
+            'supportedSchemas' => $this->getSupportedSchemas(),
+        ];
+    }
 
     public function setId(UuidInterface $id): self
     {
@@ -214,6 +299,30 @@ class Template
     public function setSupportedSchemas(array $supportedSchemas): self
     {
         $this->supportedSchemas = $supportedSchemas;
+
+        return $this;
+    }
+
+    public function getReference(): ?string
+    {
+        return $this->reference;
+    }
+
+    public function setReference(?string $reference): self
+    {
+        $this->reference = $reference;
+
+        return $this;
+    }
+
+    public function getVersion(): ?string
+    {
+        return $this->version;
+    }
+
+    public function setVersion(?string $version): self
+    {
+        $this->version = $version;
 
         return $this;
     }
