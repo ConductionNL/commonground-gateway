@@ -430,6 +430,10 @@ class Endpoint
         array_key_exists('tags', $schema) ? $this->setTags($schema['tags']) : '';
         array_key_exists('entities', $schema) ? $this->setEntities($schema['entities']) : '';
 
+        if (array_key_exists('loggingConfig', $schema) === true) {
+            $this->setLoggingConfig($schema['loggingConfig']);
+        }
+
         /*@depricated kept here for lagacy */
         $this->setMethod(array_key_exists('method', $schema) ? $schema['method'] : 'GET');
         $this->setOperationType(array_key_exists('operationType', $schema) ? $schema['operationType'] : 'GET');
