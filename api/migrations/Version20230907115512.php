@@ -20,7 +20,6 @@ final class Version20230907115512 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE template ADD reference VARCHAR(255) DEFAULT NULL');
         $this->addSql('ALTER TABLE template ADD version VARCHAR(255) DEFAULT NULL');
         $this->addSql('ALTER TABLE template ALTER id TYPE UUID');
         $this->addSql('ALTER TABLE template ALTER id DROP DEFAULT');
@@ -32,7 +31,6 @@ final class Version20230907115512 extends AbstractMigration
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE template DROP reference');
         $this->addSql('ALTER TABLE template DROP version');
         $this->addSql('ALTER TABLE template ALTER id TYPE UUID');
         $this->addSql('ALTER TABLE template ALTER id DROP DEFAULT');

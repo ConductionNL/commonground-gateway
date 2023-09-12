@@ -206,7 +206,6 @@ class Template
             $this->setOrganization($schema['organization']);
         }
 
-        // @TODO set the supported schemas from the given reference.
         if (key_exists('supportedSchemas', $schema) === true) {
             $this->setSupportedSchemas($schema['supportedSchemas']);
         }
@@ -347,18 +346,6 @@ class Template
     public function setDateModified(?\DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
-
-        return $this;
-    }
-
-    public function getReference(): ?string
-    {
-        return $this->reference;
-    }
-
-    public function setReference(?string $reference): self
-    {
-        $this->reference = $reference;
 
         return $this;
     }
