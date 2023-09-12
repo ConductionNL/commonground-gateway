@@ -29,3 +29,5 @@ framework:
             'App\Message\ActionMessage': async
             'App\Message\NotificationMessage': async
             'App\Message\SyncPageMessage': async
+            'CommonGateway\CoreBundle\Message\CacheMessage': async
+            'CommonGateway\CoreBundle\Message\ValueMessage': async
