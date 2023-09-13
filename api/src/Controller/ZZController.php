@@ -161,7 +161,7 @@ class ZZController extends AbstractController
                 return 'xml';
             case 'text/html':
                 return 'html';
-            case 'text/docx':
+            case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return 'docx';
         }//end switch
 
