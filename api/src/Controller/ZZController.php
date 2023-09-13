@@ -161,6 +161,8 @@ class ZZController extends AbstractController
                 return 'xml';
             case 'text/html':
                 return 'html';
+            case 'text/docx':
+                return 'docx';
         }//end switch
 
         throw new BadRequestHttpException('No proper accept could be determined');
