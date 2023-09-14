@@ -159,6 +159,10 @@ class ZZController extends AbstractController
             case 'text/xml':
             case 'application/xml':
                 return 'xml';
+            case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+                return 'xlsx';
+            case 'text/csv':
+                return 'csv';
             case 'text/html':
                 return 'html';
             case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
