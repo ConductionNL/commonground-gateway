@@ -52,7 +52,7 @@ RUN set -eux; \
 	pecl install \
 		apcu-${APCU_VERSION} \
 		redis \
-    	amqp \
+    	amqp-1.11.0 \
     	sqlsrv-${SQLSRV_VERSION} \
     	mongodb \
 	; \

@@ -172,7 +172,7 @@ services:
       - "5432:5432"
 
   mongodb:
-    image: mongo
+    image: mongo:4.4.14
     restart: always
     environment:
       MONGO_INITDB_ROOT_USERNAME: api-platform
@@ -181,7 +181,7 @@ services:
       - "27017:27017"
 
   rabbitmq:
-    image: rabbitmq:latest
+    image: rabbitmq:3.12.0
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
