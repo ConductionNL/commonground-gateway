@@ -1162,6 +1162,11 @@ class ObjectEntity
                     $array[$attribute->getName()] = "Attribute {$attribute->getId()->toString()} of type 'object' has not Entity connected through Attribute->object";
                 } elseif ($valueObject->getValue() == null) {
                     $array[$attribute->getName()] = null;
+                    if($valueObject->getStringValue() !== null) {
+                        $array[$attribute->getName()] = $valueObject->getStringValue();
+                    } elseif($valueObject->getArrayValue() !== []) {
+                        $array[$attribute->getName()] = $valueObject->getArrayValue();
+                    }
                 } elseif (!$attribute->getMultiple()) {
                     if (count($valueObject->getObjects()) === 0) {
                         $array[$attribute->getName()][] = null;
