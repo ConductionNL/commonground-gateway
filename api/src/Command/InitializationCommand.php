@@ -235,6 +235,7 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
                     'group.admin',
                     'admin.GET',
                     'admin.POST',
+                    'admin.PATCH',
                     'admin.PUT',
                     'admin.DELETE',
                 ]
