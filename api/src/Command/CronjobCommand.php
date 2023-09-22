@@ -5,6 +5,7 @@
 namespace App\Command;
 
 use App\Entity\Cronjob;
+use App\Entity\User;
 use App\Event\ActionEvent;
 use Cron\CronExpression;
 use Doctrine\ORM\EntityManagerInterface;
@@ -66,6 +67,8 @@ class CronjobCommand extends Command
     /**
      * This function makes action events.
      *
+     * After running this function, even if it returns an exception, currentCronJobUserId should always be removed from cache.
+     *
      * @param Cronjob      $cronjob
      * @param SymfonyStyle $io
      *
@@ -84,6 +87,16 @@ class CronjobCommand extends Command
         $throwProgressBar->start();
         $io->newLine();
         $io->newLine();
+
+        // Keep track of the user used for running this CronJob.
+        // After makeActionEvent() is done, even if it returns an exception, currentCronJobUserId should be removed from cache (outside this function)
+        $this->session->remove('currentCronJobUserId');
+        if ($cronjob->getUserId() !== null && Uuid::isValid($cronjob->getUserId()) === true) {
+            $user = $this->entityManager->getRepository('App:User')->find($cronjob->getUserId());
+            if ($user instanceof User === true) {
+                $this->session->set('currentCronJobUserId', $cronjob->getUserId());
+            }
+        }
 
         $throws = $cronjob->getThrows();
         foreach ($throws as $key => $throw) {
@@ -158,6 +171,8 @@ class CronjobCommand extends Command
                     $io->block("Trace: {$exception->getTraceAsString()}");
                     $errorCount++;
                 }
+                // Make sure we remove currentCronJobUserid from cache.
+                $this->session->remove('currentCronJobUserId');
 
                 $io->progressAdvance();
             }
