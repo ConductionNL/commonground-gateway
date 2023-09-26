@@ -21,11 +21,11 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * This entity holds the information about an Organisation.
+ * This entity holds the information about an Organization.
  *
  * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/organisations/{id}"},
  *      "put"={"path"="/admin/organisations/{id}"},
@@ -35,7 +35,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get"={"path"="/admin/organisations"},
  *      "post"={"path"="/admin/organisations"}
  *  })
- * )
  *
  * @ORM\HasLifecycleCallbacks
  *
@@ -117,7 +116,7 @@ class Organization
      *
      * @MaxDepth(1)
      *
-     * @ORM\OneToMany(targetEntity=User::class, mappedBy="organisation", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=User::class, mappedBy="organization", orphanRemoval=true)
      */
     private $users;
 

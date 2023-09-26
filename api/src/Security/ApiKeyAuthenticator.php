@@ -56,7 +56,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
     }
 
     /**
-     * Get all the child organisations for an organisation.
+     * Get all the child organizations for an organization.
      *
      * @param array               $organizations
      * @param string              $organization
@@ -85,7 +85,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
     }
 
     /**
-     * Get al the parent organizations for an organisation.
+     * Get al the parent organizations for an organization.
      *
      * @param array               $organizations
      * @param string              $organization

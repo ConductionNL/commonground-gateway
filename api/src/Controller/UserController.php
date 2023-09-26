@@ -100,8 +100,8 @@ class UserController extends AbstractController
 
         $user = $this->entityManager->getRepository('App:User')->find($user->getUserIdentifier());
 
-        if ($user->getOrganisation() !== null) {
-            $organizations[] = $user->getOrganisation();
+        if ($user->getOrganization() !== null) {
+            $organizations[] = $user->getOrganization();
         }
         foreach ($user->getApplications() as $application) {
             if ($application->getOrganization() !== null) {
@@ -110,7 +110,7 @@ class UserController extends AbstractController
         }
 
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
-        $this->session->set('activeOrganization', $user->getOrganisation()->getId()->toString());
+        $this->session->set('activeOrganization', $user->getOrganization()->getId()->toString());
 
         $user->setJwtToken($authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session)));
 
@@ -255,7 +255,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * Get all the child organisations for an organisation.
+     * Get all the child organizations for an organization.
      *
      * @param array               $organizations
      * @param string              $organization
@@ -284,7 +284,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * Get al the parent organizations for an organisation.
+     * Get al the parent organizations for an organization.
      *
      * @param array               $organizations
      * @param string              $organization
