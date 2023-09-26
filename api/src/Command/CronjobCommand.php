@@ -201,6 +201,7 @@ class CronjobCommand extends Command
             ['Id'          => $cronjob->getId()->toString()],
             ['Name'        => $cronjob->getName()],
             ['Description' => $cronjob->getDescription()],
+            ['UserId'      => $cronjob->getUserId()],
             ['Crontab'     => $cronjob->getCrontab()],
             ['Throws'      => implode(', ', $cronjob->getThrows())],
 //                    ['Data' => "[{$this->objectEntityService->implodeMultiArray($cronjob->getData())}]"],
