@@ -145,7 +145,7 @@ class UserController extends AbstractController
             'id'           => $user->getId()->toString(),
             'email'        => $user->getEmail(),
             'locale'       => $user->getLocale(),
-            'organization' => $user->getOrganisation()->getId()->toString(),
+            'organization' => $user->getOrganization()->getId()->toString(),
             'roles'        => $roleArray['roles'],
         ];
 
@@ -203,8 +203,8 @@ class UserController extends AbstractController
             return new Response(json_encode($response), 401, ['Content-type' => 'application/json']);
         }
 
-        if ($user->getOrganisation() !== null) {
-            $organizations[] = $user->getOrganisation();
+        if ($user->getOrganization() !== null) {
+            $organizations[] = $user->getOrganization();
         }
         foreach ($user->getApplications() as $application) {
             if ($application->getOrganization() !== null) {
@@ -213,7 +213,7 @@ class UserController extends AbstractController
         }
 
         // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
-        $this->session->set('activeOrganization', $user->getOrganisation()->getId()->toString());
+        $this->session->set('activeOrganization', $user->getOrganization()->getId()->toString());
 
         $token = $authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session));
 

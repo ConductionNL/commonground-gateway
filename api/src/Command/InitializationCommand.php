@@ -258,7 +258,7 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
             $user->setPassword($this->hasher->hashPassword($user, '!ChangeMe!'));
             $user->addSecurityGroup($securityGroupAdmin);
             $user->addApplication($application);
-            $user->setOrganisation($organization);
+            $user->setOrganization($organization);
 
             $this->entityManager->persist($user);
         } else {
