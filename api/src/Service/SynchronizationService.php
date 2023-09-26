@@ -65,16 +65,6 @@ class SynchronizationService
     private EventDispatcherInterface $eventDispatcher;
     private Logger $logger;
 
-    /**
-     * Default user for synchronizations.
-     * Note that owner => reference is replaces with an uuid of that User object.
-     *
-     * @var array|string[]
-     */
-    private array $synchronizationDefault = [
-        'owner' => 'https://docs.commongateway.nl/user/default.user.json',
-    ];
-
     private bool $asyncError = false;
 
     /**
@@ -789,21 +779,6 @@ class SynchronizationService
     }
 
     /**
-     * Sets default owner on objectEntity.
-     *
-     * @return ObjectEntity $object
-     */
-    public function setDefaultOwner(ObjectEntity $object): ObjectEntity
-    {
-        $defaultUser = $this->entityManager->getRepository('App:User')->findOneBy(['reference' => $this->synchronizationDefault['owner']]);
-        if ($defaultUser instanceof User === false) {
-            return $object;
-        }
-
-        return $object->setOwner($defaultUser->getId()->toString());
-    }//end setDefaultOwner()
-
-    /**
      * Adds a new ObjectEntity to a synchronization object.
      *
      * @param Synchronization $synchronization The synchronization object without object
@@ -814,7 +789,6 @@ class SynchronizationService
     {
         if (!$synchronization->getObject()) {
             $object = new ObjectEntity();
-            $object = $this->setDefaultOwner($object);
             $synchronization->getSourceId() && $object->setExternalId($synchronization->getSourceId());
             $object->setEntity($synchronization->getEntity());
             $object = $this->setApplicationAndOrganization($object);
@@ -968,7 +942,6 @@ class SynchronizationService
             isset($this->io) && $this->io->text('creating new objectEntity');
             $this->logger->info('creating new objectEntity');
             $object = new ObjectEntity($synchronization->getEntity());
-            $object = $this->setDefaultOwner($object);
             $object->addSynchronization($synchronization);
             $this->entityManager->persist($object);
             $this->entityManager->persist($synchronization);
@@ -1088,7 +1061,8 @@ class SynchronizationService
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['name' => 'main application']);
         if ($application instanceof Application) {
             $objectEntity->setApplication($application);
-            $objectEntity->setOrganization($application->getOrganization());
+            // todo: setting organization is done by CoreBundle->ObjectEntitySubscriber & ObjectEntityService, maybe move setting application to there as well?
+//            $objectEntity->setOrganization($application->getOrganization());
         } elseif (
             ($applications = $this->entityManager->getRepository('App:Application')->findAll()
                 && !empty($applications)
@@ -1096,7 +1070,8 @@ class SynchronizationService
                 && $application instanceof Application
         ) {
             $objectEntity->setApplication($application);
-            $objectEntity->setOrganization($application->getOrganization());
+            // todo: setting organization is done by CoreBundle->ObjectEntitySubscriber & ObjectEntityService, maybe move setting application to there as well?
+//            $objectEntity->setOrganization($application->getOrganization());
         }
 
         return $objectEntity;
