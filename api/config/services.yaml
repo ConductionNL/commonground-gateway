@@ -90,3 +90,12 @@ services:
         class: App\Logger\SessionDataProcessor
         tags:
             - { name: monolog.processor }
+
+    doctrine.result_cache_provider:
+        class: Symfony\Component\Cache\DoctrineProvider
+        arguments:
+            - '@doctrine.result_cache_pool'
+    doctrine.system_cache_provider:
+        class: Symfony\Component\Cache\DoctrineProvider
+        arguments:
+            - '@doctrine.system_cache_pool'
