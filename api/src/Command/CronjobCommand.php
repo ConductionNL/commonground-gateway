@@ -90,11 +90,11 @@ class CronjobCommand extends Command
 
         // Keep track of the user used for running this CronJob.
         // After makeActionEvent() is done, even if it returns an exception, currentCronJobUserId should be removed from cache (outside this function)
-        $this->session->remove('currentCronJobUserId');
+        $this->session->remove('currentCronjobUserId');
         if ($cronjob->getUserId() !== null && Uuid::isValid($cronjob->getUserId()) === true) {
             $user = $this->entityManager->getRepository('App:User')->find($cronjob->getUserId());
             if ($user instanceof User === true) {
-                $this->session->set('currentCronJobUserId', $cronjob->getUserId());
+                $this->session->set('currentCronjobUserId', $cronjob->getUserId());
             }
         }
 
