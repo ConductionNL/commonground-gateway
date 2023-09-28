@@ -116,7 +116,7 @@ class Organization
      *
      * @MaxDepth(1)
      *
-     * @ORM\OneToMany(targetEntity=User::class, mappedBy="organization", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=User::class, mappedBy="organisation", orphanRemoval=true)
      */
     private $users;
 
