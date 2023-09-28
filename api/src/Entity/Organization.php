@@ -27,13 +27,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *      "get"={"path"="/admin/organisations/{id}"},
- *      "put"={"path"="/admin/organisations/{id}"},
- *      "delete"={"path"="/admin/organisations/{id}"}
+ *      "get"={"path"="/admin/organizations/{id}"},
+ *      "put"={"path"="/admin/organizations/{id}"},
+ *      "delete"={"path"="/admin/organizations/{id}"}
  *  },
  *  collectionOperations={
- *      "get"={"path"="/admin/organisations"},
- *      "post"={"path"="/admin/organisations"}
+ *      "get"={"path"="/admin/organizations"},
+ *      "post"={"path"="/admin/organizations"}
  *  })
  *
  * @ORM\HasLifecycleCallbacks
