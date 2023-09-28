@@ -137,7 +137,7 @@ class User implements PasswordAuthenticatedUserInterface
      *
      * @ORM\JoinColumn(nullable=false)
      */
-    private ?Organization $organization = null;
+    private ?Organization $organisation = null;
 
     /**
      * @Groups({"read", "write"})
@@ -394,12 +394,12 @@ class User implements PasswordAuthenticatedUserInterface
 
     public function getOrganization(): ?Organization
     {
-        return $this->organization;
+        return $this->organisation;
     }
 
     public function setOrganization(?Organization $organization): self
     {
-        $this->organization = $organization;
+        $this->organisation = $organization;
 
         return $this;
     }
