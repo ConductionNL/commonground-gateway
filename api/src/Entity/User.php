@@ -25,8 +25,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * This entity holds the information about an User.
  *
  * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/users/{id}"},
  *      "put"={"path"="/admin/users/{id}"},
@@ -36,7 +36,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get"={"path"="/admin/users"},
  *      "post"={"path"="/admin/users"}
  *  })
- * )
  *
  * @ORM\HasLifecycleCallbacks
  *
