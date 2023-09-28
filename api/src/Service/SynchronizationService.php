@@ -791,7 +791,7 @@ class SynchronizationService
             $object = new ObjectEntity();
             $synchronization->getSourceId() && $object->setExternalId($synchronization->getSourceId());
             $object->setEntity($synchronization->getEntity());
-            $object = $this->setApplicationAndOrganization($object);
+            $object = $this->setApplication($object);
             $object->addSynchronization($synchronization);
             $this->entityManager->persist($object);
             if (isset($this->io)) {
@@ -1050,19 +1050,17 @@ class SynchronizationService
 
     /**
      * Sets an application and organization for new ObjectEntities.
+     * todo: setting organization is done by the new ObjectEntitySubscriber. We should set application through this way as well...
      *
      * @param ObjectEntity $objectEntity The ObjectEntity to update
      *
      * @return ObjectEntity The updated ObjectEntity
      */
-    public function setApplicationAndOrganization(ObjectEntity $objectEntity): ObjectEntity
+    public function setApplication(ObjectEntity $objectEntity): ObjectEntity
     {
-        // todo move this to ObjectEntityService to prevent duplicate code
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['name' => 'main application']);
         if ($application instanceof Application) {
             $objectEntity->setApplication($application);
-            // todo: setting organization is done by CoreBundle->ObjectEntitySubscriber & ObjectEntityService, maybe move setting application to there as well?
-//            $objectEntity->setOrganization($application->getOrganization());
         } elseif (
             ($applications = $this->entityManager->getRepository('App:Application')->findAll()
                 && !empty($applications)
@@ -1070,8 +1068,6 @@ class SynchronizationService
                 && $application instanceof Application
         ) {
             $objectEntity->setApplication($application);
-            // todo: setting organization is done by CoreBundle->ObjectEntitySubscriber & ObjectEntityService, maybe move setting application to there as well?
-//            $objectEntity->setOrganization($application->getOrganization());
         }
 
         return $objectEntity;
