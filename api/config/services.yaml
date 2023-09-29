@@ -99,3 +99,13 @@ services:
         class: Symfony\Component\Cache\DoctrineProvider
         arguments:
             - '@doctrine.system_cache_pool'
+    
+    doctrine.system_cache_pool:
+        parent: 'cache.app'
+        tags:
+            - { name: 'cache.pool', namespace: 'app' }
+    
+    doctrine.result_cache_pool:
+        parent: 'cache.app'
+        tags:
+            - { name: 'cache.pool', namespace: 'app' }
