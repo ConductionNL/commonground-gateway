@@ -182,7 +182,7 @@ class Entity
     private $extend = false;
 
     /**
-     * Whether objects created from this entity should be available to child organisations.
+     * Whether objects created from this entity should be available to child organizations.
      *
      * @Groups({"read","write"})
      *

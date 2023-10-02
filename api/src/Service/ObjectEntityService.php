@@ -45,7 +45,7 @@ use Twig\Environment;
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *
  * @category Service
- * @deprecated TODO: This service still contains some logic used by CoreBundle->ObjectSyncSubscriber
+ * @deprecated TODO: This service still contains some logic used by CoreBundle->ObjectEntitySubscriber (old CoreBundle->ObjectSyncSubscriber)
  * todo: this service is also used by the UserService for showing data when calling the /me endpoint.
  * todo: and this service still contains some old logic for Files and Promises we might still need at some point?
  */

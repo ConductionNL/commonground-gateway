@@ -8,33 +8,33 @@ This entity holds the information about an User.
 
 ## Methods
 
-| Name | Description |
-|------|-------------|
-|[__construct](#user__construct)||
-|[addApplication](#useraddapplication)||
-|[addUserGroup](#useraddusergroup)||
-|[getApplications](#usergetapplications)||
-|[getDateCreated](#usergetdatecreated)||
-|[getDateModified](#usergetdatemodified)||
-|[getEmail](#usergetemail)||
-|[getId](#usergetid)||
-|[getLocale](#usergetlocale)||
-|[getName](#usergetname)||
-|[getOrganisation](#usergetorganization)||
-|[getPassword](#usergetpassword)||
-|[getPerson](#usergetperson)||
-|[getRoles](#usergetroles)||
-|[getUserGroups](#usergetusergroups)||
-|[removeApplication](#userremoveapplication)||
-|[removeUserGroup](#userremoveusergroup)||
-|[setDateCreated](#usersetdatecreated)||
-|[setDateModified](#usersetdatemodified)||
-|[setEmail](#usersetemail)||
-|[setLocale](#usersetlocale)||
-|[setName](#usersetname)||
-|[setOrganisation](#usersetorganization)||
-|[setPassword](#usersetpassword)||
-|[setPerson](#usersetperson)||
+| Name                                        | Description |
+|---------------------------------------------|-------------|
+| [__construct](#user__construct)             ||
+| [addApplication](#useraddapplication)       ||
+| [addUserGroup](#useraddusergroup)           ||
+| [getApplications](#usergetapplications)     ||
+| [getDateCreated](#usergetdatecreated)       ||
+| [getDateModified](#usergetdatemodified)     ||
+| [getEmail](#usergetemail)                   ||
+| [getId](#usergetid)                         ||
+| [getLocale](#usergetlocale)                 ||
+| [getName](#usergetname)                     ||
+| [getOrganization](#usergetorganization)     ||
+| [getPassword](#usergetpassword)             ||
+| [getPerson](#usergetperson)                 ||
+| [getRoles](#usergetroles)                   ||
+| [getUserGroups](#usergetusergroups)         ||
+| [removeApplication](#userremoveapplication) ||
+| [removeUserGroup](#userremoveusergroup)     ||
+| [setDateCreated](#usersetdatecreated)       ||
+| [setDateModified](#usersetdatemodified)     ||
+| [setEmail](#usersetemail)                   ||
+| [setLocale](#usersetlocale)                 ||
+| [setName](#usersetname)                     ||
+| [setOrganisation](#usersetorganization)     ||
+| [setPassword](#usersetpassword)             ||
+| [setPerson](#usersetperson)                 ||
 
 
 
@@ -279,12 +279,12 @@ This entity holds the information about an User.
 <hr />
 
 
-### User::getOrganisation  
+### User::getOrganization  
 
 **Description**
 
 ```php
- getOrganisation (void)
+ getOrganization (void)
 ```
 
  
@@ -567,12 +567,12 @@ This entity holds the information about an User.
 <hr />
 
 
-### User::setOrganisation  
+### User::setOrganization  
 
 **Description**
 
 ```php
- setOrganisation (void)
+ setOrganization (void)
 ```
 
  

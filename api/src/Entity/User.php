@@ -25,8 +25,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  * This entity holds the information about an User.
  *
  * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
  *      "get"={"path"="/admin/users/{id}"},
  *      "put"={"path"="/admin/users/{id}"},
@@ -36,7 +36,6 @@ use Symfony\Component\Validator\Constraints as Assert;
  *      "get"={"path"="/admin/users"},
  *      "post"={"path"="/admin/users"}
  *  })
- * )
  *
  * @ORM\HasLifecycleCallbacks
  *
@@ -137,7 +136,7 @@ class User implements PasswordAuthenticatedUserInterface
      *
      * @ORM\JoinColumn(nullable=false)
      */
-    private ?Organization $organisation = null;
+    private ?Organization $organization = null;
 
     /**
      * @Groups({"read", "write"})
@@ -239,7 +238,7 @@ class User implements PasswordAuthenticatedUserInterface
         $this->setPassword('!ChangeMe!');
         array_key_exists('locale', $schema) ? $this->setLocale($schema['locale']) : '';
         array_key_exists('person', $schema) ? $this->setPerson($schema['person']) : '';
-        array_key_exists('organization', $schema) ? $this->setOrganisation($schema['organization']) : '';
+        array_key_exists('organization', $schema) ? $this->setOrganization($schema['organization']) : '';
         array_key_exists('applications', $schema) ? $this->setApplications($schema['applications']) : '';
 
         // Todo: temporary? make sure we never allow admin scopes to be added or removed with fromSchema
@@ -297,7 +296,7 @@ class User implements PasswordAuthenticatedUserInterface
             'locale'                         => $this->getLocale(),
             'person'                         => $this->getPerson(),
             'scopes'                         => $this->getScopes(),
-            'organization'                   => $this->getOrganisation() ? $this->getOrganisation()->toSchema() : null,
+            'organization'                   => $this->getOrganization() ? $this->getOrganization()->toSchema() : null,
             'applications'                   => $applications,
             'securityGroups'                 => $securityGroups,
         ];
@@ -392,14 +391,14 @@ class User implements PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getOrganisation(): ?Organization
+    public function getOrganization(): ?Organization
     {
-        return $this->organisation;
+        return $this->organization;
     }
 
-    public function setOrganisation(?Organization $organization): self
+    public function setOrganization(?Organization $organization): self
     {
-        $this->organisation = $organization;
+        $this->organization = $organization;
 
         return $this;
     }

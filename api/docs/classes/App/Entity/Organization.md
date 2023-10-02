@@ -1,6 +1,6 @@
 # App\Entity\Organization  
 
-This entity holds the information about an Organisation.
+This entity holds the information about an Organization.
 
 
 

@@ -21,21 +21,20 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * This entity holds the information about an Organisation.
+ * This entity holds the information about an Organization.
  *
  * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
  *  itemOperations={
- *      "get"={"path"="/admin/organisations/{id}"},
- *      "put"={"path"="/admin/organisations/{id}"},
- *      "delete"={"path"="/admin/organisations/{id}"}
+ *      "get"={"path"="/admin/organizations/{id}"},
+ *      "put"={"path"="/admin/organizations/{id}"},
+ *      "delete"={"path"="/admin/organizations/{id}"}
  *  },
  *  collectionOperations={
- *      "get"={"path"="/admin/organisations"},
- *      "post"={"path"="/admin/organisations"}
+ *      "get"={"path"="/admin/organizations"},
+ *      "post"={"path"="/admin/organizations"}
  *  })
- * )
  *
  * @ORM\HasLifecycleCallbacks
  *
@@ -117,7 +116,7 @@ class Organization
      *
      * @MaxDepth(1)
      *
-     * @ORM\OneToMany(targetEntity=User::class, mappedBy="organisation", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=User::class, mappedBy="organization", orphanRemoval=true)
      */
     private $users;
 
@@ -321,7 +320,7 @@ class Organization
     {
         if (!$this->users->contains($user)) {
             $this->users[] = $user;
-            $user->setOrganisation($this);
+            $user->setOrganization($this);
         }
 
         return $this;
@@ -331,8 +330,8 @@ class Organization
     {
         if ($this->users->removeElement($user)) {
             // set the owning side to null (unless already changed)
-            if ($user->getOrganisation() === $this) {
-                $user->setOrganisation(null);
+            if ($user->getOrganization() === $this) {
+                $user->setOrganization(null);
             }
         }
 
