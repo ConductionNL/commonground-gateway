@@ -231,7 +231,40 @@ class UserController extends AbstractController
             return $this->redirect($request->query->get('redirectUrl'));
         }
 
-        return new Response($serializer->serialize($user, 'json'), $status, ['Content-type' => 'application/json']);
+        $serializedUser = $serializer->serialize($user, 'json');
+        $userArray = json_decode($serializedUser, true);
+        $userArray = $this->cleanupLoginResponse($userArray);
+
+        return new Response(json_encode($userArray), $status, ['Content-type' => 'application/json']);
+    }
+
+    /**
+     * Removes some sensitive data from the login response.
+     *
+     * @param array $userArray The logged in User Object as array.
+     *
+     * @return array The updated user array.
+     */
+    private function cleanupLoginResponse(array $userArray): array
+    {
+        if (isset($userArray['organization']['users']) === true) {
+            unset($userArray['organization']['users']);
+        }
+        if (isset($userArray['organization']['applications']) === true) {
+            foreach ($userArray['organization']['applications'] as &$application) {
+                unset($application['organization']);
+            }
+        }
+        foreach ($userArray['applications'] as &$application) {
+            unset($application['organization']);
+        }
+        foreach ($userArray['securityGroups'] as &$securityGroup) {
+            unset($securityGroup['users']);
+            unset($securityGroup['parent']);
+            unset($securityGroup['children']);
+        }
+
+        return $userArray;
     }
 
     private function getActiveOrganization(array $user, array $organizations): ?string
