@@ -58,6 +58,7 @@ class ZZController extends AbstractController
     }
 
     /**
+     * @TODO This function needs to be more dynamic: /{item}/api/{path}.
      * This function dynamically handles the custom endpoints.
      *
      * @Route("/klanten/api/{path}", name="dynamic_route_second", requirements={"path" = ".+"})
