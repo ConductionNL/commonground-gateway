@@ -9,6 +9,7 @@ use App\Service\LogService;
 use App\Service\ProcessingLogService;
 use CommonGateway\CoreBundle\Service\EndpointService;
 use CommonGateway\CoreBundle\Service\RequestService;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,13 +32,13 @@ class ZZController extends AbstractController
      * @Route("/admin/objects")
      * @Route("/admin/objects/{id}", requirements={"path" = ".+"})
      *
-     * @param string|null         $path
-     * @param Request             $request
+     * @param string|null $id
+     * @param Request $request
      * @param SerializerInterface $serializer
-     * @param HandlerService      $handlerService
-     * @param RequestService      $requestService
+     * @param RequestService $requestService
      *
      * @return Response
+     * @throws Exception
      */
     public function objectAction(
         ?string $id,
@@ -57,22 +58,35 @@ class ZZController extends AbstractController
     }
 
     /**
-     * This function dynamicly handles the api endpoints.
+     * @TODO This function needs to be more dynamic: /{item}/api/{path}.
+     * This function dynamically handles the custom endpoints.
+     *
+     * @Route("/klanten/api/{path}", name="dynamic_route_second", requirements={"path" = ".+"})
+     *
+     * @param string|null $path
+     * @param Request $request
+     * @param EndpointService $endpointService
+     * @return Response
+     * @throws Exception
+     */
+    public function dynamicCustomAction(
+        ?string $path,
+        Request $request,
+        EndpointService $endpointService
+    ): Response {
+        return $endpointService->handleRequest($request);
+    }
+
+    /**
+     * This function dynamically handles the api endpoints.
      *
      * @Route("/api/{path}", name="dynamic_route", requirements={"path" = ".+"})
      *
-     * @param string|null          $path
-     * @param Request              $request
-     * @param DocumentService      $documentService
-     * @param HandlerService       $handlerService
-     * @param SerializerInterface  $serializer
-     * @param LogService           $logService
-     * @param ProcessingLogService $processingLogService
-     * @param RequestService       $requestService
-     *
-     * @throws GatewayException
-     *
+     * @param string|null $path
+     * @param Request $request
+     * @param EndpointService $endpointService
      * @return Response
+     * @throws Exception
      */
     public function dynamicAction(
         ?string $path,
@@ -101,7 +115,7 @@ class ZZController extends AbstractController
 
         try {
             $parameters['body'] = $request->toArray();
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
         }
 
         $parameters['crude_body'] = $request->getContent();
