@@ -66,7 +66,7 @@ class ApplicationService
 //                    break;
 //                }
 //            }
-            if(count($applications > 0)) {
+            if(count($applications) > 0) {
                 $application = $applications[0];
             }
         }
