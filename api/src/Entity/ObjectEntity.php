@@ -1176,7 +1176,7 @@ class ObjectEntity
                         // Only add an object if it hasn't been added yet and max depth hasn't been reached
                         if (!in_array($object, $configuration['renderedObjects'])
                             && !$attribute->getObject()->isExcluded()
-                            && $configuration['level'] < $configuration['maxDepth']
+                            && ($configuration['level'] < $configuration['maxDepth'] || $attribute->getFormat() === 'json')
                         ) {
                             $config = $configuration;
                             $config['renderedObjects'][] = $object;
@@ -1224,7 +1224,7 @@ class ObjectEntity
                         // Only add an object if it hasn't been added yet and max depth hans't been reached
                         if (!in_array($object, $configuration['renderedObjects'])
                             && !$attribute->getObject()->isExcluded()
-                            && $configuration['level'] < $configuration['maxDepth']
+                            && ($configuration['level'] < $configuration['maxDepth'] || $attribute->getFormat() === 'json')
                         ) {
                             $config = $configuration;
                             $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
