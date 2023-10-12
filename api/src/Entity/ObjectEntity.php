@@ -1176,7 +1176,7 @@ class ObjectEntity
                         // Only add an object if it hasn't been added yet and max depth hasn't been reached
                         if (!in_array($object, $configuration['renderedObjects'])
                             && !$attribute->getObject()->isExcluded()
-                            && ($configuration['level'] < $configuration['maxDepth'] || $attribute->getFormat() === 'json')
+                            && $configuration['level'] < $configuration['maxDepth']
                         ) {
                             $config = $configuration;
                             $config['renderedObjects'][] = $object;
@@ -1213,7 +1213,21 @@ class ObjectEntity
                         // If we don't set the full object then we want to set self
                         else {
                             // $array[$attribute->getName()] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
-                            $array[$attribute->getName()] = $object->getSelf();
+                            switch ($attribute->getFormat()) {
+                                case 'uuid':
+                                    $array[$attribute->getName()] = $object->getId()->toString();
+                                    break;
+                                case 'url':
+                                    $array[$attribute->getName()] = $object->getUri();
+                                    break;
+                                case 'json':
+                                    $array[$attribute->getName()] = $objectToArray;
+                                    break;
+                                case 'iri':
+                                default:
+                                    $array[$attribute->getName()] = $object->getSelf();
+                                    break;
+                            }
                         }
                     }
                 } elseif (count($valueObject->getObjects()) === 0) {
@@ -1261,8 +1275,22 @@ class ObjectEntity
                         }
                         // If we don't set the full object then we want to set self
                         else {
-                            // $array[$attribute->getName()][] = $object->getSelf() ?? ('/api' . ($object->getEntity()->getRoute() ?? $object->getEntity()->getName()) . '/' . $object->getId());
-                            $array[$attribute->getName()][] = $object->getSelf();
+                            switch ($attribute->getFormat()) {
+                                case 'uuid':
+                                    $array[$attribute->getName()][] = $object->getId()->toString();
+                                    break;
+                                case 'url':
+                                case 'uri':
+                                    $array[$attribute->getName()][] = $object->getUri();
+                                    break;
+                                case 'json':
+                                    $array[$attribute->getName()][] = $objectToArray;
+                                    break;
+                                case 'iri':
+                                default:
+                                    $array[$attribute->getName()][] = $object->getSelf();
+                                    break;
+                            }
                         }
                     }
                 }
