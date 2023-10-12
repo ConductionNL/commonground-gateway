@@ -1221,7 +1221,12 @@ class ObjectEntity
                                     $array[$attribute->getName()] = $object->getUri();
                                     break;
                                 case 'json':
-                                    $array[$attribute->getName()] = $objectToArray;
+                                    $config = $configuration;
+                                    $config['renderedObjects'][] = $object;
+                                    if ($attribute->getObject()->getMaxDepth() + $config['level'] < $config['maxDepth']) {
+                                        $config['maxDepth'] = $attribute->getObject()->getMaxDepth() + $config['level'];
+                                    }
+                                    $array[$attribute->getName()] = $object->toArray($config);
                                     break;
                                 case 'iri':
                                 default:
@@ -1284,7 +1289,12 @@ class ObjectEntity
                                     $array[$attribute->getName()][] = $object->getUri();
                                     break;
                                 case 'json':
-                                    $array[$attribute->getName()][] = $objectToArray;
+                                    $config = $configuration;
+                                    $config['renderedObjects'][] = $object;
+                                    if ($attribute->getObject()->getMaxDepth() + $config['level'] < $config['maxDepth']) {
+                                        $config['maxDepth'] = $attribute->getObject()->getMaxDepth() + $config['level'];
+                                    }
+                                    $array[$attribute->getName()][] = $object->toArray($config);
                                     break;
                                 case 'iri':
                                 default:
