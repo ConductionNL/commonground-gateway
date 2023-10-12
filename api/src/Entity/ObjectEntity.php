@@ -1238,7 +1238,7 @@ class ObjectEntity
                         // Only add an object if it hasn't been added yet and max depth hans't been reached
                         if (!in_array($object, $configuration['renderedObjects'])
                             && !$attribute->getObject()->isExcluded()
-                            && ($configuration['level'] < $configuration['maxDepth'] || $attribute->getFormat() === 'json')
+                            && $configuration['level'] < $configuration['maxDepth']
                         ) {
                             $config = $configuration;
                             $config['renderedObjects'] = array_merge($configuration['renderedObjects'], $currentObjects);
