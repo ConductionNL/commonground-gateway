@@ -4,9 +4,6 @@
 
 namespace App\Controller;
 
-use App\Service\ObjectEntityService;
-use App\Service\UserService;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
@@ -40,9 +37,8 @@ class LoginController extends AbstractController
      * @Route("/me")
      * @Route("api/users/me", methods={"get"})
      */
-    public function MeAction(Request $request, CommonGroundService $commonGroundService, ObjectEntityService $objectEntityService)
+    public function MeAction(Request $request)
     {
-        $userService = new UserService($commonGroundService, $objectEntityService);
         if ($this->getUser()) {
             $result = [
                 'id'         => $this->getUser()->getUserIdentifier(),
@@ -52,9 +48,6 @@ class LoginController extends AbstractController
                 'last_name'  => $this->getUser()->getLastName(),
                 'name'       => $this->getUser()->getName(),
                 'email'      => $this->getUser()->getEmail(),
-                // TODO: if we have no person connected to this user create one? with $this->createPersonForUser()
-                'person'        => $userService->getPersonForUser($this->getUser()),
-                'organization'  => $userService->getOrganizationForUser($this->getUser()),
             ];
             $result = json_encode($result);
         } else {
@@ -74,7 +67,7 @@ class LoginController extends AbstractController
      *
      * @return array
      */
-    private function createPersonForUser(CommonGroundService $commonGroundService): array
+    private function createPersonForUser(): array
     {
         $person = [
             'givenName'     => $this->getUser()->getFirstName(),

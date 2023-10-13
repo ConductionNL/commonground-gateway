@@ -33,100 +33,17 @@ class AuthenticationService
     private EntityManagerInterface $entityManager;
     private Client $client;
     private Security $security;
-    private CommonGroundService $commonGroundService;
     private Environment $twig;
     private ParameterBagInterface $parameterBag;
 
-    public function __construct(SessionInterface $session, EntityManagerInterface $entityManager, Security $security, CommonGroundService $commonGroundService, Environment $twig, ParameterBagInterface $parameterBag)
+    public function __construct(SessionInterface $session, EntityManagerInterface $entityManager, Security $security, Environment $twig, ParameterBagInterface $parameterBag)
     {
         $this->session = $session;
         $this->entityManager = $entityManager;
         $this->client = new Client();
         $this->security = $security;
-        $this->commonGroundService = $commonGroundService;
         $this->twig = $twig;
         $this->parameterBag = $parameterBag;
-    }
-
-    public function generateJwt()
-    {
-        $user = $this->retrieveCurrentUser();
-
-        $array = [
-            'username' => $user->getUsername(),
-            'password' => $user->getPassword(),
-        ];
-
-        $user = $this->commonGroundService->createResource($array, ['component' => 'uc', 'type' => 'login']);
-
-        return $user['jwtToken'];
-    }
-
-    /**
-     * Validates a JWT token with the public key stored in the component.
-     *
-     * @param string $jws       The signed JWT token to validate
-     * @param string $publicKey
-     *
-     * @throws Exception Thrown when the JWT token could not be verified
-     *
-     * @return bool Whether the jwt is valid
-     */
-    public function validateJWTAndGetPayload(string $jws, string $publicKey): bool
-    {
-        try {
-            $serializer = new CompactSerializer();
-            $jwt = $serializer->unserialize($jws);
-            $algorithmManager = new AlgorithmManager([new RS512()]);
-            $pem = $this->writeFile($publicKey, 'pem');
-            $public = JWKFactory::createFromKeyFile($pem);
-            $this->removeFiles([$pem]);
-
-            $jwsVerifier = new JWSVerifier($algorithmManager);
-
-            if ($jwsVerifier->verifyWithKey($jwt, $public, 0)) {
-                return true;
-            }
-
-            return false;
-        } catch (\Throwable $e) {
-            return false;
-        }
-    }
-
-    public function checkJWTExpiration($token): bool
-    {
-        $data = $this->retrieveJWTContents($token);
-
-        if (!is_array($token) || !array_key_exists('exp', $token) || strtotime('now') >= $data['exp']) {
-            return false;
-        }
-
-        return true;
-    }
-
-    public function retrieveJWTUser($token): bool
-    {
-        $data = $this->retrieveJWTContents($token);
-
-        try {
-            $user = $this->commonGroundService->getResource(['component' => 'uc', 'type' => 'users', 'id' => $data['userId']]);
-        } catch (\Throwable $e) {
-            return false;
-        }
-
-        return true;
-    }
-
-    public function retrieveJWTContents($token): array
-    {
-        try {
-            $json = base64_decode(explode('.', $token))[1];
-
-            return json_decode($json, true);
-        } catch (\Exception $exception) {
-            return [];
-        }
     }
 
     /**
@@ -157,17 +74,6 @@ class AuthenticationService
         }
     }
 
-    public function retrieveCurrentUser()
-    {
-        $user = $this->security->getUser();
-
-        if ($user) {
-            return $user;
-        }
-
-        throw new AccessDeniedException('Unable to find logged in user');
-    }
-
     public function authenticate(string $method, string $identifier, string $code): array
     {
         if (!$method || !$identifier) {
@@ -188,12 +94,12 @@ class AuthenticationService
             case 'oidc':
             case 'adfs':
                 return $this->retrieveAdfsData($code, $authentication, $redirectUrl);
-                break;
             case 'digid':
                 break;
             default:
                 throw new BadRequestException('Authentication method not supported');
         }
+        return [];
     }
 
     public function refreshAccessToken(string $refreshToken, string $authenticator): array
@@ -253,12 +159,13 @@ class AuthenticationService
                 return $this->handleOidcRedirectUrl($redirectUrl, $authentication);
             case 'adfs':
                 return $this->handleAdfsRedirectUrl($redirectUrl, $authentication);
-                break;
             case 'digid':
                 break;
             default:
                 throw new BadRequestException('Authentication method not supported');
         }
+
+        return null;
     }
 
     public function handleOidcRedirectUrl(string $redirectUrl, Authentication $authentication): string
@@ -287,37 +194,5 @@ class AuthenticationService
         }
 
         return $authentications[0];
-    }
-
-    public function sendTokenMail(array $user, string $subject, string $frontend): bool
-    {
-        $response = $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'users', 'id' => "{$user['id']}/token"], ['type' => 'SET_PASSWORD']);
-        $person = $this->commonGroundService->isResource($user['person']);
-
-        $service = $this->commonGroundService->getResourceList(['component' => 'bs', 'type' => 'services'])['hydra:member'][0];
-        $parameters = [
-            'fullname'              => $person['name'] ?? $user['username'],
-            'base64_encoded_email'  => base64_encode($user['username']),
-            'base64_encoded_token'  => base64_encode($response['token']),
-            'app_base_url'          => rtrim($frontend, '/'),
-            'subject'               => $subject,
-        ];
-
-        $content = $this->twig->render('password-forgot-e-mail.html.twig', $parameters);
-
-        $message = $this->commonGroundService->createResource(
-            [
-                'reciever' => $user['username'],
-                'sender'   => 'taalhuizen@biscutrecht.nl',
-                'content'  => $content,
-                'type'     => 'email',
-                'status'   => 'queued',
-                'service'  => '/services/'.$service['id'],
-                'subject'  => $subject,
-            ],
-            ['component' => 'bs', 'type' => 'messages']
-        );
-
-        return true;
     }
 }

@@ -1,4 +1,4 @@
-FROM php:7.4-fpm-alpine AS api_platform_php
+FROM php:8.1-fpm-alpine AS api_platform_php
 
 # Create a user
 RUN addgroup -S -g 101 commonground-gateway && adduser -S -D -u 101 commonground-gateway

@@ -3,10 +3,7 @@
 namespace App\Security;
 
 use App\Entity\User;
-use App\Service\FunctionService;
-use Conduction\CommonGroundBundle\Service\AuthenticationService;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
-use Conduction\SamlBundle\Security\User\AuthenticationUser;
+use App\Security\User\AuthenticationUser;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,26 +20,14 @@ use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 
 class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator
 {
-    private CommonGroundService $commonGroundService;
-    private ParameterBagInterface $parameterBag;
-    private AuthenticationService $authenticationService;
     private SessionInterface $session;
-    private FunctionService $functionService;
     private EntityManagerInterface $entityManager;
 
     public function __construct(
-        CommonGroundService $commonGroundService,
-        AuthenticationService $authenticationService,
-        ParameterBagInterface $parameterBag,
         SessionInterface $session,
-        FunctionService $functionService,
         EntityManagerInterface $entityManager
     ) {
-        $this->commonGroundService = $commonGroundService;
-        $this->parameterBag = $parameterBag;
-        $this->authenticationService = $authenticationService;
         $this->session = $session;
-        $this->functionService = $functionService;
         $this->entityManager = $entityManager;
     }
 
@@ -53,61 +38,6 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
     {
         return $request->headers->has('Authorization') &&
             strpos($request->headers->get('Authorization'), 'Bearer') === false;
-    }
-
-    /**
-     * Get all the child organizations for an organization.
-     *
-     * @param array               $organizations
-     * @param string              $organization
-     * @param CommonGroundService $commonGroundService
-     * @param FunctionService     $functionService
-     *
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     *
-     * @return array
-     */
-    private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
-    {
-        if ($organization = $functionService->getOrganizationFromCache($organization)) {
-            if (!empty($organization['subOrganizations']) && count($organization['subOrganizations']) > 0) {
-                foreach ($organization['subOrganizations'] as $subOrganization) {
-                    if (!in_array($subOrganization['@id'], $organizations)) {
-                        $organizations[] = $subOrganization['@id'];
-                        $this->getSubOrganizations($organizations, $subOrganization['@id'], $commonGroundService, $functionService);
-                    }
-                }
-            }
-        }
-
-        return $organizations;
-    }
-
-    /**
-     * Get al the parent organizations for an organization.
-     *
-     * @param array               $organizations
-     * @param string              $organization
-     * @param CommonGroundService $commonGroundService
-     * @param FunctionService     $functionService
-     *
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     *
-     * @return array
-     */
-    private function getParentOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
-    {
-        if ($organization = $functionService->getOrganizationFromCache($organization)) {
-            if (array_key_exists('parentOrganization', $organization) && $organization['parentOrganization'] != null
-                && !in_array($organization['parentOrganization']['@id'], $organizations)) {
-                $organizations[] = $organization['parentOrganization']['@id'];
-                $organizations = $this->getParentOrganizations($organizations, $organization['parentOrganization']['@id'], $commonGroundService, $functionService);
-            }
-        }
-
-        return $organizations;
     }
 
     private function prefixRoles(array $roles): array
