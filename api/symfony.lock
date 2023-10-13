@@ -215,9 +215,6 @@
     "khanamiryan/qrcode-detector-decoder": {
         "version": "1.0.6"
     },
-    "knplabs/knp-markdown-bundle": {
-        "version": "1.10.0"
-    },
     "laminas/laminas-code": {
         "version": "4.4.2"
     },
@@ -251,9 +248,6 @@
     },
     "masterminds/html5": {
         "version": "2.7.5"
-    },
-    "michelf/php-markdown": {
-        "version": "1.9.1"
     },
     "mongodb/mongodb": {
         "version": "1.15.0"
@@ -663,6 +657,9 @@
     },
     "symfony/polyfill-php81": {
         "version": "v1.23.0"
+    },
+    "symfony/process": {
+        "version": "v5.3.14"
     },
     "symfony/property-access": {
         "version": "v5.3.4"
