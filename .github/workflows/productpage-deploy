@@ -2,8 +2,6 @@ name: My Product Page Workflow
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * *'
 
 jobs:
   build:
