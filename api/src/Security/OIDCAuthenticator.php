@@ -82,7 +82,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
         $accessToken = $this->authenticationService->authenticate($method, $identifier, $code);
         $result = json_decode(base64_decode(explode('.', $accessToken['access_token'])[1]), true);
 
-        $this->logger->notice('Received result from OIDC connector', ['authResult' => $result]);
+        $this->logger->notice('Received result from OIDC connector', ['authResult' => $accessToken]);
 
         // Make sure groups is always an array, even if there are no groups.
         if (is_array($result['groups']) === false && $result['groups'] !== null) {
