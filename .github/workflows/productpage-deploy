@@ -1,1 +1,13 @@
+name: My Product Page Workflow
 
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Product Github Page
+        uses: OpenCatalogi/productpage-action@0.0.1-main.6.3c445a5
