@@ -2,7 +2,10 @@
 
 namespace App\Security;
 
+use App\Entity\SecurityGroup;
+use App\Entity\User;
 use App\Security\User\AuthenticationUser;
+use App\Service\ApplicationService;
 use App\Service\AuthenticationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -32,6 +35,16 @@ class OIDCAuthenticator extends AbstractAuthenticator
      */
     private LoggerInterface $logger;
 
+    /**
+     * @var \CommonGateway\CoreBundle\Service\AuthenticationService The new authenticationService
+     */
+    private \CommonGateway\CoreBundle\Service\AuthenticationService $coreAuthenticationService;
+
+    /**
+     * @var ApplicationService The application service
+     */
+    private ApplicationService $applicationService;
+
 
     /**
      * Constructor
@@ -41,13 +54,17 @@ class OIDCAuthenticator extends AbstractAuthenticator
      * @param EntityManagerInterface $entityManager         The entity manager
      * @param ParameterBagInterface  $parameterBag          The Parameter Bag
      * @param LoggerInterface        $callLogger            The call logger
+     * @param \CommonGateway\CoreBundle\Service\AuthenticationService $coreAuthenticationService The new auth service
+     * @param ApplicationService $applicationService $the application service
      */
     public function __construct(
         AuthenticationService $authenticationService,
         SessionInterface $session,
         EntityManagerInterface $entityManager,
         ParameterBagInterface $parameterBag,
-        LoggerInterface $callLogger
+        LoggerInterface $callLogger,
+        \CommonGateway\CoreBundle\Service\AuthenticationService $coreAuthenticationService,
+        ApplicationService $applicationService
     )
     {
         $this->authenticationService = $authenticationService;
@@ -55,6 +72,8 @@ class OIDCAuthenticator extends AbstractAuthenticator
         $this->entityManager = $entityManager;
         $this->parameterBag = $parameterBag;
         $this->logger = $callLogger;
+        $this->coreAuthenticationService = $coreAuthenticationService;
+        $this->applicationService = $applicationService;
     }
 
     public function supports(Request $request): ?bool
@@ -85,9 +104,9 @@ class OIDCAuthenticator extends AbstractAuthenticator
         $this->logger->notice('Received result from OIDC connector', ['authResult' => $accessToken]);
 
         // Make sure groups is always an array, even if there are no groups.
-        if (is_array($result['groups']) === false && $result['groups'] !== null) {
+        if (isset($result['groups']) !== false && (is_array($result['groups']) === false && $result['groups'] !== null)) {
             $result['groups'] = [$result['groups']];
-        } else if (is_array($result['groups']) === false) {
+        } else if (isset($result['groups']) === false || is_array($result['groups']) === false) {
             $result['groups'] = [];
         }
 
@@ -100,10 +119,41 @@ class OIDCAuthenticator extends AbstractAuthenticator
         $this->session->set('activeOrganization', $defaultOrganization);
         if (isset($accessToken['refresh_token'])) {
             $this->session->set('refresh_token', $accessToken['refresh_token']);
+            $userIdentifier = $result['email'];
+        } else {
+            $doctrineUser = $this->entityManager->getRepository('App:User')->findOneBy(['email' => $result['email']]);
+            if($doctrineUser instanceof User === false) {
+                $doctrineUser = new User();
+            }
+            $doctrineUser->setName($result['name']);
+            $doctrineUser->setEmail($result['email']);
+            $doctrineUser->setPassword('');
+            $doctrineUser->addApplication($this->applicationService->getApplication());
+            $doctrineUser->setOrganization($doctrineUser->getApplications()->first()->getOrganization());
+
+            foreach ($result['groups'] as $group) {
+                $securityGroup = $this->entityManager->getRepository('App:SecurityGroup')->findOneBy(['name' => $group]);
+                if ($securityGroup instanceof SecurityGroup === true) {
+                    $doctrineUser->addSecurityGroup($securityGroup);
+                }
+            }
+
+            $this->entityManager->persist($doctrineUser);
+            $this->entityManager->flush();
+
+            $userIdentifier = $doctrineUser->getId()->toString();
+
+            $token = $this->coreAuthenticationService->createJwtToken($doctrineUser->getApplications()[0]->getPrivateKey(), $this->coreAuthenticationService->serializeUser($doctrineUser, $this->session));
+
+            $doctrineUser->setJwtToken($token);
+            $this->session->set('jwtToken', $token);
+
+            $this->entityManager->persist($doctrineUser);
+            $this->entityManager->flush();
         }
 
         return new Passport(
-            new UserBadge($result['email'], function ($userIdentifier) use ($result) {
+            new UserBadge($userIdentifier, function ($userIdentifier) use ($result) {
                 return new AuthenticationUser(
                     $userIdentifier,
                     $result['email'],
