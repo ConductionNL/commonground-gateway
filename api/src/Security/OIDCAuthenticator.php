@@ -36,10 +36,13 @@ class OIDCAuthenticator extends AbstractAuthenticator
     private LoggerInterface $logger;
 
     /**
-     * The new authenticationService
+     * @var \CommonGateway\CoreBundle\Service\AuthenticationService The new authenticationService
      */
     private \CommonGateway\CoreBundle\Service\AuthenticationService $coreAuthenticationService;
 
+    /**
+     * @var ApplicationService The application service
+     */
     private ApplicationService $applicationService;
 
 
@@ -51,6 +54,8 @@ class OIDCAuthenticator extends AbstractAuthenticator
      * @param EntityManagerInterface $entityManager         The entity manager
      * @param ParameterBagInterface  $parameterBag          The Parameter Bag
      * @param LoggerInterface        $callLogger            The call logger
+     * @param \CommonGateway\CoreBundle\Service\AuthenticationService $coreAuthenticationService The new auth service
+     * @param ApplicationService $applicationService $the application service
      */
     public function __construct(
         AuthenticationService $authenticationService,
