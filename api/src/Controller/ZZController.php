@@ -183,6 +183,8 @@ class ZZController extends AbstractController
                 return 'html';
             case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return 'docx';
+            case 'application/json+aggregations':
+                return 'aggregations';
         }//end switch
 
         throw new BadRequestHttpException('No proper accept could be determined');
