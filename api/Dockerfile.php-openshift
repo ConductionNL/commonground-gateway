@@ -1,0 +1,153 @@
+FROM php:7.4-fpm-alpine AS api_platform_php
+
+RUN curl -O https://download.microsoft.com/download/b/9/f/b9f3cce4-3925-46d4-9f46-da08869c6486/msodbcsql18_18.1.1.1-1_amd64.apk; \
+    curl -O https://download.microsoft.com/download/b/9/f/b9f3cce4-3925-46d4-9f46-da08869c6486/mssql-tools18_18.1.1.1-1_amd64.apk; \
+    apk add --allow-untrusted  \
+    	msodbcsql18_18.1.1.1-1_amd64.apk \
+    	mssql-tools18_18.1.1.1-1_amd64.apk \
+    ;
+
+RUN apk add --no-cache \
+		acl \
+		file \
+		gettext \
+		git \
+		bash \
+	;
+
+ARG APCU_VERSION=5.1.17
+ARG SQLSRV_VERSION=5.10.1
+
+RUN set -eux; \
+	apk add --no-cache --virtual .build-deps \
+		$PHPIZE_DEPS \
+		icu-dev \
+		libzip-dev \
+		libpng-dev \
+		postgresql-dev \
+		zlib-dev \
+		gmp-dev \
+    	rabbitmq-c \
+    	rabbitmq-c-dev \
+    	openssl-dev \
+    	python3 \
+    	py-meld3 \
+    	py-setuptools \
+    	unixodbc-dev \
+	; \
+	\
+	docker-php-ext-install -j$(nproc) \
+		intl \
+		pdo_pgsql \
+		zip \
+		mysqli \
+		pdo_mysql \
+		pcntl \
+		gd \
+		gmp \
+	; \
+        pear config-set http_proxy $(printenv http_proxy); \
+        pear update-channels; \
+        pecl update-channels; \
+	pecl install \
+		apcu-${APCU_VERSION} \
+		redis \
+    	amqp \
+    	sqlsrv-${SQLSRV_VERSION} \
+    	mongodb \
+	; \
+	rm -rf /tmp/pear \
+	pecl clear-cache; \
+	docker-php-ext-enable \
+		apcu \
+		opcache \
+		mysqli \
+		redis \
+    	amqp \
+    	sqlsrv \
+	; \
+	\
+	runDeps="$( \
+		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
+			| tr ',' '\n' \
+			| sort -u \
+			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
+	)"; \
+	apk add --no-cache --virtual .api-phpexts-rundeps $runDeps; \
+	\
+	apk del .build-deps
+
+RUN apk add --no-cache \
+		acl \
+		file \
+		gettext \
+		git \
+	;
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN ln -s $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini
+COPY docker/php/conf.d/api-platform.ini $PHP_INI_DIR/conf.d/api-platform.ini
+
+# https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
+# install Symfony Flex globally to speed up download of Composer packages (parallelized prefetching)
+RUN set -eux; \
+    composer global config allow-plugins.symfony/flex true allow-plugins.endroid/installer true; \
+	composer global require "symfony/flex" --prefer-dist --no-progress --no-suggest --classmap-authoritative --no-scripts; \
+	composer clear-cache
+ENV PATH="${PATH}:/root/.composer/vendor/bin"
+
+WORKDIR /srv/api
+
+# build for production
+ARG APP_ENV=prod
+
+# prevent the reinstallation of vendors at every changes in the source code
+COPY composer.json composer.lock symfony.lock ./
+
+RUN set -eux; \
+	composer install --prefer-dist --no-dev --no-scripts --no-progress --no-suggest --no-scripts; \
+	composer clear-cache
+
+RUN apk add --no-cache $PHPIZE_DEPS \
+	&& pecl install xdebug-2.9.2 \
+	&& docker-php-ext-enable xdebug;\
+	echo -e "xdebug.overload_var_dump=off" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+
+RUN mkdir -p /cert
+RUN mkdir -p /srv/api/vendor
+COPY docker/php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
+RUN chown -R 1001:0 /usr/local/bin/docker-entrypoint
+RUN chown -R 1001:0 /usr/local/etc/php
+
+# copy only specifically what we need
+COPY .env ./
+COPY bin bin/
+COPY config config/
+COPY public public/
+COPY src src/
+COPY templates templates/
+COPY migrations migrations/
+COPY fixtures fixtures/
+COPY docker/php/online-copy-vendor.sh docker/php/online-copy-vendor.sh
+
+RUN set -eux; \
+	mkdir -p var/cache var/log; \
+	composer dump-autoload --classmap-authoritative --no-dev; \
+    sync
+
+RUN chown -R 1001:0 bin && chmod -R ug+rwX bin
+RUN chown -R 1001:0 var && chmod -R ug+rwX var
+RUN chown -R 1001:0 /cert && chmod -R ug+rwX /cert
+RUN chown -R 1001:0 vendor && chmod -R ug+rwX vendor
+RUN chown -R 1001:0 $PHP_INI_DIR && chmod -R ug+rwX $PHP_INI_DIR
+
+VOLUME /srv/api/var
+USER 1001
+
+RUN chmod +x /usr/local/bin/docker-entrypoint; \
+	chmod +x bin/console
+
+ENTRYPOINT ["docker-entrypoint"]
+CMD ["php-fpm"]
