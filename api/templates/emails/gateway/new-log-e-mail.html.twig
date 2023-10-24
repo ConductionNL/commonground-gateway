@@ -1,0 +1,491 @@
+{# todo: move this to an email plugin (see EmailService.php) #}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>{{ subject }}</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Faustina:wght@600&display=swap"
+        rel="stylesheet"
+    />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap"
+        rel="stylesheet"
+    />
+
+    <style type="text/css" rel="stylesheet" media="all">
+        /* Base ------------------------------ */
+
+        body {
+            width: 100% !important;
+            height: 100%;
+            margin: 0;
+            mso-line-height-rule: exactly;
+            line-height: 1.4;
+            background-color: #ffffff;
+            color: #74787e;
+            -webkit-text-size-adjust: none;
+        }
+
+        p,
+        ul,
+        ol,
+        blockquote {
+            mso-line-height-rule: exactly;
+            line-height: 1.4;
+            text-align: left;
+        }
+
+        a {
+            color: #1d55ff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        p a {
+            text-decoration: underline;
+        }
+
+        a img {
+            border: none;
+        }
+
+        td {
+            word-break: break-word;
+        }
+        /* Layout ------------------------------ */
+
+        .header {
+            background: #1d55ff;
+            width: 100%;
+            height: 236px;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .header-cell {
+            padding: 16px 24px;
+        }
+
+        .email-wrapper {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            -premailer-width: 100%;
+            -premailer-cellpadding: 0;
+            -premailer-cellspacing: 0;
+            background-color: #ffffff;
+        }
+
+        .email-content {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            -premailer-width: 100%;
+            -premailer-cellpadding: 0;
+            -premailer-cellspacing: 0;
+        }
+        /* Masthead ----------------------- */
+
+        .email-masthead {
+            padding: 25px 0;
+            text-align: center;
+        }
+
+        .email-masthead_logo {
+            width: 94px;
+        }
+
+        .email-masthead_name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #bbbfc3;
+            text-decoration: none;
+            text-shadow: 0 1px 0 white;
+        }
+        /* Body ------------------------------ */
+
+        .email-body {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            -premailer-width: 100%;
+            -premailer-cellpadding: 0;
+            -premailer-cellspacing: 0;
+            background: none;
+        }
+
+        .email-body_inner {
+            width: 640px;
+            margin: 0 auto;
+            padding: 0;
+            -premailer-width: 570px;
+            -premailer-cellpadding: 0;
+            -premailer-cellspacing: 0;
+            background-color: #ffffff;
+        }
+
+        .email-footer {
+            width: 640px;
+            margin: 0 auto;
+            padding: 0;
+            -premailer-width: 570px;
+            -premailer-cellpadding: 0;
+            -premailer-cellspacing: 0;
+            text-align: center;
+        }
+
+        .email-footer p {
+            color: #aeaeae;
+        }
+
+        .body-action {
+            width: 100%;
+            margin: 40px auto;
+            padding: 0;
+            -premailer-width: 100%;
+            -premailer-cellpadding: 0;
+            -premailer-cellspacing: 0;
+            text-align: center;
+        }
+
+        .body-sub {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #edeff2;
+        }
+
+        .content-cell {
+            padding: 36px 16px;
+        }
+
+        .preheader {
+            display: none !important;
+            visibility: hidden;
+            mso-hide: all;
+            font-size: 1px;
+            mso-line-height-rule: exactly;
+            line-height: 1px;
+            max-height: 0;
+            max-width: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        /* Attribute list ------------------------------ */
+
+        .attributes {
+            margin: 0 0 21px;
+        }
+
+        .attributes_content {
+            background-color: #edeff2;
+            padding: 16px;
+        }
+
+        .attributes_item {
+            padding: 0;
+        }
+        /* Related Items ------------------------------ */
+
+        .related {
+            width: 100%;
+            margin: 0;
+            padding: 25px 0 0 0;
+            -premailer-width: 100%;
+            -premailer-cellpadding: 0;
+            -premailer-cellspacing: 0;
+        }
+
+        .related_item {
+            padding: 10px 0;
+            color: #74787e;
+            font-size: 15px;
+            mso-line-height-rule: exactly;
+            line-height: 18px;
+        }
+
+        .related_item-title {
+            display: block;
+            margin: 0.5em 0 0;
+        }
+
+        .related_item-thumb {
+            display: block;
+            padding-bottom: 10px;
+        }
+
+        .related_heading {
+            border-top: 1px solid #edeff2;
+            text-align: center;
+            padding: 25px 0 10px;
+        }
+
+        /* Utilities ------------------------------ */
+
+        .no-margin {
+            margin: 0;
+        }
+
+        .margin-top {
+            margin-top: 8px;
+        }
+
+        .align-right {
+            text-align: right;
+        }
+
+        .align-left {
+            text-align: left;
+        }
+
+        .align-center {
+            text-align: center;
+        }
+        /*Media Queries ------------------------------ */
+
+        @media only screen and (max-width: 600px) {
+            .email-body_inner,
+            .email-footer {
+                width: 100% !important;
+            }
+        }
+
+        @media only screen and (max-width: 500px) {
+            .button {
+                width: 100% !important;
+            }
+        }
+
+        /* Cards ------------------------------ */
+        .card {
+            background-color: #fff;
+            border-top: 1px solid #e0e1e5;
+            border-right: 1px solid #e0e1e5;
+            border-bottom: 1px solid #e0e1e5;
+            border-left: 1px solid #e0e1e5;
+            padding: 24px;
+            display: inline-block;
+            color: #39393a;
+            text-decoration: none;
+            width: 100%;
+            border-radius: 3px;
+            box-shadow: 0 4px 3px -3px rgba(0, 0, 0, 0.08);
+            -webkit-text-size-adjust: none;
+            mso-line-height-rule: exactly;
+            line-height: 1.75;
+            letter-spacing: 0.8px;
+        }
+
+        /* Buttons ------------------------------ */
+
+        .button {
+            background-color: #1db4ed;
+            border-top: 10px solid #1db4ed;
+            border-right: 18px solid #1db4ed;
+            border-bottom: 10px solid #1db4ed;
+            border-left: 18px solid #1db4ed;
+            display: inline-block;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 4px;
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.16);
+            -webkit-text-size-adjust: none;
+            mso-line-height-rule: exactly;
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .small-logo {
+            width: 24px;
+            height: 24px;
+        }
+
+        .inline {
+            display: inline;
+        }
+        /* Type ------------------------------ */
+
+        p {
+            margin: 0;
+            color: #39393a;
+            font-size: 15px;
+            mso-line-height-rule: exactly;
+            letter-spacing: normal;
+            text-align: left;
+            line-height: 20px;
+        }
+
+        p + p {
+            margin-top: 20px;
+        }
+
+        p.suffix {
+            font-size: 14px;
+        }
+
+        p.sub {
+            font-size: 12px;
+        }
+
+        p.center {
+            text-align: center;
+        }
+
+        .subtle {
+            color: #b1b1b1;
+        }
+
+        /* Footer ------------------------------ */
+
+        .logo-label {
+            vertical-align: top;
+            font-size: 14px;
+            margin-left: 4px;
+        }
+
+        .footer-cell {
+            padding: 8px 24px;
+        }
+
+        .footer-nav {
+            margin-left: 8px;
+            font-size: 14px;
+            color: #39393a;
+            text-decoration: none;
+        }
+
+        .header-link {
+            text-decoration: none;
+            font-size: 14px;
+            color: #1d55ff;
+            font-weight: 500;
+        }
+
+        .margin-top {
+            margin-top: 16px;
+        }
+
+        .logo-container {
+            width: 100%;
+            margin-bottom: 56px;
+        }
+
+        .logo {
+            display: block;
+        }
+
+        /* Custom styles ------------------------------ */
+        hr {
+            border-top: 1px solid #d9d9de;
+            color: #d9d9de;
+            background-color: #d9d9de;
+            margin-top: 32px;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-family: "Faustina", serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: #232326;
+            margin-bottom: 22px;
+        }
+
+        p {
+            font-family: "Source Sans Pro", sans-serif;
+            font-size: 18px;
+            line-height: 1.6;
+            color: #232326;
+        }
+
+        .button {
+            font-family: "Source Sans Pro", sans-serif;
+        }
+
+        .content-cell {
+            padding: 40px 40px;
+        }
+
+        .button {
+            background-color: #ff5a26;
+            border-top: 10px solid #ff5a26;
+            border-right: 18px solid #ff5a26;
+            border-bottom: 10px solid #ff5a26;
+            border-left: 18px solid #ff5a26;
+            display: inline-block;
+            color: #fff;
+            width: auto;
+            box-shadow: none;
+            text-decoration: none;
+            border-radius: 8px;
+            -webkit-text-size-adjust: none;
+            mso-line-height-rule: exactly;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<table class="email-wrapper" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+        <td align="center">
+            <table
+                class="email-content"
+                width="100%"
+                cellpadding="0"
+                cellspacing="0"
+            >
+                <tr>
+                    <td class="email-masthead"></td>
+                </tr>
+                <!-- Email Body -->
+                <tr>
+                    <td
+                        class="email-body"
+                        width="100%"
+                        cellpadding="0"
+                        cellspacing="0"
+                    >
+                        <table
+                            class="email-body_inner"
+                            align="center"
+                            width="100%"
+                            background-color="#edeff2"
+                            cellpadding="0"
+                            cellspacing="0"
+                        >
+                            <!-- Body content -->
+                            <tr></tr>
+                            <tr>
+                                <td class="content-cell" width="100%">
+                                    <p>
+                                        De volgende {{log_level}} log met code {{code}} is aangemaakt:
+                                    </p>
+                                    <br/>
+                                    <p>
+                                        {{ description | nl2br }}
+                                    </p>
+                                    <hr />
+                                    <p>Met vriendelijke groet,</p>
+                                    <p>Conduction</p>
+                                </td>
+                            </tr>
+                            <tr></tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
