@@ -108,6 +108,9 @@ class OIDCAuthenticator extends AbstractAuthenticator
             $result['groups'] = [$result['groups']];
         } else if (isset($result['groups']) === false || is_array($result['groups']) === false) {
             $result['groups'] = [];
+            if (isset($result['group']) === true && is_array($result['group']) === true) {
+                $result['groups'] = $result['group'];
+            }
         }
 
         // Set default organization in session for multitenancy (see how this is done in other Authenticators, this can be different for each one!)
