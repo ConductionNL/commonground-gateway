@@ -379,6 +379,7 @@
         }
 
         .logo {
+            width: 28%;
             display: block;
         }
 
@@ -467,16 +468,27 @@
                             <tr></tr>
                             <tr>
                                 <td class="content-cell" width="100%">
+                                    <h1>Hallo,</h1>
                                     <p>
-                                        De volgende {{log_level}} log met code {{code}} is aangemaakt:
+                                        (At: {{ datetime | nl2br }})
+                                        <br/>
+                                        The following {{level_name}} log for channel '{{channel}}' has been created:
                                     </p>
                                     <br/>
                                     <p>
                                         {{ description | nl2br }}
                                     </p>
                                     <hr />
-                                    <p>Met vriendelijke groet,</p>
+                                    <p>Yours sincerely,</p>
                                     <p>Conduction</p>
+                                    <div class="logo-container">
+                                        <img
+                                            class="logo"
+                                            src="data:image/jpg;base64,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"
+                                            alt="img"
+                                        />
+                                        <a href="mailto:support@conduction.nl">support@conduction.nl</a>
+                                    </div>
                                 </td>
                             </tr>
                             <tr></tr>

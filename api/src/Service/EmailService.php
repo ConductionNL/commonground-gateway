@@ -71,8 +71,11 @@ class EmailService
         $variables = [];
 
         foreach ($this->configuration['variables'] as $key => $variable) {
-            if (array_key_exists($variable, $this->data['response'])) {
+            // Response is the default used for creating emails after an /api endpoint has been called and returned a response.
+            if (isset($this->data['response']) === true && array_key_exists($variable, $this->data['response'])) {
                 $variables[$key] = $this->data['response'][$variable];
+            } elseif (array_key_exists($variable, $this->data)) {
+                $variables[$key] = $this->data[$variable];
             }
         }
 
