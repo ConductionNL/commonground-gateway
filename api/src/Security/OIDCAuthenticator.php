@@ -108,6 +108,9 @@ class OIDCAuthenticator extends AbstractAuthenticator
             $result['groups'] = [$result['groups']];
         } else if (isset($result['groups']) === false || is_array($result['groups']) === false) {
             $result['groups'] = [];
+            if (isset($result['group']) === true && is_array($result['group']) === true) {
+                $result['groups'] = $result['group'];
+            }
         }
 
         // Set default organization in session for multitenancy (see how this is done in other Authenticators, this can be different for each one!)
@@ -117,10 +120,10 @@ class OIDCAuthenticator extends AbstractAuthenticator
         $this->session->set('organizations', $organizations);
         $this->session->set('parentOrganizations', $parentOrganizations);
         $this->session->set('activeOrganization', $defaultOrganization);
-        if (isset($accessToken['refresh_token'])) {
-            $this->session->set('refresh_token', $accessToken['refresh_token']);
-            $userIdentifier = $result['email'];
-        } else {
+//        if (isset($accessToken['refresh_token'])) {
+//            $this->session->set('refresh_token', $accessToken['refresh_token']);
+//            $userIdentifier = $result['email'];
+//        } else {
             $doctrineUser = $this->entityManager->getRepository('App:User')->findOneBy(['email' => $result['email']]);
             if($doctrineUser instanceof User === false) {
                 $doctrineUser = new User();
@@ -150,7 +153,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
 
             $this->entityManager->persist($doctrineUser);
             $this->entityManager->flush();
-        }
+//        }
 
         return new Passport(
             new UserBadge($userIdentifier, function ($userIdentifier) use ($result) {
