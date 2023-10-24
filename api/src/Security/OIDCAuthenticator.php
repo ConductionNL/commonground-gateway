@@ -128,7 +128,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
             if($doctrineUser instanceof User === false) {
                 $doctrineUser = new User();
             }
-            $doctrineUser->setName($result['name']);
+            $doctrineUser->setName($result['name'] ?? $result['sub']);
             $doctrineUser->setEmail($result['email']);
             $doctrineUser->setPassword('');
             $doctrineUser->addApplication($this->applicationService->getApplication());
