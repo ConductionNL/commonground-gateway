@@ -56,7 +56,7 @@ class SessionDataProcessor
         $context['schema'] = $this->session->has('schema') ? $this->session->get('schema') : '';
         $context['object'] = $this->session->has('object') === true ? $this->session->get('object') : '';
         $context['cronjob'] = $this->session->has('cronjob') ? $this->session->get('cronjob') : '';
-        $context['action'] = $this->session->has('cronjob') ? $this->session->get('action') : '';
+        $context['action'] = $this->session->has('action') ? $this->session->get('action') : '';
         $context['mapping'] = $this->session->has('mapping') ? $this->session->get('mapping') : '';
         $context['source'] = $this->session->has('source') ? $this->session->get('source') : '';
         $context['plugin'] = isset($record['data']['plugin']) === true ? $record['data']['plugin'] : '';
