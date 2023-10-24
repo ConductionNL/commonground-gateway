@@ -120,10 +120,10 @@ class OIDCAuthenticator extends AbstractAuthenticator
         $this->session->set('organizations', $organizations);
         $this->session->set('parentOrganizations', $parentOrganizations);
         $this->session->set('activeOrganization', $defaultOrganization);
-        if (isset($accessToken['refresh_token'])) {
-            $this->session->set('refresh_token', $accessToken['refresh_token']);
-            $userIdentifier = $result['email'];
-        } else {
+//        if (isset($accessToken['refresh_token'])) {
+//            $this->session->set('refresh_token', $accessToken['refresh_token']);
+//            $userIdentifier = $result['email'];
+//        } else {
             $doctrineUser = $this->entityManager->getRepository('App:User')->findOneBy(['email' => $result['email']]);
             if($doctrineUser instanceof User === false) {
                 $doctrineUser = new User();
@@ -153,7 +153,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
 
             $this->entityManager->persist($doctrineUser);
             $this->entityManager->flush();
-        }
+//        }
 
         return new Passport(
             new UserBadge($userIdentifier, function ($userIdentifier) use ($result) {
