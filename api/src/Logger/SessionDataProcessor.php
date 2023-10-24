@@ -18,6 +18,9 @@ class SessionDataProcessor
      */
     private EventDispatcherInterface $eventDispatcher;
 
+    /**
+     * @var EntityManagerInterface The entity manager.
+     */
     private EntityManagerInterface $entityManager;
 
     /**
