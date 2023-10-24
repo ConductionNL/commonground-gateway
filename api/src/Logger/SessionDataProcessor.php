@@ -63,6 +63,7 @@ class SessionDataProcessor
                 $this->entityManager->getConnection()->getDatabase(),
                 $this->entityManager->getConnection()->getSchemaManager()->listDatabases()
             ) === true
+            && $this->entityManager->getConnection()->getSchemaManager()->tablesExist('action') === true
         ){
             $event = new ActionEvent('commongateway.action.event', $record, 'core.log.create');
 
