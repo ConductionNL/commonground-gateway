@@ -86,7 +86,7 @@ class SessionDataProcessor
             && $this->entityManager->getConnection()->getSchemaManager()->tablesExist('action') === true
             && in_array($record['level_name'], ['DEBUG', 'INFO', 'NOTICE', 'WARNING']) === false
         ){
-            $event = new ActionEvent('commongateway.action.event', $record, 'core.log.create');
+            $event = new ActionEvent('commongateway.action.event', $record, 'commongateway.log.create');
 
             $this->eventDispatcher->dispatch($event, 'commongateway.action.event');
 
