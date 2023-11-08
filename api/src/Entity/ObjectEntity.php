@@ -1127,6 +1127,7 @@ class ObjectEntity
                 'level'            => $configuration['level'],
                 'dateCreated'      => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
                 'dateModified'     => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
+                'dateDeleted'      => null,
                 'owner'            => [
                     'id'    => $this->getOwner(),
                     'name'  => isset($configuration['user']) ? $configuration['user']->getName() : $this->getOwner(),

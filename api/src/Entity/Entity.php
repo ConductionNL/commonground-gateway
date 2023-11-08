@@ -464,6 +464,15 @@ class Entity
      */
     private ?Source $defaultSource = null;
 
+    /**
+     * @var bool Whether objects of this entity should be soft deleted or not.
+     *
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="boolean", options={"default": false}, nullable=true)
+     */
+    private bool $softDelete = false;
+
     public function __toString()
     {
         return $this->getName().' ('.$this->getId().')';
@@ -1356,6 +1365,18 @@ class Entity
     public function setDefaultSource(?Source $defaultSource): self
     {
         $this->defaultSource = $defaultSource;
+
+        return $this;
+    }
+
+    public function getSoftDelete(): ?bool
+    {
+        return $this->softDelete;
+    }
+
+    public function setSoftDelete(bool $softDelete): self
+    {
+        $this->softDelete = $softDelete;
 
         return $this;
     }
