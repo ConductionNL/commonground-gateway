@@ -4,6 +4,7 @@ namespace App\Security;
 
 use App\Entity\SecurityGroup;
 use App\Entity\User;
+use App\Exception\GatewayException;
 use App\Security\User\AuthenticationUser;
 use App\Service\ApplicationService;
 use App\Service\AuthenticationService;
@@ -139,6 +140,12 @@ class OIDCAuthenticator extends AbstractAuthenticator
             $this->entityManager->flush();
 
             $userIdentifier = $doctrineUser->getId()->toString();
+
+            if (empty($doctrineUser->getApplications()[0]->getPrivateKey()) === true) {
+                throw new GatewayException("Can't create a token because application doesn't have a PrivateKey." ?? null, 409, null, [
+                    'data' => ['application_id' => $doctrineUser->getApplications()[0]->getId()->toString()], 'path' => '', 'responseType' => Response::HTTP_CONFLICT,
+                ]);
+            }
 
             $token = $this->coreAuthenticationService->createJwtToken($doctrineUser->getApplications()[0]->getPrivateKey(), $this->coreAuthenticationService->serializeUser($doctrineUser, $this->session));
 

@@ -66,14 +66,11 @@ class ApplicationService
         // Find application using the host/domain
         $host = ($this->request->headers->get('host') ?? $this->request->query->get('host'));
         if (empty($host) === false) {
-            // @todo Create and use query in ApplicationRepository
+            $applications = $this->entityManager->getRepository('App:Application')->findByDomain($host);
+            if (count($applications) > 0) {
+                $this->session->set('application', $applications[0]->getId()->toString());
 
-            $applications = $this->entityManager->getRepository('App:Application')->findAll();
-            foreach ($applications as $app) {
-                if ($app->getDomains() !== null && in_array($host, $app->getDomains()) === true) {
-                    $this->session->set('application', $app->getId()->toString());
-                    return $app;
-                }
+                return $applications[0];
             }
         }
 
