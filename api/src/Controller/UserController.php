@@ -100,7 +100,8 @@ class UserController extends AbstractController
 
         $user = $this->entityManager->getRepository('App:User')->find($user->getUserIdentifier());
 
-        // Set organization in session
+        // Set organization id and user id in session
+        $this->session->set('user', $user->getId()->toString());
         $this->session->set('organization', $user->getOrganization() !== null ? $user->getOrganization()->getId()->toString() : null);
 
         $user->setJwtToken($authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session)));
@@ -195,7 +196,8 @@ class UserController extends AbstractController
             return new Response(json_encode($response), 401, ['Content-type' => 'application/json']);
         }
 
-        // Set organization in session
+        // Set organization id and user id in session
+        $this->session->set('user', $user->getId()->toString());
         $this->session->set('organization', $user->getOrganization() !== null ? $user->getOrganization()->getId()->toString() : null);
 
         $token = $authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session));

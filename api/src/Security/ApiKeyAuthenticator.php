@@ -160,7 +160,13 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
         if ($user instanceof User === false) {
             throw new AuthenticationException('An invalid User is configured for this ApiKey');
         }
+
+        // Set apiKey Application id in session
         $this->session->set('apiKeyApplication', $application->getId()->toString());
+
+        // Set organization id and user id in session
+        $this->session->set('user', $user->getId()->toString());
+        $this->session->set('organization', $user->getOrganization() !== null ? $user->getOrganization()->getId()->toString() : null);
 
         $roleArray = [];
         foreach ($user->getSecurityGroups() as $securityGroup) {
@@ -176,9 +182,6 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
                 $roleArray['roles'][$key] = "ROLE_$role";
             }
         }
-
-        // Set organization in session
-        $this->session->set('organization', $user->getOrganization() !== null ? $user->getOrganization()->getId()->toString() : null);
 
         $userArray = [
             'id'           => $user->getId()->toString(),
