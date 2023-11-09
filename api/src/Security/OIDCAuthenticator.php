@@ -147,6 +147,8 @@ class OIDCAuthenticator extends AbstractAuthenticator
                 ]);
             }
 
+            // TODO: maybe do not just get the first Application here, but get application using ApplicationService->getApplication() and ...
+            // todo... if this returns an application check if the user is part of this application or one of the organizations of this application?
             $token = $this->coreAuthenticationService->createJwtToken($doctrineUser->getApplications()[0]->getPrivateKey(), $this->coreAuthenticationService->serializeUser($doctrineUser, $this->session));
 
             $doctrineUser->setJwtToken($token);

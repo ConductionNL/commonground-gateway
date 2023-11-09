@@ -108,6 +108,8 @@ class UserController extends AbstractController
         if ($response !== null)
             return $response;
 
+        // TODO: maybe do not just get the first Application here, but get application using ApplicationService->getApplication() and ...
+        // todo... if this returns an application check if the user is part of this application or one of the organizations of this application?
         $user->setJwtToken($authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session)));
 
         return new Response($serializer->serialize($user, 'json'), $status, ['Content-type' => 'application/json']);
@@ -208,6 +210,8 @@ class UserController extends AbstractController
         if ($response !== null)
             return $response;
 
+        // TODO: maybe do not just get the first Application here, but get application using ApplicationService->getApplication() and ...
+        // todo... if this returns an application check if the user is part of this application or one of the organizations of this application?
         $token = $authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session));
 
         $user->setJwtToken($token);
