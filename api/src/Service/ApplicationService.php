@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Exception\GatewayException;
+use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
@@ -49,11 +50,15 @@ class ApplicationService
 
         // get host/domain
         $host = ($this->request->headers->get('host') ?? $this->request->query->get('host'));
-
-        $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]) && !empty($application) && $this->session->set('application', $application->getId()->toString());
+//        $host = 'api.buren.commonground.nu';
+        ($application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public])) && !empty($application) && $this->session->set('application', $application->getId()->toString());
 
         if (!$application) {
             // @todo Create and use query in ApplicationRepository
+
+            $criteria = new Criteria();
+
+           // $application = $this->entityManager->getRepository('App:Application')->findAll()->
             $applications = $this->entityManager->getRepository('App:Application')->findAll();
             foreach ($applications as $app) {
                 $app->getDomains() !== null && in_array($host, $app->getDomains()) && $application = $app;
@@ -61,6 +66,9 @@ class ApplicationService
                     break;
                 }
             }
+//            if(count($applications) > 0) {
+//                $application = $applications[0];
+//            }
         }
 
         if (!$application) {

@@ -11,7 +11,7 @@ use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 
-// todo: move this to an email plugin with the following packages from composer.json: symfony/mailer, symfony/mailgun-mailer & symfony/http-client
+// todo: move this to an email plugin with the following packages from composer.json: symfony/mailer, symfony/mailgun-mailer, symfony/sendinblue-mailer & symfony/http-client
 
 /**
  * @Author Wilco Louwerse <wilco@conduction.nl>, Ruben van der Linde <ruben@conduction.nl>, Sarai Misidjan <sarai@conduction.nl>
@@ -71,8 +71,11 @@ class EmailService
         $variables = [];
 
         foreach ($this->configuration['variables'] as $key => $variable) {
-            if (array_key_exists($variable, $this->data['response'])) {
+            // Response is the default used for creating emails after an /api endpoint has been called and returned a response.
+            if (isset($this->data['response']) === true && array_key_exists($variable, $this->data['response'])) {
                 $variables[$key] = $this->data['response'][$variable];
+            } elseif (array_key_exists($variable, $this->data)) {
+                $variables[$key] = $this->data[$variable];
             }
         }
 
