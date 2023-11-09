@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Entity\Application;
 use App\Exception\GatewayException;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,67 +30,67 @@ class ApplicationService
     }
 
     /**
-     * A function that finds an application or creates one.
+     * A function that finds an application.
      *
      * @throws GatewayException
      */
-    public function getApplication()
+    public function getApplication(): Application
     {
-        if ($application = $this->session->get('application')) {
+        // If application is already in the session
+        if ($this->session->has('application')) {
             $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
-            if (!empty($application)) {
+            if ($application !== null) {
                 return $application;
             }
-        } elseif ($this->session->get('apiKeyApplication')) {
-            // If an api-key is used for authentication we already know which application is used
-            return $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('apiKeyApplication')]);
         }
 
-        // get publickey
+        // If an api-key is used for authentication we already know which application is used
+        if ($this->session->has('apiKeyApplication')) {
+            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('apiKeyApplication')]);
+            if ($application !== null) {
+                $this->session->set('application', $application->getId()->toString());
+                return $application;
+            }
+        }
+
+        // Find application using the publicKey
         $public = ($this->request->headers->get('public') ?? $this->request->query->get('public'));
+        if (empty($public) === false) {
+            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]);
+            if ($application !== null) {
+                $this->session->set('application', $application->getId()->toString());
+                return $application;
+            }
+        }
 
-        // get host/domain
+        // Find application using the host/domain
         $host = ($this->request->headers->get('host') ?? $this->request->query->get('host'));
-//        $host = 'api.buren.commonground.nu';
-        ($application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public])) && !empty($application) && $this->session->set('application', $application->getId()->toString());
-
-        if (!$application) {
+        if (empty($host) === false) {
             // @todo Create and use query in ApplicationRepository
 
-            $criteria = new Criteria();
-
-           // $application = $this->entityManager->getRepository('App:Application')->findAll()->
             $applications = $this->entityManager->getRepository('App:Application')->findAll();
             foreach ($applications as $app) {
-                $app->getDomains() !== null && in_array($host, $app->getDomains()) && $application = $app;
-                if (isset($application)) {
-                    break;
+                if ($app->getDomains() !== null && in_array($host, $app->getDomains()) === true) {
+                    $this->session->set('application', $app->getId()->toString());
+                    return $app;
                 }
             }
-//            if(count($applications) > 0) {
-//                $application = $applications[0];
-//            }
         }
 
-        if (!$application) {
-            $this->session->set('application', null);
+        // No application was found
+        $this->session->set('application', null);
 
-            // Set message
-            $public && $message = 'No application found with public '.$public;
-            $host && $message = 'No application found with host '.$host;
-            !$public && !$host && $message = 'No host or application given';
+        // Set message
+        $public && $message = 'No application found with public '.$public;
+        $host && $message = 'No application found with host '.$host;
+        !$public && !$host && $message = 'No host or application given';
 
-            // Set data
-            $public && $data = ['public' => $public];
-            $host && $data = ['host' => $host];
+        // Set data
+        $public && $data = ['public' => $public];
+        $host && $data = ['host' => $host];
 
-            throw new GatewayException($message ?? null, null, null, [
-                'data' => $data ?? null, 'path' => $public ?? $host ?? 'Header', 'responseType' => Response::HTTP_FORBIDDEN,
-            ]);
-        }
-
-        $this->session->set('application', $application->getId()->toString());
-
-        return $application;
+        throw new GatewayException($message ?? null, null, null, [
+            'data' => $data ?? null, 'path' => $public ?? $host ?? 'Header', 'responseType' => Response::HTTP_FORBIDDEN,
+        ]);
     }
 }

@@ -100,17 +100,8 @@ class UserController extends AbstractController
 
         $user = $this->entityManager->getRepository('App:User')->find($user->getUserIdentifier());
 
-        if ($user->getOrganization() !== null) {
-            $organizations[] = $user->getOrganization();
-        }
-        foreach ($user->getApplications() as $application) {
-            if ($application->getOrganization() !== null) {
-                $organizations[] = $application->getOrganization();
-            }
-        }
-
-        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
-        $this->session->set('activeOrganization', $user->getOrganization()->getId()->toString());
+        // Set organization in session
+        $this->session->set('organization', $user->getOrganization() !== null ? $user->getOrganization()->getId()->toString() : null);
 
         $user->setJwtToken($authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session)));
 
@@ -166,10 +157,11 @@ class UserController extends AbstractController
     }
 
     /**
-     * Add the logged in user to session.
+     * Add the logged-in user to session.
      *
-     * @param User                     $user            The user to log in.
+     * @param User $user                                The user to log in.
      * @param EventDispatcherInterface $eventDispatcher The event dispatcher.
+     * @param Request $request
      *
      * @return void
      */
@@ -203,17 +195,8 @@ class UserController extends AbstractController
             return new Response(json_encode($response), 401, ['Content-type' => 'application/json']);
         }
 
-        if ($user->getOrganization() !== null) {
-            $organizations[] = $user->getOrganization();
-        }
-        foreach ($user->getApplications() as $application) {
-            if ($application->getOrganization() !== null) {
-                $organizations[] = $application->getOrganization();
-            }
-        }
-
-        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
-        $this->session->set('activeOrganization', $user->getOrganization()->getId()->toString());
+        // Set organization in session
+        $this->session->set('organization', $user->getOrganization() !== null ? $user->getOrganization()->getId()->toString() : null);
 
         $token = $authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session));
 

@@ -36,6 +36,96 @@ class ObjectEntityRepository extends ServiceEntityRepository
     }
 
     /**
+     * Gets and returns an array with the allowed filters on an Entity (including its subEntities / sub-filters).
+     *
+     * @param Entity $Entity The Entity we are currently doing a get collection on.
+     * @param string $prefix
+     * @param int $level
+     * @param bool $embedded
+     *
+     * @return array The array with allowed filters.
+     */
+    public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1, bool $embedded = false): array
+    {
+        $prefix = $embedded && $level === 2 ? "embedded.$prefix" : $prefix;
+
+        //todo: we only check for the allowed keys/attributes to filter on, if this attribute is a dateTime (or date), we should also check if the value is a valid dateTime string?
+        // NOTE:
+        // Filter id looks for ObjectEntity id and externalId
+        // Filter _id looks specifically/only for ObjectEntity id
+        // Filter _externalId looks specifically/only for ObjectEntity externalId
+
+        // defaults
+        $filters = [
+            $prefix.'id', $prefix.'_id', $prefix.'_externalId', $prefix.'_uri', $prefix.'_self', $prefix.'_organization',
+            $prefix.'_application', $prefix.'_dateCreated', $prefix.'_dateModified', $prefix.'_mapping',
+        ];
+
+        foreach ($Entity->getAttributes() as $attribute) {
+            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'float', 'number', 'boolean']) && $attribute->getSearchable()) {
+                $filters[] = $prefix.$attribute->getName();
+            } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
+                $attribute->getSearchable() && $filters[] = $prefix.$attribute->getName();
+                $embeddedString = $embedded && $level > 1 ? 'embedded.' : '';
+                $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$embeddedString.$attribute->getName().'.', $level + 1, $embedded));
+            }
+        }
+
+        return $filters;
+    }
+
+    /**
+     * Gets and returns an array with the allowed sortable attributes on an Entity (including its subEntities).
+     *
+     * @param Entity $Entity The Entity we are currently doing a get collection on.
+     * @param string $prefix
+     * @param int $level
+     * @param bool $embedded
+     *
+     * @return array The array with allowed attributes to sort by.
+     */
+    public function getOrderParameters(Entity $Entity, string $prefix = '', int $level = 1, bool $embedded = false): array
+    {
+        $prefix = $embedded && $level === 2 ? "embedded.$prefix" : $prefix;
+        // defaults
+        $sortable = [$prefix.'_dateCreated', $prefix.'_dateModified'];
+
+        foreach ($Entity->getAttributes() as $attribute) {
+            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'float', 'number']) && $attribute->getSortable()) {
+                $sortable[] = $prefix.$attribute->getName();
+            } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
+                $embeddedString = $embedded && $level > 1 ? 'embedded.' : '';
+                $sortable = array_merge($sortable, $this->getOrderParameters($attribute->getObject(), $prefix.$embeddedString.$attribute->getName().'.', $level + 1));
+            }
+        }
+
+        return $sortable;
+    }
+
+    /**
+     * Finds object entities on their id or a sourceId of a synchronization this ObjectEntity has.
+     *
+     * @param string $identifier
+     *
+     * @throws NonUniqueResultException
+     *
+     * @return ObjectEntity The found object entity
+     */
+    public function findByAnyId(string $identifier): ?ObjectEntity
+    {
+        $query = $this->createQueryBuilder('o')
+            ->leftJoin('o.synchronizations', 's')
+            ->where('s.sourceId = :identifier')
+            ->setParameter('identifier', $identifier);
+
+        if (Uuid::isValid($identifier)) {
+            $query->orWhere('o.id = :identifier');
+        }
+
+        return $query->getQuery()->getOneOrNullResult();
+    }
+
+    /**
      * Does the same as findByEntity(), but also returns an integer representing the total amount of results using the input to create a sql statement. $entity is required.
      *
      * @param Entity $entity  The Entity we are currently doing a get collection on.
@@ -47,6 +137,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @throws NoResultException|NonUniqueResultException
      *
      * @return array With a key 'objects' containing the actual objects found and a key 'total' with an integer representing the total amount of results found.
+     * @deprecated
      */
     public function findAndCountByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25): array
     {
@@ -81,6 +172,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @throws Exception
      *
      * @return array Returns an array of ObjectEntity objects
+     * @deprecated
      */
     public function findByEntity(Entity $entity, array $filters = [], array $order = [], int $offset = 0, int $limit = 25, QueryBuilder $query = null): array
     {
@@ -103,6 +195,7 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * @throws NoResultException|NonUniqueResultException
      *
      * @return int Returns an integer, for the total ObjectEntities found with this Entity and with the given filters.
+     * @deprecated
      */
     public function countByEntity(Entity $entity, array $filters = [], QueryBuilder $query = null): int
     {
@@ -155,11 +248,11 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
         // Multitenancy, only show objects this user is allowed to see.
         // Only show objects this user owns or object that have an organization this user is part of or that are inhereted down the line
-        $organizations = $this->session->get('organizations', []);
+        $organizations = [];
         $parentOrganizations = [];
         // Make sure we only check for parentOrganizations if inherited is true in the (ObjectEntity)->entity->inherited
         if ($entity->getInherited()) {
-            $parentOrganizations = $this->session->get('parentOrganizations', []);
+            $parentOrganizations = [];
         }
 
 //        $query->andWhere('o.organization IN (:organizations) OR o.organization IN (:parentOrganizations) OR o.organization = :defaultOrganization OR o.owner = :userId')
@@ -871,93 +964,5 @@ class ObjectEntityRepository extends ServiceEntityRepository
     {
         // todo, probably add more special characters to replace...
         return str_replace('-', 'Dash', $key);
-    }
-
-    /**
-     * Gets and returns an array with the allowed filters on an Entity (including its subEntities / sub-filters).
-     *
-     * @param Entity $Entity The Entity we are currently doing a get collection on.
-     * @param string $prefix
-     * @param int    $level
-     *
-     * @return array The array with allowed filters.
-     */
-    public function getFilterParameters(Entity $Entity, string $prefix = '', int $level = 1, bool $embedded = false): array
-    {
-        $prefix = $embedded && $level === 2 ? "embedded.$prefix" : $prefix;
-
-        //todo: we only check for the allowed keys/attributes to filter on, if this attribute is a dateTime (or date), we should also check if the value is a valid dateTime string?
-        // NOTE:
-        // Filter id looks for ObjectEntity id and externalId
-        // Filter _id looks specifically/only for ObjectEntity id
-        // Filter _externalId looks specifically/only for ObjectEntity externalId
-
-        // defaults
-        $filters = [
-            $prefix.'id', $prefix.'_id', $prefix.'_externalId', $prefix.'_uri', $prefix.'_self', $prefix.'_organization',
-            $prefix.'_application', $prefix.'_dateCreated', $prefix.'_dateModified', $prefix.'_mapping',
-        ];
-
-        foreach ($Entity->getAttributes() as $attribute) {
-            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'float', 'number', 'boolean']) && $attribute->getSearchable()) {
-                $filters[] = $prefix.$attribute->getName();
-            } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
-                $attribute->getSearchable() && $filters[] = $prefix.$attribute->getName();
-                $embeddedString = $embedded && $level > 1 ? 'embedded.' : '';
-                $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$embeddedString.$attribute->getName().'.', $level + 1, $embedded));
-            }
-        }
-
-        return $filters;
-    }
-
-    /**
-     * Gets and returns an array with the allowed sortable attributes on an Entity (including its subEntities).
-     *
-     * @param Entity $Entity The Entity we are currently doing a get collection on.
-     * @param string $prefix
-     * @param int    $level
-     *
-     * @return array The array with allowed attributes to sort by.
-     */
-    public function getOrderParameters(Entity $Entity, string $prefix = '', int $level = 1, bool $embedded = false): array
-    {
-        $prefix = $embedded && $level === 2 ? "embedded.$prefix" : $prefix;
-        // defaults
-        $sortable = [$prefix.'_dateCreated', $prefix.'_dateModified'];
-
-        foreach ($Entity->getAttributes() as $attribute) {
-            if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'float', 'number']) && $attribute->getSortable()) {
-                $sortable[] = $prefix.$attribute->getName();
-            } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
-                $embeddedString = $embedded && $level > 1 ? 'embedded.' : '';
-                $sortable = array_merge($sortable, $this->getOrderParameters($attribute->getObject(), $prefix.$embeddedString.$attribute->getName().'.', $level + 1));
-            }
-        }
-
-        return $sortable;
-    }
-
-    /**
-     * Finds object entities on their id or a sourceId of a synchronization this ObjectEntity has.
-     *
-     * @param string $identifier
-     *
-     * @throws NonUniqueResultException
-     *
-     * @return ObjectEntity The found object entity
-     */
-    public function findByAnyId(string $identifier): ?ObjectEntity
-    {
-        $query = $this->createQueryBuilder('o')
-            ->leftJoin('o.synchronizations', 's')
-            ->where('s.sourceId = :identifier')
-            ->setParameter('identifier', $identifier);
-
-        if (Uuid::isValid($identifier)) {
-            $query->orWhere('o.id = :identifier');
-        }
-
-        return $query->getQuery()->getOneOrNullResult();
     }
 }

@@ -175,7 +175,7 @@ class EavService
             $object = new ObjectEntity();
             $object->setEntity($entity);
             // if entity->function == 'organization', organization for this ObjectEntity will be changed later in handleMutation
-            $this->session->get('activeOrganization') ? $object->setOrganization($this->session->get('activeOrganization')) : $object->setOrganization('http://testdata-organization');
+            $this->session->get('organization') ? $object->setOrganization($this->session->get('organization')) : $object->setOrganization('http://testdata-organization');
             $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
             $object->setApplication(!empty($application) ? $application : null);
 
@@ -401,15 +401,9 @@ class EavService
             }
         }
 
-        if (!$this->session->get('activeOrganization') && $this->session->get('application')) {
+        if (!$this->session->get('organization') && $this->session->get('application')) {
             $application = $this->em->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
-            $this->session->set('activeOrganization', !empty($application) ? $application->getOrganization() : null);
-        }
-        if (!$this->session->get('organizations') && $this->session->get('activeOrganization')) {
-            $this->session->set('organizations', [$this->session->get('activeOrganization')]);
-        }
-        if (!$this->session->get('parentOrganizations')) {
-            $this->session->set('parentOrganizations', []);
+            $this->session->set('organization', !empty($application) ? $application->getOrganization() : null);
         }
 
         // Lets create an object
@@ -420,19 +414,19 @@ class EavService
                 $result = $object;
                 $object = null;
             } // Lets check if the user is allowed to view/edit this resource.
-            elseif (!$this->objectEntityService->checkOwner($object)) {
-                // TODO: do we want to throw a different error if there are nog organizations in the session? (because of logging out for example)
-                if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? [])) {
-                    $object = null; // Needed so we return the error and not the object!
-                    $responseType = Response::HTTP_FORBIDDEN;
-                    $result = [
-                        'message' => 'You are forbidden to view or edit this resource.',
-                        'type'    => 'Forbidden',
-                        'path'    => $entity->getName(),
-                        'data'    => ['id' => $requestBase['id']],
-                    ];
-                }
-            }
+//            elseif (!$this->objectEntityService->checkOwner($object)) {
+//                // TODO: do we want to throw a different error if there are nog organizations in the session? (because of logging out for example)
+//                if ($object->getOrganization() && !in_array($object->getOrganization(), [])) {
+//                    $object = null; // Needed so we return the error and not the object!
+//                    $responseType = Response::HTTP_FORBIDDEN;
+//                    $result = [
+//                        'message' => 'You are forbidden to view or edit this resource.',
+//                        'type'    => 'Forbidden',
+//                        'path'    => $entity->getName(),
+//                        'data'    => ['id' => $requestBase['id']],
+//                    ];
+//                }
+//            }
         }
 
         // Check for scopes, if forbidden to view/edit overwrite result so far to this forbidden error
@@ -836,7 +830,7 @@ class EavService
     public function handleMutation(ObjectEntity $object, array $body, $fields, Request $request): array
     {
         // Check if session contains an activeOrganization, so we can't do calls without it. So we do not create objects with no organization!
-        if ($this->parameterBag->get('app_auth') && empty($this->session->get('activeOrganization'))) {
+        if ($this->parameterBag->get('app_auth') && empty($this->session->get('organization'))) {
             return [
                 'message' => 'An active organization is required in the session, please login to create a new session.',
                 'type'    => 'Forbidden',

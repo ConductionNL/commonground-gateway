@@ -113,13 +113,6 @@ class OIDCAuthenticator extends AbstractAuthenticator
             }
         }
 
-        // Set default organization in session for multitenancy (see how this is done in other Authenticators, this can be different for each one!)
-        $defaultOrganization = $this->getDefaultOrganization();
-        $organizations = [$defaultOrganization, 'localhostOrganization'];
-        $parentOrganizations[] = 'localhostOrganization';
-        $this->session->set('organizations', $organizations);
-        $this->session->set('parentOrganizations', $parentOrganizations);
-        $this->session->set('activeOrganization', $defaultOrganization);
 //        if (isset($accessToken['refresh_token'])) {
 //            $this->session->set('refresh_token', $accessToken['refresh_token']);
 //            $userIdentifier = $result['email'];
@@ -133,6 +126,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
             $doctrineUser->setPassword('');
             $doctrineUser->addApplication($this->applicationService->getApplication());
             $doctrineUser->setOrganization($doctrineUser->getApplications()->first()->getOrganization());
+            $this->session->set('organization', $doctrineUser->getApplications()->first()->getOrganization());
 
             foreach ($result['groups'] as $group) {
                 $securityGroup = $this->entityManager->getRepository('App:SecurityGroup')->findOneBy(['name' => $group]);
@@ -176,24 +170,6 @@ class OIDCAuthenticator extends AbstractAuthenticator
                 ['method' => $method, 'identifier' => $identifier, 'code' => $code, 'service' => $this->authenticationService]
             )
         );
-    }
-
-    private function getDefaultOrganization(): string
-    {
-        // Find application->organization
-        if ($this->session->get('application')) {
-            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
-            if (!empty($application) && $application->getOrganization()) {
-                return $application->getOrganization();
-            }
-        }
-        // Else find and return 'the' default organization
-        $organization = $this->entityManager->getRepository('App:ObjectEntity')->findOneBy(['id' => 'a1c8e0b6-2f78-480d-a9fb-9792142f4761']);
-        if (!empty($organization) && $organization->getOrganization()) {
-            return $organization->getOrganization();
-        }
-
-        return 'http://api/admin/organizations/a1c8e0b6-2f78-480d-a9fb-9792142f4761';
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response

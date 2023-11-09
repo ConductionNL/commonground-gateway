@@ -461,12 +461,12 @@ class ObjectEntityService
             throw new GatewayException($object['message'], null, null, ['data' => $object['data'], 'path' => $object['path'], 'responseType' => Response::HTTP_BAD_REQUEST]);
         } // Let's check if the user is allowed to view/edit this resource.
 
-        if (!$method == 'POST' && !$this->checkOwner($object)) {
-            // TODO: do we want to throw a different error if there are no organizations in the session? (because of logging out for example)
-            if ($object->getOrganization() && !in_array($object->getOrganization(), $this->session->get('organizations') ?? [])) {
-                throw new GatewayException('You are forbidden to view or edit this resource.', null, null, ['data' => ['id' => $id ?? null], 'path' => $entity->getName(), 'responseType' => Response::HTTP_FORBIDDEN]);
-            }
-        }
+//        if (!$method == 'POST' && !$this->checkOwner($object)) {
+//            // TODO: do we want to throw a different error if there are no organizations in the session? (because of logging out for example)
+//            if ($object->getOrganization() && !in_array($object->getOrganization(), [])) {
+//                throw new GatewayException('You are forbidden to view or edit this resource.', null, null, ['data' => ['id' => $id ?? null], 'path' => $entity->getName(), 'responseType' => Response::HTTP_FORBIDDEN]);
+//            }
+//        }
 
         if ($object instanceof ObjectEntity && $object->getId() !== null) {
             $this->session->set('object', $object->getId()->toString());
@@ -1045,7 +1045,7 @@ class ObjectEntityService
             $subObject->setOrganization($subObject->getSubresourceOf()->first()->getObjectEntity()->getOrganization());
             $subObject->setApplication($subObject->getSubresourceOf()->first()->getObjectEntity()->getApplication());
         } else {
-            $subObject->setOrganization($this->session->get('activeOrganization'));
+            $subObject->setOrganization($this->session->get('organization'));
             $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
             $subObject->setApplication(!empty($application) ? $application : null);
         }
