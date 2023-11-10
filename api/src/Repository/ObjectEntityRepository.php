@@ -66,7 +66,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
                 $filters[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
                 $attribute->getSearchable() && $filters[] = $prefix.$attribute->getName();
-                $embeddedString = $embedded && $level > 1 ? 'embedded.' : '';
+                $embeddedString = '';
+                if ($embedded && $level > 1) {
+                    $embeddedString = 'embedded.';
+                }
                 $filters = array_merge($filters, $this->getFilterParameters($attribute->getObject(), $prefix.$embeddedString.$attribute->getName().'.', $level + 1, $embedded));
             }
         }
@@ -86,7 +89,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
      */
     public function getOrderParameters(Entity $Entity, string $prefix = '', int $level = 1, bool $embedded = false): array
     {
-        $prefix = $embedded && $level === 2 ? "embedded.$prefix" : $prefix;
+        $prefix = $prefix;
+        if ($embedded && $level === 2) {
+            $prefix = "embedded.$prefix";
+        }
         // defaults
         $sortable = [$prefix.'_dateCreated', $prefix.'_dateModified'];
 
@@ -94,7 +100,10 @@ class ObjectEntityRepository extends ServiceEntityRepository
             if (in_array($attribute->getType(), ['string', 'date', 'datetime', 'integer', 'float', 'number']) && $attribute->getSortable()) {
                 $sortable[] = $prefix.$attribute->getName();
             } elseif ($attribute->getObject() && $level < 3 && !str_contains($prefix, $attribute->getName().'.')) {
-                $embeddedString = $embedded && $level > 1 ? 'embedded.' : '';
+                $embeddedString = '';
+                if ($embedded && $level > 1) {
+                    $embeddedString = 'embedded.';
+                }
                 $sortable = array_merge($sortable, $this->getOrderParameters($attribute->getObject(), $prefix.$embeddedString.$attribute->getName().'.', $level + 1));
             }
         }
