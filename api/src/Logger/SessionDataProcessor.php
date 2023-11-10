@@ -27,6 +27,7 @@ class SessionDataProcessor
      * @param SessionInterface $session
      * @param RequestStack $requestStack
      * @param EventDispatcherInterface $eventDispatcher
+     * @param EntityManagerInterface $entityManager
      */
     public function __construct(
         SessionInterface $session,
@@ -48,7 +49,7 @@ class SessionDataProcessor
      *
      * @return array The updated context.
      */
-    public function updateContext($context): array
+    public function updateContext(array $context): array
     {
         $context['session'] = $this->session->getId();
         $context['process'] = $this->session->has('process') ? $this->session->get('process') : '';
