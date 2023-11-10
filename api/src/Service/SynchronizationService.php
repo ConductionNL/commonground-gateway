@@ -66,6 +66,7 @@ class SynchronizationService
     private Logger $logger;
 
     private bool $asyncError = false;
+    private ?string $sha = null;
 
     /**
      * @param CallService              $callService
@@ -918,6 +919,29 @@ class SynchronizationService
     }
 
     /**
+     * This function checks if the sha of $synchronization matches the given $sha.
+     * When $synchronization->getSha() doesn't match with the given $sha, the given $sha will be stored in the SynchronizationService.
+     * Always call the ->synchronize() function after this, because only then the stored $sha will be used to update $synchronization->setSha().
+     *
+     * @param Synchronization $synchronization The Synchronization to check the sha of.
+     * @param string $sha The sha to check / compare.
+     *
+     * @return bool Returns True if sha matches, and false if it does not match.
+     */
+    public function doesShaMatch(Synchronization $synchronization, string $sha): bool
+    {
+        $this->sha = null;
+
+        if ($synchronization->getSha() === $sha) {
+            return true;
+        }
+
+        $this->sha = $sha;
+
+        return false;
+    }
+
+    /**
      * Executes the synchronization between source and gateway.
      *
      * @param Synchronization $synchronization The synchronization to update
@@ -988,6 +1012,12 @@ class SynchronizationService
             $sourceObject = $this->mappingService->mapping($synchronization->getMapping(), $sourceObject);
         }
         $synchronization->getObject()->hydrate($sourceObject, $unsafe);
+
+        if ($this->sha !== null) {
+            $synchronization->setSha($this->sha);
+            $this->sha = null;
+        }
+
         $this->entityManager->persist($synchronization->getObject());
         $this->entityManager->persist($synchronization);
 
