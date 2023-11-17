@@ -67,6 +67,7 @@ class SessionDataProcessor
         $context['application'] = $this->session->has('application') === true ? $this->session->get('application') : '';
         $context['host'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getHost() : '';
         $context['ip'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getClientIp() : '';
+        $context['method'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getMethod() : '';
 
         return $context;
     }
@@ -81,7 +82,6 @@ class SessionDataProcessor
      */
     private function updateErrorContext(array $record): array
     {
-        $context['method'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getMethod() : '';
         $context['pathRaw'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getPathInfo() : '';
         $context['querystring'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getQueryString() : '';
         $context['contentType'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getContentType() : '';
