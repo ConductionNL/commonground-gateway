@@ -82,8 +82,11 @@ class SessionDataProcessor
      */
     private function updateErrorContext(array $record): array
     {
+        $context = $record['context'];
+
         $context['pathRaw'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getPathInfo() : '';
         $context['querystring'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getQueryString() : '';
+        $context['mongoDBFilter'] = $this->session->has('mongoDBFilter') === true ? json_encode($this->session->get('mongoDBFilter')) : '';
         $context['contentType'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getContentType() : '';
 
         // Do not log entire body for normal errors, only critical and higher
