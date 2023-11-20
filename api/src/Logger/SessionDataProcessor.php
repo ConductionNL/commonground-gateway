@@ -65,14 +65,13 @@ class SessionDataProcessor
         $context['source'] = $this->session->has('source') === true ? $this->session->get('source') : '';
 
         // Add more to context if we are dealing with a log containing sourceCall data
-        if (isset($record['data']['sourceCall'])) {
-            $context = $this->addSourceCallContext($context, $record['data']['sourceCall'], $record['level_name']);
+        if (isset($context['sourceCall'])) {
+            $context = $this->updateSourceCallContext($context, $record['level_name']);
         }
 
         $context['user'] = $this->session->has('user') === true ? $this->session->get('user') : '';
         $context['organization'] = $this->session->has('organization') === true ? $this->session->get('organization') : '';
         $context['application'] = $this->session->has('application') === true ? $this->session->get('application') : '';
-        $context['plugin'] = isset($record['data']['plugin']) === true ? $record['data']['plugin'] : '';
         $context['host'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getHost() : '';
         $context['ip'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getClientIp() : '';
         $context['method'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getMethod() : '';
@@ -86,35 +85,31 @@ class SessionDataProcessor
     }
 
     /**
-     * Update the context with data from the session and the request stack. For log records with level ERROR or higher.
+     * Update the context for Source call logs.
      *
      * @param array $context The log context we are updating.
-     * @param array $callData The [data][sourceCall] info of the log record we are updating the context for.
      * @param string $levelName The level name of the log record we are updating the context for.
      *
      * @return array The updated context.
      */
-    private function addSourceCallContext(array $context, array $callData, string $levelName): array
+    private function updateSourceCallContext(array $context, string $levelName): array
     {
         $maxStrLength = 500;
         if (in_array($levelName, ['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY']) === true) {
             $maxStrLength = 2000;
         }
 
-        $context['callMethod'] = isset($callData['callMethod']) === true ? $callData['callMethod'] : '';
-        $context['callUrl'] = isset($callData['callUrl']) === true ? $callData['callUrl'] : '';
-        $context['callQuery'] = isset($callData['callQuery']) === true ? json_encode($callData['callQuery']) : '';
-        $context['callContentType'] = isset($callData['callContentType']) === true ? $callData['callContentType'] : '';
-        $context['callBody'] = isset($callData['callBody']) === true ? $callData['callBody'] : '';
-        if (strlen($context['callBody']) > $maxStrLength) {
-            $context['callBody'] = substr($context['callBody'], 0, $maxStrLength) . '...';
+        $context['sourceCall']['callQuery'] = isset($context['sourceCall']['callQuery']) === true ? json_encode($context['sourceCall']['callQuery']) : '';
+        if ($context['sourceCall']['callQuery'] === "[]") {
+            $context['sourceCall']['callQuery'] = '';
         }
 
-        $context['responseStatusCode'] = isset($callData['responseStatusCode']) === true ? $callData['responseStatusCode'] : '';
-        $context['responseContentType'] = isset($callData['responseContentType']) === true ? $callData['responseContentType'] : '';
-        $context['responseBody'] = isset($callData['responseBody']) === true ? $callData['responseBody'] : '';
-        if (strlen($context['responseBody']) > $maxStrLength) {
-            $context['responseBody'] = substr($context['responseBody'], 0, $maxStrLength) . '...';
+        if (strlen($context['sourceCall']['callBody']) > $maxStrLength) {
+            $context['sourceCall']['callBody'] = substr($context['sourceCall']['callBody'], 0, $maxStrLength) . '...';
+        }
+
+        if (strlen($context['sourceCall']['responseBody']) > $maxStrLength) {
+            $context['sourceCall']['responseBody'] = substr($context['sourceCall']['responseBody'], 0, $maxStrLength) . '...';
         }
 
         return $context;
