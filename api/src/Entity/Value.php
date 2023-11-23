@@ -661,10 +661,10 @@ class Value
                     if (is_array($value)) {
                         $object = null;
 
-                        // Make sure to not create new objects if we don't have to...
-                        if (isset($value['id'])) {
+                        // Make sure to not create new objects if we don't have to (_id in testdata)...
+                        if (isset($value['_id'])) {
                             $objects = $this->objects->filter(function ($item) use ($value) {
-                                return $item->getId() !== null && $item->getId()->toString() === $value['id'];
+                                return $item->getId() !== null && $item->getId()->toString() === $value['_id'];
                             });
 
                             if (count($objects) > 0) {
