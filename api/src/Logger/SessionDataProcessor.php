@@ -64,19 +64,19 @@ class SessionDataProcessor
         $context['mapping'] = $this->session->has('mapping') === true ? $this->session->get('mapping') : '';
         $context['source'] = $this->session->has('source') === true ? $this->session->get('source') : '';
 
-        // Add more to context if we are dealing with a log containing sourceCall data
-        if (isset($context['sourceCall'])) {
+        // Add more to context if we are dealing with a log containing sourceCall data.
+        if (isset($context['sourceCall']) === true) {
             $context = $this->updateSourceCallContext($context, $record['level_name']);
         }
 
         $context['user'] = $this->session->has('user') === true ? $this->session->get('user') : '';
         $context['organization'] = $this->session->has('organization') === true ? $this->session->get('organization') : '';
         $context['application'] = $this->session->has('application') === true ? $this->session->get('application') : '';
-        $context['host'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getHost() : '';
-        $context['ip'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getClientIp() : '';
-        $context['method'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getMethod() : '';
+        $context['host'] = $this->requestStack->getMainRequest() !== null ? $this->requestStack->getMainRequest()->getHost() : '';
+        $context['ip'] = $this->requestStack->getMainRequest() !== null ? $this->requestStack->getMainRequest()->getClientIp() : '';
+        $context['method'] = $this->requestStack->getMainRequest() !== null ? $this->requestStack->getMainRequest()->getMethod() : '';
 
-        // Add more to context for higher level logs
+        // Add more to context for higher level logs.
         if (in_array($record['level_name'], ['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY']) === true) {
             $context = $this->addErrorContext($context, $record['level_name']);
         }
@@ -87,7 +87,7 @@ class SessionDataProcessor
     /**
      * Update the context for Source call logs.
      *
-     * @param array $context The log context we are updating.
+     * @param array  $context The log context we are updating.
      * @param string $levelName The level name of the log record we are updating the context for.
      *
      * @return array The updated context.
@@ -95,10 +95,10 @@ class SessionDataProcessor
     private function updateSourceCallContext(array $context, string $levelName): array
     {
         if (in_array($levelName, ['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY']) === true) {
-            $maxStrLength = $context['sourceCall']['maxCharCountErrorBody'] ?? 2000;
+            $maxStrLength = ($context['sourceCall']['maxCharCountErrorBody'] ?? 2000);
             unset($context['sourceCall']['maxCharCountBody']);
         } else {
-            $maxStrLength = $context['sourceCall']['maxCharCountBody'] ?? 500;
+            $maxStrLength = ($context['sourceCall']['maxCharCountBody'] ?? 500);
             unset($context['sourceCall']['maxCharCountErrorBody']);
         }
 
@@ -110,11 +110,11 @@ class SessionDataProcessor
         }
 
         if (isset($context['sourceCall']['callBody']) === true && strlen($context['sourceCall']['callBody']) > $maxStrLength) {
-            $context['sourceCall']['callBody'] = substr($context['sourceCall']['callBody'], 0, $maxStrLength) . '...';
+            $context['sourceCall']['callBody'] = substr($context['sourceCall']['callBody'], 0, $maxStrLength).'...';
         }
 
         if (isset($context['sourceCall']['responseBody']) === true && strlen($context['sourceCall']['responseBody']) > $maxStrLength) {
-            $context['sourceCall']['responseBody'] = substr($context['sourceCall']['responseBody'], 0, $maxStrLength) . '...';
+            $context['sourceCall']['responseBody'] = substr($context['sourceCall']['responseBody'], 0, $maxStrLength).'...';
         }
 
         return $context;
@@ -131,13 +131,13 @@ class SessionDataProcessor
      */
     private function addErrorContext(array $context, string $levelName): array
     {
-        $context['pathRaw'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getPathInfo() : '';
-        $context['querystring'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getQueryString() : '';
+        $context['pathRaw'] = $this->requestStack->getMainRequest() !== null ? $this->requestStack->getMainRequest()->getPathInfo() : '';
+        $context['querystring'] = $this->requestStack->getMainRequest() !== null ? $this->requestStack->getMainRequest()->getQueryString() : '';
         $context['mongoDBFilter'] = $this->session->has('mongoDBFilter') === true ? json_encode($this->session->get('mongoDBFilter')) : '';
-        $context['contentType'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getContentType() : '';
+        $context['contentType'] = $this->requestStack->getMainRequest() !== null ? $this->requestStack->getMainRequest()->getContentType() : '';
 
-        // Do not log entire body for normal errors, only critical and higher
-        if ($this->requestStack->getMainRequest() && $levelName !== 'ERROR') {
+        // Do not log entire body for normal errors, only critical and higher.
+        if ($this->requestStack->getMainRequest() !== null && $levelName !== 'ERROR') {
             try {
                 $context['body'] = $this->requestStack->getMainRequest()->toArray();
             } catch (Exception $exception) {
