@@ -559,11 +559,25 @@ class Gateway
     private ?string $documentation = null;
 
     /**
-     * Setting logging to true will couse ALL responses to be logged (normaly we only log errors). Doing so wil dramaticly slow down the gateway and couse an increase in database size. This is not recomended outside of development purposes.
+     * Configuration for logging, when an api call is made on the source we can log some information for this call.
+     * With this array you can enable/disable what will be logged.
      *
-     * @ORM\Column(type="boolean", nullable=true)
+     * @Groups({"read","read_secure","write"})
+     *
+     * @ORM\Column(type="array")
      */
-    private $logging;
+    private array $loggingConfig = [
+        'callMethod'            => true,
+        'callUrl'               => true,
+        'callQuery'             => true,
+        'callContentType'       => true,
+        'callBody'              => true,
+        'responseStatusCode'    => true,
+        'responseContentType'   => true,
+        'responseBody'          => true,
+        'maxCharCountBody'      => 500,
+        'maxCharCountErrorBody' => 2000,
+    ];
 
     /**
      * @var array ...
@@ -792,6 +806,7 @@ class Gateway
         array_key_exists('jwtId', $schema) ? $this->setJwtId($schema['jwtId']) : '';
         array_key_exists('username', $schema) ? $this->setUsername($schema['username']) : '';
         array_key_exists('documentation', $schema) ? $this->setDocumentation($schema['documentation']) : '';
+        array_key_exists('loggingConfig', $schema) ? $this->setLoggingConfig($schema['loggingConfig']) : '';
         array_key_exists('headers', $schema) ? $this->setHeaders($schema['headers']) : '';
         array_key_exists('translationConfig', $schema) ? $this->setTranslationConfig($schema['translationConfig']) : '';
         array_key_exists('type', $schema) ? $this->setType($schema['type']) : '';
@@ -826,6 +841,7 @@ class Gateway
             'jwtId'                          => $this->getJwtId(),
             'username'                       => $this->getUsername(),
             'documentation'                  => $this->getDocumentation(),
+            'loggingConfig'                  => $this->getLoggingConfig(),
             'headers'                        => $this->getHeaders(),
             'translationConfig'              => $this->getTranslationConfig(),
             'type'                           => $this->getType(),
@@ -857,6 +873,7 @@ class Gateway
             'password'                       => $this->getPassword(),
             'apikey'                         => $this->getApikey(),
             'documentation'                  => $this->getDocumentation(),
+            'loggingConfig'                  => $this->getLoggingConfig(),
             'headers'                        => $this->getHeaders(),
             'translationConfig'              => $this->getTranslationConfig(),
             'type'                           => $this->getType(),
@@ -1129,14 +1146,14 @@ class Gateway
         return $this;
     }
 
-    public function getLogging(): ?bool
+    public function getLoggingConfig(): ?array
     {
-        return $this->logging;
+        return $this->loggingConfig;
     }
 
-    public function setLogging(?bool $logging): self
+    public function setLoggingConfig(array $loggingConfig): self
     {
-        $this->logging = $logging;
+        $this->loggingConfig = array_merge($loggingConfig);
 
         return $this;
     }
