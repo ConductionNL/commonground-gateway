@@ -94,9 +94,12 @@ class SessionDataProcessor
      */
     private function updateSourceCallContext(array $context, string $levelName): array
     {
-        $maxStrLength = $context['sourceCall']['maxCharCountBody'] ?? 500;
         if (in_array($levelName, ['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY']) === true) {
             $maxStrLength = $context['sourceCall']['maxCharCountErrorBody'] ?? 2000;
+            unset($context['sourceCall']['maxCharCountBody']);
+        } else {
+            $maxStrLength = $context['sourceCall']['maxCharCountBody'] ?? 500;
+            unset($context['sourceCall']['maxCharCountErrorBody']);
         }
 
         if (isset($context['sourceCall']['callQuery']) === true) {
