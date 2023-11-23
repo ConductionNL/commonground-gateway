@@ -94,21 +94,23 @@ class SessionDataProcessor
      */
     private function updateSourceCallContext(array $context, string $levelName): array
     {
-        $maxStrLength = 500;
+        $maxStrLength = $context['sourceCall']['maxCharCountBody'] ?? 500;
         if (in_array($levelName, ['ERROR', 'CRITICAL', 'ALERT', 'EMERGENCY']) === true) {
-            $maxStrLength = 2000;
+            $maxStrLength = $context['sourceCall']['maxCharCountErrorBody'] ?? 2000;
         }
 
-        $context['sourceCall']['callQuery'] = isset($context['sourceCall']['callQuery']) === true ? json_encode($context['sourceCall']['callQuery']) : '';
-        if ($context['sourceCall']['callQuery'] === "[]") {
-            $context['sourceCall']['callQuery'] = '';
+        if (isset($context['sourceCall']['callQuery']) === true) {
+            $context['sourceCall']['callQuery'] = json_encode($context['sourceCall']['callQuery']);
+            if ($context['sourceCall']['callQuery'] === "[]") {
+                $context['sourceCall']['callQuery'] = '';
+            }
         }
 
-        if (strlen($context['sourceCall']['callBody']) > $maxStrLength) {
+        if (isset($context['sourceCall']['callBody']) === true && strlen($context['sourceCall']['callBody']) > $maxStrLength) {
             $context['sourceCall']['callBody'] = substr($context['sourceCall']['callBody'], 0, $maxStrLength) . '...';
         }
 
-        if (strlen($context['sourceCall']['responseBody']) > $maxStrLength) {
+        if (isset($context['sourceCall']['responseBody']) === true && strlen($context['sourceCall']['responseBody']) > $maxStrLength) {
             $context['sourceCall']['responseBody'] = substr($context['sourceCall']['responseBody'], 0, $maxStrLength) . '...';
         }
 
@@ -132,7 +134,7 @@ class SessionDataProcessor
         $context['contentType'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getContentType() : '';
 
         // Do not log entire body for normal errors, only critical and higher
-        if ($levelName !== 'ERROR') {
+        if ($this->requestStack->getMainRequest() && $levelName !== 'ERROR') {
             try {
                 $context['body'] = $this->requestStack->getMainRequest()->toArray();
             } catch (Exception $exception) {
