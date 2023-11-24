@@ -562,6 +562,8 @@ class Gateway
      * Configuration for logging, when an api call is made on the source we can log some information for this call.
      * With this array you can enable/disable what will be logged.
      *
+     * @Assert\NotNull
+     *
      * @Groups({"read","write"})
      *
      * @ORM\Column(type="array")
