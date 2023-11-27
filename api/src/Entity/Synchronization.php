@@ -87,7 +87,7 @@ class Synchronization
      *
      * @Groups({"read","write"})
      *
-     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="synchronizations", fetch="EAGER")
+     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, cascade={"persist"}, inversedBy="synchronizations", fetch="EAGER")
      */
     private ?ObjectEntity $object = null;
 
@@ -154,7 +154,16 @@ class Synchronization
     private ?string $hash = '';
 
     /**
-     * @var bool Whether or not the synchronization is blocked
+     * @var ?string The sha(256) used to check if a Sync should be triggered cause the object has changed
+     *
+     * @Groups({"read","write"})
+     *
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $sha = null;
+
+    /**
+     * @var bool Whether the synchronization is blocked
      *
      * @Groups({"read", "write"})
      *
@@ -271,9 +280,22 @@ class Synchronization
 
     public function setObject(?ObjectEntity $object): self
     {
-        $this->object = $object;
+        if ($object !== null) {
+            $this->setEntity($object->getEntity());
 
-        $this->setEntity($object->getEntity());
+            if ($object->getSynchronizations()->contains($this) === false) {
+                $object->addSynchronization($this);
+            }
+        }
+        if ($object === null) {
+            $this->setEntity(null);
+
+            if ($this->object->getSynchronizations()->contains($this) === true) {
+                $this->object->removeSynchronization($this);
+            }
+        }
+
+        $this->object = $object;
 
         return $this;
     }
@@ -344,6 +366,18 @@ class Synchronization
     public function setHash(?string $hash): self
     {
         $this->hash = $hash;
+
+        return $this;
+    }
+
+    public function getSha(): ?string
+    {
+        return $this->sha;
+    }
+
+    public function setSha(?string $sha): self
+    {
+        $this->sha = $sha;
 
         return $this;
     }

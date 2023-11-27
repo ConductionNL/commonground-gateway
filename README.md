@@ -2,11 +2,16 @@
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/commonground-gateway)](https://artifacthub.io/packages/search?repo=commonground-gateway)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/b6de6f6071044e1783a145afa27f1829)](https://www.codacy.com/gh/CommonGateway/CoreBundle/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=CommonGateway/CoreBundle&amp;utm_campaign=Badge_Grade)
 
+
 The Common Gateway repository provides a quick Kubernetes wrapper for the Common Gateway Symfony Bundle. In other words, it doesn't aim to be its own code base but simply contains the files needed to create Kubernetes images and Helm installers for the core bundle.
 
-If you are looking for the Common Gateway code base, please refer to the Core Bundle repository instead, as that's where you will find all the appropriate documentation.
+If you are looking for the Common Gateway code base, please refer to the [Core Bundle repository](https://github.com/CommonGateway/coreBundle) instead, as that's where you will find all the appropriate documentation.
 
 ## Quick start (for local development)
+> **Warning**
+> The most recent documentation for setting up your common gateway is maintained in [this document](https://github.com/CommonGateway/CoreBundle/blob/master/docs/features/Installation.md). The documentation in this document might or might not be up to date with this documentation.
+
+
 > **Dependencies**
 > - To clone the codebase to your locale machine you will need Git
 > - To run the gateway on your local machine, you will need Docker Desktop.
@@ -91,3 +96,89 @@ If you want your cluster to be able to set up its own certificates for SSL/HTTPS
 $ kubectl apply -f letsencrypt-ci.yaml --kubeconfig=[path-to-your-kubeconfig]
 ````
 
+### Installed dependencies
+The common gateway relies on a number of software dependencies the helm chart installs alongside the common gateway. If you want however to connect to existing versions of these dependencies, you can disable them.
+
+#### PostgreSQL
+The common gateway is dependent on a SQL database for internal operations. We recommend to use PostgreSQL as the database type the common gateway was designed with. However we also support MySQL, MariaDB and Microsoft SQL Server, although the latter defers from newer standards and henceforth can cause some issues and therefore is not recommended.
+
+To disable PostgreSQL: set the setting `postgresql.enabled` to `false`, and enter a SQL url (`pgsql://`, `psql://` for postgres, `mysqli://` for MySQL and MariaDB or `pdo_sqlsrv://`) in the field `postgresql.url`. Also, if the database is a Microsoft SQL Server database, don't forget to change the field `databaseType` to mssql.
+
+The PostgreSQL database that is installed if `postgresql.enabled` is set to `true` is installed with [this chart](https://artifacthub.io/packages/helm/bitnami/postgresql/12.1.2). This chart contains default resource requests that are not overwritten.
+
+In case the resource requests and/or limits have to be overridden this can be done using the following parameters:
+```yaml
+postgresql:
+  primary:
+    resources:
+      limits: {}
+      requests: {}
+```
+The default requests are 256Mi memory and 200m vCPU.
+
+
+#### MongoDB
+For serving content quickly the common gateway relies on a document cache which is run in MongoDB. MongoDB is also used to store the logs of the common gateway.
+
+To disable MongoDB: set the setting `mongodb.enabled` to `false`, and enter a SQL url (`mongodb://`) in the field `mongodb.url`.
+
+The MongoDB database that is installed if `mongodb.enabled` is set to `true` is installed with [this chart](https://artifacthub.io/packages/helm/bitnami/mongodb/13.4.4). This chart does not contain default resource requests, therefore the gateway chart overrides these requests with the following values:
+
+```yaml
+mongodb:
+  resources:
+    requests:
+      cpu: 1
+      memory: 6Gi
+```
+
+These limits are set to high limits to accommodate for large databases, and can be tweaked to lower values if the size of the database is not expected to exceed a couple of Gigabytes.
+
+#### RabbitMQ
+To run events from the event-driven architecture asynchronously, the common gateway uses a message queue on RabbitMQ.
+
+The RabbitMQ dependency can be disabled by setting `rabbitmq.enabled` to `false`. However, it is not possible at this time to connect to an external instance of rabbitmq, this means that events cannot be run asynchronously, and that the workers have to be disabled by setting `consumer.replicaCount` to `0`.
+
+The RabbitMQ message queue that is installed if `rabbitmq.enabled` is set to `true` is installed with [this chart](https://artifacthub.io/packages/helm/bitnami/rabbitmq/11.91.1). This chart does not contain default resource requests, therefore the gateway chart overrides these requests with the following values:
+
+```yaml
+rabbitmq:
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+```
+
+These are values that are not observed to be exceeded on busy environments with large numbers of asynchronous events.
+
+#### Redis
+For session storage and key value caching, a redis cache is in place.
+
+The Redis dependency can be disabled by setting `redis.enabled` to `false`. However, it is not possible at this time to connect to an external instance of redis. This means that in order to have consistent session storage the common gateway can only be run on one container by setting the `replicaCount` parameter to `1`.
+
+The Redis cache that is in stalled if `redis.enabled` is set to `true` is installed with [this chart](https://artifacthub.io/packages/helm/bitnami/redis/17.3.11). This chart does not contain default resource requests, therefore the gateway chart overrides these requests with the following values:
+
+In case the resource requests and/or limits have to be overridden this can be done using the following parameters:
+```yaml
+redis:
+  master:
+    resources:
+      requests:
+        cpu: 20m
+        memory: 128Mi
+```
+
+#### Gateway UI
+The common gateway also offers its own User Interface for admin.
+
+This user interface is installed with [this chart](https://raw.githubusercontent.com/ConductionNL/gateway-ui/development/helm/).
+
+The resource requests for these containers are set to:
+
+```yaml
+gateway-ui:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 128Mi
+```

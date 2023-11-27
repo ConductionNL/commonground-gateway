@@ -50,7 +50,7 @@ services:
             #       - 'my_prefix'
 
     # TODO: test if we still need this here, might be deprecated
-    App\Subscriber\ValueDatabaseSubscriber:
+    CommonGateway\CoreBundle\Subscriber\ValueDatabaseSubscriber:
         tags:
             - name: 'doctrine.event_subscriber'
               priority: 0
@@ -90,3 +90,22 @@ services:
         class: App\Logger\SessionDataProcessor
         tags:
             - { name: monolog.processor }
+
+    doctrine.result_cache_provider:
+        class: Symfony\Component\Cache\DoctrineProvider
+        arguments:
+            - '@doctrine.result_cache_pool'
+    doctrine.system_cache_provider:
+        class: Symfony\Component\Cache\DoctrineProvider
+        arguments:
+            - '@doctrine.system_cache_pool'
+    
+    doctrine.system_cache_pool:
+        parent: 'cache.app'
+        tags:
+            - { name: 'cache.pool', namespace: 'app' }
+    
+    doctrine.result_cache_pool:
+        parent: 'cache.app'
+        tags:
+            - { name: 'cache.pool', namespace: 'app' }

@@ -5,7 +5,6 @@ namespace App\Service;
 use Adbar\Dot;
 use App\Entity\Application;
 use App\Entity\Entity;
-use App\Entity\Gateway;
 use App\Entity\Gateway as Source;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
@@ -66,17 +65,8 @@ class SynchronizationService
     private EventDispatcherInterface $eventDispatcher;
     private Logger $logger;
 
-    /**
-     * Default user for synchronizations.
-     * Note that owner => reference is replaces with an uuid of that User object.
-     *
-     * @var array|string[]
-     */
-    private array $synchronizationDefault = [
-        'owner' => 'https://docs.commongateway.nl/user/default.user.json',
-    ];
-
     private bool $asyncError = false;
+    private ?string $sha = null;
 
     /**
      * @param CallService              $callService
@@ -389,7 +379,7 @@ class SynchronizationService
      *
      * @param string $configKey The key to use when looking for an uuid of a Source in the Action->Configuration.
      *
-     * @return Gateway|null The found source for the configuration
+     * @return Source|null The found source for the configuration
      */
     private function getSourceFromConfig(string $configKey = 'source'): ?Source
     {
@@ -790,35 +780,19 @@ class SynchronizationService
     }
 
     /**
-     * Sets default owner on objectEntity.
-     *
-     * @return ObjectEntity $object
-     */
-    private function setDefaultOwner(ObjectEntity $object): ObjectEntity
-    {
-        $defaultUser = $this->entityManager->getRepository('App:User')->findOneBy(['reference' => $this->synchronizationDefault['owner']]);
-        if ($defaultUser instanceof User === false) {
-            return $object;
-        }
-
-        return $object->setOwner($defaultUser->getId()->toString());
-    }//end setDefaultOwner()
-
-    /**
      * Adds a new ObjectEntity to a synchronization object.
      *
      * @param Synchronization $synchronization The synchronization object without object
      *
      * @return string The method for populateObject, POST or PUT depending on if we created a new ObjectEntity.
      */
-    private function checkObjectEntity(Synchronization $synchronization): string
+    public function checkObjectEntity(Synchronization $synchronization): string
     {
         if (!$synchronization->getObject()) {
             $object = new ObjectEntity();
-            $object = $this->setDefaultOwner($object);
             $synchronization->getSourceId() && $object->setExternalId($synchronization->getSourceId());
             $object->setEntity($synchronization->getEntity());
-            $object = $this->setApplicationAndOrganization($object);
+            $object = $this->setApplication($object);
             $object->addSynchronization($synchronization);
             $this->entityManager->persist($object);
             if (isset($this->io)) {
@@ -945,6 +919,29 @@ class SynchronizationService
     }
 
     /**
+     * This function checks if the sha of $synchronization matches the given $sha.
+     * When $synchronization->getSha() doesn't match with the given $sha, the given $sha will be stored in the SynchronizationService.
+     * Always call the ->synchronize() function after this, because only then the stored $sha will be used to update $synchronization->setSha().
+     *
+     * @param Synchronization $synchronization The Synchronization to check the sha of.
+     * @param string $sha The sha to check / compare.
+     *
+     * @return bool Returns True if sha matches, and false if it does not match.
+     */
+    public function doesShaMatch(Synchronization $synchronization, string $sha): bool
+    {
+        $this->sha = null;
+
+        if ($synchronization->getSha() === $sha) {
+            return true;
+        }
+
+        $this->sha = $sha;
+
+        return false;
+    }
+
+    /**
      * Executes the synchronization between source and gateway.
      *
      * @param Synchronization $synchronization The synchronization to update
@@ -969,7 +966,6 @@ class SynchronizationService
             isset($this->io) && $this->io->text('creating new objectEntity');
             $this->logger->info('creating new objectEntity');
             $object = new ObjectEntity($synchronization->getEntity());
-            $object = $this->setDefaultOwner($object);
             $object->addSynchronization($synchronization);
             $this->entityManager->persist($object);
             $this->entityManager->persist($synchronization);
@@ -998,6 +994,9 @@ class SynchronizationService
 
         // Counter
         $counter = $synchronization->getTryCounter() + 1;
+        if ($counter > 10000) {
+            $counter = 10000;
+        }
         $synchronization->setTryCounter($counter);
 
         // Set dont try before, expensional so in minutes  1,8,27,64,125,216,343,512,729,1000
@@ -1013,6 +1012,13 @@ class SynchronizationService
             $sourceObject = $this->mappingService->mapping($synchronization->getMapping(), $sourceObject);
         }
         $synchronization->getObject()->hydrate($sourceObject, $unsafe);
+
+        if ($this->sha !== null) {
+            $synchronization->setSha($this->sha);
+            $this->sha = null;
+        }
+
+        $this->entityManager->persist($synchronization->getObject());
         $this->entityManager->persist($synchronization);
 
         if ($oldDateModified !== $synchronization->getObject()->getDateModified()->getTimestamp()) {
@@ -1074,18 +1080,17 @@ class SynchronizationService
 
     /**
      * Sets an application and organization for new ObjectEntities.
+     * todo: setting organization is done by the new ObjectEntitySubscriber. We should set application through this way as well...
      *
      * @param ObjectEntity $objectEntity The ObjectEntity to update
      *
      * @return ObjectEntity The updated ObjectEntity
      */
-    public function setApplicationAndOrganization(ObjectEntity $objectEntity): ObjectEntity
+    public function setApplication(ObjectEntity $objectEntity): ObjectEntity
     {
-        // todo move this to ObjectEntityService to prevent duplicate code
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['name' => 'main application']);
         if ($application instanceof Application) {
             $objectEntity->setApplication($application);
-            $objectEntity->setOrganization($application->getOrganization());
         } elseif (
             ($applications = $this->entityManager->getRepository('App:Application')->findAll()
                 && !empty($applications)
@@ -1093,7 +1098,6 @@ class SynchronizationService
                 && $application instanceof Application
         ) {
             $objectEntity->setApplication($application);
-            $objectEntity->setOrganization($application->getOrganization());
         }
 
         return $objectEntity;
@@ -1469,24 +1473,26 @@ class SynchronizationService
         $parse = \Safe\parse_url($url);
         $location = $parse['scheme'].'://'.$parse['host'];
 
-        // 2.c Try to establich a source for the domain
+        // 2.c Try to establish a source for the domain
         $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
 
         // 2.b The source might be on a path e.g. /v1 so if whe cant find a source let try to cycle
-        foreach (explode('/', $parse['path']) as $pathPart) {
-            if ($pathPart !== '') {
-                $location = $location.'/'.$pathPart;
-            }
-            $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
-            if ($source !== null) {
-                break;
+        if ($source instanceof Source === false && isset($parse['path']) === true) {
+            foreach (explode('/', $parse['path']) as $pathPart) {
+                if ($pathPart !== '') {
+                    $location = $location.'/'.$pathPart;
+                }
+                $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
+                if ($source !== null) {
+                    break;
+                }
             }
         }
-        if ($source instanceof Gateway === false) {
+        if ($source instanceof Source === false) {
             return null;
         }
 
-        // 3 If we have a source we can establich an endpoint.
+        // 3 If we have a source we can establish an endpoint.
         $endpoint = str_replace($location, '', $url);
 
         // 4 Create sync

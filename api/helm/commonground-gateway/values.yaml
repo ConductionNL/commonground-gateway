@@ -31,8 +31,10 @@ config:
     crontab: '*/5 * * * *' # https://crontab.guru/
     appAuth: false # If we should check and care about authorization in the cronRunner pods.
   defaultRedirectUrl: useDomain
-  defaultBackUrl: useDomain
+  defaultBackUrl: useDomain  
+  logLevel: warning
   documentation_description: "This documentation contains the endpoints on your commonground gateway.
+
 
 # Authentication
 
@@ -115,34 +117,30 @@ php:
   pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
-  resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-#    limits:
-#      cpu: 400m
-#      memory: 512Mi
-#    requests:
-#      cpu: 200m
-#      memory: 256Mi
+  resources:
+    limits:
+      cpu: 2
+      memory: 2Gi
+    requests:
+      cpu: 1
+      memory: 1Gi
 
 
 nginx:
   repository: ghcr.io/conductionnl/commonground-gateway-nginx
   pullPolicy: Always
   tag: "latest"
-  resources: {}
+  resources:
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-#    limits:
-#      cpu: 200m
-#      memory: 128Mi
-#    requests:
-#      cpu: 100m
-#      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 64Mi
 
 redis:
   enabled: true
@@ -151,6 +149,11 @@ redis:
   auth:
     enabled: false
   pullPolicy: IfNotPresent
+  master:
+      resources:
+          requests:
+              cpu: 20m
+              memory: 128Mi
   
 rabbitmq:
   auth:
@@ -158,6 +161,11 @@ rabbitmq:
       password: '!changeMe!'
   service:
       port: 5672
+  ## Tweak these limits yourself, this is an indicative setting for larger message queues.
+  resources:
+      requests:
+          cpu: 200m
+          memory: 256Mi
 
 imagePullSecrets: []
 nameOverride: ""
@@ -187,6 +195,7 @@ postgresql:
   # ref: https://kubernetes.io/docs/user-guide/persistent-volumes
   persistence:
     enabled: true
+  ## Resource requests for postgresql are set by default by the bitnami chart, but can be overruled here.
 
 mongodb:
     enabled: true
@@ -198,9 +207,18 @@ mongodb:
         enabled: true
         rootUser: api-platform
         rootPassword: "!ChangeMe!"
+    resources:
+        requests:
+            ## Tweak these limits yourself, this is an indicative setting for large databases.
+            cpu: 1
+            memory: 6Gi
 
 gateway-ui:
     enabled: true
+    resources:
+        requests:
+            cpu: 10m
+            memory: 128Mi
 
 consumer:
     replicaCount: 5
@@ -230,12 +248,6 @@ securityContextNginx:
     capabilities:
       drop:
         - all
-      add:
-        - chown
-        - dac_override
-        - setgid
-        - setuid
-        - net_bind_service
     runAsUser: 101
 #    # Warning: the Nginx image is at this moment not able to run on a read-only filesystem.
 #    readOnlyRootFilesystem: false
@@ -248,6 +260,7 @@ service:
 ingress:
   enabled: true
   className: "nginx"
+  maxRequestSize: 50m
   path: /
   pathType: ImplementationSpecific
   annotations: {}

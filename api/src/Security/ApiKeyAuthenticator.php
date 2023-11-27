@@ -2,6 +2,7 @@
 
 namespace App\Security;
 
+use App\Entity\Application;
 use App\Entity\User;
 use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\AuthenticationService;
@@ -56,7 +57,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
     }
 
     /**
-     * Get all the child organisations for an organisation.
+     * Get all the child organizations for an organization.
      *
      * @param array               $organizations
      * @param string              $organization
@@ -85,7 +86,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
     }
 
     /**
-     * Get al the parent organizations for an organisation.
+     * Get al the parent organizations for an organization.
      *
      * @param array               $organizations
      * @param string              $organization
@@ -146,20 +147,27 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
     {
         $key = $request->headers->get('Authorization');
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['secret' => $key]);
-        if (!$application) {
+        if ($application === null) {
             throw new AuthenticationException('Invalid ApiKey');
         }
 
         try {
             $user = $application->getOrganization()->getUsers()[0];
         } catch (\Exception $exception) {
-            throw new AuthenticationException('Invalid User');
+            throw new AuthenticationException('An invalid User is configured for this ApiKey');
         }
+
+        if ($user instanceof User === false) {
+            throw new AuthenticationException('An invalid User is configured for this ApiKey');
+        }
+
+        // Set apiKey Application id in session
         $this->session->set('apiKeyApplication', $application->getId()->toString());
 
-        if (!$user || !($user instanceof User)) {
-            throw new AuthenticationException('The provided token does not match the user it refers to');
-        }
+        // Set organization id and user id in session
+        $this->session->set('user', $user->getId()->toString());
+        $this->session->set('organization', $user->getOrganization() !== null ? $user->getOrganization()->getId()->toString() : null);
+
         $roleArray = [];
         foreach ($user->getSecurityGroups() as $securityGroup) {
             $roleArray['roles'][] = "Role_{$securityGroup->getName()}";
@@ -175,21 +183,11 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
             }
         }
 
-        $organizations = [];
-        if ($user->getOrganisation()) {
-            $organizations[] = $user->getOrganisation();
-        }
-
-        $organizations[] = 'localhostOrganization';
-        $this->session->set('organizations', $organizations);
-        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
-        $this->session->set('activeOrganization', $user->getOrganisation());
-
         $userArray = [
             'id'           => $user->getId()->toString(),
             'email'        => $user->getEmail(),
             'locale'       => $user->getLocale(),
-            'organization' => $user->getOrganisation()->getId()->toString(),
+            'organization' => $user->getOrganization()->getId()->toString(),
             'roles'        => $roleArray['roles'],
         ];
 

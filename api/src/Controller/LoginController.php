@@ -42,8 +42,6 @@ class LoginController extends AbstractController
      */
     public function MeAction(Request $request, CommonGroundService $commonGroundService, ObjectEntityService $objectEntityService)
     {
-        $this->cache->invalidateTags(['grantedScopes']);
-
         $userService = new UserService($commonGroundService, $objectEntityService);
         if ($this->getUser()) {
             $result = [
@@ -54,9 +52,8 @@ class LoginController extends AbstractController
                 'last_name'  => $this->getUser()->getLastName(),
                 'name'       => $this->getUser()->getName(),
                 'email'      => $this->getUser()->getEmail(),
-                // TODO: if we have no person connected to this user create one? with $this->createPersonForUser()
-                'person'        => $userService->getPersonForUser($this->getUser()),
-                'organization'  => $userService->getOrganizationForUser($this->getUser()),
+                'person'        => $userService->getPersonForUser($this->getUser()), // Get person ObjectEntity (->Entity with function = person) by id
+                'organization'  => $userService->getOrganizationForUser($this->getUser()), // Get organization ObjectEntity (->Entity with function = organization) by id
             ];
             $result = json_encode($result);
         } else {

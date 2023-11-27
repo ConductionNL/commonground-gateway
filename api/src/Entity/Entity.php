@@ -182,7 +182,7 @@ class Entity
     private $extend = false;
 
     /**
-     * Whether objects created from this entity should be available to child organisations.
+     * Whether objects created from this entity should be available to child organizations.
      *
      * @Groups({"read","write"})
      *
@@ -1067,6 +1067,9 @@ class Entity
         if (array_key_exists('nameProperties', $schema)) {
             $this->setNameProperties($schema['nameProperties']);
         }
+        if (array_key_exists('createAuditTrails', $schema)) {
+            $this->setCreateAuditTrails($schema['createAuditTrails']);
+        }
 
         // Properties.
         if (array_key_exists('properties', $schema)) {
@@ -1129,6 +1132,7 @@ class Entity
             'exclude'           => $this->isExcluded(),
             'maxDepth'          => $this->getMaxDepth(),
             'nameProperties'    => $this->getNameProperties(),
+            'createAuditTrails' => $this->getCreateAuditTrails(),
             'required'          => [],
             'properties'        => [],
         ];

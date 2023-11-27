@@ -187,7 +187,9 @@ class AuditTrail
     /**
      * @var ?DateTime The creation date of the audit trail
      *
-     * @Groups({"read", "write"})
+     * @Groups({"read"})
+     *
+     * @Gedmo\Timestampable(on="create")
      *
      * @ORM\Column(type="datetime", nullable=true)
      */
@@ -370,12 +372,19 @@ class AuditTrail
         return $this;
     }
 
-    public function getCreationDate(): ?\DateTimeInterface
+    /**
+     * Getter for creationDate.
+     * CoreBundle->ReadUnreadService->getDateRead() return type requires this to have return type DateTime. Not DateTimeInterface!
+     * Please test it if you want to change this.
+     *
+     * @return DateTime|null
+     */
+    public function getCreationDate(): ?DateTime
     {
         return $this->creationDate;
     }
 
-    public function setCreationDate(?\DateTimeInterface $creationDate): self
+    public function setCreationDate(?DateTime $creationDate): self
     {
         $this->creationDate = $creationDate;
 

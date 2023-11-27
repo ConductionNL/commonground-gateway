@@ -659,21 +659,38 @@ class Value
                 foreach ($valueArray as $value) {
                     // Catch Array input (for hydrator)
                     if (is_array($value)) {
-                        $object = new ObjectEntity($this->getAttribute()->getObject());
+                        $object = null;
+
+                        // Make sure to not create new objects if we don't have to (_id in testdata)...
+                        if (isset($value['_id'])) {
+                            $objects = $this->objects->filter(function ($item) use ($value) {
+                                return $item->getId() !== null && $item->getId()->toString() === $value['_id'];
+                            });
+
+                            if (count($objects) > 0) {
+                                $object = $objects[0];
+                            }
+                        }
+                        if ($object instanceof ObjectEntity === false) {
+                            // failsafe to not create duplicate sub objects. In some weird cases $objects[0] doesn't return an ObjectEntity.
+                            if (isset($objects) === true && count($objects) > 0) {
+                                continue;
+                            }
+                            $object = new ObjectEntity($this->getAttribute()->getObject());
+                        }
 
                         $object->setOwner($this->getObjectEntity()->getOwner());
                         $object->setApplication($this->getObjectEntity()->getApplication());
                         $object->setOrganization($this->getObjectEntity()->getOrganization());
                         $object->hydrate($value, $unsafe, $dateModified);
                         $value = $object;
-                        $this->hydratedObjects[] = $object;
                     }
 
                     if (is_string($value)) {
                         $idArray[] = $value;
                     } elseif (!$value) {
                         continue;
-                    } elseif ($value instanceof ObjectEntity) {
+                    } elseif ($value instanceof ObjectEntity && $this->objects->contains($value) === false) {
                         $this->addObject($value);
                     }
                 }

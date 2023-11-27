@@ -26,6 +26,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  * @license EUPL <https://github.com/ConductionNL/contactcatalogus/blob/master/LICENSE.md>
  *
  * @category Command
+ * @deprecated
  */
 class ClearObjectsFromCacheCommand extends Command
 {

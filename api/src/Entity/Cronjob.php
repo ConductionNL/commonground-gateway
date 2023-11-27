@@ -124,6 +124,16 @@ class Cronjob
     private string $crontab = '*/5 * * * *';
 
     /**
+     * @var string|null The userId of a user. This user will be used to run this Cronjob for, if there is no logged-in user.
+     * This helps when, for example: setting the organization of newly created ObjectEntities while running this Cronjob.
+     *
+     * @Groups({"read","write"})
+     *
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $userId = null;
+
+    /**
      * @var array The actions that put on the stack by the crontab.
      *
      * @Groups({"read", "write"})
@@ -316,6 +326,18 @@ class Cronjob
     public function setCrontab(string $crontab): self
     {
         $this->crontab = $crontab;
+
+        return $this;
+    }
+
+    public function getUserId(): ?string
+    {
+        return $this->userId;
+    }
+
+    public function setUserId(?string $userId): self
+    {
+        $this->userId = $userId;
 
         return $this;
     }

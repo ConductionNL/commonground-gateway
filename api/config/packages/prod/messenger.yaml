@@ -1,0 +1,33 @@
+parameters:
+    env(MESSENGER_TRANSPORT_DSN): "amqp://%env(RABBITMQ_USERNAME)%:%env(RABBITMQ_PASSWORD)%@%env(RABBITMQ_HOST)%:%env(RABBITMQ_PORT)%/%2f/messages"
+
+framework:
+    messenger:
+        # Uncomment this (and the failed transport below) to send failed messages to this transport for later handling.
+        failure_transport: failed
+
+        transports:
+            # https://symfony.com/doc/current/messenger.html#transport-configuration
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+
+                retry_strategy:
+                    max_retries: 5
+                    delay: 5000
+                    multiplier: 2
+                    max_delay: 300000
+            failed: 'doctrine://default'
+        buses:
+            messenger.bus.default:
+                middleware:
+                    - router_context
+                
+                
+
+        routing:
+            # Route your messages to the transports
+            'App\Message\ActionMessage': async
+            'App\Message\NotificationMessage': async
+            'App\Message\SyncPageMessage': async
+            'CommonGateway\CoreBundle\Message\CacheMessage': async
+            'CommonGateway\CoreBundle\Message\ValueMessage': async
