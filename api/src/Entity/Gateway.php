@@ -633,7 +633,9 @@ class Gateway
      *
      * @ORM\Column(type="array", nullable=true)
      */
-    private ?array $configuration = [];
+    private ?array $configuration = [
+        "verify" => true
+    ];
 
     /**
      * @var array|null The configuration for endpoints on this source, mostly mapping for now.
@@ -812,7 +814,12 @@ class Gateway
         array_key_exists('headers', $schema) ? $this->setHeaders($schema['headers']) : '';
         array_key_exists('translationConfig', $schema) ? $this->setTranslationConfig($schema['translationConfig']) : '';
         array_key_exists('type', $schema) ? $this->setType($schema['type']) : '';
-        array_key_exists('configuration', $schema) ? $this->setConfiguration($schema['configuration']) : '';
+        if (isset($schema['configuration']) === true) {
+            if (isset($schema['configuration']['verify']) === false) {
+                $schema['configuration']['verify'] = true;
+            }
+            $this->setConfiguration($schema['configuration']);
+        }
         array_key_exists('endpointsConfig', $schema) ? $this->setEndpointsConfig($schema['endpointsConfig']) : '';
         array_key_exists('isEnabled', $schema) ? $this->setIsEnabled($schema['isEnabled']) : '';
 
