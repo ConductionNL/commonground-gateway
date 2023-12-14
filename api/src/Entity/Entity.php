@@ -19,6 +19,7 @@ use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
 use phpDocumentor\Reflection\Types\This;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -63,6 +64,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "name": "exact",
  *     "reference": "exact"
  * })
+ *
+ * @UniqueEntity("reference")
  */
 class Entity
 {

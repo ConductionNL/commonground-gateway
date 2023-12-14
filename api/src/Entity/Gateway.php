@@ -149,6 +149,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * })
  *
  * @UniqueEntity("name")
+ * @UniqueEntity("reference")
  */
 class Gateway
 {
