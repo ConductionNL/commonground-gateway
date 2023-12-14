@@ -53,15 +53,15 @@ legal:
 maintenance: 
   type: internal
   contractors: 
-    name: Conduction
-    until: 2035-01-01
-    email: info\x64conduction.nl
-    website: https://www.conduction.nl
-  contact:
-    name: Ruben van der Linde
-    email: info\x64conduction.nl
-    phone: 085 303 6840
-    affiliation: Conduction
+    - name: Conduction
+      until: 2035-01-01
+      email: info\x64conduction.nl
+      website: https://www.conduction.nl
+  contacts:
+    - name: Ruben van der Linde
+      email: info\x64conduction.nl
+      phone: 085 303 6840
+      affiliation: Conduction
 localisation:
   localisationReady: true
   availableLanguages: 
