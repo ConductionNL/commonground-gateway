@@ -85,7 +85,7 @@ class Action
      *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $version;
+    private ?string $version = '0.0.1';
 
     /**
      * @var string The name of the action

@@ -423,7 +423,7 @@ class Entity
      *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private ?string $version = null;
+    private ?string $version = '0.0.1';
 
     //todo: do we want read/write groups here?
     /**

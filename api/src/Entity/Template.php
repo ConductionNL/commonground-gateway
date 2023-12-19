@@ -140,7 +140,7 @@ class Template
      *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $version = null;
+    private ?string $version = '0.0.1';
 
     /**
      * @var Datetime|null The moment this resource was created

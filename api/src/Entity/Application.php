@@ -113,7 +113,7 @@ class Application
      *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private ?string $version = null;
+    private ?string $version = '0.0.1';
 
     /**
      * The hosts that this applications uses, keep in ind that a host is exluding a trailing slach / and https:// ot http://.
