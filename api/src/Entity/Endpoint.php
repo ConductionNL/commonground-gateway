@@ -333,7 +333,7 @@ class Endpoint
      *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private ?string $version = null;
+    private ?string $version = '0.0.1';
 
     /**
      * Constructor for creating an Endpoint. Use $entity to create an Endpoint for an Entity or

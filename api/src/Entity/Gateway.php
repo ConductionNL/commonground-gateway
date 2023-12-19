@@ -226,7 +226,7 @@ class Gateway
      *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
-    private ?string $version = null;
+    private ?string $version = '0.0.1';
 
     /**
      * @var string The location where the Gateway needs to be accessed
