@@ -560,7 +560,7 @@ class Gateway
     private ?string $documentation = null;
 
     /**
-     * Configuration for logging, when an api call is made on the source we can log some information for this call.
+     * @var array Configuration for logging, when an api call is made on the source we can log some information for this call.
      * With this array you can enable/disable what will be logged.
      *
      * @Assert\NotNull
