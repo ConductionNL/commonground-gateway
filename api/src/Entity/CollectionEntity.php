@@ -108,9 +108,9 @@ class CollectionEntity
     /**
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
      */
-    private ?string $version = '0.0.1';
+    private string $version = '0.0.0';
 
     /**
      * @var ?string The location where the OAS can be loaded from

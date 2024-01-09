@@ -138,9 +138,9 @@ class Template
     /**
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
      */
-    private ?string $version = '0.0.1';
+    private string $version = '0.0.0';
 
     /**
      * @var Datetime|null The moment this resource was created
