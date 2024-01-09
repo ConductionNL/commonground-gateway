@@ -331,9 +331,9 @@ class Endpoint
     /**
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
      */
-    private ?string $version = '0.0.1';
+    private string $version = '0.0.0';
 
     /**
      * Constructor for creating an Endpoint. Use $entity to create an Endpoint for an Entity or
