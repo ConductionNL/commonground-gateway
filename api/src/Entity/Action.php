@@ -76,12 +76,16 @@ class Action
     /**
      * @Groups({"read", "write"})
      *
+     * @Assert\NotNull
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $reference;
+    private ?string $reference;
 
     /**
      * @Groups({"read", "write"})
+     *
+     * @Assert\NotNull
      *
      * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
      */

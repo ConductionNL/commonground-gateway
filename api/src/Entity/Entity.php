@@ -414,12 +414,16 @@ class Entity
     /**
      * @Groups({"read", "write"})
      *
+     * @Assert\NotNull
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
+     *
+     * @Assert\NotNull
      *
      * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
      */
