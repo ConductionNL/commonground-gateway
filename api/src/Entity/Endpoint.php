@@ -324,12 +324,16 @@ class Endpoint
     /**
      * @Groups({"read", "write"})
      *
+     * @Assert\NotNull
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $reference = null;
 
     /**
      * @Groups({"read", "write"})
+     *
+     * @Assert\NotNull
      *
      * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
      */
