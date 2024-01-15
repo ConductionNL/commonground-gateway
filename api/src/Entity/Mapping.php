@@ -31,7 +31,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/mappings"},
  *      "post"={"path"="/admin/mappings"}
- *  })
+ *  }
  * )
  *
  * @ORM\Entity(repositoryClass=MappingRepository::class)

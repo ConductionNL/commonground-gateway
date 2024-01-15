@@ -19,7 +19,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 use function Symfony\Component\Translation\t;
 
 /**
- * An (data) object that resides within the datalayer of the gateway.
+ * A (data) object that resides within the datalayer of the gateway.
  *
  * @category Entity
  *

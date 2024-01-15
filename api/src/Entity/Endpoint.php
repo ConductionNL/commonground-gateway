@@ -37,7 +37,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/endpoints"},
  *      "post"={"path"="/admin/endpoints"}
- *  })
+ *  }
+ * )
  *
  * @ORM\Entity(repositoryClass="App\Repository\EndpointRepository")
  *

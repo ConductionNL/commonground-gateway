@@ -31,7 +31,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/templates"},
  *      "post"={"path"="/admin/templates"}
- *  }))
+ *  }
+ * )
  *
  * @ORM\Entity(repositoryClass=TemplateRepository::class)
  *

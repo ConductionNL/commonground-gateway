@@ -40,7 +40,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/values"},
  *      "post"={"path"="/admin/values"}
- *  })
+ *  }
+ * )
  *
  * @ORM\Entity(repositoryClass="App\Repository\ValueRepository")
  *
