@@ -31,7 +31,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *     "get"={"path"="/admin/cronjobs"},
  *     "post"={"path"="/admin/cronjobs"}
- *  })
+ *  }
+ * )
  *
  * @ORM\Entity(repositoryClass=CronjobRepository::class)
  *

@@ -33,7 +33,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/actions"},
  *      "post"={"path"="/admin/actions"}
- *  })
+ *  }
  * )
  *
  * @ORM\HasLifecycleCallbacks

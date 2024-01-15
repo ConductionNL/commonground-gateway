@@ -32,7 +32,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/synchronizations"},
  *      "post"={"path"="/admin/synchronizations"}
- *  })
+ *  }
+ * )
  *
  * @ORM\Entity(repositoryClass=SynchronizationRepository::class)
  *

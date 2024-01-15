@@ -51,7 +51,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              "description"="Deletes all objects that belong to this schema"
  *          }
  *      },
- *  })
+ *  }
+ * )
  *
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")
  *

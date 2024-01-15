@@ -28,7 +28,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/properties"},
  *      "post"={"path"="/admin/properties"}
- *  })
+ *  }
  * )
  *
  * @ORM\Entity(repositoryClass=PropertyRepository::class)
