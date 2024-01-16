@@ -1257,6 +1257,11 @@ class ObjectEntity
                                 $config['maxDepth'] = $attribute->getObject()->getMaxDepth() + $config['level'];
                             }
                             $config['level'] = $config['level'] + 1;
+
+                            //TODO: This is a very hacky solution that has to be changed back ASAP
+                            if ($attribute->getObject() === $this->getEntity()) {
+                                $config['maxDepth'] = $config['level'];
+                            }
                             $objectToArray = $object->toArray($config);
 
                             // Check if we want an embedded array
