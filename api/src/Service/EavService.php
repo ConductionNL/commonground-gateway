@@ -1291,7 +1291,8 @@ class EavService
         }
 
         // Remove this object from cache
-        $this->functionService->removeResultFromCache($object);
+        //todo: deprecated function
+//        $this->functionService->removeResultFromCache($object);
 
         $this->em->remove($object);
         $this->em->flush();
