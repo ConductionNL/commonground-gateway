@@ -309,7 +309,7 @@ class SynchronizationService
             array_key_exists('object', $this->configuration['apiSource']['location']) && $result = $dot->get($this->configuration['apiSource']['location']['object'], $result);
 
             // Lets grab the sync object, if we don't find an existing one, this will create a new one:
-            $synchronization = $this->findSyncBySource($config['source'], $config['entity'], $id);
+            $synchronization = $this->findSyncBySource($config['source'], $config['entity'], $id, $this->configuration['location'] ?? null);
             // todo: Another search function for sync object. If no sync object is found, look for matching properties...
             // todo: ...in $result and an ObjectEntity in db. And then create sync for an ObjectEntity if we find one this way. (nice to have)
             // Other option to find a sync object, currently not used:
@@ -676,7 +676,13 @@ class SynchronizationService
 
         $url = \Safe\parse_url($synchronization->getSource()->getLocation());
 
-        $endpoint = str_contains('http', $synchronization->getSourceId()) === true ? $synchronization->getEndpoint() : $synchronization->getEndpoint().'/'.$synchronization->getSourceId();
+        if (isset($this->configuration['location']) === true) {
+            $endpoint = $this->configuration['location'];
+            $synchronization->setEndpoint($endpoint);
+        } else {
+            $normalEndpoint = $synchronization->getEndpoint().'/'.$synchronization->getSourceId();
+            $endpoint = str_contains('http', $synchronization->getSourceId()) === true ? $synchronization->getEndpoint() : $normalEndpoint;
+        }
 
         if ($url['scheme'] === 'http' || $url['scheme'] === 'https') {
             // Get object form source with callservice
@@ -684,7 +690,7 @@ class SynchronizationService
                 $this->logger->info("getSingleFromSource with Synchronization->sourceId = {$synchronization->getSourceId()}");
                 $response = $this->callService->call(
                     $callServiceConfig['source'],
-                    isset($this->configuration['location']) === true ? $callServiceConfig['endpoint'] : $endpoint,
+                    $endpoint,
                     $callServiceConfig['method'] ?? 'GET',
                     [
                         'body'    => '',
@@ -1343,15 +1349,20 @@ class SynchronizationService
         $callServiceConfig = $this->getCallServiceConfig($synchronization->getSource(), $existsInSource ? $synchronization->getSourceId() : null, $objectArray);
         $objectArray = $this->mapOutput($objectArray);
 
-        $normalEndpoint = $synchronization->getEndpoint().($existsInSource ? '/'.$synchronization->getSourceId() : '');
-        $endpoint = str_contains('http', $synchronization->getSourceId()) === true ? $synchronization->getEndpoint() : $normalEndpoint;
+        if (isset($this->configuration['location']) === true) {
+            $endpoint = $this->configuration['location'];
+            $synchronization->setEndpoint($endpoint);
+        } else {
+            $normalEndpoint = $synchronization->getEndpoint().($existsInSource ? '/'.$synchronization->getSourceId() : '');
+            $endpoint = str_contains('http', $synchronization->getSourceId()) === true ? $synchronization->getEndpoint() : $normalEndpoint;
+        }
 
         $objectString = $this->getObjectString($objectArray);
 
         try {
             $result = $this->callService->call(
                 $callServiceConfig['source'],
-                isset($this->configuration['location']) === true ? $callServiceConfig['endpoint'] : $endpoint,
+                $endpoint,
                 $callServiceConfig['method'] ?? ($existsInSource ? 'PUT' : 'POST'),
                 [
                     'body'    => $objectString,
