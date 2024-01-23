@@ -676,12 +676,13 @@ class SynchronizationService
 
         $url = \Safe\parse_url($synchronization->getSource()->getLocation());
 
+        $endpoint = $synchronization->getEndpoint().'/'.$synchronization->getSourceId();
+        if (str_contains('http', $synchronization->getSourceId()) === true) {
+            $endpoint = $synchronization->getEndpoint();
+        }
         if (isset($this->configuration['location']) === true) {
             $endpoint = $this->configuration['location'];
             $synchronization->setEndpoint($endpoint);
-        } else {
-            $normalEndpoint = $synchronization->getEndpoint().'/'.$synchronization->getSourceId();
-            $endpoint = str_contains('http', $synchronization->getSourceId()) === true ? $synchronization->getEndpoint() : $normalEndpoint;
         }
 
         if ($url['scheme'] === 'http' || $url['scheme'] === 'https') {
@@ -1349,12 +1350,16 @@ class SynchronizationService
         $callServiceConfig = $this->getCallServiceConfig($synchronization->getSource(), $existsInSource ? $synchronization->getSourceId() : null, $objectArray);
         $objectArray = $this->mapOutput($objectArray);
 
+        $endpoint = $synchronization->getEndpoint();
+        if ($existsInSource === true) {
+            $endpoint = $endpoint.'/'.$synchronization->getSourceId();
+        }
+        if (str_contains('http', $synchronization->getSourceId()) === true) {
+            $endpoint = $synchronization->getEndpoint();
+        }
         if (isset($this->configuration['location']) === true) {
             $endpoint = $this->configuration['location'];
             $synchronization->setEndpoint($endpoint);
-        } else {
-            $normalEndpoint = $synchronization->getEndpoint().($existsInSource ? '/'.$synchronization->getSourceId() : '');
-            $endpoint = str_contains('http', $synchronization->getSourceId()) === true ? $synchronization->getEndpoint() : $normalEndpoint;
         }
 
         $objectString = $this->getObjectString($objectArray);
