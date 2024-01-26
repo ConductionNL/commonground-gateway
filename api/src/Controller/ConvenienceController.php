@@ -40,7 +40,6 @@ class ConvenienceController extends AbstractController
     private ActionSubscriber $actionSubscriber;
     private ObjectEntityService $objectEntityService;
     private MappingService $mappingService;
-    private Environment $twig;
 
     public function __construct(
         EntityManagerInterface $entityManager,
@@ -50,7 +49,7 @@ class ConvenienceController extends AbstractController
         HandlerService $handlerService,
         ActionSubscriber $actionSubscriber,
         ObjectEntityService $objectEntityService,
-        Environment $twig
+        MappingService $mappingService
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
@@ -60,8 +59,7 @@ class ConvenienceController extends AbstractController
         $this->handlerService = $handlerService;
         $this->actionSubscriber = $actionSubscriber;
         $this->objectEntityService = $objectEntityService;
-        $this->twig = $twig;
-        $this->mappingService = new MappingService($twig);
+        $this->mappingService = $mappingService;
     }
 
     /**
