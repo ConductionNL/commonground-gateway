@@ -249,7 +249,8 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
         // Handling users
         $io->section('Looking for an user');
         if (!$user = $this->entityManager->getRepository('App:User')->findOneBy([])) {
-            $io->info('No User found, creating a new one');
+            $io->info('No User found, creating a default and APIKEY one');
+
             $user = new User();
             $user->setName('Default User');
             $user->setReference('https://docs.commongateway.nl/user/default.user.json');
@@ -261,6 +262,18 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
             $user->setOrganization($organization);
 
             $this->entityManager->persist($user);
+
+            $apikeyUser = new User();
+            $apikeyUser->setName('APIKEY_USER');
+            $apikeyUser->setReference('https://docs.commongateway.nl/user/default.apikey.user.json');
+            $apikeyUser->setDescription('Created during auto configuration');
+            $apikeyUser->setEmail('apikey@test.com');
+            $apikeyUser->setPassword($this->hasher->hashPassword($apikeyUser, '!ChangeMe!'));
+            $apikeyUser->addSecurityGroup($securityGroupAdmin);
+            $apikeyUser->addApplication($application);
+            $apikeyUser->setOrganization($organization);
+
+            $this->entityManager->persist($apikeyUser);
         } else {
             $io->info('User found, continuing....');
         }
