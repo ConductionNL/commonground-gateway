@@ -22,9 +22,6 @@
     "bacon/bacon-qr-code": {
         "version": "2.0.7"
     },
-    "beberlei/doctrineextensions": {
-        "version": "v1.3.0"
-    },
     "behat/transliterator": {
         "version": "v1.5.0"
     },
@@ -373,10 +370,10 @@
         "version": "3.0.3"
     },
     "ramsey/collection": {
-        "version": "1.3.0"
+        "version": "2.0.0"
     },
     "ramsey/uuid": {
-        "version": "4.2.3"
+        "version": "4.7.5"
     },
     "ramsey/uuid-doctrine": {
         "version": "2.0",
