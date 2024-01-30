@@ -8180,20 +8180,21 @@
         },
         {
             "name": "symfony/finder",
-            "version": "v5.3.7",
+            "version": "v5.4.27",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/finder.git",
-                "reference": "a10000ada1e600d109a6c7632e9ac42e8bf2fb93"
+                "reference": "ff4bce3c33451e7ec778070e45bd23f74214cd5d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/finder/zipball/a10000ada1e600d109a6c7632e9ac42e8bf2fb93",
-                "reference": "a10000ada1e600d109a6c7632e9ac42e8bf2fb93",
+                "url": "https://api.github.com/repos/symfony/finder/zipball/ff4bce3c33451e7ec778070e45bd23f74214cd5d",
+                "reference": "ff4bce3c33451e7ec778070e45bd23f74214cd5d",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
+                "symfony/deprecation-contracts": "^2.1|^3",
                 "symfony/polyfill-php80": "^1.16"
             },
             "type": "library",
@@ -8222,7 +8223,7 @@
             "description": "Finds files and directories via an intuitive fluent interface",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/finder/tree/v5.3.7"
+                "source": "https://github.com/symfony/finder/tree/v5.4.27"
             },
             "funding": [
                 {
@@ -8238,7 +8239,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-08-04T21:20:46+00:00"
+            "time": "2023-07-31T08:02:31+00:00"
         },
         {
             "name": "symfony/flex",
@@ -11069,26 +11070,27 @@
         },
         {
             "name": "symfony/sendinblue-mailer",
-            "version": "v5.3.14",
+            "version": "v5.4.19",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/sendinblue-mailer.git",
-                "reference": "269383a0dac2ab4d5a1a0f0c042ba114d132cb24"
+                "reference": "8cd7f7c2e92073dd5af1642e8e8e5ea808a9a3ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/sendinblue-mailer/zipball/269383a0dac2ab4d5a1a0f0c042ba114d132cb24",
-                "reference": "269383a0dac2ab4d5a1a0f0c042ba114d132cb24",
+                "url": "https://api.github.com/repos/symfony/sendinblue-mailer/zipball/8cd7f7c2e92073dd5af1642e8e8e5ea808a9a3ff",
+                "reference": "8cd7f7c2e92073dd5af1642e8e8e5ea808a9a3ff",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.2.5",
-                "symfony/mailer": "^5.1"
+                "psr/event-dispatcher": "^1",
+                "symfony/mailer": "^5.1|^6.0"
             },
             "require-dev": {
-                "symfony/http-client": "^4.4|^5.0"
+                "symfony/http-client": "^4.4|^5.0|^6.0"
             },
-            "type": "symfony-bridge",
+            "type": "symfony-mailer-bridge",
             "autoload": {
                 "psr-4": {
                     "Symfony\\Component\\Mailer\\Bridge\\Sendinblue\\": ""
@@ -11114,7 +11116,7 @@
             "description": "Symfony Sendinblue Mailer Bridge",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/sendinblue-mailer/tree/v5.3.14"
+                "source": "https://github.com/symfony/sendinblue-mailer/tree/v5.4.19"
             },
             "funding": [
                 {
@@ -11130,7 +11132,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-01-02T09:51:59+00:00"
+            "time": "2023-01-01T08:32:19+00:00"
         },
         {
             "name": "symfony/serializer",
