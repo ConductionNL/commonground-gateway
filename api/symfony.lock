@@ -31,6 +31,9 @@
     "brick/reflection": {
         "version": "0.4.1"
     },
+    "common-gateway/woo-bundle": {
+        "version": "dev-feature/GW-1596/test-symfony54"
+    },
     "commongateway/corebundle": {
         "version": "dev-master"
     },
@@ -167,12 +170,6 @@
     },
     "fakerphp/faker": {
         "version": "v1.15.0"
-    },
-    "fgrosse/phpasn1": {
-        "version": "v2.5.0"
-    },
-    "fig/link-util": {
-        "version": "1.1.2"
     },
     "friendsofphp/proxy-manager-lts": {
         "version": "v1.0.5"
@@ -449,9 +446,6 @@
     },
     "spomky-labs/aes-key-wrap": {
         "version": "v6.0.0"
-    },
-    "spomky-labs/base64url": {
-        "version": "v2.0.4"
     },
     "symfony/amqp-messenger": {
         "version": "v5.3.14"
