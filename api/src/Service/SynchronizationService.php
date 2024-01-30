@@ -1523,6 +1523,10 @@ class SynchronizationService
      */
     public function getSourceId(?string &$endpoint, ?string $url = null): ?string
     {
+        if ($endpoint === null) {
+            return $url;
+        }
+
         $explodedEndpoint = explode('/', $endpoint);
         $sourceId = end($explodedEndpoint);
         if (Uuid::isValid($sourceId) === true || is_int((int) $sourceId) === true) {
