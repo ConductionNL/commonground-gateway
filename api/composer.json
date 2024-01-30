@@ -23,7 +23,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.1",
         "doctrine/event-manager": "^1.2",
         "doctrine/lexer": "^2.0",
-        "doctrine/orm": "2.14",
+        "doctrine/orm": "^2.14",
         "doctrine/persistence": "^2.4",
         "dompdf/dompdf": "^2",
         "endroid/qr-code-bundle": "3.4",
