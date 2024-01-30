@@ -26,7 +26,6 @@ final class Version20230602151620 extends AbstractMigration
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE SCHEMA public');
         $this->addSql('DROP INDEX entity_attribute_unique');
     }
 }

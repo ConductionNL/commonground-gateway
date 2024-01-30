@@ -36,7 +36,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/collections"},
  *      "post"={"path"="/admin/collections"}
- *  })
+ *  }
+ * )
  *
  * @ORM\Entity(repositoryClass=CollectionEntityRepository::class)
  *
@@ -51,6 +52,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * })
  *
  * @UniqueEntity("name")
+ * @UniqueEntity("reference")
  */
 class CollectionEntity
 {
@@ -100,6 +102,8 @@ class CollectionEntity
     /**
      * @Groups({"read", "write"})
      *
+     * @Assert\NotNull
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $reference = null;
@@ -107,9 +111,11 @@ class CollectionEntity
     /**
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     * @Assert\NotNull
+     *
+     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
      */
-    private ?string $version = null;
+    private string $version = '0.0.0';
 
     /**
      * @var ?string The location where the OAS can be loaded from

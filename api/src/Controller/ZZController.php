@@ -58,12 +58,12 @@ class ZZController extends AbstractController
     }
 
     /**
-     * @TODO This function needs to be more dynamic: /{item}/api/{path}.
      * This function dynamically handles the custom endpoints.
      *
-     * @Route("/klanten/api/{path}", name="dynamic_route_second", requirements={"path" = ".+"})
+     * @Route("/{prefix}/api/{path}", name="dynamic_route_second", requirements={"path" = ".+"})
      *
      * @param string|null $path
+     * @param string|null $bundle
      * @param Request $request
      * @param EndpointService $endpointService
      * @return Response
@@ -71,6 +71,7 @@ class ZZController extends AbstractController
      */
     public function dynamicCustomAction(
         ?string $path,
+        ?string $bundle,
         Request $request,
         EndpointService $endpointService
     ): Response {
@@ -181,6 +182,8 @@ class ZZController extends AbstractController
                 return 'html';
             case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                 return 'docx';
+            case 'application/json+aggregations':
+                return 'aggregations';
         }//end switch
 
         throw new BadRequestHttpException('No proper accept could be determined');

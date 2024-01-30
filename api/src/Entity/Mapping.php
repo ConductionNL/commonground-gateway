@@ -15,6 +15,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -30,7 +31,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/mappings"},
  *      "post"={"path"="/admin/mappings"}
- *  })
+ *  }
  * )
  *
  * @ORM\Entity(repositoryClass=MappingRepository::class)
@@ -44,6 +45,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "name": "exact",
  *     "reference": "exact"
  * })
+ *
+ * @UniqueEntity("reference")
  */
 class Mapping
 {
@@ -69,6 +72,8 @@ class Mapping
     /**
      * @Groups({"read", "write"})
      *
+     * @Assert\NotNull
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $reference = null;
@@ -76,9 +81,11 @@ class Mapping
     /**
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     * @Assert\NotNull
+     *
+     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
      */
-    private ?string $version = null;
+    private string $version = '0.0.0';
 
     /**
      * @var string The name of the mapping

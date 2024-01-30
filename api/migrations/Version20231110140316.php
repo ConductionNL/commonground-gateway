@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20230922133622 extends AbstractMigration
+final class Version20231110140316 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -20,14 +20,12 @@ final class Version20230922133622 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE action ADD user_id VARCHAR(255) DEFAULT NULL');
-        $this->addSql('ALTER TABLE cronjob ADD user_id VARCHAR(255) DEFAULT NULL');
+        $this->addSql('ALTER TABLE synchronization ADD sha VARCHAR(255) DEFAULT NULL');
     }
 
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE action DROP user_id');
-        $this->addSql('ALTER TABLE cronjob DROP user_id');
+        $this->addSql('ALTER TABLE synchronization DROP sha');
     }
 }

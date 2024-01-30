@@ -8,14 +8,6 @@ x-cache:
         - ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-cron
 
 services:
-    #  gateway-frontend:
-    #    &gateway-frontend
-    #    image: ghcr.io/conductionnl/commonground-gateway-frontend:latest
-    #    depends_on:
-    #      - php
-    #    ports:
-    #      - "83:80"
-    
     cron:
         image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}_cron:${APP_ENV}
         build: ./dockerized-cron
@@ -45,6 +37,7 @@ services:
             - ./api/var/certs:/var/certs:rw,cached
             - ./gateway:/srv/api/fixtures:rw,cached
         environment:
+            - APP_INIT='true'
             - CONTAINER_REGISTRY_BASE=${CONTAINER_REGISTRY_BASE}
             - CONTAINER_PROJECT_NAME=${CONTAINER_PROJECT_NAME}
             - DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1
@@ -106,6 +99,7 @@ services:
             - CRON_RUNNER_ENABLED=${CRON_RUNNER_ENABLED}
             - CRON_RUNNER_CRONTAB=${CRON_RUNNER_CRONTAB}
             - CRON_RUNNER_CONCURRENCY_POLICY=${CRON_RUNNER_CONCURRENCY_POLICY}
+            - LOG_LEVEL=${LOG_LEVEL}
         ports:
             - "82:80"
         cap_drop:
@@ -170,13 +164,14 @@ services:
             - "5432:5432"
     
     mongodb:
-        image: mongo
+        image: mongo:4.4.14
         restart: always
         environment:
             MONGO_INITDB_ROOT_USERNAME: api-platform
             MONGO_INITDB_ROOT_PASSWORD: '!ChangeMe!'
         ports:
             - "27017:27017"
+
     dex:
         image: dexidp/dex:latest
         ports:
@@ -204,12 +199,12 @@ services:
         ports:
           - 389:389
           - 636:636
-
+    
     rabbitmq:
-        image: rabbitmq:latest
+        image: rabbitmq:3.12.0
         environment:
-          - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
-          - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+            - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
+            - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
     
 
 networks:

@@ -38,6 +38,7 @@ class FunctionService
      * @throws InvalidArgumentException
      *
      * @return bool
+     * @deprecated
      */
     public function removeResultFromCache(ObjectEntity $objectEntity, ?SymfonyStyle $io = null): bool
     {
@@ -67,6 +68,7 @@ class FunctionService
      * @throws InvalidArgumentException
      *
      * @return void
+     * @deprecated
      */
     private function removeParentResultsFromCache(ObjectEntity $objectEntity, ?SymfonyStyle $io)
     {
@@ -90,6 +92,7 @@ class FunctionService
      * @throws InvalidArgumentException
      *
      * @return void
+     * @deprecated
      */
     private function removeChildResultsFromCache(ObjectEntity $objectEntity, ?SymfonyStyle $io)
     {

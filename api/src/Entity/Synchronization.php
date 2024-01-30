@@ -32,7 +32,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/synchronizations"},
  *      "post"={"path"="/admin/synchronizations"}
- *  })
+ *  }
+ * )
  *
  * @ORM\Entity(repositoryClass=SynchronizationRepository::class)
  *
@@ -154,7 +155,16 @@ class Synchronization
     private ?string $hash = '';
 
     /**
-     * @var bool Whether or not the synchronization is blocked
+     * @var ?string The sha(256) used to check if a Sync should be triggered cause the object has changed
+     *
+     * @Groups({"read","write"})
+     *
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private ?string $sha = null;
+
+    /**
+     * @var bool Whether the synchronization is blocked
      *
      * @Groups({"read", "write"})
      *
@@ -357,6 +367,18 @@ class Synchronization
     public function setHash(?string $hash): self
     {
         $this->hash = $hash;
+
+        return $this;
+    }
+
+    public function getSha(): ?string
+    {
+        return $this->sha;
+    }
+
+    public function setSha(?string $sha): self
+    {
+        $this->sha = $sha;
 
         return $this;
     }

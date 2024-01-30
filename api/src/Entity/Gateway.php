@@ -149,6 +149,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * })
  *
  * @UniqueEntity("name")
+ * @UniqueEntity("reference")
  */
 class Gateway
 {
@@ -216,6 +217,8 @@ class Gateway
     /**
      * @Groups({"read", "write"})
      *
+     * @Assert\NotNull
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $reference = null;
@@ -223,9 +226,11 @@ class Gateway
     /**
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     * @Assert\NotNull
+     *
+     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
      */
-    private ?string $version = null;
+    private string $version = '0.0.0';
 
     /**
      * @var string The location where the Gateway needs to be accessed
@@ -559,11 +564,26 @@ class Gateway
     private ?string $documentation = null;
 
     /**
-     * Setting logging to true will couse ALL responses to be logged (normaly we only log errors). Doing so wil dramaticly slow down the gateway and couse an increase in database size. This is not recomended outside of development purposes.
+     * @var array Configuration for logging, when an api call is made on the source we can log some information for this call. With this array you can enable/disable what will be logged.
      *
-     * @ORM\Column(type="boolean", nullable=true)
+     * @Assert\NotNull
+     *
+     * @Groups({"read","write"})
+     *
+     * @ORM\Column(type="array")
      */
-    private $logging;
+    private array $loggingConfig = [
+        'callMethod'            => true,
+        'callUrl'               => true,
+        'callQuery'             => true,
+        'callContentType'       => true,
+        'callBody'              => true,
+        'responseStatusCode'    => true,
+        'responseContentType'   => true,
+        'responseBody'          => true,
+        'maxCharCountBody'      => 500,
+        'maxCharCountErrorBody' => 2000,
+    ];
 
     /**
      * @var array ...
@@ -617,7 +637,9 @@ class Gateway
      *
      * @ORM\Column(type="array", nullable=true)
      */
-    private ?array $configuration = [];
+    private ?array $configuration = [
+        "verify" => true
+    ];
 
     /**
      * @var array|null The configuration for endpoints on this source, mostly mapping for now.
@@ -792,10 +814,16 @@ class Gateway
         array_key_exists('jwtId', $schema) ? $this->setJwtId($schema['jwtId']) : '';
         array_key_exists('username', $schema) ? $this->setUsername($schema['username']) : '';
         array_key_exists('documentation', $schema) ? $this->setDocumentation($schema['documentation']) : '';
+        array_key_exists('loggingConfig', $schema) ? $this->setLoggingConfig($schema['loggingConfig']) : '';
         array_key_exists('headers', $schema) ? $this->setHeaders($schema['headers']) : '';
         array_key_exists('translationConfig', $schema) ? $this->setTranslationConfig($schema['translationConfig']) : '';
         array_key_exists('type', $schema) ? $this->setType($schema['type']) : '';
-        array_key_exists('configuration', $schema) ? $this->setConfiguration($schema['configuration']) : '';
+        if (isset($schema['configuration']) === true) {
+            if (isset($schema['configuration']['verify']) === false) {
+                $schema['configuration']['verify'] = true;
+            }
+            $this->setConfiguration($schema['configuration']);
+        }
         array_key_exists('endpointsConfig', $schema) ? $this->setEndpointsConfig($schema['endpointsConfig']) : '';
         array_key_exists('isEnabled', $schema) ? $this->setIsEnabled($schema['isEnabled']) : '';
 
@@ -826,6 +854,7 @@ class Gateway
             'jwtId'                          => $this->getJwtId(),
             'username'                       => $this->getUsername(),
             'documentation'                  => $this->getDocumentation(),
+            'loggingConfig'                  => $this->getLoggingConfig(),
             'headers'                        => $this->getHeaders(),
             'translationConfig'              => $this->getTranslationConfig(),
             'type'                           => $this->getType(),
@@ -857,6 +886,7 @@ class Gateway
             'password'                       => $this->getPassword(),
             'apikey'                         => $this->getApikey(),
             'documentation'                  => $this->getDocumentation(),
+            'loggingConfig'                  => $this->getLoggingConfig(),
             'headers'                        => $this->getHeaders(),
             'translationConfig'              => $this->getTranslationConfig(),
             'type'                           => $this->getType(),
@@ -1129,14 +1159,14 @@ class Gateway
         return $this;
     }
 
-    public function getLogging(): ?bool
+    public function getLoggingConfig(): ?array
     {
-        return $this->logging;
+        return $this->loggingConfig;
     }
 
-    public function setLogging(?bool $logging): self
+    public function setLoggingConfig(array $loggingConfig): self
     {
-        $this->logging = $logging;
+        $this->loggingConfig = array_merge($loggingConfig);
 
         return $this;
     }

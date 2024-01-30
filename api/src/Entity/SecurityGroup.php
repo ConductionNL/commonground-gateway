@@ -16,6 +16,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -34,7 +35,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/user_groups"},
  *      "post"={"path"="/admin/user_groups"}
- *  })
+ *  }
  * )
  *
  * @ORM\HasLifecycleCallbacks
@@ -50,6 +51,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "name": "exact",
  *     "reference": "exact"
  * })
+ *
+ * @UniqueEntity("reference")
  */
 class SecurityGroup
 {
@@ -101,6 +104,8 @@ class SecurityGroup
     /**
      * @Groups({"read", "write"})
      *
+     * @Assert\NotNull
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $reference = null;
@@ -108,9 +113,11 @@ class SecurityGroup
     /**
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     * @Assert\NotNull
+     *
+     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
      */
-    private ?string $version = null;
+    private string $version = '0.0.0';
 
     /**
      * @Groups({"read", "write"})

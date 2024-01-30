@@ -1,0 +1,106 @@
+publiccodeYmlVersion: '0.1'
+name: commonground-gateway
+applicationSuite: null
+url: https://github.com/ConductionNL/commonground-gateway
+landingURL: https://conductor-gateway.app
+isBasedOn: null
+softwareVersion: null
+logo: https://avatars.githubusercontent.com/u/46676163?v=4
+monochromeLogo: null
+platforms:
+  - web
+releaseDate: 2021-08-2
+categories: 
+  - collaboration
+  - it-development
+developmentStatus: beta
+softwareType: !!!
+description:
+  en:
+    localisedName: CommonGateway
+    genericName: null
+    shortDescription: CommonGateway
+    longDescription: "The Common Gateway repository provides a quick Kubernetes wrapper for the Common Gateway Symfony Bundle. In other words, it doesn't aim to be its own code base but simply contains the files needed to create Kubernetes images and Helm installers for the core bundle."
+    documentation: https://conductor-gateway.app
+    apiDocumentation: null
+    features: []
+    screenshots: []
+    videos: []
+    awards: []
+  nl:
+    localisedName: CommonGateway
+    genericName: null
+    shortDescription: CommonGateway
+    longDescription: "De Common Gateway-repository biedt een snelle Kubernetes-wrapper voor de Common Gateway Symfony-bundel. Met andere woorden, het is niet bedoeld als een eigen codebasis, maar bevat eenvoudigweg de bestanden die nodig zijn om Kubernetes-images en Helm-installatieprogramma's voor de core bundle te maken."
+    documentation: https://conductor-gateway.app
+    apiDocumentation: null
+    features: []
+    screenshots: []
+    videos: []
+    awards: []
+intendedaudience: 
+  countries: 
+    - nl
+  unsupportedCountries: []
+  scope: 
+    - government
+    - local-authorities
+legal: 
+  license: EUPL-1.2-or-later
+  mainCopyrightOwner: legal/authorsFile
+  repoOwner: CommonGateway
+  authorsFile: null
+maintenance: 
+  type: internal
+  contractors: 
+    - name: Conduction
+      until: 2035-01-01
+      email: info\x64conduction.nl
+      website: https://www.conduction.nl
+  contacts:
+    - name: Ruben van der Linde
+      email: info\x64conduction.nl
+      phone: 085 303 6840
+      affiliation: Conduction
+localisation:
+  localisationReady: true
+  availableLanguages: 
+     - en
+     - nl
+dependsOn: 
+  open: 
+    - name: CoreBundle
+      versionMin: 1.2
+      versionMax: 1.3
+      version: 1.2.47
+      optional: false
+  proprietary: 
+    - name: Docker
+      versionMin: 24.0.6
+      version: 24.0.6
+      optional: false
+roadmap: null
+inputTypes:
+  - application/json
+  - application/xml
+  - application/x-yaml
+outputTypes: 
+  - application/json
+  - application/json+hal
+  - application/json+ld
+  - application/xml
+  - application/x-yaml
+nl: 
+  countryExtensionVersion: null
+  commonground: 
+    intendedOrganisations: []
+    installationType: null
+    layerType: service
+  gemma:
+    bedrijfsfuncties: []
+    bedrijfsservices: []
+    applicatiefunctie: null
+    model: null
+  upl: []
+downloadUrls:
+  - https://github.com/ConductionNL/commonground-gateway/archive/refs/heads/main.zip
