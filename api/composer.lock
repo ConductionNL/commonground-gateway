@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b06ff88d1873f12139f276bf48c7d1d1",
+    "content-hash": "48e6767cf9de82cabd41909b54ab0163",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -552,12 +552,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "8349de2b20097e5fc4d7a29f283f949c01d870eb"
+                "reference": "081a03a639680a32db5d70bd5a44090caaffa113"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/8349de2b20097e5fc4d7a29f283f949c01d870eb",
-                "reference": "8349de2b20097e5fc4d7a29f283f949c01d870eb",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/081a03a639680a32db5d70bd5a44090caaffa113",
+                "reference": "081a03a639680a32db5d70bd5a44090caaffa113",
                 "shasum": ""
             },
             "require": {
@@ -586,7 +586,7 @@
                 "mongodb/mongodb": "^1.15",
                 "monolog/monolog": "^2.8.0",
                 "nelmio/cors-bundle": "^2.1",
-                "php": "^7.4.0 || ^8.1.0 || ^8.2.0",
+                "php": "^7.4.0 || ^8.0.0 || ^8.1.0 || ^8.2.0",
                 "phpdocumentor/reflection-docblock": "^5.2",
                 "phpoffice/phpspreadsheet": "^1.29",
                 "phpoffice/phpword": "^0.18.2",
@@ -668,7 +668,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-10-13T10:59:01+00:00"
+            "time": "2023-10-20T11:20:11+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -11019,6 +11019,71 @@
                 }
             ],
             "time": "2021-11-05T16:25:46+00:00"
+        },
+        {
+            "name": "symfony/sendinblue-mailer",
+            "version": "v5.3.14",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/sendinblue-mailer.git",
+                "reference": "269383a0dac2ab4d5a1a0f0c042ba114d132cb24"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/sendinblue-mailer/zipball/269383a0dac2ab4d5a1a0f0c042ba114d132cb24",
+                "reference": "269383a0dac2ab4d5a1a0f0c042ba114d132cb24",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.2.5",
+                "symfony/mailer": "^5.1"
+            },
+            "require-dev": {
+                "symfony/http-client": "^4.4|^5.0"
+            },
+            "type": "symfony-bridge",
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Mailer\\Bridge\\Sendinblue\\": ""
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony Sendinblue Mailer Bridge",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/sendinblue-mailer/tree/v5.3.14"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-01-02T09:51:59+00:00"
         },
         {
             "name": "symfony/serializer",

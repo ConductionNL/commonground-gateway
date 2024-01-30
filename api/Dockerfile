@@ -48,6 +48,7 @@ RUN set -eux; \
 		pcntl \
 		gd \
 		gmp \
+    	ftp \
 	; \
 	pecl install \
 		apcu-${APCU_VERSION} \
