@@ -1519,7 +1519,7 @@ class SynchronizationService
      * @param string|null $endpoint The endpoint to get the SourceId from.
      * @param string|null $url The url used as back-up for SourceId if no proper SourceId can be found.
      *
-     * @return string|null The sourceId, will be equal to $url if end part of the endpoint isn't an uuid or integer.
+     * @return string|null The sourceId, will be equal to $url if end part of the endpoint isn't an uuid or integer. And will return null if $endpoint & $url ar both null.
      */
     public function getSourceId(?string &$endpoint, ?string $url = null): ?string
     {
