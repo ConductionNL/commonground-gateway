@@ -22,7 +22,6 @@ use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\CustomCredentials;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
-use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 
 class OIDCAuthenticator extends AbstractAuthenticator
 {
@@ -93,7 +92,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
         return $newGroups;
     }
 
-    public function authenticate(Request $request): PassportInterface
+    public function authenticate(Request $request): Passport
     {
         $code = $request->query->get('code');
         $method = $request->attributes->get('method');

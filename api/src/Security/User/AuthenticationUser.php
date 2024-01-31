@@ -28,7 +28,7 @@ class AuthenticationUser implements UserInterface, EquatableInterface
     private $salt;
 
     /* Iether a BRP or CC person URI */
-    private $roles;
+    private array $roles;
 
     /* Always true */
     private $isActive;
@@ -68,7 +68,7 @@ class AuthenticationUser implements UserInterface, EquatableInterface
         return $this->name;
     }
 
-    public function getRoles()
+    public function getRoles(): array
     {
         return $this->roles;
     }
@@ -150,7 +150,7 @@ class AuthenticationUser implements UserInterface, EquatableInterface
             $this->password) = unserialize($serialized);
     }
 
-    public function isEqualTo(UserInterface $user)
+    public function isEqualTo(UserInterface $user): bool
     {
         return true;
     }

@@ -13,7 +13,7 @@ use Symfony\Component\Security\Core\User\UserProviderInterface;
 /**
  * @method UserInterface loadUserByIdentifier(string $identifier)
  */
-class AuthenticationProvider implements UserProviderInterface
+abstract class AuthenticationProvider implements UserProviderInterface
 {
     public function loadUserByUsername($username)
     {

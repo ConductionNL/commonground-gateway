@@ -15,7 +15,6 @@ use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\CustomCredentials;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
-use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 
 class CertificateAuthenticator extends AbstractAuthenticator
 {
@@ -80,7 +79,7 @@ class CertificateAuthenticator extends AbstractAuthenticator
     /**
      * @inheritDoc
      */
-    public function authenticate(Request $request): PassportInterface
+    public function authenticate(Request $request): Passport
     {
         if ($request->server->has('SSL_CLIENT_CERT')) {
             $certificate = $request->server->get('SSL_CLIENT_CERT');

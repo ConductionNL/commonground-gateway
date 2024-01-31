@@ -14,12 +14,12 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\CustomCredentials;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
-use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 
-class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator
+class ApiKeyAuthenticator extends AbstractAuthenticator
 {
     private SessionInterface $session;
     private EntityManagerInterface $entityManager;
@@ -73,7 +73,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
     /**
      * @inheritDoc
      */
-    public function authenticate(Request $request): PassportInterface
+    public function authenticate(Request $request): Passport
     {
         $key = $request->headers->get('Authorization');
         $application = $this->entityManager->getRepository('App:Application')->findOneBy(['secret' => $key]);

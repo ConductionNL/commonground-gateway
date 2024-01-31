@@ -20,12 +20,13 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\CustomCredentials;
 use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 
-class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator
+class TokenAuthenticator extends AbstractAuthenticator
 {
     private AuthenticationService $authenticationService;
     private SessionInterface $session;
@@ -144,7 +145,7 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
      *
      * @return PassportInterface
      */
-    public function authenticate(Request $request): PassportInterface
+    public function authenticate(Request $request): Passport
     {
         $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
         $payload = $this->validateToken($token);
