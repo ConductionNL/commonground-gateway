@@ -15,9 +15,9 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 
 	mkdir -p var/cache var/log
 
-	if [ "$READ_ONLY" != 'true' ]; then
-		composer install --prefer-dist --no-progress --no-suggest --no-interaction
-	fi
+#	if [ "$READ_ONLY" != 'true' ]; then
+#		composer install --prefer-dist --no-progress --no-suggest --no-interaction
+#	fi
 
 	echo "Waiting for db to be ready..."
 	until bin/console doctrine:query:sql "SELECT 1" > /dev/null 2>&1; do

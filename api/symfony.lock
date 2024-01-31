@@ -206,9 +206,6 @@
     "jwadhams/json-logic-php": {
         "version": "1.4.2"
     },
-    "khanamiryan/qrcode-detector-decoder": {
-        "version": "1.0.6"
-    },
     "laminas/laminas-code": {
         "version": "4.4.2"
     },
@@ -640,14 +637,8 @@
     "symfony/polyfill-mbstring": {
         "version": "v1.23.1"
     },
-    "symfony/polyfill-php73": {
-        "version": "v1.23.0"
-    },
     "symfony/polyfill-php80": {
         "version": "v1.23.1"
-    },
-    "symfony/polyfill-php81": {
-        "version": "v1.23.0"
     },
     "symfony/process": {
         "version": "v5.3.14"
@@ -696,9 +687,6 @@
         "version": "v5.3.6"
     },
     "symfony/security-csrf": {
-        "version": "v5.3.4"
-    },
-    "symfony/security-guard": {
         "version": "v5.3.4"
     },
     "symfony/security-http": {
