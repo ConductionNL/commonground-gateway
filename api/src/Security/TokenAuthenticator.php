@@ -15,6 +15,7 @@ use Psr\Cache\InvalidArgumentException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -28,24 +29,24 @@ use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 
 class TokenAuthenticator extends AbstractAuthenticator
 {
-    private AuthenticationService $authenticationService;
+    /**
+     * @var SessionInterface The current session.
+     */
     private SessionInterface $session;
-    private ParameterBagInterface $parameterBag;
-    private ApplicationService $applicationService;
-    private EntityManagerInterface $entityManager;
 
+    /**
+     * @param AuthenticationService $authenticationService The authentication service.
+     * @param RequestStack $requestStack The current request stack.
+     * @param ApplicationService $applicationService The application service.
+     * @param EntityManagerInterface $entityManager The entity manager.
+     */
     public function __construct(
-        AuthenticationService $authenticationService,
-        ParameterBagInterface $parameterBag,
-        SessionInterface $session,
-        ApplicationService $applicationService,
-        EntityManagerInterface $entityManager
+        private readonly AuthenticationService  $authenticationService,
+        RequestStack                            $requestStack,
+        private readonly ApplicationService     $applicationService,
+        private readonly EntityManagerInterface $entityManager
     ) {
-        $this->authenticationService = $authenticationService;
-        $this->session = $session;
-        $this->applicationService = $applicationService;
-        $this->parameterBag = $parameterBag;
-        $this->entityManager = $entityManager;
+        $this->session = $requestStack->getSession();
     }
 
     /**
@@ -54,7 +55,7 @@ class TokenAuthenticator extends AbstractAuthenticator
     public function supports(Request $request): ?bool
     {
         return $request->headers->has('Authorization') &&
-            strpos($request->headers->get('Authorization'), 'Bearer') === 0;
+            str_starts_with($request->headers->get('Authorization'), 'Bearer') === true;
     }
 
     /**
@@ -112,11 +113,11 @@ class TokenAuthenticator extends AbstractAuthenticator
             throw new AuthenticationException('The provided token is not valid');
         }
         $now = new \DateTime();
-        if (isset($payload['iat']) && !isset($payload['exp'])) {
+        if (isset($payload['iat']) === true && isset($payload['exp']) === false) {
             $iat = new \DateTime();
             $iat->setTimestamp($payload['iat']);
             $exp = $iat->modify('+1 Hour');
-            if (!isset($payload['exp']) && isset($exp) && $exp->getTimestamp() < $now->getTimestamp()) {
+            if ($exp->getTimestamp() < $now->getTimestamp()) {
                 throw new AuthenticationException('The provided token has expired');
             }
         }
@@ -143,7 +144,7 @@ class TokenAuthenticator extends AbstractAuthenticator
      *
      * @throws GatewayException
      *
-     * @return PassportInterface
+     * @return Passport
      */
     public function authenticate(Request $request): Passport
     {

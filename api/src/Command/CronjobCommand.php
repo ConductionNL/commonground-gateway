@@ -19,6 +19,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
@@ -42,12 +43,12 @@ class CronjobCommand extends Command
     public function __construct(
         EntityManagerInterface $entityManager,
         EventDispatcherInterface $eventDispatcher,
-        SessionInterface $session,
+        RequestStack $requestStack,
         LoggerInterface $cronjobLogger
     ) {
         $this->entityManager = $entityManager;
         $this->eventDispatcher = $eventDispatcher;
-        $this->session = $session;
+        $this->session = $requestStack->getSession();
         $this->logger = $cronjobLogger;
 
         parent::__construct();

@@ -8,6 +8,7 @@ use App\Entity\Synchronization;
 use CommonGateway\CoreBundle\Service\CallService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
@@ -21,14 +22,14 @@ use Symfony\Component\Serializer\Encoder\XmlEncoder;
 class TranslationService
 {
     private SessionInterface $sessionInterface;
-    private EntityManagerInterface $entityManager;
-    private CallService $callService;
 
-    public function __construct(SessionInterface $sessionInterface, EntityManagerInterface $entityManager, CallService $callService)
+    public function __construct(
+        RequestStack                            $requestStack,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly CallService            $callService
+    )
     {
-        $this->callService = $callService;
-        $this->sessionInterface = $sessionInterface;
-        $this->entityManager = $entityManager;
+        $this->sessionInterface = $requestStack->getSession();
     }
 
     private function encodeArrayKeys($array, string $toReplace, string $replacement): array

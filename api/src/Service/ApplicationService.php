@@ -6,6 +6,7 @@ use App\Entity\Application;
 use App\Exception\GatewayException;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -19,14 +20,26 @@ use Symfony\Component\HttpFoundation\Session\SessionInterface;
  */
 class ApplicationService
 {
+    /**
+     * @var Request|null The current request.
+     */
+    private ?Request $request;
+
+    /**
+     * @var SessionInterface The current session.
+     */
+    private SessionInterface $session;
+
+    /**
+     * @param RequestStack $requestStack
+     * @param EntityManagerInterface $entityManager
+     */
     public function __construct(
-        RequestStack $requestStack,
-        EntityManagerInterface $entityManager,
-        SessionInterface $session
+        RequestStack                            $requestStack,
+        private readonly EntityManagerInterface $entityManager,
     ) {
         $this->request = $requestStack->getCurrentRequest();
-        $this->entityManager = $entityManager;
-        $this->session = $session;
+        $this->session = $requestStack->getSession();
     }
 
     /**

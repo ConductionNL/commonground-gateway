@@ -13,6 +13,7 @@ use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Exception;
 use Ramsey\Uuid\Uuid;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Security;
 
@@ -27,9 +28,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
     private SessionInterface $session;
     private Security $security;
 
-    public function __construct(ManagerRegistry $registry, SessionInterface $session, Security $security)
+    public function __construct(ManagerRegistry $registry, RequestStack $requestStack, Security $security)
     {
-        $this->session = $session;
+        $this->session = $requestStack->getSession();
         $this->security = $security;
 
         parent::__construct($registry, ObjectEntity::class);

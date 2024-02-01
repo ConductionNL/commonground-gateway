@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Service\OasDocumentationService;
 use CommonGateway\CoreBundle\Service\OasService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -47,7 +46,7 @@ class EavController extends AbstractController
     /**
      * @Route("/openapi.{extension}")
      */
-    public function OasAction(OasDocumentationService $oasDocumentationService, CacheInterface $customThingCache, Request $request, string $extension): Response
+    public function OasAction(CacheInterface $customThingCache, Request $request, string $extension): Response
     {
         /* accept only json an yaml as extensions or throw error */
         if ($extension !== 'yaml' && $extension !== 'json') {

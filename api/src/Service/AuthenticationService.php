@@ -15,6 +15,7 @@ use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Exception\BadRequestException;
 use Symfony\Component\HttpFoundation\File\Exception\AccessDeniedException;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Security\Core\Security;
@@ -29,21 +30,29 @@ use Twig\Environment;
  */
 class AuthenticationService
 {
+    /**
+     * @var SessionInterface The current session.
+     */
     private SessionInterface $session;
-    private EntityManagerInterface $entityManager;
-    private Client $client;
-    private Security $security;
-    private Environment $twig;
-    private ParameterBagInterface $parameterBag;
 
-    public function __construct(SessionInterface $session, EntityManagerInterface $entityManager, Security $security, Environment $twig, ParameterBagInterface $parameterBag)
+    /**
+     * @var Client A guzzle client.
+     */
+    private Client $client;
+
+    /**
+     * @param RequestStack $requestStack The current request stack.
+     * @param EntityManagerInterface $entityManager The entity manager.
+     * @param ParameterBagInterface $parameterBag The parameter bag.
+     */
+    public function __construct(
+        RequestStack                            $requestStack,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly ParameterBagInterface $parameterBag
+    )
     {
-        $this->session = $session;
-        $this->entityManager = $entityManager;
-        $this->client = new Client();
-        $this->security = $security;
-        $this->twig = $twig;
-        $this->parameterBag = $parameterBag;
+        $this->session = $requestStack->getSession();
+        $this->client  = new Client();
     }
 
     /**

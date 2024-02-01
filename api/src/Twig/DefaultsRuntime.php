@@ -8,13 +8,6 @@ use Twig\Extension\RuntimeExtensionInterface;
 
 class DefaultsRuntime implements RuntimeExtensionInterface
 {
-    private ObjectEntityService $objectEntityService;
-
-    public function __construct(ObjectEntityService $objectEntityService)
-    {
-        $this->objectEntityService = $objectEntityService;
-    }
-
     public function selfUrl(ObjectEntity $object): string
     {
         $value = $object->getUri();

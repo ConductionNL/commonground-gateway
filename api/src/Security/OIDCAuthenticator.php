@@ -14,6 +14,7 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -25,55 +26,39 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 
 class OIDCAuthenticator extends AbstractAuthenticator
 {
-    private AuthenticationService $authenticationService;
+    /**
+     * @var SessionInterface The current session.
+     */
     private SessionInterface $session;
-    private EntityManagerInterface $entityManager;
-    private ParameterBagInterface $parameterBag;
 
     /**
-     * @var LoggerInterface The logger for this service.
+     * @var LoggerInterface The call logger.
      */
     private LoggerInterface $logger;
 
     /**
-     * @var \CommonGateway\CoreBundle\Service\AuthenticationService The new authenticationService
-     */
-    private \CommonGateway\CoreBundle\Service\AuthenticationService $coreAuthenticationService;
-
-    /**
-     * @var ApplicationService The application service
-     */
-    private ApplicationService $applicationService;
-
-
-    /**
      * Constructor
      *
-     * @param AuthenticationService  $authenticationService The authentication service
-     * @param SessionInterface       $session               The session interface
-     * @param EntityManagerInterface $entityManager         The entity manager
-     * @param ParameterBagInterface  $parameterBag          The Parameter Bag
-     * @param LoggerInterface        $callLogger            The call logger
+     * @param AuthenticationService $authenticationService The authentication service
+     * @param RequestStack $requestStack
+     * @param EntityManagerInterface $entityManager The entity manager
+     * @param ParameterBagInterface $parameterBag The Parameter Bag
+     * @param LoggerInterface $callLogger The call logger
      * @param \CommonGateway\CoreBundle\Service\AuthenticationService $coreAuthenticationService The new auth service
      * @param ApplicationService $applicationService $the application service
      */
     public function __construct(
-        AuthenticationService $authenticationService,
-        SessionInterface $session,
-        EntityManagerInterface $entityManager,
-        ParameterBagInterface $parameterBag,
-        LoggerInterface $callLogger,
-        \CommonGateway\CoreBundle\Service\AuthenticationService $coreAuthenticationService,
-        ApplicationService $applicationService
+        private readonly AuthenticationService                                   $authenticationService,
+        RequestStack                                                             $requestStack,
+        private readonly EntityManagerInterface                                  $entityManager,
+        private readonly ParameterBagInterface                                   $parameterBag,
+        LoggerInterface                                                          $callLogger,
+        private readonly \CommonGateway\CoreBundle\Service\AuthenticationService $coreAuthenticationService,
+        private readonly ApplicationService                                      $applicationService
     )
     {
-        $this->authenticationService = $authenticationService;
-        $this->session = $session;
-        $this->entityManager = $entityManager;
-        $this->parameterBag = $parameterBag;
+        $this->session = $requestStack->getSession();
         $this->logger = $callLogger;
-        $this->coreAuthenticationService = $coreAuthenticationService;
-        $this->applicationService = $applicationService;
     }
 
     public function supports(Request $request): ?bool

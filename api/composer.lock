@@ -606,12 +606,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "52b36315e5b24c1254de5806b75607b017b2e54e"
+                "reference": "4d267f4e7fb886c4b7a3fa7a52ae815dde8020a6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/52b36315e5b24c1254de5806b75607b017b2e54e",
-                "reference": "52b36315e5b24c1254de5806b75607b017b2e54e",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/4d267f4e7fb886c4b7a3fa7a52ae815dde8020a6",
+                "reference": "4d267f4e7fb886c4b7a3fa7a52ae815dde8020a6",
                 "shasum": ""
             },
             "require": {
@@ -639,7 +639,7 @@
                 "mongodb/mongodb": "^1.15",
                 "monolog/monolog": "^2.8.0",
                 "nelmio/cors-bundle": "^2.1",
-                "php": "^7.4.0 || ^8.0.0 || ^8.1.0 || ^8.2.0",
+                "php": "^8.2.0",
                 "phpdocumentor/reflection-docblock": "^5.2",
                 "phpoffice/phpspreadsheet": "^1.29",
                 "phpoffice/phpword": "^0.18.2",
@@ -721,7 +721,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2024-01-31T14:22:49+00:00"
+            "time": "2024-02-01T10:00:57+00:00"
         },
         {
             "name": "composer/ca-bundle",

@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
@@ -22,14 +23,12 @@ use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 class ApiKeyAuthenticator extends AbstractAuthenticator
 {
     private SessionInterface $session;
-    private EntityManagerInterface $entityManager;
 
     public function __construct(
-        SessionInterface $session,
-        EntityManagerInterface $entityManager
+        RequestStack $requestStack,
+        public EntityManagerInterface $entityManager
     ) {
-        $this->session = $session;
-        $this->entityManager = $entityManager;
+        $this->session = $requestStack->getSession();
     }
 
     /**

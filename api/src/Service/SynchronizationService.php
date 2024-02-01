@@ -8,7 +8,6 @@ use App\Entity\Entity;
 use App\Entity\Gateway as Source;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
-use App\Entity\User;
 use App\Event\ActionEvent;
 use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
@@ -21,16 +20,17 @@ use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
-use Monolog\Logger;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
+use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
+use Respect\Validation\Exceptions\ComponentException;
 use Safe\Exceptions\UrlException;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
-use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Twig\Environment;
 use Twig\Error\LoaderError;
@@ -45,28 +45,13 @@ use Twig\Error\SyntaxError;
  */
 class SynchronizationService
 {
-    private CallService $callService;
-    private FileSystemHandleService $fileSystemService;
-
-    private EntityManagerInterface $entityManager;
     private SessionInterface $session;
-    private GatewayService $gatewayService;
-    private FunctionService $functionService;
-    private LogService $logService;
-    private MessageBusInterface $messageBus;
-    private TranslationService $translationService;
-    private ObjectEntityService $objectEntityService;
-    private EavService $eavService;
+
     public array $configuration;
     private array $data;
     private SymfonyStyle $io;
-    private Environment $twig;
-    private MappingService $mappingService;
-    private GatewayResourceService $resourceService;
-
     private ActionEvent $event;
-    private EventDispatcherInterface $eventDispatcher;
-    private Logger $logger;
+    private LoggerInterface $logger;
 
     private bool $asyncError = false;
     private ?string $sha = null;
@@ -74,13 +59,7 @@ class SynchronizationService
     /**
      * @param CallService              $callService
      * @param EntityManagerInterface   $entityManager
-     * @param SessionInterface         $session
-     * @param GatewayService           $gatewayService
-     * @param FunctionService          $functionService
-     * @param LogService               $logService
-     * @param MessageBusInterface      $messageBus
      * @param TranslationService       $translationService
-     * @param EavService               $eavService
      * @param Environment              $twig
      * @param EventDispatcherInterface $eventDispatcher
      * @param MappingService           $mappingService
@@ -88,39 +67,22 @@ class SynchronizationService
      * @param GatewayResourceService   $resourceService
      */
     public function __construct(
-        CallService $callService,
-        EntityManagerInterface $entityManager,
-        SessionInterface $session,
-        GatewayService $gatewayService,
-        FunctionService $functionService,
-        LogService $logService,
-        MessageBusInterface $messageBus,
-        TranslationService $translationService,
-        EavService $eavService,
-        Environment $twig,
-        EventDispatcherInterface $eventDispatcher,
-        MappingService $mappingService,
-        FileSystemHandleService $fileSystemService,
-        GatewayResourceService $resourceService
+        private readonly CallService              $callService,
+        private readonly EntityManagerInterface   $entityManager,
+        RequestStack                              $requestStack,
+        private readonly TranslationService       $translationService,
+        private readonly Environment              $twig,
+        private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly MappingService           $mappingService,
+        private readonly FileSystemHandleService  $fileSystemService,
+        private readonly GatewayResourceService   $resourceService,
+        LoggerInterface                           $installationLogger
     ) {
-        $this->callService = $callService;
-        $this->entityManager = $entityManager;
-        $this->session = $session;
-        $this->gatewayService = $gatewayService;
-        $this->functionService = $functionService;
-        $this->logService = $logService;
-        $this->messageBus = $messageBus;
-        $this->translationService = $translationService;
-        $this->eavService = $eavService;
+        $this->session = $requestStack->getSession();
         $this->configuration = [];
         $this->data = [];
-        $this->twig = $twig;
         $this->event = new ActionEvent('', []);
-        $this->eventDispatcher = $eventDispatcher;
-        $this->logger = new Logger('installation');
-        $this->mappingService = $mappingService;
-        $this->fileSystemService = $fileSystemService;
-        $this->resourceService = $resourceService;
+        $this->logger = $installationLogger;
     }
 
     /**
@@ -389,8 +351,10 @@ class SynchronizationService
 
             // Delete object (this will remove this object result from the cache)
             // This will also delete the sync because of cascade delete
-            $this->functionService->removeResultFromCache = [];
-            $data = $this->eavService->handleDelete($object);
+            $this->entityManager->remove($object);
+            $this->entityManager->remove($synchronization);
+
+            $this->entityManager->flush();
 
             return true;
         } catch (Exception $exception) {
