@@ -11,11 +11,13 @@ use App\Service\AuthenticationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use Symfony\Component\HttpFoundation\Exception\SessionNotFoundException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
@@ -57,7 +59,11 @@ class OIDCAuthenticator extends AbstractAuthenticator
         private readonly ApplicationService                                      $applicationService
     )
     {
-        $this->session = $requestStack->getSession();
+                try {
+            $this->session = $requestStack->getSession();
+        } catch (SessionNotFoundException) {
+            $this->session = new Session();
+        };
         $this->logger = $callLogger;
     }
 
