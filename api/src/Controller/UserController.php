@@ -10,6 +10,7 @@ use App\Service\AuthenticationService;
 use App\Service\FunctionService;
 use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use GuzzleHttp\Exception\ClientException;
 use Psr\EventDispatcher\EventDispatcherInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -37,13 +38,11 @@ use Symfony\Component\Serializer\SerializerInterface;
 class UserController extends AbstractController
 {
     private AuthenticationService $authenticationService;
-    private SessionInterface $session;
     private EntityManagerInterface $entityManager;
 
-    public function __construct(AuthenticationService $authenticationService, SessionInterface $session, EntityManagerInterface $entityManager)
+    public function __construct(AuthenticationService $authenticationService, EntityManagerInterface $entityManager)
     {
         $this->authenticationService = $authenticationService;
-        $this->session = $session;
         $this->entityManager = $entityManager;
     }
 
@@ -51,7 +50,7 @@ class UserController extends AbstractController
      * @Route("login", methods={"POST"})
      * @Route("users/login", methods={"POST"})
      */
-    public function LoginAction(Request $request, CommonGroundService $commonGroundService)
+    public function LoginAction(Request $request)
     {
     }
 
@@ -101,8 +100,8 @@ class UserController extends AbstractController
         $user = $this->entityManager->getRepository('App:User')->find($user->getUserIdentifier());
 
         // Set organization id and user id in session
-        $this->session->set('user', $user->getId()->toString());
-        $this->session->set('organization', $user->getOrganization() !== null ? $user->getOrganization()->getId()->toString() : null);
+        $session->set('user', $user->getId()->toString());
+        $session->set('organization', $user->getOrganization() !== null ? $user->getOrganization()->getId()->toString() : null);
 
         $response = $this->validateUserApp($user);
         if ($response !== null)
@@ -175,8 +174,8 @@ class UserController extends AbstractController
     public function addUserToSession(User $user, EventDispatcherInterface $eventDispatcher, Request $request): void
     {
         $authUser = $this->createAuthenticationUser($user);
-        $authToken = new UsernamePasswordToken($authUser, $user->getPassword(), 'public', $authUser->getRoles());
-        $this->get('security.token_storage')->setToken($authToken);
+        $authToken = new UsernamePasswordToken($authUser, $user->getPassword(), ['public'], $authUser->getRoles());
+        $this->container->get('security.token_storage')->setToken($authToken);
 
         $event = new InteractiveLoginEvent($request, $authToken);
         $eventDispatcher->dispatch($event);
@@ -185,12 +184,13 @@ class UserController extends AbstractController
     /**
      * @Route("api/users/login", methods={"POST"})
      */
-    public function apiLoginAction(Request $request, UserPasswordHasherInterface $hasher, SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService, EventDispatcherInterface $eventDispatcher)
+    public function apiLoginAction(Request $request, UserPasswordHasherInterface $hasher, SerializerInterface $serializer, \CommonGateway\CoreBundle\Service\AuthenticationService $authenticationService, EventDispatcherInterface $eventDispatcher, ManagerRegistry $doctrine)
     {
         $status = 200;
         $data = json_decode($request->getContent(), true);
 
-        $user = $this->getDoctrine()->getRepository('App:User')->findOneBy(['email' => $data['username']]);
+
+        $user = $doctrine->getRepository('App:User')->findOneBy(['email' => $data['username']]);
         if ($user instanceof User === false || $hasher->isPasswordValid($user, $data['password']) === false) {
             $response = [
                 'message' => 'Invalid credentials',
@@ -203,8 +203,8 @@ class UserController extends AbstractController
         }
 
         // Set organization id and user id in session
-        $this->session->set('user', $user->getId()->toString());
-        $this->session->set('organization', $user->getOrganization() !== null ? $user->getOrganization()->getId()->toString() : null);
+        $request->getSession()->set('user', $user->getId()->toString());
+        $request->getSession()->set('organization', $user->getOrganization() !== null ? $user->getOrganization()->getId()->toString() : null);
 
         $response = $this->validateUserApp($user);
         if ($response !== null)
@@ -219,11 +219,11 @@ class UserController extends AbstractController
         $this->addUserToSession($user, $eventDispatcher, $request);
 
         if (isset($data['redirectUrl']) === true) {
-            $this->session->set('jwtToken', $token);
+            $request->getSession()->set('jwtToken', $token);
 
             return $this->redirect($data['redirectUrl']);
         } elseif ($request->query->has('redirectUrl') === true) {
-            $this->session->set('jwtToken', $token);
+            $request->getSession()->set('jwtToken', $token);
 
             return $this->redirect($request->query->get('redirectUrl'));
         }
@@ -367,9 +367,9 @@ class UserController extends AbstractController
             throw new BadRequestException('Missing authentication method or identifier');
         }
 
-        $this->session->set('backUrl', $request->query->get('redirecturl') ?? $request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
-        $this->session->set('method', $method);
-        $this->session->set('identifier', $identifier);
+        $request->getSession()->set('backUrl', $request->query->get('redirecturl') ?? $request->headers->get('referer') ?? $request->getSchemeAndHttpHost());
+        $request->getSession()->set('method', $method);
+        $request->getSession()->set('identifier', $identifier);
 
         $redirectUrl = $request->getSchemeAndHttpHost().$this->generateUrl('app_user_authenticate', ['method' => $method, 'identifier' => $identifier]);
 
@@ -377,7 +377,7 @@ class UserController extends AbstractController
             $redirectUrl = str_replace('http://', 'https://', $redirectUrl);
         }
 
-        $this->session->set('redirectUrl', $redirectUrl);
+        $request->getSession()->set('redirectUrl', $redirectUrl);
 
         return $this->redirect($this->authenticationService->handleAuthenticationUrl($method, $identifier, $redirectUrl));
     }

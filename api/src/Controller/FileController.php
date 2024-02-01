@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Service\FileService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Cache\Adapter\AdapterInterface as CacheInterface;
+use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**

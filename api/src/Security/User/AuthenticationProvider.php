@@ -4,20 +4,21 @@
 
 namespace App\Security\User;
 
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 
-/**
- * @method UserInterface loadUserByIdentifier(string $identifier)
- */
-abstract class AuthenticationProvider implements UserProviderInterface
+class AuthenticationProvider implements UserProviderInterface
 {
     public function loadUserByUsername($username)
     {
         return $this->fetchUser($username);
+    }
+
+    public function loadUserByIdentifier(string $identifier): UserInterface
+    {
+        return $this->fetchUser($identifier);
     }
 
     public function refreshUser(UserInterface $user)
@@ -45,7 +46,7 @@ abstract class AuthenticationProvider implements UserProviderInterface
         return AuthenticationUser::class === $class;
     }
 
-    private function fetchUser($userIdentifier, $username, $password, $firstName, $lastName, $name, $roles, $email)
+    private function fetchUser($userIdentifier, $username = '', $password = '', $firstName = '', $lastName = '', $name = '', $roles = '', $email = '')
     {
         return new AuthenticationUser($userIdentifier, $username, $password, $firstName, $lastName, $name, null, $roles, $email);
     }

@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Action;
 use App\Entity\ActionHandler;
+use App\Kernel;
 use Exception;
 use Monolog\Logger;
 use Ramsey\Uuid\Uuid;
@@ -24,10 +25,10 @@ class ActionService
 
     public function __construct(
         iterable $actionHandlers,
-        ContainerInterface $container
+        Kernel $kernel
     ) {
         $this->actionHandlers = $actionHandlers;
-        $this->container = $container;
+        $this->container = $kernel->getContainer();
         $this->logger = new Logger('action');
     }
 
