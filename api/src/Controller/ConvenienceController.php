@@ -9,6 +9,8 @@ use App\Service\OasParserService;
 use App\Service\ObjectEntityService;
 use App\Service\PackagesService;
 use App\Service\ParseDataService;
+use CommonGateway\CoreBundle\Service\ActionService;
+use CommonGateway\CoreBundle\Service\EndpointService;
 use CommonGateway\CoreBundle\Subscriber\ActionSubscriber;
 use CommonGateway\CoreBundle\Service\MappingService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -36,29 +38,39 @@ class ConvenienceController extends AbstractController
     private SerializerInterface $serializer;
     private ParseDataService $dataService;
     private PackagesService $packagesService;
-    private HandlerService $handlerService;
     private ActionSubscriber $actionSubscriber;
-    private ObjectEntityService $objectEntityService;
     private MappingService $mappingService;
+
+    /**
+     * @var EndpointService The endpoint service.
+     */
+    private EndpointService $endpointService;
+
+    /**
+     * @param EntityManagerInterface $entityManager
+     * @param ParameterBagInterface $params
+     * @param SerializerInterface $serializer
+     * @param ParseDataService $dataService
+     * @param ActionSubscriber $actionSubscriber
+     * @param MappingService $mappingService
+     * @param ActionService $actionService
+     */
 
     public function __construct(
         EntityManagerInterface $entityManager,
         ParameterBagInterface $params,
         SerializerInterface $serializer,
         ParseDataService $dataService,
-        HandlerService $handlerService,
         ActionSubscriber $actionSubscriber,
-        ObjectEntityService $objectEntityService,
-        MappingService $mappingService
+        MappingService $mappingService,
+        public ActionService $actionService
     ) {
         $this->entityManager = $entityManager;
         $this->serializer = $serializer;
         $this->oasParser = new OasParserService($entityManager);
         $this->packagesService = new PackagesService();
         $this->dataService = $dataService;
-        $this->handlerService = $handlerService;
         $this->actionSubscriber = $actionSubscriber;
-        $this->objectEntityService = $objectEntityService;
         $this->mappingService = $mappingService;
     }
 
@@ -223,18 +235,18 @@ class ConvenienceController extends AbstractController
      * @throws GatewayException
      * @throws Exception
      */
-    public function runAction(string $actionId): Response
+    public function runAction(string $actionId, Request $request): Response
     {
         $action = $this->entityManager->getRepository('App:Action')->find($actionId);
 
-        $contentType = $this->handlerService->getRequestType('content-type');
-        $data = $this->handlerService->getDataFromRequest();
+        $contentType = $this->endpointService->getAcceptType($request);
+        $data        = $this->endpointService->decodeBody($request);
 
         $data = $this->actionSubscriber->runFunction($action, $data, $action->getListens()[0]);
 
         // throw events
         foreach ($action->getThrows() as $throw) {
-            $this->objectEntityService->dispatchEvent('commongateway.action.event', $data, $throw);
+            $this->actionService->dispatchEvent('commongateway.action.event', $data, $throw);
         }
 
         return new Response(
@@ -249,9 +261,9 @@ class ConvenienceController extends AbstractController
      *
      * @throws GatewayException
      */
-    public function getMapping(string $id)
+    public function getMapping(string $id, Request $request)
     {
-        $contentType = $this->handlerService->getRequestType('content-type');
+        $contentType = $this->endpointService->getAcceptType($request);
 
         if (!$mappingObject = $this->entityManager->getRepository('App:Mapping')->find($id)) {
             return new GatewayException(
@@ -260,7 +272,7 @@ class ConvenienceController extends AbstractController
             );
         }
 
-        $requestMappingArray = $this->handlerService->getDataFromRequest();
+        $requestMappingArray = $this->endpointService->decodeBody($request);
 
         $mapping = $this->mappingService->mapping($mappingObject, $requestMappingArray);
 
