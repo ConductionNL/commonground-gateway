@@ -6,9 +6,11 @@ use App\Entity\Application;
 use App\Exception\GatewayException;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Exception\SessionNotFoundException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
 /**
@@ -39,7 +41,11 @@ class ApplicationService
         private readonly EntityManagerInterface $entityManager,
     ) {
         $this->request = $requestStack->getCurrentRequest();
-        $this->session = $requestStack->getSession();
+        try {
+            $this->session = $requestStack->getSession();
+        } catch (SessionNotFoundException) {
+            $this->session = new Session();
+        }
     }
 
     /**

@@ -558,17 +558,17 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/WooBundle.git",
-                "reference": "40ef723384e9b028d30d5d47ab176c4705bb0fb5"
+                "reference": "a4595292c553a0dbb248ea85654e9933af316fa0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/WooBundle/zipball/40ef723384e9b028d30d5d47ab176c4705bb0fb5",
-                "reference": "40ef723384e9b028d30d5d47ab176c4705bb0fb5",
+                "url": "https://api.github.com/repos/CommonGateway/WooBundle/zipball/a4595292c553a0dbb248ea85654e9933af316fa0",
+                "reference": "a4595292c553a0dbb248ea85654e9933af316fa0",
                 "shasum": ""
             },
             "require": {
                 "commongateway/corebundle": "^1.1.52 | dev-feature/GW-1596/Symfony54 | dev-feature/GW-1595/Symfony64",
-                "php": ">=7.4"
+                "php": ">=8.2"
             },
             "require-dev": {
                 "symfony/dependency-injection": "~3.4|~4.1|~5.0"
@@ -598,7 +598,7 @@
                 "issues": "https://github.com/CommonGateway/WooBundle/issues",
                 "source": "https://github.com/CommonGateway/WooBundle/tree/feature/GW-1595/test-symfony64"
             },
-            "time": "2024-01-31T12:41:55+00:00"
+            "time": "2024-02-01T14:45:19+00:00"
         },
         {
             "name": "commongateway/corebundle",
@@ -606,12 +606,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "4d267f4e7fb886c4b7a3fa7a52ae815dde8020a6"
+                "reference": "b40e0333065c60e919f2549e96948cb25260a6c5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/4d267f4e7fb886c4b7a3fa7a52ae815dde8020a6",
-                "reference": "4d267f4e7fb886c4b7a3fa7a52ae815dde8020a6",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/b40e0333065c60e919f2549e96948cb25260a6c5",
+                "reference": "b40e0333065c60e919f2549e96948cb25260a6c5",
                 "shasum": ""
             },
             "require": {
@@ -721,7 +721,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2024-02-01T10:00:57+00:00"
+            "time": "2024-02-01T14:35:32+00:00"
         },
         {
             "name": "composer/ca-bundle",

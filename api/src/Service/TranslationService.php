@@ -8,7 +8,9 @@ use App\Entity\Synchronization;
 use CommonGateway\CoreBundle\Service\CallService;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Exception\SessionNotFoundException;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 
@@ -29,7 +31,11 @@ class TranslationService
         private readonly CallService            $callService
     )
     {
-        $this->sessionInterface = $requestStack->getSession();
+        try {
+            $this->session = $requestStack->getSession();
+        } catch (SessionNotFoundException) {
+            $this->session = new Session();
+        }
     }
 
     private function encodeArrayKeys($array, string $toReplace, string $replacement): array

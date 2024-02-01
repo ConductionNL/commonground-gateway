@@ -6,7 +6,6 @@ use App\Entity\Attribute;
 use App\Entity\CollectionEntity;
 use App\Entity\Endpoint;
 use App\Entity\Entity;
-use App\Entity\Handler;
 use App\Entity\Property;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;

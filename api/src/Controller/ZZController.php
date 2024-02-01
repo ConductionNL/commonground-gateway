@@ -6,7 +6,6 @@ use App\Exception\GatewayException;
 use App\Service\DocumentService;
 use App\Service\HandlerService;
 use App\Service\LogService;
-use App\Service\ProcessingLogService;
 use CommonGateway\CoreBundle\Service\EndpointService;
 use CommonGateway\CoreBundle\Service\RequestService;
 use Exception;

@@ -29,7 +29,9 @@ use Safe\Exceptions\UrlException;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\Exception\SessionNotFoundException;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Serializer\Encoder\XmlEncoder;
 use Twig\Environment;
@@ -78,7 +80,11 @@ class SynchronizationService
         private readonly GatewayResourceService   $resourceService,
         LoggerInterface                           $installationLogger
     ) {
-        $this->session = $requestStack->getSession();
+        try {
+            $this->session = $requestStack->getSession();
+        } catch (SessionNotFoundException) {
+            $this->session = new Session();
+        }
         $this->configuration = [];
         $this->data = [];
         $this->event = new ActionEvent('', []);
