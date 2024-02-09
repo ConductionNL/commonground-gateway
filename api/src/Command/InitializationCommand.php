@@ -91,7 +91,7 @@ class InitializationCommand extends Command
         $config['unsafe'] = $input->getOption('unsafe');
 
         // Throw the event
-        $io->info('Trowing commongateway.pre.initialization event');
+        $io->info('Throwing commongateway.pre.initialization event');
         $event = new ActionEvent('commongateway.pre.initialization', []);
         $this->eventDispatcher->dispatch($event, 'commongateway.pre.initialization');
 
@@ -293,7 +293,7 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
         $io->success('Successfully finished setting basic configuration');
 
         // todo: actualy throw it
-        $io->info('Trowing commongateway.post.initialization event');
+        $io->info('Throwing commongateway.post.initialization event');
 
         // Throw the event
         $event = new ActionEvent('commongateway.post.initialization', []);
