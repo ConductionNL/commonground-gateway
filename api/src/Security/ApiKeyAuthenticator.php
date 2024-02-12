@@ -152,13 +152,22 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
         }
 
         try {
-            $user = $application->getOrganization()->getUsers()[0];
+            $user = $application->getOrganization()->getUsers()->first();
+
+            $userCollection = $application->getOrganization()->getUsers();
+            $users = $userCollection->filter(function (User $user) {
+                return $user->getName() === 'APIKEY_USER';
+            });
+
+            if (count($users) > 0) {
+                $user = $users->first();
+            }
         } catch (\Exception $exception) {
-            throw new AuthenticationException('An invalid User is configured for this ApiKey');
+            throw new AuthenticationException('An invalid User (or no user) is configured for this ApiKey');
         }
 
         if ($user instanceof User === false) {
-            throw new AuthenticationException('An invalid User is configured for this ApiKey');
+            throw new AuthenticationException('An invalid User (or no user) is configured for this ApiKey');
         }
 
         // Set apiKey Application id in session

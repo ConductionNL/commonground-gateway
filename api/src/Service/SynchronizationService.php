@@ -14,6 +14,7 @@ use App\Exception\AsynchronousException;
 use App\Exception\GatewayException;
 use CommonGateway\CoreBundle\Service\CallService;
 use CommonGateway\CoreBundle\Service\FileSystemHandleService;
+use CommonGateway\CoreBundle\Service\GatewayResourceService;
 use CommonGateway\CoreBundle\Service\MappingService;
 use DateInterval;
 use DateTime;
@@ -23,6 +24,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use Monolog\Logger;
 use Psr\Cache\CacheException;
 use Psr\Cache\InvalidArgumentException;
+use Ramsey\Uuid\Uuid;
 use Safe\Exceptions\UrlException;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -60,6 +62,7 @@ class SynchronizationService
     private SymfonyStyle $io;
     private Environment $twig;
     private MappingService $mappingService;
+    private GatewayResourceService $resourceService;
 
     private ActionEvent $event;
     private EventDispatcherInterface $eventDispatcher;
@@ -83,6 +86,7 @@ class SynchronizationService
      * @param EventDispatcherInterface $eventDispatcher
      * @param MappingService           $mappingService
      * @param FileSystemHandleService  $fileSystemService
+     * @param GatewayResourceService   $resourceService
      */
     public function __construct(
         CallService $callService,
@@ -98,7 +102,8 @@ class SynchronizationService
         Environment $twig,
         EventDispatcherInterface $eventDispatcher,
         MappingService $mappingService,
-        FileSystemHandleService $fileSystemService
+        FileSystemHandleService $fileSystemService,
+        GatewayResourceService $resourceService
     ) {
         $this->callService = $callService;
         $this->entityManager = $entityManager;
@@ -119,6 +124,7 @@ class SynchronizationService
         $this->logger = new Logger('installation');
         $this->mappingService = $mappingService;
         $this->fileSystemService = $fileSystemService;
+        $this->resourceService = $resourceService;
     }
 
     /**
@@ -303,7 +309,7 @@ class SynchronizationService
             array_key_exists('object', $this->configuration['apiSource']['location']) && $result = $dot->get($this->configuration['apiSource']['location']['object'], $result);
 
             // Lets grab the sync object, if we don't find an existing one, this will create a new one:
-            $synchronization = $this->findSyncBySource($config['source'], $config['entity'], $id);
+            $synchronization = $this->findSyncBySource($config['source'], $config['entity'], $id, $this->configuration['location'] ?? null);
             // todo: Another search function for sync object. If no sync object is found, look for matching properties...
             // todo: ...in $result and an ObjectEntity in db. And then create sync for an ObjectEntity if we find one this way. (nice to have)
             // Other option to find a sync object, currently not used:
@@ -670,13 +676,22 @@ class SynchronizationService
 
         $url = \Safe\parse_url($synchronization->getSource()->getLocation());
 
+        $endpoint = $synchronization->getEndpoint().'/'.$synchronization->getSourceId();
+        if (str_contains('http', $synchronization->getSourceId()) === true) {
+            $endpoint = $synchronization->getEndpoint();
+        }
+        if (isset($this->configuration['location']) === true) {
+            $endpoint = $this->configuration['location'];
+            $synchronization->setEndpoint($endpoint);
+        }
+
         if ($url['scheme'] === 'http' || $url['scheme'] === 'https') {
             // Get object form source with callservice
             try {
                 $this->logger->info("getSingleFromSource with Synchronization->sourceId = {$synchronization->getSourceId()}");
                 $response = $this->callService->call(
                     $callServiceConfig['source'],
-                    $synchronization->getEndpoint() ?? $callServiceConfig['endpoint'],
+                    $endpoint,
                     $callServiceConfig['method'] ?? 'GET',
                     [
                         'body'    => '',
@@ -694,7 +709,7 @@ class SynchronizationService
             $result = $this->callService->decodeResponse($callServiceConfig['source'], $response);
         } elseif ($url['scheme'] === 'ftp') {
             // This only works if a file data equals a single Object(Entity). Or if the mapping on the Source or Synchronization results in data for just a single Object.
-            $result = $this->fileSystemService->call($synchronization->getSource(), $synchronization->getEndpoint() ?? $callServiceConfig['endpoint']);
+            $result = $this->fileSystemService->call($synchronization->getSource(), isset($this->configuration['location']) === true ? $callServiceConfig['endpoint'] : $endpoint);
         }
         $dot = new Dot($result);
         // The place where we can find the id field when looping through the list of objects, from $result root, by object (dot notation)
@@ -711,15 +726,20 @@ class SynchronizationService
     /**
      * Finds a synchronization object if it exists for the current object in the source, or creates one if it doesn't exist.
      *
-     * @param Source $source   The source that is requested
-     * @param Entity $entity   The entity that is requested
-     * @param string $sourceId The id of the object in the source
+     * @param Source $source        The source that is requested
+     * @param Entity $entity        The entity that is requested
+     * @param string $sourceId      The id of the object in the source
+     * @param string|null $endpoint The endpoint of the synchronization.
      *
      * @return Synchronization|null A synchronization object related to the object in the source
      */
-    public function findSyncBySource(Source $source, Entity $entity, string $sourceId): ?Synchronization
+    public function findSyncBySource(Source $source, Entity $entity, string $sourceId, ?string $endpoint = null): ?Synchronization
     {
-        $synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['gateway' => $source, 'entity' => $entity, 'sourceId' => $sourceId]);
+        $criteria = ['gateway' => $source, 'entity' => $entity, 'sourceId' => $sourceId];
+        if (empty($endpoint) === false) {
+            $criteria['endpoint'] = $endpoint;
+        }
+        $synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy($criteria);
 
         if ($synchronization instanceof Synchronization) {
             if (isset($this->io)) {
@@ -731,6 +751,7 @@ class SynchronizationService
         }
 
         $synchronization = new Synchronization($source, $entity);
+        $synchronization->setEndpoint($endpoint);
         $synchronization->setSourceId($sourceId);
         $this->entityManager->persist($synchronization);
         // We flush later
@@ -1326,15 +1347,27 @@ class SynchronizationService
 
         //        $objectArray = $this->objectEntityService->checkGetObjectExceptions($data, $object, [], ['all' => true], 'application/ld+json');
         // todo: maybe move this to foreach in getAllFromSource() (nice to have)
-        $callServiceConfig = $this->getCallServiceConfig($synchronization->getSource(), null, $objectArray);
+        $callServiceConfig = $this->getCallServiceConfig($synchronization->getSource(), $existsInSource ? $synchronization->getSourceId() : null, $objectArray);
         $objectArray = $this->mapOutput($objectArray);
+
+        $endpoint = $synchronization->getEndpoint();
+        if ($existsInSource === true) {
+            $endpoint = $endpoint.'/'.$synchronization->getSourceId();
+        }
+        if (str_contains('http', $synchronization->getSourceId()) === true) {
+            $endpoint = $synchronization->getEndpoint();
+        }
+        if (isset($this->configuration['location']) === true) {
+            $endpoint = $this->configuration['location'];
+            $synchronization->setEndpoint($endpoint);
+        }
 
         $objectString = $this->getObjectString($objectArray);
 
         try {
             $result = $this->callService->call(
                 $callServiceConfig['source'],
-                $synchronization->getEndpoint() ?? $callServiceConfig['endpoint'],
+                $endpoint,
                 $callServiceConfig['method'] ?? ($existsInSource ? 'PUT' : 'POST'),
                 [
                     'body'    => $objectString,
@@ -1469,41 +1502,39 @@ class SynchronizationService
      */
     public function aquireObject(string $url, Entity $entity): ?ObjectEntity
     {
-        // 1. Get the domain from the url
-        $parse = \Safe\parse_url($url);
-        $location = $parse['scheme'].'://'.$parse['host'];
+        $source = $this->resourceService->findSourceForUrl($url, 'conduction-nl/commonground-gateway', $endpoint);
+        $sourceId = $this->getSourceId($endpoint, $url);
 
-        // 2.c Try to establish a source for the domain
-        $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
-
-        // 2.b The source might be on a path e.g. /v1 so if whe cant find a source let try to cycle
-        if ($source instanceof Source === false && isset($parse['path']) === true) {
-            foreach (explode('/', $parse['path']) as $pathPart) {
-                if ($pathPart !== '') {
-                    $location = $location.'/'.$pathPart;
-                }
-                $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['location'=>$location]);
-                if ($source !== null) {
-                    break;
-                }
-            }
-        }
-        if ($source instanceof Source === false) {
-            return null;
-        }
-
-        // 3 If we have a source we can establish an endpoint.
-        $endpoint = str_replace($location, '', $url);
-
-        // 4 Create sync
-        $synchronization = new Synchronization($source, $entity);
-        $synchronization->setSourceId($url);
-        $synchronization->setEndpoint($endpoint);
-
-        $this->entityManager->persist($synchronization);
+        $synchronization = $this->findSyncBySource($source, $entity, $sourceId, $endpoint);
 
         $this->synchronize($synchronization);
 
         return $synchronization->getObject();
+    }
+
+    /**
+     * A function best used after resourceService->findSourceForUrl and/or before $this->findSyncBySource.
+     * This function will get the uuid / int id from the end of an endpoint. This is the sourceId for a Synchronization.
+     *
+     * @param string|null $endpoint The endpoint to get the SourceId from.
+     * @param string|null $url The url used as back-up for SourceId if no proper SourceId can be found.
+     *
+     * @return string|null The sourceId, will be equal to $url if end part of the endpoint isn't an uuid or integer. And will return null if $endpoint & $url ar both null.
+     */
+    public function getSourceId(?string &$endpoint, ?string $url = null): ?string
+    {
+        if ($endpoint === null) {
+            return $url;
+        }
+
+        $explodedEndpoint = explode('/', $endpoint);
+        $sourceId = end($explodedEndpoint);
+        if (Uuid::isValid($sourceId) === true || is_int((int) $sourceId) === true) {
+            $endpoint = str_replace("/$sourceId", '', $endpoint);
+        } else {
+            $sourceId = $url;
+        }
+
+        return $sourceId;
     }
 }

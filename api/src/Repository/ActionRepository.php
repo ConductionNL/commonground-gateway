@@ -26,6 +26,8 @@ class ActionRepository extends ServiceEntityRepository
      */
     public function findByListens(string $listen): array
     {
+        // Todo: maybe add actions to MongoDB as well, so we can use better queries for this:
+        // Todo: %$listen% will sometimes find actions it shouldn't find, example: action listening to test.test.123 will be found if action test.test is thrown.
         $query = $this->createQueryBuilder('a')
             ->andWhere('a.listens LIKE :listen')
             ->setParameter('listen', "%$listen%")

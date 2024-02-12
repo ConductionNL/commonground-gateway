@@ -19,6 +19,7 @@ use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
 use phpDocumentor\Reflection\Types\This;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -50,7 +51,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *              "description"="Deletes all objects that belong to this schema"
  *          }
  *      },
- *  })
+ *  }
+ * )
  *
  * @ORM\Entity(repositoryClass="App\Repository\EntityRepository")
  *
@@ -63,6 +65,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "name": "exact",
  *     "reference": "exact"
  * })
+ *
+ * @UniqueEntity("reference")
  */
 class Entity
 {
@@ -411,6 +415,8 @@ class Entity
     /**
      * @Groups({"read", "write"})
      *
+     * @Assert\NotNull
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $reference = null;
@@ -418,9 +424,11 @@ class Entity
     /**
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     * @Assert\NotNull
+     *
+     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
      */
-    private ?string $version = null;
+    private string $version = '0.0.0';
 
     //todo: do we want read/write groups here?
     /**

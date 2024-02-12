@@ -149,6 +149,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * })
  *
  * @UniqueEntity("name")
+ * @UniqueEntity("reference")
  */
 class Gateway
 {
@@ -216,6 +217,8 @@ class Gateway
     /**
      * @Groups({"read", "write"})
      *
+     * @Assert\NotNull
+     *
      * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
     private ?string $reference = null;
@@ -223,9 +226,11 @@ class Gateway
     /**
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     * @Assert\NotNull
+     *
+     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
      */
-    private ?string $version = null;
+    private string $version = '0.0.0';
 
     /**
      * @var string The location where the Gateway needs to be accessed
@@ -559,8 +564,7 @@ class Gateway
     private ?string $documentation = null;
 
     /**
-     * Configuration for logging, when an api call is made on the source we can log some information for this call.
-     * With this array you can enable/disable what will be logged.
+     * @var array Configuration for logging, when an api call is made on the source we can log some information for this call. With this array you can enable/disable what will be logged.
      *
      * @Assert\NotNull
      *
@@ -633,7 +637,9 @@ class Gateway
      *
      * @ORM\Column(type="array", nullable=true)
      */
-    private ?array $configuration = [];
+    private ?array $configuration = [
+        "verify" => true
+    ];
 
     /**
      * @var array|null The configuration for endpoints on this source, mostly mapping for now.
@@ -812,7 +818,12 @@ class Gateway
         array_key_exists('headers', $schema) ? $this->setHeaders($schema['headers']) : '';
         array_key_exists('translationConfig', $schema) ? $this->setTranslationConfig($schema['translationConfig']) : '';
         array_key_exists('type', $schema) ? $this->setType($schema['type']) : '';
-        array_key_exists('configuration', $schema) ? $this->setConfiguration($schema['configuration']) : '';
+        if (isset($schema['configuration']) === true) {
+            if (isset($schema['configuration']['verify']) === false) {
+                $schema['configuration']['verify'] = true;
+            }
+            $this->setConfiguration($schema['configuration']);
+        }
         array_key_exists('endpointsConfig', $schema) ? $this->setEndpointsConfig($schema['endpointsConfig']) : '';
         array_key_exists('isEnabled', $schema) ? $this->setIsEnabled($schema['isEnabled']) : '';
 

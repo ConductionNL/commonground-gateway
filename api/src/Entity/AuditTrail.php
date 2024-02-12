@@ -33,7 +33,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "get"={"path"="/admin/audit_trails"},
  *     "post"={"path"="/admin/audit_trails"}
  *  },
- *  attributes={"order"={"creationDate": "DESC"}})
+ *  attributes={"order"={"creationDate": "DESC"}}
+ * )
  *
  * @ORM\Entity(repositoryClass=AuditTrailRepository::class)
  *

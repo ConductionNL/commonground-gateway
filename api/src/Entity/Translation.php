@@ -35,7 +35,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *          "path"="/admin/table_names"
  *      },
  *      "post"={"path"="/admin/translations"}
- *  })
+ *  }
+ * )
  *
  * @ORM\Entity(repositoryClass=TranslationRepository::class)
  *
