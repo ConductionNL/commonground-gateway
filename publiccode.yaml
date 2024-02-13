@@ -14,7 +14,7 @@ categories:
   - collaboration
   - it-development
 developmentStatus: beta
-softwareType: !!!
+softwareType: gateway
 description:
   en:
     localisedName: CommonGateway
