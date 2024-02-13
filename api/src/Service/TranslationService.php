@@ -33,7 +33,7 @@ class TranslationService
     {
         try {
             $this->session = $requestStack->getSession();
-        } catch (SessionNotFoundException) {
+        } catch (SessionNotFoundException $exception) {
             $this->session = new Session();
         }
     }

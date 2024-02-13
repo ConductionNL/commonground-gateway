@@ -48,11 +48,11 @@ class TokenAuthenticator extends AbstractAuthenticator
         private readonly ApplicationService     $applicationService,
         private readonly EntityManagerInterface $entityManager
     ) {
-                try {
+        try {
             $this->session = $requestStack->getSession();
-        } catch (SessionNotFoundException) {
+        } catch (SessionNotFoundException $exception) {
             $this->session = new Session();
-        };
+        }
     }
 
     /**

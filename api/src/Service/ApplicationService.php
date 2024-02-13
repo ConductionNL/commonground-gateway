@@ -43,7 +43,7 @@ class ApplicationService
         $this->request = $requestStack->getCurrentRequest();
         try {
             $this->session = $requestStack->getSession();
-        } catch (SessionNotFoundException) {
+        } catch (SessionNotFoundException $exception) {
             $this->session = new Session();
         }
     }

@@ -59,11 +59,11 @@ class OIDCAuthenticator extends AbstractAuthenticator
         private readonly ApplicationService                                      $applicationService
     )
     {
-                try {
+        try {
             $this->session = $requestStack->getSession();
-        } catch (SessionNotFoundException) {
+        } catch (SessionNotFoundException $exception) {
             $this->session = new Session();
-        };
+        }
         $this->logger = $callLogger;
     }
 
