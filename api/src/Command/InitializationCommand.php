@@ -58,7 +58,7 @@ class InitializationCommand extends Command
         $this->eventDispatcher = $eventDispatcher;
         try {
             $this->session = $requestStack->getSession();
-        } catch (SessionNotFoundException) {
+        } catch (SessionNotFoundException $exception) {
             $this->session = new Session();
         }
         $this->installationService = $installationService;
@@ -106,7 +106,7 @@ class InitializationCommand extends Command
 
         // Handling Organizations
         $io->section('Looking for an organization');
-        if (!$organization = $this->entityManager->getRepository('App:Organization')->findOneBy([])) {
+        if (!$organization = $this->entityManager->getRepository(Organization::class)->findOneBy([])) {
             $io->info('No organization found, creating a new one');
             $organization = new Organization();
             $organization->setName('Default Organization');
@@ -122,7 +122,7 @@ class InitializationCommand extends Command
             $organization->setId($id);
             $this->entityManager->persist($organization);
             $this->entityManager->flush();
-            $organization = $this->entityManager->getRepository('App:Organization')->findOneBy(['id' => $id]);
+            $organization = $this->entityManager->getRepository(Organization::class)->findOneBy(['id' => $id]);
 
             $organization->setDescription('Created during auto configuration');
 
@@ -133,7 +133,7 @@ class InitializationCommand extends Command
 
         // Handling Applications
         $io->section('Looking for an application');
-        if (!$application = $this->entityManager->getRepository('App:Application')->findOneBy([])) {
+        if (!$application = $this->entityManager->getRepository(Application::class)->findOneBy([])) {
             $io->info('No application found, creating a new one');
             $application = new Application();
             $application->setName('Default Application');
@@ -212,7 +212,7 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
 
         // Handling user groups
         $io->section('Looking for a security group');
-        if (!$securityGroupAdmin = $this->entityManager->getRepository('App:SecurityGroup')->findOneBy([])) {
+        if (!$securityGroupAdmin = $this->entityManager->getRepository(SecurityGroup::class)->findOneBy([])) {
             $io->info('No securityGroup found, creating an anonymous, user and admin one');
 
             $securityGroupAnonymous = new SecurityGroup();
@@ -255,7 +255,7 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
 
         // Handling users
         $io->section('Looking for an user');
-        if (!$user = $this->entityManager->getRepository('App:User')->findOneBy([])) {
+        if (!$user = $this->entityManager->getRepository(User::class)->findOneBy([])) {
             $io->info('No User found, creating a default and APIKEY one');
 
             $user = new User();

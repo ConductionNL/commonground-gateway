@@ -2,13 +2,19 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\ApplicationRepository;
+use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -23,252 +29,312 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * This entity holds the information about an Application.
- *
- * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *      "get"={"path"="/admin/applications/{id}"},
- *      "put"={"path"="/admin/applications/{id}"},
- *      "delete"={"path"="/admin/applications/{id}"}
- *  },
- *  collectionOperations={
- *      "get"={"path"="/admin/applications"},
- *      "post"={"path"="/admin/applications"}
- *  }
- * )
- *
- * @ORM\HasLifecycleCallbacks
- *
- * @ORM\Entity(repositoryClass=ApplicationRepository::class)
- *
- * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class, properties={
- *     "name": "exact",
- *     "reference": "exact"
- * })
- *
- * @UniqueEntity("reference")
  */
+#[
+    ApiResource(
+        operations: [
+            new Get(uriTemplate: "/admin/applications/{id}"),
+            new Put(uriTemplate: "/admin/applications/{id}"),
+            new Delete(uriTemplate: "/admin/applications/{id}"),
+            new GetCollection(uriTemplate: "/admin/applications"),
+            new Post(uriTemplate: "/admin/applications"),
+        ],
+        normalizationContext: [
+            'groups'           => ['read'],
+            'enable_max_depth' => true
+        ],
+        denormalizationContext: [
+            'groups'           => ['write'],
+            'enable_max_depth' => true
+        ]
+    ),
+    ORM\HasLifecycleCallbacks,
+    ORM\Entity(
+        repositoryClass: ApplicationRepository::class
+    ),
+    ApiFilter(BooleanFilter::class),
+    ApiFilter(OrderFilter::class),
+    ApiFilter(DateFilter::class, strategy: DateFilter::EXCLUDE_NULL),
+    ApiFilter(SearchFilter::class, properties: [
+        'name'      => 'exact',
+        'reference' => 'exact'
+    ]),
+
+    UniqueEntity('reference')
+]
 class Application
 {
     /**
      * @var UuidInterface The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
-     *
-     * @Assert\Uuid
-     *
-     * @Groups({"read","read_secure"})
-     *
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
+    #[
+        Assert\Uuid,
+        Groups(['read', 'write']),
+        ORM\Id,
+        ORM\Column(
+            type: 'uuid',
+            unique: true
+        ),
+        ORM\GeneratedValue,
+        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+    ]
     private $id;
 
     /**
      * @var string The name of this Application.
-     *
-     * @Gedmo\Versioned
-     *
-     * @Assert\Length(
-     *     max = 255
-     * )
-     *
-     * @Assert\NotNull
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255)
      */
+    #[
+        Assert\Length(max: 255),
+        Assert\NotNull,
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        ),
+        Gedmo\Versioned
+    ]
     private string $name;
 
     /**
      * @var string|null A description of this Application.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $description = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     * @var string|null The reference of the application
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $reference = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
+     * @var string The version of the application.
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            options: ['default' => '0.0.0']
+        )
+    ]
     private string $version = '0.0.0';
 
     /**
      * The hosts that this applications uses, keep in ind that a host is exluding a trailing slach / and https:// ot http://.
      *
      * @var array An array of hosts of this Application.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array")
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(type: 'array')
+    ]
     private array $domains = [];
 
     /**
      * @var string A public key of this Application.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="text", nullable=true, name="public_column")
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            name: 'public_column',
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $public = null;
 
     /**
      * @var string A secret key of this Application.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $secret = null;
 
     /**
      * @var string|null A public key for authentication, or a secret for HS256 keys
-     *
-     * @Groups({"write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
      */
+    #[
+        Groups(['write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $publicKey = null;
 
     /**
      * @var string|null A private key for authentication, or a secret for HS256 keys
-     *
-     * @Groups({"write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
      */
+    #[
+        Groups(['write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $privateKey = null;
 
     /**
      * @var string Uri of user object.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $resource = null;
 
     /**
      * @var Organization An uuid or uri of an organization for this Application.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="applications")
-     *
-     * @ORM\JoinColumn(nullable=false)
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\ManyToOne(
+            targetEntity: Organization::class,
+            inversedBy: 'applications'
+        ),
+        ORM\JoinColumn(nullable: false)
+    ]
     private ?Organization $organization;
 
     /**
-     * @MaxDepth(1)
-     *
-     * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="application", fetch="EXTRA_LAZY", cascade={"remove"})
+     * @var Collection|ArrayCollection The objects of this application.
      */
+    #[
+        MaxDepth(1),
+        ORM\OneToMany(
+            mappedBy: 'application',
+            targetEntity: ObjectEntity::class,
+            cascade: ['remove'],
+            fetch: 'EXTRA_LAZY'
+        )
+    ]
     private Collection $objectEntities;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="applications")
+     * @var ArrayCollection The endpoints of the application.
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\ManyToMany(
+            targetEntity: Endpoint::class,
+            inversedBy: 'applications'
+        )
+    ]
     private $endpoints;
 
     /**
      * @var ?Collection The collections of this Application
-     *
-     * @Groups({"read", "write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="applications")
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\ManyToMany(targetEntity: CollectionEntity::class, mappedBy: 'applications')
+    ]
     private ?Collection $collections;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\OneToMany(targetEntity=Contract::class, mappedBy="application")
+     * @var Collection|ArrayCollection|null The contracts for this application
+     * @TODO: Do we still want this?
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\OneToMany(
+            mappedBy: 'application',
+            targetEntity: Contract::class
+        )
+    ]
     private ?Collection $contracts;
 
     /**
-     * @var Datetime The moment this resource was created
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="create")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was created
      */
-    private $dateCreated;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'create'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateCreated = null;
 
     /**
-     * @var Datetime The moment this resource was last Modified
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="update")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was last Modified
      */
-    private $dateModified;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'update'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateModified = null;
 
     /**
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToMany(targetEntity=User::class, mappedBy="applications")
+     * @var ArrayCollection The users of the application.
      */
+    #[
+        MaxDepth(1),
+        ORM\ManyToMany(
+            targetEntity: User::class,
+            mappedBy: 'applications'
+        )
+    ]
     private $users;
 
     /**
      * @var array Certificates that can be used to verify with this application
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private array $certificates = [];
 
     /**
      * @var array|null The configuration of this application.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private ?array $configuration = [];
 
     public function __construct()

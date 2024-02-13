@@ -2,12 +2,17 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\UserRepository;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -25,192 +30,249 @@ use Symfony\Component\Validator\Constraints as Assert;
 /**
  * This entity holds the information about an User.
  *
- * @ApiResource(
- *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *      "get"={"path"="/admin/users/{id}"},
- *      "put"={"path"="/admin/users/{id}"},
- *      "delete"={"path"="/admin/users/{id}"}
- *  },
- *  collectionOperations={
- *      "get"={"path"="/admin/users"},
- *      "post"={"path"="/admin/users"}
- *  }
- * )
- *
- * @ORM\HasLifecycleCallbacks
- *
- * @ORM\Entity(repositoryClass=UserRepository::class)
- *
- * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class, properties={
- *     "reference": "exact"
- * })
- *
- * @UniqueEntity("reference")
- *
- * @ORM\Table(name="`user`")
  */
+#[
+    ApiResource(
+        operations: [
+            new Get("/admin/users/{id}"),
+            new Put("/admin/users/{id}"),
+            new Delete("/admin/users/{id}"),
+            new GetCollection("/admin/users"),
+            new Post("/admin/users")
+        ],
+        normalizationContext: [
+            "groups"           => ["read"],
+            "enable_max_depth" => true
+        ],
+        denormalizationContext: [
+            "groups"           => ["write"],
+            "enable_max_depth" => true
+        ]
+    ),
+    ORM\HasLifecycleCallbacks,
+    ORM\Entity(repositoryClass: UserRepository::class),
+    ApiFilter(BooleanFilter::class),
+    ApiFilter(OrderFilter::class),
+    ApiFilter(
+        filterClass: DateFilter::class,
+        strategy: DateFilter::EXCLUDE_NULL
+    ),
+    ApiFilter(
+        filterClass: SearchFilter::class,
+        properties: [
+            'reference' => 'exact',
+        ]
+    ),
+    UniqueEntity('reference'),
+    ORM\Table(name: '`user`')
+]
 class User implements PasswordAuthenticatedUserInterface
 {
     /**
      * @var UuidInterface The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
-     *
-     * @Assert\Uuid
-     *
-     * @Groups({"read","read_secure"})
-     *
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
+    #[
+        Assert\Uuid,
+        Groups(['read', 'write']),
+        ORM\Id,
+        ORM\Column(
+            type: 'uuid',
+            unique: true
+        ),
+        ORM\GeneratedValue,
+        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+    ]
     private $id;
 
     /**
      * @var string The name of this User.
-     *
-     * @Gedmo\Versioned
-     *
-     * @Assert\Length(
-     *     max = 255
-     * )
-     *
-     * @Assert\NotNull
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255)
      */
+    #[
+        Assert\Length(max: 255),
+        Assert\NotNull,
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        ),
+        Gedmo\Versioned
+    ]
     private string $name;
 
     /**
      * @var string|null A description of this User.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $description = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     * @var string|null The reference of the user
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $reference = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
+     * @var string The version of the user
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            options: ['default' => '0.0.0']
+        )
+    ]
     private string $version = '0.0.0';
 
     /**
-     * @Groups({"write"})
-     *
-     * @ORM\Column(type="string", length=255)
+     * @var string|null The password of the user.
      */
+    #[
+        Groups(['write']),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private $password;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255)
+     * @var string|null The e-mail address of the user.
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private $email;
 
+
     /**
-     * @Groups({"read", "write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="users")
-     *
-     * @ORM\JoinColumn(nullable=false)
+     * @var Organization|null The organization of the user.
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\ManyToOne(
+            targetEntity: Organization::class,
+            inversedBy: 'users'
+        ),
+        ORM\JoinColumn(nullable: false)
+    ]
     private ?Organization $organization = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToMany(targetEntity=Application::class, inversedBy="users")
+     * @var ArrayCollection The applications of the user.
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\ManyToMany(
+            targetEntity: Application::class,
+            inversedBy: 'users'
+        )
+    ]
     private $applications;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @var string|null The locale of the user.
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private $locale = 'en';
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @var string|null The connected person of the user.
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private $person;
 
     /**
-     * @Groups({"read"})
-     * The roles that this user inherrits from the user groups
+     * @var array The roles that this user inherrits from the user groups
      */
+    #[
+        Groups(['read'])
+    ]
     private $scopes = [];
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToMany(targetEntity=SecurityGroup::class, mappedBy="users")
+     * @var ArrayCollection The security groups the user belongs to.
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\ManyToMany(
+            targetEntity: SecurityGroup::class,
+            inversedBy: 'users'
+        )
+    ]
     private $securityGroups;
 
     /**
      * @var Datetime The moment this resource was created
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="create")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
      */
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'create'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
     private $dateCreated;
 
     /**
      * @var Datetime The moment this resource was last Modified
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="update")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
      */
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'update'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
     private $dateModified;
 
     /**
      * @var string RS512 token
-     *
-     * @Groups({"read"})
      */
+    #[
+        Groups(['read']),
+    ]
     private string $jwtToken = '';
 
     public function __construct()

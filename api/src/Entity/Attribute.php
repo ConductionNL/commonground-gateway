@@ -2,12 +2,17 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\AttributeRepository;
 use DateTime;
 use DateTimeInterface;
@@ -27,88 +32,81 @@ use Symfony\Component\Validator\Constraints as Assert;
  * A possible attribute on an Entity.
  *
  * @category Entity
- *
- * @ApiResource(
- *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *      "get"={"path"="/admin/attributes/{id}"},
- *      "put"={"path"="/admin/attributes/{id}"},
- *      "delete"={"path"="/admin/attributes/{id}"}
- *  },
- *  collectionOperations={
- *      "get"={"path"="/admin/attributes"},
- *      "post"={"path"="/admin/attributes"}
- *  }
- * )
- *
- * @ORM\Entity(repositoryClass=AttributeRepository::class)
- *
- * @ORM\Table(
- *     name="attribute",
- *     uniqueConstraints={
- *
- *      @ORM\UniqueConstraint(
- *          name="entity_attribute_unique",
- *          columns={"name", "entity_id"}
- *     )
- * })
- *
- * @UniqueEntity(
- *     fields={"name", "entity"},
- *     message="Attribute->name for given Entity already exists in database."
- * )
- *
- * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class, properties={
- *     "entity.id": "exact",
- *     "object.id": "exact",
- *     "name": "exact",
- *     "reference": "exact"
- * })
  */
+#[
+    ApiResource(
+        operations: [
+            new Get("/admin/attributes/{id}"),
+            new Put("/admin/attributes/{id}"),
+            new Delete("/admin/attributes/{id}"),
+            new GetCollection("/admin/attributes"),
+            new Post("/admin/attributes")
+        ],
+        normalizationContext: ['groups' => ['read'], 'enable_max_depth' => true],
+        denormalizationContext: ['groups' => ['write'], 'enable_max_depth' => true]
+    ),
+    ORM\Entity(repositoryClass: AttributeRepository::class),
+    ORM\Table(
+        name: 'attribute',
+        uniqueConstraints: [
+            new ORM\UniqueConstraint(
+                name: 'entity_attribute_unique',
+                columns: ['name', 'entity_id'],
+            )
+        ]
+    ),
+    UniqueEntity(
+        fields: ['name', 'entity'],
+        message:"Attribute->name for given Entity already exists in database."
+    ),
+    ApiFilter(BooleanFilter::class),
+    ApiFilter(OrderFilter::class),
+    ApiFilter(DateFilter::class, strategy: DateFilter::EXCLUDE_NULL),
+    ApiFilter(
+        filterClass: SearchFilter::class,
+        properties: [
+            'entity.id' => 'exact',
+            'object.id' => 'exact',
+            'name'      => 'exact',
+            'reference' => 'exact',
+        ]
+    )
+]
 class Attribute
 {
     /**
-     * @var UuidInterface The UUID identifier of this object
+     * @var UuidInterface The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
-     *
-     * @Groups({"read"})
-     *
-     * @Assert\Uuid
-     *
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
+    #[
+        Assert\Uuid,
+        Groups(['read', 'write']),
+        ORM\Id,
+        ORM\Column(
+            type: 'uuid',
+            unique: true
+        ),
+        ORM\GeneratedValue,
+        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+    ]
     private $id;
 
     /**
      * @var string The name of the property as used in api calls
      *
      * @example my_property
-     *
-     * @Gedmo\Versioned
-     *
-     * @Assert\Length(
-     *     max = 255
-     * )
-     *
-     * @Assert\NotNull
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255)
      */
+    #[
+        Assert\Length(max: 255),
+        Assert\NotNull,
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        ),
+        Gedmo\Versioned
+    ]
     private $name;
 
     /* @todo slugify to key */
@@ -117,56 +115,83 @@ class Attribute
      * @var string The type of this property
      *
      * @example string
-     *
-     * @Assert\NotBlank
-     *
-     * @Assert\Length(max = 255)
-     *
-     * @Assert\Choice({"string", "integer", "boolean", "float", "number", "datetime", "date", "file", "object", "array"})
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255)
      */
+    #[
+        Assert\Length(max: 255),
+        Assert\NotBlank,
+        Assert\Choice(
+            [
+                'string',
+                'integer',
+                'boolean',
+                'float',
+                'number',
+                'datetime',
+                'date',
+                'file',
+                'object',
+                'array'
+            ]
+        ),
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        ),
+        Gedmo\Versioned
+    ]
     private $type = 'string';
 
     /**
      * @var string The swagger type of the property as used in api calls
-     *
-     * @example string
-     *
-     * @Assert\Length(max = 255)
-     *
-     * @Assert\Choice({"countryCode","bsn","url","uri","uuid","email","phone","json","dutch_pc4","text"})
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Assert\Length(max: 255),
+        Assert\Choice([
+            'countryCode',
+            'bsn',
+            'url',
+            'uri',
+            'uuid',
+            'email',
+            'phone',
+            'json',
+            'dutch_pc4',
+            'text'
+        ]),
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private $format;
 
     /**
      * @var bool True if this attribute expects an array of the given type.
      *
      * @example true
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean")
      */
+    #[
+        Assert\Type('bool'),
+        Groups(['read', 'write']),
+        ORM\Column(type: 'boolean')
+
+    ]
     private bool $multiple = false;
 
     /**
-     * The Entity this attribute is part of.
-     *
-     * @Groups({"write"})
-     *
-     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="attributes")
-     *
-     * @MaxDepth(1)
+     * @var Entity|null The Entity this attribute is part of.
      */
+    #[
+        Groups(['write']),
+        ORM\ManyToOne(
+            targetEntity: Entity::class,
+            inversedBy: 'attributes'
+        ),
+        MaxDepth(1)
+    ]
     private ?Entity $entity;
 
     /**
@@ -175,686 +200,849 @@ class Attribute
      *             And the type of this attribute must be string (or date/datetime for dateCreated/dateModified) or the function can not be set/changed!
      *
      * @example self
-     *
-     * @Assert\Choice({"noFunction", "id", "self", "uri", "externalId", "dateCreated", "dateModified", "userName"})
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", options={"default":"noFunction"}, name="function_column")
      */
+    #[
+        Assert\Choice([
+            'noFunction',
+            'id',
+            'self',
+            'uri',
+            'externalId',
+            'dateCreated',
+            'dateModified',
+            'userName'
+        ]),
+        Groups(['read', 'write']),
+        ORM\Column(
+            name: 'function_column',
+            type: 'string',
+            options: [
+                'default' => 'noFunction'
+            ]
+        )
+    ]
     private string $function = 'noFunction';
 
     /**
      * Null, or the Entity this attribute is part of, if it is allowed to partial search on this attribute using the search query parameter.
-     *
-     * @Groups({"write"})
-     *
-     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="searchPartial")
-     *
-     * @ORM\JoinColumn(nullable=true)
-     *
-     * @MaxDepth(1)
      */
+    #[
+        Groups(['write']),
+        MaxDepth(1),
+        ORM\ManyToOne(
+            targetEntity: Entity::class,
+            inversedBy: 'searchPartial'
+        ),
+        ORM\JoinColumn(nullable: true)
+    ]
     private ?Entity $searchPartial = null;
 
     /**
-     * @Groups({"write"})
-     *
-     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="attribute", cascade={"remove"}, fetch="EXTRA_LAZY")
-     *
-     * @MaxDepth(1)
+     * @var Collection|ArrayCollection Values of this attribute.
      */
-    private Collection $attributeValues;
+    #[
+        Groups(['write']),
+        MaxDepth(1),
+        ORM\OneToMany(
+            mappedBy: 'attribute',
+            targetEntity: Value::class,
+            cascade: ['remove'],
+            fetch: 'EXTRA_LAZY'
+        )
+    ]
+    private Collection|ArrayCollection $attributeValues;
 
     /**
-     * @Groups({"read","write"})
-     *
-     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="usedIn")
-     *
-     * @ORM\JoinColumn(nullable=true)
-     *
-     * @MaxDepth(1)
+     * @var Entity|null The object type contained in the values of the attribute.
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\ManyToOne(
+            targetEntity: Entity::class,
+            inversedBy: 'usedIn'
+        ),
+        ORM\JoinColumn(nullable: true)
+    ]
     private ?Entity $object = null;
 
     /**
-     * @var bool whether the properties of the original object are automatically include.
-     * @deprecated
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="boolean", options={"default":false})
-     */
-    private bool $extend = false;
-
-    /**
      * @var bool whether the properties of the object are always shown, even outside or instead of the embedded array.
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="boolean", options={"default":false})
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'boolean',
+            options: ['default' => false]
+        )
+    ]
     private bool $include = false;
 
     /**
      * Used for schema or oas parsing.
-     *
-     * @Assert\Length(max = 255)
      */
+    #[
+        Assert\Length(max: 255)
+    ]
     private $ref = '';
 
     /**
      * @var string *Can only be used in combination with type integer* Specifies a number where the value should be a multiple of, e.g. a multiple of 2 would validate 2,4 and 6 but would prevent 5
      *
      * @example 2
-     *
-     * @Assert\Type("integer")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('integer'),
+        ORM\Column(
+            type: 'integer',
+            nullable: true
+        )
+    ]
     private $multipleOf;
 
     /**
      * @var string *Can only be used in combination with type integer* The maximum allowed value
      *
      * @example 2
-     *
-     * @Assert\Type("integer")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('integer'),
+        ORM\Column(
+            type: 'integer',
+            nullable: true
+        )
+    ]
     private $maximum;
 
     /**
      * @var string *Can only be used in combination with type integer* Defines if the maximum is exclusive, e.g. a exclusive maximum of 5 would invalidate 5 but validate 4
      *
      * @example true
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+
+    ]
     private $exclusiveMaximum;
 
     /**
      * @var string *Can only be used in combination with type integer* The minimum allowed value
      *
      * @example 2
-     *
-     * @Assert\Type("integer")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('integer'),
+        ORM\Column(
+            type: 'integer',
+            nullable: true
+        )
+    ]
     private $minimum;
 
     /**
      * @var string *Can only be used in combination with type integer* Defines if the minimum is exclusive, e.g. a exclusive minimum of 5 would invalidate 5 but validate 6
      *
      * @example true
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+
+    ]
     private $exclusiveMinimum;
 
     /**
      * @var string The maximum amount of characters in the value
      *
      * @example 2
-     *
-     * @Assert\Type("integer")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('integer'),
+        ORM\Column(
+            type: 'integer',
+            nullable: true
+        )
+    ]
     private $maxLength;
 
     /**
      * @var int The minimal amount of characters in the value
      *
      * @example 2
-     *
-     * @Assert\Type("integer")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('integer'),
+        ORM\Column(
+            type: 'integer',
+            nullable: true
+        )
+    ]
     private $minLength;
 
     /**
      * @var ?int *Can only be used in combination with type array* The maximum array length
      *
      * @example 2
-     *
-     * @Assert\Type("integer")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('integer'),
+        ORM\Column(
+            type: 'integer',
+            nullable: true
+        )
+    ]
     private ?int $maxItems = null;
 
     /**
      * @var ?int *Can only be used in combination with type array* The minimum array length
      *
      * @example 2
-     *
-     * @Assert\Type("integer")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('integer'),
+        ORM\Column(
+            type: 'integer',
+            nullable: true
+        )
+    ]
     private ?int $minItems = null;
 
     /**
      * @var bool *Can only be used in combination with type array* Define whether or not values in an array should be unique
      *
      * @example false
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+
+    ]
     private $uniqueItems = null;
 
     /**
      * @var string *Can only be used in combination with type object* The maximum amount of properties an object should contain
      *
      * @example 2
-     *
-     * @Assert\Type("integer")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('integer'),
+        ORM\Column(
+            type: 'integer',
+            nullable: true
+        )
+    ]
     private $maxProperties = null;
 
     /**
      * @var int *Can only be used in combination with type object* The minimum amount of properties an object should contain
      *
      * @example 2
-     *
-     * @Assert\Type("integer")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('integer'),
+        ORM\Column(
+            type: 'integer',
+            nullable: true
+        )
+    ]
     private $minProperties = null;
 
     /**
      * @var Attribute If the attribute targets an object that object might have an inversedBy field allowing a two-way connection
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\OneToOne(targetEntity=Attribute::class, fetch="EXTRA_LAZY")
-     *
-     * @MaxDepth(1)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\OneToOne(
+            targetEntity: Attribute::class,
+            fetch: 'EXTRA_LAZY'
+        ),
+        MaxDepth(1)
+    ]
     private $inversedBy = null;
 
     /**
      * @var bool Only whether or not this property is required
      *
      * @example false
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+
+    ]
     private $required = null;
 
     /**
      * @var array conditional requiremends for field
      *
      * @example false
-     *
-     * @Assert\Type("array")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('array'),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private $requiredIf = [];
 
     /**
      * @var array conditional requiremends for field
      *
      * @example false
-     *
-     * @Assert\Type("array")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('array'),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private $forbiddenIf = [];
 
     /**
      * @var array An array of possible values, input is limited to this array]
-     *
-     * @Assert\Type("array")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('array'),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private $enum = [];
 
     /**
      * @var array *mutually exclusive with using type* An array of possible types that an property should confirm to
-     *
-     * @Assert\Type("array")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('array'),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private $allOf = [];
 
     /**
-     * @var array *mutually exclusive with using type* An array of possible types that an property might confirm to
-     *
-     * @Assert\Type("array")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
+     * @var array *mutually exclusive with using type* An array of possible types that an property might confirm to.
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('array'),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private $anyOf = [];
 
     /**
-     * @var array *mutually exclusive with using type* An array of possible types that an property must confirm to
-     *
-     * @Assert\Type("array")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
+     * @var array *mutually exclusive with using type* An array of possible types that an property must confirm to.
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('array'),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private $oneOf = [];
 
     /**
      * @var string An description of the value asked, supports markdown syntax as described by [CommonMark 0.27.](https://spec.commonmark.org/0.27/)
      *
      * @example My value
-     *
-     * @Assert\Type("string")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
      */
+    #[
+
+        Groups(['read', 'write']),
+        Assert\Type('string'),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private $description = null;
 
     /**
      * @var string An default value for this value that will be used if a user doesn't supply a value
      *
      * @example My value
-     *
-     * @Assert\Length(max = 255)
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('string'),
+        Assert\Length(255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private $defaultValue = null;
 
     /**
      * @var bool Whether or not this property can be left empty
      *
      * @example false
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true, options={"default":true})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true,
+            options: ['default' => false]
+        )
+    ]
     private $nullable = true;
 
     /**
      * @var bool Whether or not this property must be unique
      *
      * @example false
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+    ]
     private $mustBeUnique = null;
 
     /**
      * @var bool Whether or not the mustBeUnique check is case sensitive
      *
      * @example false
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true, options={"default":true})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true,
+            options: ['default' => true]
+        )
+    ]
     private bool $caseSensitive = true;
 
     /**
      * @var bool Whether or not this property is read only
      *
      * @example false
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+    ]
     private $readOnly = null;
 
     /**
      * @var bool Whether or not this property is write only
      *
      * @example false
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+    ]
     private $writeOnly = null;
 
     /**
      * @var string An example of the value that should be supplied
      *
      * @example My value
-     *
-     * @Assert\Length(max = 255)
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('string'),
+        Assert\Length(255),
+        ORM\Column(
+            type: 'text',
+            length: 255,
+            nullable: true
+        )
+    ]
     private $example = null;
 
     /**
      * @var string Pattern which value should suffice to (Ecma-262 Edition 5.1 regular expression dialect)
      *
      * @example ^[1-9][0-9]{9}$
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('string'),
+        Assert\Length(255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private $pattern = null;
 
     /**
      * @var bool Whether or not this property has been deprecated and wil be removed in the future
      *
      * @example false
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+    ]
     private $deprecated = null;
 
     /**
      * @var string The minimal date for value, either a date, datetime or duration (ISO_8601)
      *
      * @example 2019-09-16T14:26:51+00:00
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('string'),
+        Assert\Length(255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private $minDate = null;
 
     /**
      * @var string The maximum date for value, either a date, datetime or duration (ISO_8601)
      *
      * @example 2019-09-16T14:26:51+00:00
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('string'),
+        Assert\Length(255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private $maxDate = null;
 
     /**
      * @var string *Can only be used in combination with type file* The maximum allowed file size in bytes
      *
      * @example 32000
-     *
-     * @Assert\Type("integer")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('integer'),
+        ORM\Column(
+            type: 'integer',
+            nullable: true
+        )
+    ]
     private $maxFileSize = null;
 
     /**
      * @var string *Can only be used in combination with type file* The minimum allowed file size in bytes
      *
      * @example 32000
-     *
-     * @Assert\Type("integer")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('integer'),
+        ORM\Column(
+            type: 'integer',
+            nullable: true
+        )
+    ]
     private $minFileSize = null;
 
     /**
      * @var array *Can only be used in combination with type file* The type of the file
      *
      * @example image/png
-     *
-     * @Assert\Type("array")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('array'),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private $fileTypes = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\Type("array")
-     *
-     * @var array This convieniance property alows us to get and set our validations as an array instead of loose objects
+     * @var array This convienience property allows us to get and set our validations as an array instead of loose objects
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('array')
+    ]
     private $validations = [];
 
     /**
      * Setting this property to true wil force the property to be saved in the gateway endpoint (default behafure is saving in the EAV).
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+    ]
     private $persistToGateway = false;
 
     /**
      * Whether or not this property is searchable.
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true,
+            options: ['default' => false]
+        )
+    ]
     private $searchable = false;
 
     /**
      * Whether or not this property is sortable. (orderBy).
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true,
+            options: ['default' => false]
+        )
+    ]
     private $sortable = false;
 
     /**
      * Only works if this attribute has type 'object'. When set to true, updating the object of this property will also trigger an Update event for the parent object.
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true,
+            options: ['default' => false]
+        )
+    ]
     private bool $triggerParentEvents = false;
 
     /**
      * Only works if this attribute has type 'object'. Whether the object of this property will be deleted if the parent object is deleted.
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+    ]
     private bool $cascadeDelete = false;
 
     /**
      * Only works if this attribute has type 'object'. Whether this property kan be used to create new entities (versus when it can only be used to link exsisting entities).
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true, options={"default":true}, name="allow_cascade")
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            name: 'allow_cascade',
+            type: 'boolean',
+            nullable: true,
+            options: ['default' => false]
+        )
+    ]
     private bool $cascade = true;
 
     /**
      * @var array Config for getting the object result info from the correct places (id is required!). "envelope" for where to find this item and "id" for where to find the id. (both from the root! So if id is in the envelope example: envelope = instance, id = instance.id)
-     *
-     * @Assert\Type("array")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('array'),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private array $objectConfig = ['id' => 'id'];
 
     /**
      * Setting this property to true makes it so that this property is not allowed to be changed after creation.
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+    ]
     private bool $immutable = false;
 
     /**
      * Setting this property to true makes it so that this property is only allowed to be set or changed after creation.
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+    ]
     private bool $unsetable = false;
 
     /**
      * Whether or not this property can be orphaned. If mayBeOrphaned = false, the parent object can not be deleted if this property still has an object.
-     *
-     * @Assert\Type("bool")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+    ]
     private bool $mayBeOrphaned = true;
 
     /**
      * @var ?string The uri to a schema.org property
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null}, name="schema_column")
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('string'),
+        ORM\Column(
+            name: 'schema_column',
+            type: 'string',
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $schema = null;
 
     /**
      * @var string|null The property name that inverses the value of the property
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
+    #[
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $inversedByPropertyName = null;
 
     /**
-     * @var Datetime The moment this resource was created
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="create")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was created
      */
-    private $dateCreated = null;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'create'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateCreated = null;
 
     /**
-     * @var Datetime The moment this resource was last Modified
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="update")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was last Modified
      */
-    private $dateModified = null;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'update'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateModified = null;
 
     /**
-     * @todo
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @var string|null The reference of the attribute.
      */
-    private $reference = null;
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
+    private ?string $reference = null;
 
     /**
      * @var Boolean Whether sub-objects in this value should be re-cached.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", options={"default": false})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            name: 'allow_cascade',
+            type: 'boolean',
+            nullable: true,
+            options: ['default' => false]
+        )
+    ]
     private bool $cacheSubObjects = false;
 
     public function __construct()

@@ -2,14 +2,19 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiProperty;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Odm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\CollectionEntityRepository;
+use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -24,276 +29,336 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * This entity holds the information about a Collections.
- *
- * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *      "get"={"path"="/admin/collections/{id}"},
- *      "put"={"path"="/admin/collections/{id}"},
- *      "delete"={"path"="/admin/collections/{id}"}
- *  },
- *  collectionOperations={
- *      "get"={"path"="/admin/collections"},
- *      "post"={"path"="/admin/collections"}
- *  }
- * )
- *
- * @ORM\Entity(repositoryClass=CollectionEntityRepository::class)
- *
- * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class, properties={
- *     "name": "exact",
- *     "reference": "exact"
- * })
- *
- * @UniqueEntity("name")
- * @UniqueEntity("reference")
  */
+#[
+    ApiResource(
+        operations: [
+            new Get("/admin/collections/{id}"),
+            new Put("/admin/collections/{id}"),
+            new Delete("/admin/collections/{id}"),
+            new GetCollection("/admin/collections"),
+            new Post("/admin/collections")
+        ],
+        normalizationContext: [
+            'groups' => ['read'],
+            'enable_max_depth' => true
+        ],
+        denormalizationContext: [
+            'groups' => ['write'],
+            'enable_max_depth' => true
+        ],
+    ),
+    ORM\Entity(repositoryClass: CollectionEntityRepository::class),
+    ApiFilter(BooleanFilter::class),
+    ApiFilter(OrderFilter::class),
+    ApiFilter(DateFilter::class, strategy: DateFilter::EXCLUDE_NULL),
+    ApiFilter(SearchFilter::class),
+    UniqueEntity('name'),
+    UniqueEntity('reference')
+]
 class CollectionEntity
 {
     /**
-     * @var UuidInterface The UUID identifier of this Entity.
+     * @var UuidInterface The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
-     *
-     * @Assert\Uuid
-     *
-     * @Groups({"read","read_secure"})
-     *
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
+    #[
+        Assert\Uuid,
+        Groups(['read', 'write']),
+        ORM\Id,
+        ORM\Column(
+            type: 'uuid',
+            unique: true
+        ),
+        ORM\GeneratedValue,
+        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+    ]
     private $id;
 
     /**
-     * @var string The name of this Collection
-     *
-     * @Assert\NotNull
-     *
-     * @Assert\Type("string")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(name="name", type="string", length=255)
+     * @var string The Name of the Gateway which is used to authenticate.
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private string $name;
 
     /**
      * @var ?string The description of this Collection
-     *
-     * @Assert\Type("string")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
+
      */
+    #[
+
+        Groups(['read', 'write']),
+        Assert\Type('string'),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $description = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     * @var string|null The reference of the application
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $reference = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
+     * @var string The version of the application.
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            options: ['default' => '0.0.0']
+        )
+    ]
     private string $version = '0.0.0';
 
     /**
      * @var ?string The location where the OAS can be loaded from
-     *
-     * @Assert\Length(
-     *      max = 255
-     * )
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="https://raw.githubusercontent.com/conductionnl/commonground-gateway/master/public/schema/openapi.yaml"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $locationOAS = null;
 
     /**
      * @var ?Gateway|string The source of this Collection
-     *
-     * @Groups({"write"})
-     *
-     * @ORM\JoinColumn(nullable=true)
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="collections", fetch="EXTRA_LAZY")
      */
+    #[
+        Groups(['write']),
+        MaxDepth(1),
+        ORM\ManyToOne(
+            targetEntity: Gateway::class,
+            fetch: 'EXTRA_LAZY',
+            inversedBy: 'collections'
+        ),
+        ORM\JoinColumn(nullable: true)
+    ]
     private $source;
 
     /**
      * @var ?string The url of this Collection
-     *
-     * @Assert\Type("string")
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('string'),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $sourceUrl = null;
 
     /**
      * @var ?string The source type of this Collection
-     *
-     * @Assert\Type("string")
-     *
-     * @Assert\Choice({"url", "GitHub"})
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Choice([
+            'url',
+            'GitHub'
+        ]),
+        Assert\Type('string'),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $sourceType = null;
 
     /**
      * @var ?string The source branch of this Collection
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $sourceBranch = null;
 
     /**
      * @var ?string The location where the test data set can be found
-     *
-     * @Assert\Length(
-     *      max = 255
-     * )
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $testDataLocation = null;
 
     /**
      * @var bool Wether or not the test data from the location above should be loaded. Defaults to false
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true,
+            options: ['default' => false]
+        )
+    ]
     private bool $loadTestData = false;
 
     /**
      * @var ?DateTimeInterface The moment this Collection was synced
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="datetime", nullable=true, options={"default":null})
      */
+    #[
+        Groups(['read']),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
     private ?DateTimeInterface $syncedAt = null;
 
     /**
      * @var bool Wether or not this Collection's config and testdata should be loaded when fixtures are loaded
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true, options={"default":false})
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true,
+            options: ['default' => false]
+        )
+    ]
     private bool $autoLoad = false;
 
     /**
      * @var ?string The prefix for all endpoints on this Collection
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $prefix = null;
 
     /**
      * @var ?Collection The applications of this Collection
-     *
-     * @Groups({"write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToMany(targetEntity=Application::class, inversedBy="collections", fetch="EXTRA_LAZY")
      */
+    #[
+        Groups(['write']),
+        MaxDepth(1),
+        ORM\ManyToMany(
+            targetEntity: Application::class,
+            inversedBy: 'collections',
+            fetch: 'EXTRA_LAZY'
+        )
+    ]
     private ?Collection $applications;
 
     /**
      * @var ?Collection The endpoints of this Collection
-     *
-     * @Groups({"write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToMany(targetEntity=Endpoint::class, inversedBy="collections", fetch="EXTRA_LAZY")
      */
+    #[
+        Groups(['write']),
+        MaxDepth(1),
+        ORM\ManyToMany(
+            targetEntity: Endpoint::class,
+            inversedBy: 'collections',
+            fetch: 'EXTRA_LAZY'
+        )
+    ]
     private ?Collection $endpoints;
 
     /**
      * @var ?Collection The entities of this Collection
-     *
-     * @Groups({"write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToMany(targetEntity=Entity::class, inversedBy="collections", fetch="EXTRA_LAZY")
      */
+    #[
+        Groups(['write']),
+        MaxDepth(1),
+        ORM\ManyToMany(
+            targetEntity: Entity::class,
+            inversedBy: 'collections',
+            fetch: 'EXTRA_LAZY'
+        )
+    ]
     private ?Collection $entities;
 
     /**
-     * @var Datetime The moment this resource was created
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="create")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was created
      */
-    private $dateCreated;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'create'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateCreated = null;
 
     /**
-     * @var Datetime The moment this resource was last Modified
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="update")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was last Modified
      */
-    private $dateModified;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'update'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateModified = null;
 
     /**
-     * @todo
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @var string Plugin the collection belongs to
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 2555,
+            nullable: true
+        )
+    ]
     private $plugin;
 
     public function __construct(?string $name = null, ?string $prefix = null, ?string $plugin = null)

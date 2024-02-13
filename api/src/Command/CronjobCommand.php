@@ -52,7 +52,7 @@ class CronjobCommand extends Command
         $this->eventDispatcher = $eventDispatcher;
         try {
             $this->session = $requestStack->getSession();
-        } catch (SessionNotFoundException) {
+        } catch (SessionNotFoundException $exception) {
             $this->session = new Session();
         }
         $this->logger = $cronjobLogger;

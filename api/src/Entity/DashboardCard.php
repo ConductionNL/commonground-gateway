@@ -2,121 +2,152 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\DashboardCardRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @ApiResource(
- *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *     "get"={"path"="/admin/dashboardCards/{id}"},
- *     "put"={"path"="/admin/dashboardCards/{id}"},
- *     "delete"={"path"="/admin/dashboardCards/{id}"}
- *  },
- *  collectionOperations={
- *     "get"={"path"="/admin/dashboardCards"},
- *     "post"={"path"="/admin/dashboardCards"}
- *  }
- * )
- *
- * @ORM\Entity(repositoryClass=DashboardCardRepository::class)
- *
- * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class, properties={
- *     "name": "exact"
- * })
+ * Dashboard cards for display on dashboards.
  */
+#[
+    ApiResource(
+        operations: [
+            new Get("/admin/dashboardCards/{id}"),
+            new Put("/admin/dashboardCards/{id}"),
+            new Delete("/admin/dashboardCards/{id}"),
+            new GetCollection("/admin/dashboardCards"),
+            new Post("/admin/dashboardCards")
+        ],
+        normalizationContext: [
+            'groups' => ['read'],
+            'enable_max_depth' => true
+        ],
+        denormalizationContext: [
+            'groups' => ['write'],
+            'enable_max_depth' => true
+        ],
+    ),
+    ORM\Entity(repositoryClass: DashboardCardRepository::class),
+    ApiFilter(BooleanFilter::class),
+    ApiFilter(OrderFilter::class),
+    ApiFilter(DateFilter::class, strategy: DateFilter::EXCLUDE_NULL),
+    ApiFilter(SearchFilter::class, properties: ['name' => 'exact'])
+]
 class DashboardCard
 {
     /**
-     * @var UuidInterface The UUID identifier of this Entity.
+     * @var UuidInterface The UUID identifier of this resource
      *
-     * @Groups({"read"})
-     *
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
      */
-    private $id;
+    #[
+        Assert\Uuid,
+        Groups(['read', 'write']),
+        ORM\Id,
+        ORM\Column(
+            type: 'uuid',
+            unique: true
+        ),
+        ORM\GeneratedValue,
+        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+    ]
+    private UuidInterface $id;
 
     /**
-     * The name of the dashboard card.
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255)
+     * @var string The name of this Application.
      */
+    #[
+        Assert\Length(max: 255),
+        Assert\NotNull,
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        ),
+        Gedmo\Versioned
+    ]
     private string $name;
 
     /**
-     * @var string|null The description of the dashboard.
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
+     * @var string|null A description of this Application.
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $description = null;
 
     /**
-     * The type of the card.
-     *
-     * @todo enum on schema etc
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255)
+     * @var string The type of the card.
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private string $type;
 
     /**
-     * The entity of the schema e.g. Gateway.
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255)
+     * @var string The entity of the schema e.g. Gateway.
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private string $entity;
 
     /**
-     * The actual object that the card refers to, is loaded by subscriber on get requests.
-     *
-     * @Groups({"read"})
+     * @var mixed The actual object that the card refers to, is loaded by subscriber on get requests.
      */
-    private $object;
+    #[
+        Groups(['read'])
+    ]
+    private mixed $object;
 
     /**
-     * The UUID of the object stored in Dashboard Card.
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="uuid")
+     * @var UuidInterface The UUID of the object stored in Dashboard Card.
      */
-    private Uuid $entityId;
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'uuid'
+        )
+    ]
+    private UuidInterface $entityId;
 
     /**
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="integer")
+     * @var int priority in the ordering of dashboard cards.
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'integer'
+        )
+    ]
     private int $ordering = 1;
 
     public function __construct($object = null)

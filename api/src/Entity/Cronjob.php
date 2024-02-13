@@ -2,12 +2,17 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\CronjobRepository;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
@@ -19,194 +24,223 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * An entity that holds a cronjob.
- *
- * @ApiResource(
- *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *     "get"={"path"="/admin/cronjobs/{id}"},
- *     "put"={"path"="/admin/cronjobs/{id}"},
- *     "delete"={"path"="/admin/cronjobs/{id}"}
- *  },
- *  collectionOperations={
- *     "get"={"path"="/admin/cronjobs"},
- *     "post"={"path"="/admin/cronjobs"}
- *  }
- * )
- *
- * @ORM\Entity(repositoryClass=CronjobRepository::class)
- *
- * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class, properties={
- *     "name": "exact",
- *     "reference": "exact"
- * })
- *
- * @UniqueEntity("reference")
  */
+#[
+    ApiResource(
+        operations: [
+            new Get("/admin/cronjobs/{id}"),
+            new Put("/admin/cronjobs/{id}"),
+            new Delete("/admin/cronjobs/{id}"),
+            new GetCollection("/admin/cronjobs"),
+            new Post("/admin/cronjobs")
+        ],
+        normalizationContext: [
+            'groups' => ['read'],
+            'enable_max_depth' => true
+        ],
+        denormalizationContext: [
+            'groups' => ['write'],
+            'enable_max_depth' => true
+        ],
+    ),
+    ORM\Entity(repositoryClass: CronjobRepository::class),
+    ApiFilter(BooleanFilter::class),
+    ApiFilter(OrderFilter::class),
+    ApiFilter(DateFilter::class, strategy: DateFilter::EXCLUDE_NULL),
+    ApiFilter(SearchFilter::class, properties: ['name' => 'exact', 'reference' => 'exact']),
+    UniqueEntity('reference')
+]
 class Cronjob
 {
     /**
-     * @var UuidInterface The UUID identifier of this Cronjob.
+     * @var UuidInterface The UUID identifier of this resource
      *
-     * @Groups({"read"})
-     *
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
+     * @example e2984465-190a-4562-829e-a8cca81aa35d
      */
-    private $id;
+    #[
+        Assert\Uuid,
+        Groups(['read', 'write']),
+        ORM\Id,
+        ORM\Column(
+            type: 'uuid',
+            unique: true
+        ),
+        ORM\GeneratedValue,
+        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+    ]
+    private UuidInterface $id;
 
     /**
-     * @var string The name of this Cronjob
-     *
-     * @Gedmo\Versioned
-     *
-     * @Assert\Length(
-     *     max = 255
-     * )
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255)
+     * @var string The name of this Application.
      */
+    #[
+        Assert\Length(max: 255),
+        Assert\NotNull,
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        ),
+        Gedmo\Versioned
+    ]
     private string $name;
 
     /**
-     * @var string|null The description of this Cronjob
-     *
-     * @Gedmo\Versioned
-     *
-     * @Assert\Length(
-     *     max = 255
-     * )
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @var string|null A description of this Application.
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $description = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     * @var string|null The reference of the application
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $reference = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
+     * @var string The version of the application.
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            options: ['default' => '0.0.0']
+        )
+    ]
     private string $version = '0.0.0';
 
     /**
      * @var string The crontab that determines the interval https://crontab.guru/
      *             defaulted at every 5 minutes * / 5  *  *  *  *
-     *
-     * @Assert\Regex(
-     *     pattern="/(^((\*\/)?([0-5]?[0-9])((\,|\-|\/)([0-5]?[0-9]))*|\*)\s+((\*\/)?((2[0-3]|1[0-9]|[0-9]|00))((\,|\-|\/)(2[0-3]|1[0-9]|[0-9]|00))*|\*)\s+((\*\/)?([1-9]|[12][0-9]|3[01])((\,|\-|\/)([1-9]|[12][0-9]|3[01]))*|\*)\s+((\*\/)?([1-9]|1[0-2])((\,|\-|\/)([1-9]|1[0-2]))*|\*|(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|des))\s+((\*\/)?[0-6]((\,|\-|\/)[0-6])*|\*|00|(sun|mon|tue|wed|thu|fri|sat))\s*$)|@(annually|yearly|monthly|weekly|daily|hourly|reboot)/",
-     *     match=true,
-     *     message="This is an invalid crontab, see https://crontab.guru/ to create an interval"
-     * )
-     *
-     * @Gedmo\Versioned
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string")
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Regex(
+            pattern: '/(^((\*\/)?([0-5]?[0-9])((\,|\-|\/)([0-5]?[0-9]))*|\*)\s+((\*\/)?((2[0-3]|1[0-9]|[0-9]|00))((\,|\-|\/)(2[0-3]|1[0-9]|[0-9]|00))*|\*)\s+((\*\/)?([1-9]|[12][0-9]|3[01])((\,|\-|\/)([1-9]|[12][0-9]|3[01]))*|\*)\s+((\*\/)?([1-9]|1[0-2])((\,|\-|\/)([1-9]|1[0-2]))*|\*|(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|des))\s+((\*\/)?[0-6]((\,|\-|\/)[0-6])*|\*|00|(sun|mon|tue|wed|thu|fri|sat))\s*$)|@(annually|yearly|monthly|weekly|daily|hourly|reboot)/',
+            message: 'This is an invalid crontab, see https://crontab.guru/ to create an interval',
+            match: true
+        ),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private string $crontab = '*/5 * * * *';
 
     /**
      * @var string|null The userId of a user. This user will be used to run this Cronjob for, if there is no logged-in user.
      * This helps when, for example: setting the organization of newly created ObjectEntities while running this Cronjob.
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read' , 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $userId = null;
 
     /**
      * @var array The actions that put on the stack by the crontab.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array")
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(type: 'array')
+    ]
     private array $throws = [];
 
     /**
      * @var array|null The optional data array of this Cronjob
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private ?array $data = [];
 
     /**
-     * @var Datetime The last run of this Cronjob
-     *
-     * @Groups({"read"})
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DatetimeInterface|null The last run of this Cronjob
      */
-    private $lastRun;
+    #[
+        Groups(['read']),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $lastRun = null;
 
     /**
-     * @var Datetime The next run of this Cronjob
-     *
-     * @Groups({"read"})
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The next run of this Cronjob
      */
-    private $nextRun;
+    #[
+        Groups(['read']),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $nextRun = null;
 
     /**
      * @var ?bool true if action should be ran
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true, options={"default": true})
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true,
+            options: ['default' => true]
+        )
+    ]
     private ?bool $isEnabled = true;
 
     /**
-     * @var Datetime The moment this resource was created
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="create")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was created
      */
-    private DateTimeInterface $dateCreated;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'create'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateCreated = null;
 
     /**
-     * @var Datetime The moment this resource was last Modified
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="update")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was last Modified
      */
-    private DateTimeInterface $dateModified;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'update'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateModified = null;
 
     public function __construct(
         $action = false

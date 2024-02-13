@@ -2,12 +2,17 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Repository\AuditTrailRepository;
 use DateTime;
 use Doctrine\ORM\Mapping as ORM;
@@ -19,190 +24,252 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * This entity holds the information about an Audit Trail.
- *
- * @ApiResource(
- *  shortName="gateway_audit_trail",
- *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *     "get"={"path"="/admin/audit_trails/{id}"},
- *     "put"={"path"="/admin/audit_trails/{id}"},
- *     "delete"={"path"="/admin/audit_trails/{id}"}
- *  },
- *  collectionOperations={
- *     "get"={"path"="/admin/audit_trails"},
- *     "post"={"path"="/admin/audit_trails"}
- *  },
- *  attributes={"order"={"creationDate": "DESC"}}
- * )
- *
- * @ORM\Entity(repositoryClass=AuditTrailRepository::class)
- *
- * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class)
- *
- * @ORM\Table(name="`gateway_audit_trail`")
  */
+#[
+    ApiResource(
+        shortName: 'gateway_audit_trail',
+        operations: [
+            new Get("/admin/audit_trails/{id}"),
+            new Put("/admin/audit_trails/{id}"),
+            new Delete("/admin/audit_trails/{id}"),
+            new GetCollection("/admin/audit_trails"),
+            new Post("/admin/audit_trails")
+        ],
+        normalizationContext: [
+            'groups' => ['read'],
+            'enable_max_depth' => true
+        ],
+        denormalizationContext: [
+            'groups' => ['write'],
+            'enable_max_depth' => true
+        ],
+        order: ['creationDate' => 'DESC']
+    ),
+    ORM\Entity(repositoryClass: AuditTrailRepository::class),
+    ApiFilter(BooleanFilter::class),
+    ApiFilter(OrderFilter::class),
+    ApiFilter(DateFilter::class, strategy: DateFilter::EXCLUDE_NULL),
+    ApiFilter(SearchFilter::class),
+    ORM\Table(name: '`gateway_audit_trail`')
+]
 class AuditTrail
 {
     /**
-     * @var ?UuidInterface The UUID identifier of this resource
+     * @var UuidInterface The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
-     *
-     * @Assert\Uuid
-     *
-     * @Groups({"read","read_secure"})
-     *
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
+    #[
+        Assert\Uuid,
+        Groups(['read', 'write']),
+        ORM\Id,
+        ORM\Column(
+            type: 'uuid',
+            unique: true
+        ),
+        ORM\GeneratedValue,
+        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+    ]
     private $id;
 
     /**
      * @var ?string The source of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $source;
 
     /**
      * @var ?string The application id of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $applicationId;
 
     /**
      * @var ?string The application view of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $applicationView;
 
     /**
      * @var ?string The user id of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $userId;
 
     /**
      * @var ?string The user view of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $userView;
 
     /**
      * @var ?string The action of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $action;
 
     /**
      * @var ?string The action view of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $actionView;
 
     /**
      * @var ?int The result of the audit trail Status code.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", nullable=true)
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'integer',
+            nullable: true
+        )
+    ]
     private ?int $result;
 
     /**
      * @var ?string The main object of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $mainObject;
 
     /**
      * @var ?string The resource of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $resource;
 
     /**
      * @var ?string The resource url of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $resourceUrl;
 
     /**
      * @var ?string The explanation of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $explanation;
 
     /**
      * @var ?string The resource view of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $resourceView;
 
     /**
      * @var ?DateTime The creation date of the audit trail
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="create")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
      */
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'create'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
     private ?DateTime $creationDate;
 
     /**
      * @var ?array The amendments of the audit trail
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private ?array $amendments;
 
     public function getId(): ?UuidInterface

@@ -2,12 +2,18 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use App\Repository\DocumentRepository;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
@@ -18,195 +24,197 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * This entity holds the information about a document.
- *
- * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *     collectionOperations={
- *          "post"={"path"="/admin/documents"},
- *     		"get"={"path"="/admin/documents"},
- *     },
- *      itemOperations={
- * 		    "get"={"path"="/admin/documents/{id}"},
- * 	        "put"={"path"="/admin/documents/{id}"},
- * 	        "delete"={"path"="/admin/documents/{id}"},
- *     },
- * )
- *
- * @ORM\Entity(repositoryClass="App\Repository\DocumentRepository")
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class)
  */
+#[
+    ApiResource(
+        operations: [
+            new Get("/admin/documents/{id}"),
+            new Put("/admin/documents/{id}"),
+            new Delete("/admin/documents/{id}"),
+            new GetCollection("/admin/documents"),
+            new Post("/admin/documents")
+        ],
+        normalizationContext: [
+            'groups' => ['read'],
+            'enable_max_depth' => true
+        ],
+        denormalizationContext: [
+            'groups' => ['write'],
+            'enable_max_depth' => true
+        ],
+    ),
+    ORM\Entity(repositoryClass: DocumentRepository::class),
+    ApiFilter(BooleanFilter::class),
+    ApiFilter(OrderFilter::class),
+    ApiFilter(DateFilter::class, strategy: DateFilter::EXCLUDE_NULL),
+    ApiFilter(SearchFilter::class)
+]
 class Document
 {
     /**
-     * @var UuidInterface The UUID identifier of this object
+     * @var UuidInterface The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
-     *
-     * @Groups({"read"})
-     *
-     * @Assert\Uuid
-     *
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private $id;
+    #[
+        Assert\Uuid,
+        Groups(['read', 'write']),
+        ORM\Id,
+        ORM\Column(
+            type: 'uuid',
+            unique: true
+        ),
+        ORM\GeneratedValue,
+        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+    ]
+    private UuidInterface $id;
 
     /**
      * @var string The name of this Document.
-     *
-     * @Assert\Length(
-     *     max = 255
-     * )
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private string $name;
 
     /**
      * @var string The route of this Document.
-     *
-     * @Assert\Length(
-     *     max = 255
-     * )
-     *
-     * @Assert\NotNull
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private string $route;
 
     /**
      * @Groups({"read","write"})
-     *
-     * @ORM\ManyToOne(targetEntity=Entity::class, fetch="EAGER")
-     *
-     * @ORM\JoinColumn(nullable=true)
-     *
-     * @MaxDepth(1)
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\ManyToOne(
+            targetEntity: Entity::class,
+            fetch: 'EAGER'
+        ),
+        ORM\JoinColumn(nullable: true)
+    ]
     private ?Entity $object = null;
 
     /**
      * @var string The data of this Document.
-     *
-     * @Assert\Length(
-     *     max = 255
-     * )
-     *
-     * @Assert\NotNull
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private string $data;
 
     /**
      * @var string The data id of this Document.
      *
-     * @Assert\Length(
-     *     max = 255
-     * )
-     *
-     * @Assert\NotNull
-     *
-     * @Assert\Uuid
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private string $dataId;
 
     /**
      * @var string An uri to the document creation service.
-     *
-     * @Assert\Length(
-     *     max = 255
-     * )
-     *
-     * @Assert\NotNull
-     *
-     * @Assert\Url
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private string $documentCreationService;
 
     /**
      * @var string The type of this Document.
-     *
-     * @Assert\Length(
-     *     max = 255
-     * )
-     *
-     * @Assert\NotNull
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private string $documentType;
 
     /**
-     * @var string The type of template
-     *
-     * @Assert\Length(
-     *      max = 255
-     * )
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, name="content_type")
+     * @var string|null The type of template
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $type;
 
     /**
-     * @var string The content of the template
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
+     * @var string|null The content of the template
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $content;
 
     /**
-     * @var Datetime The moment this resource was created
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="create")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was created
      */
-    private $dateCreated;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'create'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateCreated = null;
 
     /**
-     * @var Datetime The moment this resource was last Modified
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="update")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was last Modified
      */
-    private $dateModified;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'update'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateModified = null;
 
     public function __construct()
     {

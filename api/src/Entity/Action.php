@@ -2,14 +2,20 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Exception\GatewayException;
 use App\Repository\ActionRepository;
+use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
@@ -21,248 +27,313 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * This entity holds the information about an Application.
- *
- * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *      "get"={"path"="/admin/actions/{id}"},
- *      "put"={"path"="/admin/actions/{id}"},
- *      "delete"={"path"="/admin/actions/{id}"}
- *  },
- *  collectionOperations={
- *      "get"={"path"="/admin/actions"},
- *      "post"={"path"="/admin/actions"}
- *  }
- * )
- *
- * @ORM\HasLifecycleCallbacks
- *
- * @ORM\Entity(repositoryClass=ActionRepository::class)
- *
- * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class, properties={
- *     "name": "exact",
- *     "reference": "exact"
- * })
- *
- * @UniqueEntity("reference")
  */
+#[
+    ApiResource(
+        operations: [
+            new Get('/admin/actions/{id}'),
+            new Put('/admin/actions/{id}'),
+            new Delete('/admin/actions/{id}'),
+            new GetCollection('/admin/actions'),
+            new Post('/admin/actions'),
+        ],
+        normalizationContext: [
+            'groups'           => ['read'],
+            'enable_max_depth' => true,
+        ],
+        denormalizationContext: [
+            'groups'           => ['write'],
+            'enable_max_depth' => true,
+        ],
+    ),
+    ApiFilter(BooleanFilter::class),
+    ApiFilter(OrderFilter::class),
+    ApiFilter(DateFilter::class, strategy: DateFilter::EXCLUDE_NULL),
+    ApiFilter(SearchFilter::class, properties: ['name' => 'exact', 'reference' => 'exact']),
+    UniqueEntity('reference'),
+    ORM\HasLifecycleCallbacks,
+    ORM\Entity(repositoryClass: ActionRepository::class)
+]
 class Action
 {
     /**
-     * @var ?UuidInterface The UUID identifier of this resource
+     * @var UuidInterface The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
-     *
-     * @Assert\Uuid
-     *
-     * @Groups({"read","read_secure"})
-     *
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
+    #[
+        Assert\Uuid,
+        Groups(['read', 'write']),
+        ORM\Id,
+        ORM\Column(
+            type: 'uuid',
+            unique: true
+        ),
+        ORM\GeneratedValue,
+        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+    ]
     private $id;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @var string|null The reference of the action.
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $reference;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
+     * @var string The version of the action.
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            options: ['default' => '0.0.0']
+        )
+    ]
     private string $version = '0.0.0';
 
     /**
      * @var string The name of the action
-     *
-     * @Assert\NotNull
-     *
-     * @Assert\Length(max=255)
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="string", length=255)
      */
+    #[
+        Assert\Length(max: 255),
+        Assert\NotNull,
+        Groups(['read', 'write', 'read_secure']),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        ),
+        Gedmo\Versioned
+    ]
     private string $name;
 
     /**
-     * @var string|null The description of the action
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
+     * @var string|null A description of this Organization.
      */
+    #[
+        Groups(['read', 'write', 'read_secure']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $description = null;
 
     /**
      * @var array The event names the action should listen to
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="simple_array")
      */
+    #[
+        Groups(['read', 'write', 'read_secure']),
+        ORM\Column(type: 'simple_array')
+    ]
     private array $listens = [];
 
     /**
      * @var array|null The event names the action should trigger
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="simple_array", nullable=true)
      */
+    #[
+        Groups(['read', 'write', 'read_secure']),
+        ORM\Column(
+            type: 'simple_array',
+            nullable: true
+        )
+    ]
     private ?array $throws = [];
 
     /**
      * @var array|null The conditions that the data object should match for the action to be triggered
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="json", nullable=true)
      */
+    #[
+        Groups(['read', 'write', 'read_secure']),
+        ORM\Column(
+            type: 'json',
+            nullable: true
+        )
+    ]
     private ?array $conditions = [];
 
     /**
      * @var string|null The class that should be run when the action is triggered
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write', 'read_secure']),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $class = null;
 
     /**
      * @var int The priority of the action
-     *
-     * @Assert\NotNull
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="integer")
      */
+    #[
+        Groups(['read', 'write', 'read_secure']),
+        Assert\NotNull,
+        ORM\Column(type: 'integer')
+    ]
     private int $priority = 1;
 
     /**
      * @var bool Whether the action should be run asynchronous
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="boolean")
      */
+    #[
+        Groups(['read', 'write', 'read_secure']),
+        ORM\Column(type: 'boolean')
+    ]
     private bool $async = false;
 
     /**
      * @var array|null The configuration of the action
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write', 'read_secure']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private ?array $configuration = [];
 
     /**
      * @var string|null The userId of a user. This user will be used to run this Action for, if there is no logged-in user.
      * This helps when, for example: setting the organization of newly created ObjectEntities while running this Action.
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $userId = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", options={"default":false})
+     * @var bool Whether the action is lockable or not.
      */
+    #[
+        Groups(['read', 'write', 'read_secure']),
+        ORM\Column(
+            type: 'boolean',
+            options: ['default' => false]
+        )
+    ]
     private bool $isLockable = false;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface The date and time the action has been locked.
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
     private $locked;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface The date and time the action has last been run.
      */
+    #[
+        Groups(['read','write']),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
     private $lastRun;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", nullable=true, options={"default": 0})
+     * @var int|null The amount of time the action has run for during the last operation.
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'integer',
+            nullable: true,
+            options: ['default' => 0]
+        )
+    ]
     private ?int $lastRunTime = 0;
 
     /**
-     * @var ?bool true if last run went good and false if something went wrong
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true, options={"default": null})
+     * @var ?bool true if last run went good and false if something went wrong.
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?bool $status = null;
 
-    /**
-     * @var ?bool true if action should be ran
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true, options={"default": true})
-     */
-    private ?bool $isEnabled = true;
+     /**
+      * @var ?bool true if action should be ran.
+      */
+     #[
+     Groups(['read', 'write']),
+     ORM\Column(
+     type: 'boolean',
+     nullable: true,
+     options: ['default' => null]
+     )
+     ]
+     private ?bool $isEnabled = true;
 
     /**
      * @var array|null The configuration of the action handler
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="array", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?array $actionHandlerConfiguration;
 
     /**
      * @var Datetime The moment this resource was created
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="create")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
      */
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'create'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
     private $dateCreated;
 
     /**
      * @var Datetime The moment this resource was last Modified
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="update")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
      */
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'update'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
     private $dateModified;
 
     public function __construct(

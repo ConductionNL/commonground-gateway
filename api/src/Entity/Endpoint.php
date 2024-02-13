@@ -2,14 +2,20 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\ExistsFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\ExistsFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Entity\Gateway as Source;
+use App\Repository\EndpointRepository;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -25,320 +31,372 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * This entity holds the information about an Endpoint.
- *
- * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *      "get"={"path"="/admin/endpoints/{id}"},
- *      "put"={"path"="/admin/endpoints/{id}"},
- *      "delete"={"path"="/admin/endpoints/{id}"}
- *  },
- *  collectionOperations={
- *      "get"={"path"="/admin/endpoints"},
- *      "post"={"path"="/admin/endpoints"}
- *  }
- * )
- *
- * @ORM\Entity(repositoryClass="App\Repository\EndpointRepository")
- *
- * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class, properties={
- *     "name": "exact",
- *     "reference": "exact",
- *     "operationType": "exact",
- *     "pathRegex": "ipartial",
- *     "entities.id": "exact",
- *     "proxy.id": "exact"
- * })
- * @ApiFilter(ExistsFilter::class, properties={
- *     "entities",
- *     "proxy"
- * })
- *
- * @UniqueEntity("reference")
  */
+#[
+    ApiResource(
+        operations: [
+            new Get("/admin/endpoints/{id}"),
+            new Put("/admin/endpoints/{id}"),
+            new Delete("/admin/endpoints/{id}"),
+            new GetCollection("/admin/endpoints"),
+            new Post("/admin/endpoints")
+        ],
+        normalizationContext: [
+            'groups' => ['read'],
+            'enable_max_depth' => true
+        ],
+        denormalizationContext: [
+            'groups' => ['write'],
+            'enable_max_depth' => true
+        ],
+    ),
+    ORM\Entity(repositoryClass: EndpointRepository::class),
+    ApiFilter(BooleanFilter::class),
+    ApiFilter(OrderFilter::class),
+    ApiFilter(DateFilter::class, strategy: DateFilter::EXCLUDE_NULL),
+    ApiFilter(
+        SearchFilter::class,
+        properties: [
+            'name'          => 'exact',
+            'reference'     => 'exact',
+            'operationType' => 'exact',
+            'pathRegex'     => 'ipartial',
+            'entities.id'   => 'exact',
+            'proxy.id'      => 'exact',
+        ]
+    ),
+    ApiFilter(
+        ExistsFilter::class,
+        properties: [
+            'entities',
+            'proxy'
+        ]
+    ),
+    UniqueEntity('reference')
+]
+
 class Endpoint
 {
     /**
      * @var UuidInterface The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
-     *
-     * @Assert\Uuid
-     *
-     * @Groups({"read","read_secure"})
-     *
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private $id;
+    #[
+        Assert\Uuid,
+        Groups(['read', 'write']),
+        ORM\Id,
+        ORM\Column(
+            type: 'uuid',
+            unique: true
+        ),
+        ORM\GeneratedValue,
+        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+    ]
+    private UuidInterface $id;
 
     /**
-     * @var string The name of this Endpoint.
-     *
-     * @Gedmo\Versioned
-     *
-     * @Assert\Length(
-     *     max = 255
-     * )
-     *
-     * @Assert\NotNull
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="string", length=255)
+     * @var string The name of this Application.
      */
+    #[
+        Assert\Length(max: 255),
+        Assert\NotNull,
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        ),
+        Gedmo\Versioned
+    ]
     private string $name;
 
     /**
-     * @var string|null A description of this Endpoint.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="text", nullable=true, options={"default":null})
+     * @var string|null A description of this Application.
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $description = null;
 
     /**
-     * @var string|null A regex description of this path.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", nullable=true, options={"default":null})
+     * @var string|null The reference of the application
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
+    private ?string $reference = null;
+
+    /**
+     * @var string The version of the application.
+     */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            options: ['default' => '0.0.0']
+        )
+    ]
+    private string $version = '0.0.0';
+
+    /**
+     * @var string|null A regex description of this path.
+     */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $pathRegex = null;
 
     /**
      * @var string|null The method.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", nullable=true, options={"default":null})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $method = null;
 
     /**
      * @var string|null The (OAS) tag of this Endpoint.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", nullable=true, options={"default":null})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $tag = null;
-
-    // @TODO remove totally?
-    // /**
-    //  * @var string The type of this Endpoint.
-    //  *
-    //  * @Assert\NotNull
-    //  * @Assert\Choice({"gateway-endpoint", "entity-route", "entity-endpoint", "documentation-endpoint"})
-    //  *
-    //  * @Groups({"read", "write"})
-    //  * @ORM\Column(type="string")
-    //  */
-    // private string $type;
 
     /**
      * @var array|null The path of this Endpoint.
-     *
-     * @Assert\NotNull
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array")
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'array',
+        )
+    ]
     private ?array $path = [];
 
     /**
      * @var array Everything we do *not* want to log when logging errors on this endpoint, defaults to only the authorization header. See the entity RequestLog for the possible options. For headers an array of headers can be given, if you only want to filter out specific headers.
-     *
-     * @example ["statusCode", "status", "headers" => ["authorization", "accept"]]
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private array $loggingConfig = ['headers' => ['authorization']];
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToMany(targetEntity=Application::class, mappedBy="endpoints")
+     * @var Collection|null The applications the endpoint belongs to.
      */
-    private $applications;
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\ManyToMany(
+            targetEntity: Application::class,
+            mappedBy: 'endpoints'
+        )
+    ]
+    private ?Collection $applications;
 
     /**
      * @var ?Collection The collections of this Endpoint
-     *
-     * @Groups({"read", "write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToMany(targetEntity=CollectionEntity::class, mappedBy="endpoints")
-     *
-     * @ORM\OrderBy({"dateCreated" = "DESC"})
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\ManyToMany(
+            targetEntity: CollectionEntity::class,
+            mappedBy: 'endpoints'
+        ),
+        ORM\OrderBy(['dateCreated' => 'DESC'])
+    ]
     private ?Collection $collections;
 
     /**
      * @var ?string The operation type calls must be that are requested through this Endpoint
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $operationType = null;
 
     /**
      * @var ?array (OAS) tags to identify this Endpoint
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'array',
+        )
+    ]
     private ?array $tags = [];
 
     /**
-     * @var ?string Array of the path if this Endpoint has parameters and/or subpaths
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
+     * @var ?array Array of the path if this Endpoint has parameters and/or subpaths
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private ?array $pathArray = [];
 
     /**
      * @var ?array needs to be refined
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private ?array $methods = [];
 
     /**
      * @var ?array needs to be refined
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private ?array $throws = [];
 
     /**
      * @var ?bool needs to be refined
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
+
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+    ]
     private ?bool $status = null;
 
     /**
      * @var Collection|null Properties of this Endpoint
-     *
-     * @MaxDepth(1)
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\OneToMany(targetEntity=Property::class, mappedBy="endpoint")
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\OneToMany(
+            mappedBy: 'endpoint',
+            targetEntity: Property::class
+        )
+    ]
     private ?Collection $properties;
 
     /**
-     * @var Collection|null Handlers of this Endpoint
-     *
-     * @MaxDepth(1)
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\ManyToMany(targetEntity=Handler::class, mappedBy="endpoints")
+     * @var DateTimeInterface|null The moment this resource was created
      */
-    private ?Collection $handlers;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'create'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateCreated = null;
 
     /**
-     * @var Datetime The moment this resource was created
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="create")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was last Modified
      */
-    private $dateCreated;
-
-    /**
-     * @var Datetime The moment this resource was last Modified
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="update")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
-     */
-    private $dateModified;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'update'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateModified = null;
 
     /**
      * @var string|null The default content type of the endpoint
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $defaultContentType = 'application/json';
 
     /**
-     * @deprecated
-     *
-     * @ORM\ManyToOne(targetEntity=Entity::class)
+     * @var Collection The Entities related to this Endpoint.
      */
-    private $entity;
+    #[
+        Groups(['read', 'write']),
+        ORM\ManyToMany(
+            targetEntity: Entity::class,
+            inversedBy: 'endpoints'
+        )
+    ]
+    private Collection $entities;
 
     /**
-     * The Entities of this Endpoint.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\ManyToMany(targetEntity=Entity::class, inversedBy="endpoints")
+     * @var Gateway The gateway related to this Endpoint.
      */
-    private $entities;
-
-    /**
-     * @Groups({"read", "write"})
-     *
-     * @ORM\ManyToOne(targetEntity=Gateway::class, inversedBy="proxies")
-     */
-    private $proxy;
-
-    /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
-     */
-    private ?string $reference = null;
-
-    /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
-     */
-    private string $version = '0.0.0';
+    #[
+        Groups(['read', 'write']),
+        ORM\ManyToOne(
+            targetEntity: Gateway::class,
+            inversedBy: 'proxies'
+        )
+    ]
+    private Gateway $proxy;
 
     /**
      * Constructor for creating an Endpoint. Use $entity to create an Endpoint for an Entity or
