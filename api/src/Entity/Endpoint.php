@@ -35,11 +35,11 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[
     ApiResource(
         operations: [
-            new Get("/admin/endpoints/{id}"),
-            new Put("/admin/endpoints/{id}"),
-            new Delete("/admin/endpoints/{id}"),
+            new Get(          "/admin/endpoints/{id}"),
+            new Put(          "/admin/endpoints/{id}"),
+            new Delete(       "/admin/endpoints/{id}"),
             new GetCollection("/admin/endpoints"),
-            new Post("/admin/endpoints")
+            new Post(         "/admin/endpoints")
         ],
         normalizationContext: [
             'groups' => ['read'],
@@ -410,7 +410,6 @@ class Endpoint
      */
     public function __construct(?Entity $entity = null, ?Source $source = null, ?array $configuration = [])
     {
-        $this->handlers = new ArrayCollection();
         $this->applications = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->properties = new ArrayCollection();
@@ -470,7 +469,7 @@ class Endpoint
 
         // Find the first Entity, so we can check if it is connected to a Collection.
         $entity = (array_key_exists('entities', $schema) && is_array($schema['entities']) && !empty($schema['entities']))
-            ? $schema['entities'][0] : ($this->entities->first() ?? $this->entity);
+            ? $schema['entities'][0] : $this->entities->first();
 
         // Get the most recent created collection of the Entity and check if we need to add a prefix to this Endpoint.
         $criteria = Criteria::create()->orderBy(['date_created' => Criteria::DESC]);
@@ -538,7 +537,7 @@ class Endpoint
             'defaultContentType'             => $this->getDefaultContentType(),
             'tag'                            => $this->getTag(),
             'tags'                           => $this->getTags(),
-            'proxy'                          => $this->getProxy() !== null ? $this->getProxy()->toSchema() : null,
+            'proxy'                          => $this->getProxy()?->toSchema(),
             'entities'                       => $entities,
         ];
     }
@@ -558,7 +557,6 @@ class Endpoint
     private function constructEntityEndpoint(Entity $entity): array
     {
         $this->addEntity($entity);
-        $this->setEntity($entity);
         $this->setName($entity->getName());
         $this->setDescription($entity->getDescription());
 
@@ -663,18 +661,6 @@ class Endpoint
         return $this;
     }
 
-    // public function getType(): ?string
-    // {
-    //     return $this->type;
-    // }
-
-    // public function setType(string $type): self
-    // {
-    //     $this->type = $type;
-
-    //     return $this;
-    // }
-
     public function getPath(): ?array
     {
         return $this->path;
@@ -683,18 +669,6 @@ class Endpoint
     public function setPath(array $path): self
     {
         $this->path = $path;
-
-        return $this;
-    }
-
-    public function getParameters(): ?array
-    {
-        return $this->parameters;
-    }
-
-    public function setParameters(array $parameters): self
-    {
-        $this->parameters = $parameters;
 
         return $this;
     }
@@ -867,33 +841,6 @@ class Endpoint
         return $this;
     }
 
-    /**
-     * @return Collection|Handler[]
-     */
-    public function getHandlers(): Collection
-    {
-        return $this->handlers;
-    }
-
-    public function addHandler(Handler $handler): self
-    {
-        if (!$this->handlers->contains($handler)) {
-            $this->handlers[] = $handler;
-            $handler->addEndpoint($this);
-        }
-
-        return $this;
-    }
-
-    public function removeHandler(Handler $handler): self
-    {
-        if ($this->handlers->removeElement($handler)) {
-            $handler->removeEndpoint($this);
-        }
-
-        return $this;
-    }
-
     public function getDateCreated(): ?DateTimeInterface
     {
         return $this->dateCreated;
@@ -926,25 +873,6 @@ class Endpoint
     public function setDefaultContentType(?string $defaultContentType): self
     {
         $this->defaultContentType = $defaultContentType;
-
-        return $this;
-    }
-
-    public function getEntity(): ?Entity
-    {
-        return $this->entity;
-    }
-
-    public function setEntity(?Entity $entity): self
-    {
-        // Also put it in the array
-        if ($entity === null) {
-            $this->setEntities(null);
-        } else {
-            $this->addEntity($entity);
-        }
-
-        $this->entity = $entity;
 
         return $this;
     }

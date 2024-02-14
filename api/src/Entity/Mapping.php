@@ -2,14 +2,21 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use App\Exception\GatewayException;
+use App\Repository\FileRepository;
 use App\Repository\MappingRepository;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -20,159 +27,201 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *      "get"={"path"="/admin/mappings/{id}"},
- *      "put"={"path"="/admin/mappings/{id}"},
- *      "delete"={"path"="/admin/mappings/{id}"}
- *  },
- *  collectionOperations={
- *      "get"={"path"="/admin/mappings"},
- *      "post"={"path"="/admin/mappings"}
- *  }
- * )
- *
- * @ORM\Entity(repositoryClass=MappingRepository::class)
- *
- * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class, properties={
- *     "name": "exact",
- *     "reference": "exact"
- * })
- *
- * @UniqueEntity("reference")
+ * An entity containing mapping information.
  */
+#[
+    ApiResource(
+        operations: [
+            new Get(          "/admin/mappings/{id}"),
+            new Put(          "/admin/mappings/{id}"),
+            new Delete(       "/admin/mappings/{id}"),
+            new GetCollection("/admin/mappings"),
+            new Post(         "/admin/mappings")
+        ],
+        normalizationContext: [
+            'groups' => ['read'],
+            'enable_max_depth' => true
+        ],
+        denormalizationContext: [
+            'groups' => ['write'],
+            'enable_max_depth' => true
+        ],
+    ),
+    ORM\Entity(repositoryClass: MappingRepository::class),
+    ApiFilter(BooleanFilter::class),
+    ApiFilter(OrderFilter::class),
+    ApiFilter(DateFilter::class, strategy: DateFilter::EXCLUDE_NULL),
+    ApiFilter(
+        SearchFilter::class,
+        properties: [
+            'name'      => 'exact',
+            'reference' => 'exact'
+        ]
+    ),
+    UniqueEntity('reference')
+]
 class Mapping
 {
     /**
      * @var UuidInterface The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
-     *
-     * @Assert\Uuid
-     *
-     * @Groups({"read","read_secure"})
-     *
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private $id;
+    #[
+        Groups(['read', 'write']),
+        Assert\Uuid,
+        ORM\Id,
+        ORM\Column(
+            type: 'uuid',
+            unique: true
+        ),
+        ORM\GeneratedValue,
+        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+    ]
+    private UuidInterface $id;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     * @var string The name of this Application.
      */
-    private ?string $reference = null;
-
-    /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
-     */
-    private string $version = '0.0.0';
-
-    /**
-     * @var string The name of the mapping
-     *
-     * @Assert\NotNull
-     *
-     * @Assert\Length(max=255)
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="string", length=255)
-     */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        Assert\NotNull,
+        Gedmo\Versioned,
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private string $name;
 
     /**
-     * @var string|null The description of the mapping
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
+     * @var string|null A description of this Application.
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $description = null;
 
     /**
-     * @var array The mapping of this mapping object
-     *
-     * @Assert\NotNull
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="array")
+     * @var string|null The reference of the application
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
+    private ?string $reference = null;
+
+    /**
+     * @var string The version of the application.
+     */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            options: ['default' => '0.0.0']
+        )
+    ]
+    private string $version = '0.0.0';
+
+    /**
+     * @var array The mapping of this mapping object
+     */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'array'
+        )
+    ]
     private array $mapping = [];
 
     /**
      * @var array|null The unset of this mapping object
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private ?array $unset = [];
 
     /**
      * @var array|null The cast of this mapping object
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="array", nullable=true, name="cast_column")
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private ?array $cast = [];
 
     /**
      * @var bool|null The passThrough of this mapping object
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('boolean'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true,
+            options: ['default' => true]
+        )
+    ]
     private ?bool $passTrough = true;
 
     /**
      * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="mapping")
      */
+    #[
+        ORM\OneToMany(
+            mappedBy: 'mapping',
+            targetEntity: Synchronization::class
+        )
+    ]
     private $synchronizations;
 
     /**
-     * @var Datetime The moment this resource was created
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="create")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was created
      */
-    private $dateCreated;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'create'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateCreated = null;
 
     /**
-     * @var Datetime The moment this resource was last Modified
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="update")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was last Modified
      */
-    private $dateModified;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'update'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateModified = null;
 
     public function __construct()
     {
@@ -351,24 +400,24 @@ class Mapping
         return $this;
     }
 
-    public function getDateCreated(): ?\DateTimeInterface
+    public function getDateCreated(): ?DateTimeInterface
     {
         return $this->dateCreated;
     }
 
-    public function setDateCreated(?\DateTimeInterface $dateCreated): self
+    public function setDateCreated(?DateTimeInterface $dateCreated): self
     {
         $this->dateCreated = $dateCreated;
 
         return $this;
     }
 
-    public function getDateModified(): ?\DateTimeInterface
+    public function getDateModified(): ?DateTimeInterface
     {
         return $this->dateModified;
     }
 
-    public function setDateModified(?\DateTimeInterface $dateModified): self
+    public function setDateModified(?DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
 

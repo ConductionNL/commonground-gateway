@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Repository\ObjectEntityRepository;
 use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -16,229 +17,312 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
-use function Symfony\Component\Translation\t;
-
 /**
  * A (data) object that resides within the datalayer of the gateway.
  *
  * @category Entity
- *
- * @ORM\Entity(repositoryClass="App\Repository\ObjectEntityRepository")
- *
- * @ORM\HasLifecycleCallbacks
- *
- * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  */
+#[
+    ORM\Entity(repositoryClass: ObjectEntityRepository::class),
+    ORM\HasLifecycleCallbacks
+]
 class ObjectEntity
 {
     /**
      * @var UuidInterface The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
-     *
-     * @Assert\Uuid
-     *
-     * @Groups({"read"})
-     *
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private $id;
+    #[
+        Groups(['read', 'write']),
+        Assert\Uuid,
+        ORM\Id,
+        ORM\Column(
+            type: 'uuid',
+            unique: true
+        ),
+        ORM\GeneratedValue,
+        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+    ]
+    private UuidInterface $id;
 
     /**
-     * @var ?string The name of this Object (configured from a attribute)
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @var string|null The name of this Application.
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        Gedmo\Versioned,
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private ?string $name = null;
 
     /**
      * @var string The {at sign} id or self->href of this Object.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private $self;
 
     /**
      * @var string UUID of the external object of this ObjectEntity
-     *
-     * @Assert\Uuid
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        Assert\Uuid,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private $externalId;
 
     /**
      * @var string An uri (or url identifier) for this object
-     *
-     * @Assert\Url
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        Assert\Url,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private $uri;
 
     /**
-     * The application that this object belongs to.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\ManyToOne(targetEntity=Application::class, inversedBy="objectEntities")
-     *
-     * @MaxDepth(1)
+     * @var Application|null The application that this object belongs to.
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\ManyToOne(
+            targetEntity: Application::class,
+            inversedBy: 'objectEntities'
+        )
+    ]
     private ?Application $application = null;
 
     /**
-     * @var string An uuid or uri of an organization
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\ManyToOne(targetEntity=Organization::class, inversedBy="objectEntities")
+     * @var Organization|null An uuid or uri of an organization
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\ManyToOne(
+            targetEntity: Organization::class,
+            inversedBy: 'objectEntities'
+        )
+    ]
     private ?Organization $organization = null;
 
     /**
-     * @var string An uuid or uri of an owner of this object
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @var string|null An uuid or uri of an owner of this object
      */
-    private $owner;
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
+    private ?string $owner = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @ORM\ManyToOne(targetEntity=Entity::class, inversedBy="objectEntities", fetch="EAGER")
-     *
-     * @MaxDepth(1)
+     * @var Entity|null The Entity that defines this object
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\ManyToOne(
+            targetEntity: Entity::class,
+            fetch: 'EAGER',
+            inversedBy: 'objectEntities'
+        )
+    ]
     private ?Entity $entity = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @ORM\OneToMany(targetEntity=Value::class, mappedBy="objectEntity", cascade={"persist","remove"}, orphanRemoval=true)
-     *
-     * @MaxDepth(1)
+     * @var Collection The values for this object.
      */
-    private $objectValues;
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\OneToMany(
+            mappedBy: 'objectEntity',
+            targetEntity: Value::class,
+            cascade: ['persist', 'remove'],
+            orphanRemoval: true
+        )
+
+    ]
+    private Collection $objectValues;
 
     /**
-     * @Groups({"read"})
+     * @var bool Whether the object contains errors
      */
+    #[
+        Groups(['read'])
+    ]
     private bool $hasErrors = false;
 
     /**
-     * @Groups({"read", "write"})
+     * @var array|null Errors in the object
      */
+    #[
+        Groups(['read', 'write'])
+    ]
     private ?array $errors = [];
 
     /**
-     * @Groups({"read"})
+     * @var bool Whether the object contains promises
      */
+    #[
+        Groups(['read'])
+    ]
     private bool $hasPromises = false;
 
     /**
-     * @Groups({"read", "write"})
+     * @var array|null Promises in the object
      */
+    #[
+        Groups(['read', 'write'])
+    ]
     private ?array $promises = [];
 
+
     /**
-     * @Groups({"read", "write"})
+     * @var array|null An external result
      */
+    #[
+        Groups(['read', 'write'])
+    ]
     private ?array $externalResult = [];
 
     /**
-     * @Groups({"read"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToMany(targetEntity=Value::class, inversedBy="objects", cascade={"persist"}, fetch="EXTRA_LAZY")
+     * @var Collection Values that refer to this object
      */
-    private $subresourceOf;
+    #[
+        Groups(['read']),
+        MaxDepth(1),
+        ORM\ManyToMany(
+            targetEntity: Value::class,
+            inversedBy: 'objects',
+            cascade: ['persist'],
+            fetch: 'EXTRA_LAZY'
+        )
+    ]
+    private Collection $subresourceOf;
 
     /**
-     * If this is a subresource part of a list of subresources of another ObjectEntity this represents the index of this ObjectEntity in that list.
+     * @var string|null If this is a subresource part of a list of subresources of another ObjectEntity this represents the index of this ObjectEntity in that list.
      * Used for showing correct index in error messages.
-     *
-     * @var string|null
-     *
-     * @Groups({"read", "write"})
      */
+    #[
+        Groups(['read', 'write'])
+    ]
     private ?string $subresourceIndex = null;
 
     /**
-     * @MaxDepth(1)
-     *
-     * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="object", fetch="EXTRA_LAZY", cascade={"remove"})
+     * @var Collection Synchronizations connected to this object.
      */
+    #[
+        MaxDepth(1),
+        ORM\OneToMany(
+            mappedBy: 'object',
+            targetEntity: Synchronization::class,
+            cascade: ['remove'],
+            fetch: 'EXTRA_LAZY'
+        )
+    ]
     private Collection $synchronizations;
 
     /**
-     * @MaxDepth(1)
-     *
-     * @ORM\OneToMany(targetEntity=Attribute::class, mappedBy="object", fetch="EXTRA_LAZY", cascade={"remove","persist"})
+     * @var Collection Attributes that use this object.
      */
+    #[
+        MaxDepth(1),
+        ORM\OneToMany(
+            mappedBy: 'object',
+            targetEntity: Attribute::class,
+            cascade: ['remove', 'persist'],
+            fetch: 'EXTRA_LAZY'
+        )
+    ]
     private Collection $usedIn;
 
     /**
-     * Used to check if the object has been hydrated.
-     *
-     * @var bool
+     * @var bool Used to check if the object has been hydrated.
      */
     private bool $hydrated = false;
 
     /**
-     * Filled when the object entity is locked.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @var string|null
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @var string|null Filled when the object entity is locked.
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
+
     private ?string $lock = null;
 
     /**
-     * @var Datetime The moment this resource was created
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="create")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var Collection Synchronizations for which this object is the source object.
      */
-    private $dateCreated;
+    #[
+        ORM\OneToMany(
+            mappedBy: 'sourceObject',
+            targetEntity: Synchronization::class
+        )
+    ]
+    private Collection $sourceOfSynchronizations;
 
     /**
-     * @var Datetime The moment this resource was last Modified
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="update")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was created
      */
-    private $dateModified;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'create'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateCreated = null;
 
     /**
-     * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="sourceObject")
+     * @var DateTimeInterface|null The moment this resource was last Modified
      */
-    private $sourceOfSynchronizations;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'update'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateModified = null;
 
     public function __toString()
     {

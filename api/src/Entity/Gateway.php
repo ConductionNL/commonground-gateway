@@ -2,14 +2,18 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiProperty;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
-use DateTime;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use App\Repository\GatewayRepository;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -24,7 +28,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * This entity holds the information about a common ground gateway.
- *
+ */
+
+/*
  * @ApiResource(
  *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
  *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
@@ -151,427 +157,381 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @UniqueEntity("name")
  * @UniqueEntity("reference")
  */
+#[
+    ApiResource(
+        operations: [
+            new Get(          "/admin/gateways/{id}"),
+            new Put(          "/admin/gateways/{id}"),
+            new Delete(       "/admin/gateways/{id}"),
+            new GetCollection("/admin/gateways"),
+            new Post(         "/admin/gateways"),
+            new Get(          "/admin/sources/{id}"),
+            new Put(          "/admin/sources/{id}"),
+            new Delete(       "/admin/sources/{id}"),
+            new GetCollection("/admin/sources"),
+            new Post(         "/admin/sources"),
+            new Get(
+                uriTemplate: "/admin/sources/{id}/proxy",
+                requirements: ["endpoint" => ".+"],
+                read: false,
+                validate: false
+            ),
+            new Get(
+                uriTemplate: "/admin/gateways/{id}/proxy",
+                requirements: ["endpoint" => ".+"],
+                read: false,
+                validate: false
+            )
+        ],
+        normalizationContext: [
+            'groups' => ['read'],
+            'enable_max_depth' => true
+        ],
+        denormalizationContext: [
+            'groups' => ['write'],
+            'enable_max_depth' => true
+        ],
+    ),
+    ORM\Entity(repositoryClass: GatewayRepository::class),
+    ApiFilter(BooleanFilter::class),
+    ApiFilter(OrderFilter::class),
+    ApiFilter(DateFilter::class, strategy: DateFilter::EXCLUDE_NULL),
+    ApiFilter(
+        SearchFilter::class,
+        properties: [
+            'name'      => 'exact',
+            'reference' => 'exact'
+        ]
+    ),
+    UniqueEntity('reference')
+]
 class Gateway
 {
     /**
      * @var UuidInterface The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
-     *
-     * @Assert\Uuid
-     *
-     * @Groups({"read","read_secure"})
-     *
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private $id;
+    #[
+        Groups(['read', 'write']),
+        Assert\Uuid,
+        ORM\Id,
+        ORM\Column(
+            type: 'uuid',
+            unique: true
+        ),
+        ORM\GeneratedValue,
+        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+    ]
+    private UuidInterface $id;
 
     /**
-     * @var string The Name of the Gateway which is used in the commonGround service
-     *
-     * @Assert\NotNull
-     *
-     * @Assert\Length(
-     *      max = 255
-     * )
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="arc"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="string", length=255)
+     * @var string The name of this Application.
      */
-    private string $name = '';
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        Assert\NotNull,
+        Gedmo\Versioned,
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
+    private string $name;
 
     /**
-     * @var string|null The description of the Gateway which is used in the commonGround service
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="arc"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
+     * @var string|null A description of this Application.
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $description = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     * @var string|null The reference of the application
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
     private ?string $reference = null;
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @Assert\NotNull
-     *
-     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
+     * @var string The version of the application.
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            options: ['default' => '0.0.0']
+        )
+    ]
     private string $version = '0.0.0';
 
     /**
      * @var string The location where the Gateway needs to be accessed
-     *
-     * @Assert\NotNull
-     *
-     * @Assert\Length(
-     *      max = 255
-     * )
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="https://test.nl/api/v1/arc"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="string", length=255, options={"default": ""})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            options: ['default' => '']
+        )
+    ]
     private string $location = '';
 
     /**
      * @var bool true if this Source is enabled and can be used.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", options={"default": true})
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'boolean',
+            options: ['default' => true]
+        )
+    ]
     private bool $isEnabled = true;
 
     /**
-     * @var string The type of this gatewat
-     *
-     * @Assert\NotNull
-     *
-     * @Assert\Length(
-     *      max = 255
-     * )
-     *
-     * @Assert\Choice({"json", "xml", "soap", "ftp", "sftp"})
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "enum"={"json", "xml", "soap", "ftp", "sftp"},
-     *             "example"="apikey"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(nullable=true, type="string", length=255)
+     * @var string The type of this Source
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        Assert\Length(max: 255),
+        Assert\Choice([
+            'json',
+            'xml',
+            'soap',
+            'ftp',
+            'sftp'
+        ]),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private string $type = 'json';
 
     /**
      * @var string The header used for api key authorizations
-     *
-     * @Assert\Length(
-     *      max = 255
-     * )
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="Authorization"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="string", length=255)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private string $authorizationHeader = 'Authorization';
 
     /**
      * @var string The method used for authentication to the Gateway
-     *
-     * @Assert\NotNull
-     *
-     * @Assert\Length(
-     *      max = 255
-     * )
-     *
-     * @Assert\Choice({"apikey", "jwt", "username-password", "none", "jwt-HS256", "vrijbrp-jwt", "pink-jwt", "oauth"})
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "enum"={"apikey", "jwt", "username-password","none", "jwt-HS256", "vrijbrp-jwt", "pink-jwt", "oauth"},
-     *             "example"="apikey"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="string", length=255)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        Assert\NotNull,
+        Assert\Choice([
+            'apikey',
+            'jwt',
+            'username-password',
+            'none',
+            'jwt-HS256',
+            'vrijbrp-jwt',
+            'pink-jwt',
+            'oauth'
+        ]),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private string $auth = 'none';
 
     /**
      * @var array|null The configuration for certain types of authentication methods.
      *
      * This contains configuration for e.g. oauth authentication. For oauth the following fields are available: `case` to set if the credential fields have to be in camelCase or snake_case, `additionalFields` for fields that the api requires on top of clientId and clientSecret, `tokenPath` for the path on the api where the token can be requested and `tokenField` for the response field containing the token.
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private ?array $authenticationConfig = [];
 
     /**
      * @var string The method used for authentication to the Gateway
-     *
-     * @Assert\NotNull
-     *
-     * @Assert\Length(
-     *      max = 255
-     * )
-     *
-     * @Assert\Choice({"header", "query", "form_params", "json"})
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "enum"={"header", "query", "form_params", "json"},
-     *             "example"="header"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="string", length=255)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        Assert\NotNull,
+        Assert\Choice([
+            'header',
+            'query',
+            'form_params',
+            'json'
+        ]),
+        ORM\Column(
+            type: 'string',
+            length: 255
+        )
+    ]
     private string $authorizationPassthroughMethod = 'header';
 
     /**
      * @var ?string The Locale of the Gateway
-     *
-     * @Assert\Length(
-     *      max = 10
-     * )
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="nl"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="string", length=10, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 10),
+        ORM\Column(
+            type: 'string',
+            length: 10,
+            nullable: true
+        )
+    ]
     private ?string $locale = null;
 
     /**
      * @var ?string The accept header used for the Gateway
-     *
-     * @Assert\Length(
-     *      max = 255
-     * )
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="application/json"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $accept = null;
 
     /**
      * @var ?string The JWT used for authentication to the Gateway
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $jwt = null;
 
     /**
      * @var ?string The JWT ID used for authentication to the Gateway
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="conduction"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $jwtId = null;
 
     /**
      * @var ?string The JWT secret used for authentication to the Gateway
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="secret"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
     private ?string $secret = null;
 
     /**
      * @var ?string The username used for authentication to the Gateway
-     *
-     * @Assert\Length(
-     *      max = 255
-     * )
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="username@email.nl"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $username = null;
 
     /**
      * @var ?string The password used for authentication to the Gateway
-     *
-     * @Assert\Length(
-     *      max = 255
-     * )
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="password"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $password = null;
 
     /**
      * @var ?string The api key used for authentication to the Gateway
-     *
-     * @Assert\Length(
-     *      max = 255
-     * )
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="66505f8c-a80e-4bad-8678-d48ace4fbe4b"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true
+        )
+    ]
     private ?string $apikey = null;
 
     /**
      * @var ?string The documentation url for this gateway
-     *
-     * @Assert\Url
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="https://documentation.nl"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="string", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 511),
+        ORM\Column(
+            type: 'string',
+            length: 511,
+            nullable: true
+        )
+    ]
     private ?string $documentation = null;
 
     /**
      * @var array Configuration for logging, when an api call is made on the source we can log some information for this call. With this array you can enable/disable what will be logged.
-     *
-     * @Assert\NotNull
-     *
-     * @Groups({"read","write"})
-     *
-     * @ORM\Column(type="array")
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\NotNull,
+        ORM\Column(
+            type: 'array'
+        )
+    ]
     private array $loggingConfig = [
         'callMethod'            => true,
         'callUrl'               => true,
@@ -587,139 +547,143 @@ class Gateway
 
     /**
      * @var array ...
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
-    private $oas = [];
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
+    private array $oas = [];
 
     /**
      * @var array ...
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
-    private $paths = [];
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
+    private array $paths = [];
 
     /**
-     * Headers that are required to be added for every request.
-     *
-     * @Groups({"read","read_secure","write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
+     * @var array Headers that are required to be added for every request.
      */
-    private $headers = [];
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
+    private array $headers = [];
 
     /**
      * @var array Config to translate specific calls to a different method or endpoint. When changing the endpoint, if you want, you can use {id} to specify the location of the id in the endpoint.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private array $translationConfig = [];
 
     /**
-     * @Groups({"read", "write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\OneToMany(targetEntity=CollectionEntity::class, mappedBy="source")
+     * @var Collection|null The collections the source belongs to.
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\OneToMany(
+            mappedBy: 'source',
+            targetEntity: CollectionEntity::class
+        )
+    ]
     private ?Collection $collections;
 
     /**
      * @var array|null The guzzle configuration of the source
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private ?array $configuration = [
         "verify" => true
     ];
 
     /**
      * @var array|null The configuration for endpoints on this source, mostly mapping for now.
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
      */
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
     private ?array $endpointsConfig = [];
 
     /**
      * @var string The status from the last call made to this source
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="string",
-     *             "example"="200 OK status received on /api-endpoint"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", nullable=true, options={"default":"No calls have been made yet to this source"})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        ORM\Column(
+            type: 'string',
+            length: 255,
+            nullable: true,
+            options: ['default' => 'No calls have been made yet to this source']
+        )
+    ]
     private string $status = 'No calls have been made yet to this source';
 
     /**
-     * @var ?Datetime The datetime from the last request made to this source
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="datetime",
-     *             "example"="2020-02-15T120:50:00"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="datetime", nullable=true, options={"default":null})
+     * @var DateTimeInterface|null The datetime from the last request made to this source
      */
-    private ?Datetime $lastCall = null;
+    #[
+        Groups(['read']),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
+    private ?DateTimeInterface $lastCall = null;
 
     /**
-     * @var ?Datetime The datetime from the last synchronization made to this source
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="datetime",
-     *             "example"="2020-02-15T120:50:00"
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="datetime", nullable=true, options={"default":null})
+     * @var DateTimeInterface|null The datetime from the last synchronization made to this source
      */
-    private ?Datetime $lastSync = null;
+    #[
+        Groups(['read']),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true,
+            options: ['default' => null]
+        )
+    ]
+    private ?DateTimeInterface $lastSync = null;
 
     /**
      * @var int The count of total sync objects from this source
-     *
-     * @ApiProperty(
-     *     attributes={
-     *         "openapi_context"={
-     *             "type"="integer",
-     *             "example"=52
-     *         }
-     *     }
-     * )
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", options={"default":0})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('integer'),
+        ORM\Column(
+            type: 'integer',
+            options: ['default' => 0]
+        )
+    ]
     private int $objectCount = 0;
 
     /**
@@ -729,43 +693,67 @@ class Gateway
      *
      * @ORM\OneToMany(targetEntity=Synchronization::class, fetch="EXTRA_LAZY", mappedBy="gateway", orphanRemoval=true)
      */
+    #[
+        Groups(['write']),
+        ORM\OneToMany(
+            mappedBy: 'gateway',
+            targetEntity: Synchronization::class,
+            fetch: 'EXTRA_LAZY',
+            orphanRemoval: true
+        )
+    ]
     private Collection $synchronizations;
 
     /**
-     * @var Datetime The moment this resource was created
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="create")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was created
      */
-    private $dateCreated;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'create'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateCreated = null;
 
     /**
-     * @var Datetime The moment this resource was last Modified
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="update")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was last Modified
      */
-    private $dateModified;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'update'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateModified = null;
 
     /**
      * @var bool Whether the source is in test mode
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", options={"default": false})
      */
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('boolean'),
+        ORM\Column(
+            type: 'boolean',
+            options: ['default' => false]
+        )
+    ]
     private bool $test = false;
 
     /**
-     * @ORM\OneToMany(targetEntity=Endpoint::class, mappedBy="proxy")
+     * @var Collection the Endpoints that proxy this source.
      */
-    private $proxies;
+    #[
+        Groups(['read']),
+        ORM\OneToMany(
+            mappedBy: 'proxy',
+            targetEntity: Endpoint::class
+        )
+        ]
+    private Collection $proxies;
 
     /**
      * Constructor for Gateway.
@@ -1249,24 +1237,24 @@ class Gateway
         return $this;
     }
 
-    public function getLastCall(): ?DateTime
+    public function getLastCall(): ?DateTimeInterface
     {
         return $this->lastCall;
     }
 
-    public function setLastCall(?DateTime $lastCall): self
+    public function setLastCall(?DateTimeInterface $lastCall): self
     {
         $this->lastCall = $lastCall;
 
         return $this;
     }
 
-    public function getLastSync(): ?DateTime
+    public function getLastSync(): ?DateTimeInterface
     {
         return $this->lastSync;
     }
 
-    public function setLastSync(?DateTime $lastSync): self
+    public function setLastSync(?DateTimeInterface $lastSync): self
     {
         $this->lastSync = $lastSync;
 
@@ -1277,14 +1265,6 @@ class Gateway
     {
         return $this->synchronizations->count();
     }
-
-    // Should not be used or needed
-    // public function setObjectCount(int $objectCount): self
-    // {
-    //     $this->objectCount = $objectCount;
-
-    //     return $this;
-    // }
 
     /**
      * @return Collection|Synchronization[]
