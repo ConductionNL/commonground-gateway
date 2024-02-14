@@ -2,14 +2,20 @@
 
 namespace App\Entity;
 
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Annotation\ApiResource;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\ExistsFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
-use DateTime;
+use ApiPlatform\Doctrine\Orm\Filter\BooleanFilter;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\ExistsFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
+use App\Repository\SecurityGroupRepository;
+use App\Repository\ValueRepository;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -18,201 +24,262 @@ use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * A value for a given attribute on an Object Entity.
- *
- * @category Entity
- *
- * @ORM\HasLifecycleCallbacks()
- *
- * @ApiResource(
- *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *      "get"={"path"="/admin/values/{id}"},
- *      "put"={"path"="/admin/values/{id}"},
- *      "delete"={"path"="/admin/values/{id}"}
- *  },
- *  collectionOperations={
- *      "get"={"path"="/admin/values"},
- *      "post"={"path"="/admin/values"}
- *  }
- * )
- *
- * @ORM\Entity(repositoryClass="App\Repository\ValueRepository")
- *
- * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class, properties={
- *     "attribute.id": "exact",
- *     "objectEntity.id": "exact"
- * })
- * @ApiFilter(ExistsFilter::class, properties={
- *     "stringValue",
- *     "dateTimeValue",
- * })
  */
+#[
+    ApiResource(
+        operations: [
+            new Get(          "/admin/values/{id}"),
+            new Put(          "/admin/values/{id}"),
+            new Delete(       "/admin/values/{id}"),
+            new GetCollection("/admin/values"),
+            new Post(         "/admin/values")
+        ],
+        normalizationContext: [
+            'groups' => ['read'],
+            'enable_max_depth' => true
+        ],
+        denormalizationContext: [
+            'groups' => ['write'],
+            'enable_max_depth' => true
+        ],
+    ),
+    ORM\Entity(repositoryClass: ValueRepository::class),
+    ApiFilter(BooleanFilter::class),
+    ApiFilter(OrderFilter::class),
+    ApiFilter(DateFilter::class, strategy: DateFilter::EXCLUDE_NULL),
+    ApiFilter(
+        SearchFilter::class,
+        properties: [
+            'attribute.id'    => 'exact',
+            'objectEntity.id' => 'exact',
+        ]
+    ),
+    ApiFilter(
+        ExistsFilter::class,
+        properties: [
+            'stringValue',
+            'dateTimeValue'
+        ]
+    ),
+]
 class Value
 {
     /**
      * @var UuidInterface The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
-     *
-     * @Assert\Uuid
-     *
-     * @Groups({"read"})
-     *
-     * @ORM\Id
-     *
-     * @ORM\Column(type="uuid", unique=true)
-     *
-     * @ORM\GeneratedValue(strategy="CUSTOM")
-     *
-     * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private $id;
+    #[
+        Assert\Uuid,
+        Groups(['read', 'write']),
+        ORM\Id,
+        ORM\Column(
+            type: 'uuid',
+            unique: true
+        ),
+        ORM\GeneratedValue,
+        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+    ]
+    private UuidInterface $id;
+
+    /**
+     * @var string|null An uri
+     */
+    #[
+        Groups(['read', 'write']),
+        Assert\Length(max: 255),
+        Assert\Url,
+        ORM\Column(
+            type: 'string',
+            length: 10,
+            nullable: true
+        )
+    ]
+    private ?string $uri = null;
 
     // TODO:indexeren
     /**
-     * @var string An uri
-     *
-     * @Assert\Url
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @var string|null The actual value if is of type string
      */
-    private $uri;
-
-    // TODO:indexeren
-    /**
-     * @var string The actual value if is of type string
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="text", nullable=true)
-     */
-    private $stringValue; //TODO make this type=string again!?
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'text',
+            nullable: true
+        )
+    ]
+    private ?string $stringValue = null;
 
     /**
-     * @var int Integer if the value is type integer
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="integer", nullable=true)
+     * @var int|null Integer if the value is type integer
      */
-    private $integerValue;
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('integer'),
+        ORM\Column(
+            type: 'integer',
+            nullable: true
+        )
+    ]
+    private ?int $integerValue = null;
 
     /**
-     * @var float Float if the value is type number
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="float", nullable=true)
+     * @var float|null Float if the value is type number
      */
-    private $numberValue;
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'float',
+            nullable: true
+        )
+    ]
+    private ?float $numberValue = null;
 
     /**
-     * @var bool Boolean if the value is type boolean
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="boolean", nullable=true)
+     * @var bool|null Boolean if the value is type boolean
      */
-    private $booleanValue;
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('bool'),
+        ORM\Column(
+            type: 'boolean',
+            nullable: true
+        )
+
+    ]
+    private ?bool $booleanValue = null;
 
     /**
-     * @var array Array if the value is type multidemensional array
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="array", nullable=true)
+     * @var array|null Array if the value is type multidimensional array
      */
-    private $arrayValue;
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('array'),
+        ORM\Column(
+            type: 'array',
+            nullable: true
+        )
+    ]
+    private ?array $arrayValue = null;
 
     /**
-     * @var array Array if the value is type singledimensional array without key's e.g. a list
-     *
-     * @Groups({"read", "write"})
-     *
-     * @ORM\Column(type="simple_array", nullable=true)
+     * @var array|null Array if the value is type single-dimensional array without key's e.g. a list
      */
-    private $simpleArrayValue = [];
+    #[
+        Groups(['read', 'write']),
+        Assert\Type('array'),
+        ORM\Column(
+            type: 'simple_array',
+            nullable: true
+        )
+    ]
+    private ?array $simpleArrayValue = [];
 
     /**
-     * @var DateTime DateTime if the value is type DateTime
+     * @var DateTimeInterface|null DateTime if the value is type DateTime
      *
      * @Groups({"read", "write"})
      *
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private $dateTimeValue;
+    #[
+        Groups(['read', 'write']),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateTimeValue = null;
 
     /**
-     * @Groups({"read","write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\OneToMany(targetEntity=File::class, mappedBy="value", cascade={"persist", "remove"})
+     * @var Collection The files of this value.
      */
-    private $files;
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\OneToMany(
+            mappedBy: 'value',
+            targetEntity: File::class,
+            cascade: ['persist', 'remove']
+        )
+    ]
+    private Collection $files;
 
     /**
-     * @Groups({"read","write"})
-     *
-     * @ORM\ManyToOne(targetEntity=Attribute::class, inversedBy="attributeValues")
-     *
-     * @ORM\JoinColumn(nullable=false)
-     *
-     * @MaxDepth(1)
+     * @var Attribute The attribute the value is an instance of.
      */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\JoinColumn(nullable: false),
+        ORM\ManyToOne(
+            targetEntity: Attribute::class,
+            inversedBy: 'attributeValues'
+        )
+    ]
     private Attribute $attribute;
 
     /**
-     * @Groups({"write"})
-     *
-     * @ORM\ManyToOne(targetEntity=ObjectEntity::class, inversedBy="objectValues", fetch="EXTRA_LAZY", cascade={"persist"})
-     *
-     * @MaxDepth(1)
+     * @var ObjectEntity The object the value belongs to, otherwise known as the parent object.
      */
-    private $objectEntity; // parent object
+    #[
+        Groups(['write']),
+        MaxDepth(1),
+        ORM\ManyToOne(
+            targetEntity: ObjectEntity::class,
+            cascade: ['persist'],
+            fetch: 'EXTRA_LAZY',
+            inversedBy: 'objectValues'
+        )
+    ]
+    private ObjectEntity $objectEntity;
 
     /**
-     * @MaxDepth(1)
-     *
-     * @ORM\ManyToMany(targetEntity=ObjectEntity::class, mappedBy="subresourceOf", fetch="EXTRA_LAZY", cascade={"persist"})
+     * @var Collection The object the value refers to, otherwise known as the sub objects.
      */
-    private $objects; // sub objects
+    #[
+        MaxDepth(1),
+        ORM\ManyToMany(
+            targetEntity: ObjectEntity::class,
+            mappedBy: 'subresourceOf',
+            cascade: ['persist'],
+            fetch: 'EXTRA_LAZY'
+        )
+    ]
+    private Collection $objects;
+    
+    /**
+     * @var DateTimeInterface|null The moment this resource was created
+     */
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'create'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateCreated = null;
 
     /**
-     * @var Datetime The moment this resource was created
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="create")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
+     * @var DateTimeInterface|null The moment this resource was last Modified
      */
-    private $dateCreated;
-
-    /**
-     * @var Datetime The moment this resource last Modified
-     *
-     * @Groups({"read"})
-     *
-     * @Gedmo\Timestampable(on="update")
-     *
-     * @ORM\Column(type="datetime", nullable=true)
-     */
-    private $dateModified;
+    #[
+        Groups(['read']),
+        Gedmo\Timestampable(on: 'update'),
+        ORM\Column(
+            type: 'datetime',
+            nullable: true
+        )
+    ]
+    private ?DateTimeInterface $dateModified = null;
 
     public function __toString()
     {

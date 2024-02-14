@@ -33,7 +33,7 @@ services:
 
   php:
     &php
-    image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php:${APP_ENV}
+    image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-php:php82-symfony64
     build:
       context: ./api
       target: api_platform_php
@@ -117,7 +117,7 @@ services:
 
   api:
     &nginx
-    image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-nginx:${APP_ENV}
+    image: ${CONTAINER_REGISTRY_BASE}/${CONTAINER_PROJECT_NAME}-nginx:php82-symfony64
     build:
       context: ./api
       target: api_platform_nginx

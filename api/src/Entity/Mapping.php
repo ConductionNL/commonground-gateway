@@ -13,8 +13,6 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
-use App\Exception\GatewayException;
-use App\Repository\FileRepository;
 use App\Repository\MappingRepository;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -81,7 +79,7 @@ class Mapping
     private UuidInterface $id;
 
     /**
-     * @var string The name of this Application.
+     * @var string The name of this Mapping.
      */
     #[
         Groups(['read', 'write']),
@@ -96,7 +94,7 @@ class Mapping
     private string $name;
 
     /**
-     * @var string|null A description of this Application.
+     * @var string|null A description of this Mapping.
      */
     #[
         Groups(['read', 'write']),
@@ -108,7 +106,7 @@ class Mapping
     private ?string $description = null;
 
     /**
-     * @var string|null The reference of the application
+     * @var string|null The reference of the Mapping
      */
     #[
         Groups(['read', 'write']),
@@ -123,7 +121,7 @@ class Mapping
     private ?string $reference = null;
 
     /**
-     * @var string The version of the application.
+     * @var string The version of the Mapping.
      */
     #[
         Groups(['read', 'write']),
@@ -187,7 +185,7 @@ class Mapping
     private ?bool $passTrough = true;
 
     /**
-     * @ORM\OneToMany(targetEntity=Synchronization::class, mappedBy="mapping")
+     * @var Collection The synchronizations using this mapping.
      */
     #[
         ORM\OneToMany(
@@ -195,7 +193,7 @@ class Mapping
             targetEntity: Synchronization::class
         )
     ]
-    private $synchronizations;
+    private Collection $synchronizations;
 
     /**
      * @var DateTimeInterface|null The moment this resource was created

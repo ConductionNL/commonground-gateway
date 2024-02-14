@@ -172,12 +172,14 @@ use Symfony\Component\Validator\Constraints as Assert;
             new Post(         "/admin/sources"),
             new Get(
                 uriTemplate: "/admin/sources/{id}/proxy",
+                routeName: 'get_sources_proxy',
                 requirements: ["endpoint" => ".+"],
                 read: false,
                 validate: false
             ),
             new Get(
                 uriTemplate: "/admin/gateways/{id}/proxy",
+                routeName: 'get_proxy',
                 requirements: ["endpoint" => ".+"],
                 read: false,
                 validate: false

@@ -27,6 +27,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * This entity holds a Contract between a User and a Application.
+ * @deprecated
  */
 #[
     ApiResource(
