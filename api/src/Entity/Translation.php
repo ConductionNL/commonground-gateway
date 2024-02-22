@@ -17,6 +17,7 @@ use App\Repository\TranslationRepository;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Doctrine\UuidGenerator;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -71,8 +72,8 @@ class Translation
             type: 'uuid',
             unique: true
         ),
-        ORM\GeneratedValue,
-        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+        ORM\GeneratedValue(strategy: 'CUSTOM'),
+        ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
     private UuidInterface $id;
 

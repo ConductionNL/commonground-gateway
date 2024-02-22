@@ -20,6 +20,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Doctrine\UuidGenerator;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -70,10 +71,10 @@ class Organization
             type: 'uuid',
             unique: true
         ),
-        ORM\GeneratedValue,
-        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+        ORM\GeneratedValue(strategy: 'CUSTOM'),
+        ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
-    private $id;
+    private UuidInterface $id;
 
     /**
      * @var string The name of this Organization.
@@ -160,6 +161,32 @@ class Organization
     private $applications;
 
     /**
+     * @var Collection The object entities of this organization.
+     */
+    #[
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\OneToMany(
+            mappedBy: 'organization',
+            targetEntity: ObjectEntity::class,
+            orphanRemoval: true
+        )
+    ]
+    private Collection $objectEntities;
+
+    /**
+     * @var ArrayCollection Templates of the organization.
+     */
+    #[
+        ORM\OneToMany(
+            mappedBy: 'organization',
+            targetEntity: Template::class,
+            orphanRemoval: true
+        )
+    ]
+    private $templates;
+
+    /**
      * @var Datetime The moment this resource was created
      */
     #[
@@ -185,23 +212,12 @@ class Organization
     ]
     private $dateModified;
 
-    /**
-     * @var ArrayCollection Templates of the organization.
-     */
-    #[
-        ORM\OneToMany(
-            mappedBy: 'organization',
-            targetEntity: Template::class,
-            orphanRemoval: true
-        )
-    ]
-    private $templates;
-
     public function __construct()
     {
         $this->users = new ArrayCollection();
         $this->templates = new ArrayCollection();
         $this->applications = new ArrayCollection();
+        $this->objectEntities = new ArrayCollection();
     }
 
     /**

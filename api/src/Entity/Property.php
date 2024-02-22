@@ -17,6 +17,7 @@ use App\Repository\PropertyRepository;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Doctrine\UuidGenerator;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -64,8 +65,8 @@ class Property
             type: 'uuid',
             unique: true
         ),
-        ORM\GeneratedValue,
-        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+        ORM\GeneratedValue(strategy: 'CUSTOM'),
+        ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
     private UuidInterface $id;
 

@@ -108,7 +108,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
 //            $this->session->set('refresh_token', $accessToken['refresh_token']);
 //            $userIdentifier = $result['email'];
 //        } else {
-            $doctrineUser = $this->entityManager->getRepository('App:User')->findOneBy(['email' => $result['email']]);
+            $doctrineUser = $this->entityManager->getRepository(User::class)->findOneBy(['email' => $result['email']]);
             if($doctrineUser instanceof User === false) {
                 $doctrineUser = new User();
             }
@@ -120,7 +120,7 @@ class OIDCAuthenticator extends AbstractAuthenticator
             $this->session->set('organization', $doctrineUser->getApplications()->first()->getOrganization());
 
             foreach ($result['groups'] as $group) {
-                $securityGroup = $this->entityManager->getRepository('App:SecurityGroup')->findOneBy(['name' => $group]);
+                $securityGroup = $this->entityManager->getRepository(SecurityGroup::class)->findOneBy(['name' => $group]);
                 if ($securityGroup instanceof SecurityGroup === true) {
                     $doctrineUser->addSecurityGroup($securityGroup);
                 }

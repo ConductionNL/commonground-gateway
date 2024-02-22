@@ -63,7 +63,7 @@ class GatewayService
         $request = $this->requestStack->getCurrentRequest();
         $host = $request->headers->get('host');
 
-        $applications = $this->entityManager->getRepository('App:Application')->findAll();
+        $applications = $this->entityManager->getRepository(Application::class)->findAll();
         $applications = array_values(array_filter($applications, function (Application $application) use ($host) {
             return in_array($host, $application->getDomains());
         }));

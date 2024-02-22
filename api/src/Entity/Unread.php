@@ -15,6 +15,7 @@ use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use App\Repository\UnreadRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Ramsey\Uuid\Doctrine\UuidGenerator;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
@@ -69,8 +70,8 @@ class Unread
             type: 'uuid',
             unique: true
         ),
-        ORM\GeneratedValue,
-        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+        ORM\GeneratedValue(strategy: 'CUSTOM'),
+        ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
     private UuidInterface $id;
 

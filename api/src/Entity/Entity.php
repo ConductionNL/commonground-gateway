@@ -25,6 +25,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
 use phpDocumentor\Reflection\Types\This;
+use Ramsey\Uuid\Doctrine\UuidGenerator;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -85,10 +86,10 @@ class Entity
             type: 'uuid',
             unique: true
         ),
-        ORM\GeneratedValue,
-        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+        ORM\GeneratedValue(strategy: 'CUSTOM'),
+        ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
-    private UuidInterface $id;
+    private ?UuidInterface $id = null;
 
     /**
      * @var string The name of this Application.
@@ -189,6 +190,22 @@ class Entity
     private Collection $attributes;
 
     /**
+     * @var Collection The attributes allowed to partial search on using the search query parameter.
+     * @deprecated
+     */
+    #[
+
+        Groups(['read', 'write']),
+        MaxDepth(1),
+        ORM\OneToMany(
+            mappedBy: 'searchPartial',
+            targetEntity: Attribute::class,
+            fetch: 'EAGER'
+        )
+    ]
+    private Collection $searchPartial;
+
+    /**
      * @var Collection The object entities of this Schema.
      */
     #[
@@ -239,8 +256,7 @@ class Entity
         Groups(['read', 'write']),
         ORM\Column(
             type: 'array',
-            nullable: true,
-            options: ['default' => []]
+            nullable: true
         )
     ]
     private ?array $nameProperties = [];
@@ -360,6 +376,7 @@ class Entity
         $this->usedIn = new ArrayCollection();
         $this->collections = new ArrayCollection();
         $this->endpoints = new ArrayCollection();
+        $this->searchPartial = new ArrayCollection();
     }
 
     public function export()
@@ -404,7 +421,7 @@ class Entity
         'default',
     ];
 
-    public function getId()
+    public function getId(): ?UuidInterface
     {
         return $this->id;
     }
@@ -956,4 +973,51 @@ class Entity
 
         return $this;
     }
+
+
+    /**
+     * @return Collection|Attribute[]
+     */
+    public function getSearchPartial(): Collection
+    {
+        return $this->searchPartial;
+    }
+
+    /**
+     * @todo docs
+     *
+     * @param Attribute $attribute
+     *
+     * @throws Exception
+     *
+     * @return $this
+     */
+    public function addSearchPartial(Attribute $attribute): self
+    {
+        // Only allow adding to searchPartial if the attribute is part of this Entity.
+        // Or if this entity has no attributes, when loading in fixtures.
+        if (!$this->searchPartial->contains($attribute)
+            && ($this->attributes->isEmpty() || $this->attributes->contains($attribute))
+        ) {
+            $this->searchPartial[] = $attribute;
+            $attribute->setSearchPartial($this);
+        } else {
+            throw new Exception('You are not allowed to set searchPartial of an Entity to an Attribute that is not part of this Entity.');
+        }
+
+        return $this;
+    }
+
+    public function removeSearchPartial(Attribute $attribute): self
+    {
+        if ($this->searchPartial->removeElement($attribute)) {
+            // set the owning side to null (unless already changed)
+            if ($attribute->getSearchPartial() === $this) {
+                $attribute->setSearchPartial(null);
+            }
+        }
+
+        return $this;
+    }
+
 }

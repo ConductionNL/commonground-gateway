@@ -239,7 +239,7 @@ class SynchronizationService
         // Get json/array results based on the type of source
         $results = $this->getObjectsFromSource($source);
         // Get all existing synchronizations for the entity+source
-        $collectionDelete && $existingSynchronizations = $this->entityManager->getRepository('App:Synchronization')->findBy(['gateway' => $source, 'entity' => $entity]);
+        $collectionDelete && $existingSynchronizations = $this->entityManager->getRepository(Synchronization::class)->findBy(['gateway' => $source, 'entity' => $entity]);
 
         if (isset($this->io)) {
             $totalResults = is_countable($results) ? count($results) : 0;
@@ -384,7 +384,7 @@ class SynchronizationService
     private function getSourceFromConfig(string $configKey = 'source'): ?Source
     {
         if (isset($this->configuration[$configKey])) {
-            $source = $this->entityManager->getRepository('App:Gateway')->findOneBy(['id' => $this->configuration[$configKey]]);
+            $source = $this->entityManager->getRepository(Gateway::class)->findOneBy(['id' => $this->configuration[$configKey]]);
             if ($source instanceof Source && $source->getIsEnabled()) {
                 return $source;
             }
@@ -415,7 +415,7 @@ class SynchronizationService
     public function getEntityFromConfig(string $configKey = 'entity'): ?Entity
     {
         if (isset($this->configuration[$configKey])) {
-            $entity = $this->entityManager->getRepository('App:Entity')->findOneBy(['id' => $this->configuration[$configKey]]);
+            $entity = $this->entityManager->getRepository(Entity::class)->findOneBy(['id' => $this->configuration[$configKey]]);
             if ($entity instanceof Entity) {
                 return $entity;
             }
@@ -733,7 +733,7 @@ class SynchronizationService
         if (empty($endpoint) === false) {
             $criteria['endpoint'] = $endpoint;
         }
-        $synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy($criteria);
+        $synchronization = $this->entityManager->getRepository(Synchronization::class)->findOneBy($criteria);
 
         if ($synchronization instanceof Synchronization) {
             if (isset($this->io)) {
@@ -769,7 +769,7 @@ class SynchronizationService
      */
     public function findSyncByObject(ObjectEntity $objectEntity, Source $source, Entity $entity): ?Synchronization
     {
-        $synchronization = $this->entityManager->getRepository('App:Synchronization')->findOneBy(['object' => $objectEntity->getId(), 'gateway' => $source, 'entity' => $entity]);
+        $synchronization = $this->entityManager->getRepository(Synchronization::class)->findOneBy(['object' => $objectEntity->getId(), 'gateway' => $source, 'entity' => $entity]);
         if ($synchronization instanceof Synchronization) {
             if (isset($this->io)) {
                 $this->io->text("findSyncByObject() Found existing Synchronization with object = {$objectEntity->getId()->toString()}");
@@ -1084,7 +1084,7 @@ class SynchronizationService
      */
     private function translate(array $sourceObject, bool $translateOut = false): array
     {
-        $translationsRepo = $this->entityManager->getRepository('App:Translation');
+        $translationsRepo = $this->entityManager->getRepository(Translation::class);
         $translations = $translationsRepo->getTranslations($translateOut ? $this->configuration['apiSource']['translationsOut'] : $this->configuration['apiSource']['translationsIn']);
         if (!empty($translations)) {
             $sourceObject = $this->translationService->parse($sourceObject, true, $translations);
@@ -1103,11 +1103,11 @@ class SynchronizationService
      */
     public function setApplication(ObjectEntity $objectEntity): ObjectEntity
     {
-        $application = $this->entityManager->getRepository('App:Application')->findOneBy(['name' => 'main application']);
+        $application = $this->entityManager->getRepository(Application::class)->findOneBy(['name' => 'main application']);
         if ($application instanceof Application) {
             $objectEntity->setApplication($application);
         } elseif (
-            ($applications = $this->entityManager->getRepository('App:Application')->findAll()
+            ($applications = $this->entityManager->getRepository(Application::class)->findAll()
                 && !empty($applications)
                 && $application = $applications[0])
                 && $application instanceof Application

@@ -57,7 +57,7 @@ class ApplicationService
     {
         // If application is already in the session
         if ($this->session->has('application')) {
-            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+            $application = $this->entityManager->getRepository(Application::class)->findOneBy(['id' => $this->session->get('application')]);
             if ($application !== null) {
                 return $application;
             }
@@ -65,7 +65,7 @@ class ApplicationService
 
         // If an api-key is used for authentication we already know which application is used
         if ($this->session->has('apiKeyApplication')) {
-            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('apiKeyApplication')]);
+            $application = $this->entityManager->getRepository(Application::class)->findOneBy(['id' => $this->session->get('apiKeyApplication')]);
             if ($application !== null) {
                 $this->session->set('application', $application->getId()->toString());
                 return $application;
@@ -75,7 +75,7 @@ class ApplicationService
         // Find application using the publicKey
         $public = ($this->request->headers->get('public') ?? $this->request->query->get('public'));
         if (empty($public) === false) {
-            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]);
+            $application = $this->entityManager->getRepository(Application::class)->findOneBy(['public' => $public]);
             if ($application !== null) {
                 $this->session->set('application', $application->getId()->toString());
                 return $application;
@@ -85,7 +85,7 @@ class ApplicationService
         // Find application using the host/domain
         $host = ($this->request->headers->get('host') ?? $this->request->query->get('host'));
         if (empty($host) === false) {
-            $applications = $this->entityManager->getRepository('App:Application')->findByDomain($host);
+            $applications = $this->entityManager->getRepository(Application::class)->findByDomain($host);
             if (count($applications) > 0) {
                 $this->session->set('application', $applications[0]->getId()->toString());
 

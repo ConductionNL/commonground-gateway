@@ -108,7 +108,7 @@ class EavDocumentationService
         $docs['components'] = $this->getDocumentationComponents();
 
         /* @todo we want to make exposing objects a choice */
-        $entities = $this->em->getRepository('App:Entity')->findAll(); ///findBy(['expose_in_docs'=>true]);
+        $entities = $this->em->getRepository(Entity::class)->findAll(); ///findBy(['expose_in_docs'=>true]);
 
         foreach ($entities as $entity) {
             $docs = $this->addEntityToDocs($entity, $docs);

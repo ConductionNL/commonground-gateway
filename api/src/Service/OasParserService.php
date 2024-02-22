@@ -330,7 +330,7 @@ class OasParserService
         if (isset($this->oas['components']['parameters'][$property])) {
             $oasParameter = $this->oas['components']['parameters'][$property];
 
-            $propertyRepo = $this->entityManager->getRepository('App:Property');
+            $propertyRepo = $this->entityManager->getRepository(Property::class);
             $propertyObject = $propertyRepo->findOneBy(['name' => $oasParameter['name']]) ? $propertyRepo->findOneBy(['name' => $oasParameter['name']]) : $this->createProperty($oasParameter, $endpoint, $createdPropertiesCount);
 
             // Set Endpoint and persist Property

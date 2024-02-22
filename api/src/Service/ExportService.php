@@ -75,7 +75,7 @@ class ExportService
     public function exportGateway()
     {
         $array['App\Entity\Gateway'] = [];
-        $objects = $this->em->getRepository('App:Gateway')->findAll();
+        $objects = $this->em->getRepository(Gateway::class)->findAll();
 
         foreach ($objects as &$object) {
             $array['App\Entity\Gateway'][$object->getId()->toString()] = $object->export();
@@ -92,7 +92,7 @@ class ExportService
     public function exportSoap()
     {
         $array['App\Entity\Soap'] = [];
-        $objects = $this->em->getRepository('App:Soap')->findAll();
+        $objects = $this->em->getRepository(Soap::class)->findAll();
 
         foreach ($objects as &$object) {
             $array['App\Entity\Soap'][$object->getId()->toString()] = $object->export();
@@ -104,7 +104,7 @@ class ExportService
     public function exportProperty()
     {
         $array['App\Entity\Attribute'] = [];
-        $objects = $this->em->getRepository('App:Attribute')->findAll();
+        $objects = $this->em->getRepository(Attribute::class)->findAll();
 
         foreach ($objects as &$object) {
             $array['App\Entity\Attribute'][$object->getId()->toString()] = $object->export();
@@ -116,7 +116,7 @@ class ExportService
     public function exportEntity()
     {
         $array['App\Entity\Entity'] = [];
-        $objects = $this->em->getRepository('App:Entity')->findAll();
+        $objects = $this->em->getRepository(Entity::class)->findAll();
 
         foreach ($objects as &$object) {
             $array['App\Entity\Entity'][$object->getId()->toString()] = $object->export();

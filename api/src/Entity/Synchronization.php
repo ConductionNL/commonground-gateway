@@ -14,50 +14,18 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use App\Entity\Gateway as Source;
-use App\Repository\MappingRepository;
 use App\Repository\SynchronizationRepository;
 use DateTimeInterface;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Doctrine\UuidGenerator;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * This entity holds the information about the Synchronization.
- *
- * @ApiResource(
- *     	normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *     	denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *      "get"={"path"="/admin/synchronizations/{id}"},
- *      "put"={"path"="/admin/synchronizations/{id}"},
- *      "delete"={"path"="/admin/synchronizations/{id}"}
- *  },
- *  collectionOperations={
- *      "get"={"path"="/admin/synchronizations"},
- *      "post"={"path"="/admin/synchronizations"}
- *  }
- * )
- *
- * @ORM\Entity(repositoryClass=SynchronizationRepository::class)
- *
- * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
- *
- * @ORM\HasLifecycleCallbacks
- *
- * @ApiFilter(BooleanFilter::class)
- * @ApiFilter(OrderFilter::class)
- * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
- * @ApiFilter(SearchFilter::class, properties={
- *     "entity.id": "exact",
- *     "gateway.id": "exact",
- *     "object.id": "exact",
- *     "sourceId": "exact"
- * })
  */
 #[
     ApiResource(
@@ -77,7 +45,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             'enable_max_depth' => true
         ],
     ),
-    ORM\Entity(repositoryClass: MappingRepository::class),
+    ORM\Entity(repositoryClass: SynchronizationRepository::class),
     ApiFilter(BooleanFilter::class),
     ApiFilter(OrderFilter::class),
     ApiFilter(DateFilter::class, strategy: DateFilter::EXCLUDE_NULL),
@@ -107,8 +75,8 @@ class Synchronization
             type: 'uuid',
             unique: true
         ),
-        ORM\GeneratedValue,
-        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+        ORM\GeneratedValue(strategy: 'CUSTOM'),
+        ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
     private UuidInterface $id;
 

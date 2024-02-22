@@ -66,7 +66,7 @@ class ApiKeyAuthenticator extends AbstractAuthenticator
         }
         // If we still have no organization, get the organization from the application
         if ($this->session->get('application')) {
-            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
+            $application = $this->entityManager->getRepository(Application::class)->findOneBy(['id' => $this->session->get('application')]);
             if (!empty($application) && $application->getOrganization()) {
                 return $application->getOrganization();
             }
@@ -81,7 +81,7 @@ class ApiKeyAuthenticator extends AbstractAuthenticator
     public function authenticate(Request $request): Passport
     {
         $key = $request->headers->get('Authorization');
-        $application = $this->entityManager->getRepository('App:Application')->findOneBy(['secret' => $key]);
+        $application = $this->entityManager->getRepository(Application::class)->findOneBy(['secret' => $key]);
         if ($application === null) {
             throw new AuthenticationException('Invalid ApiKey');
         }

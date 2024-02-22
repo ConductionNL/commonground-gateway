@@ -57,7 +57,7 @@ class GatewayOasCommand extends Command
             'This script will get the OAS documentation for gateway\'s (if provided) and parse them to usable information in order to help user configure gateways',
         ]);
 
-        $gateways = $this->em->getRepository('App:Gateway')->findAll();
+        $gateways = $this->em->getRepository(Gateway::class)->findAll();
 
         $output->writeln('Found '.count($gateways).' gateways to parse');
 

@@ -34,7 +34,7 @@ class MappingRuntime implements RuntimeExtensionInterface
      */
     public function map(string $mappingString, array $data, bool $list = false): array
     {
-        $mapping = $this->entityManager->getRepository('App:Mapping')->findOneBy(['reference' => $mappingString]);
+        $mapping = $this->entityManager->getRepository(Mapping::class)->findOneBy(['reference' => $mappingString]);
 
         $value = $this->mappingService->mapping($mapping, $data, $list);
 

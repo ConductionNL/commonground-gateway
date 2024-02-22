@@ -34,7 +34,7 @@ class GatewayDocumentationService
     {
         $paths = [];
 
-        foreach ($this->em->getRepository('App:Gateway')->findAll() as $source) {
+        foreach ($this->em->getRepository(Gateway::class)->findAll() as $source) {
             if ($source->getDocumentation()) {
                 $source = $this->getPathsForGateway($source);
 

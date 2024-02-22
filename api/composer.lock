@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "489e045635c872160eaad29390c5ce1a",
+    "content-hash": "dbb409a4846505c8c531a3a243787177",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -606,12 +606,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "b40e0333065c60e919f2549e96948cb25260a6c5"
+                "reference": "6045680bad78e146197b1ecd29f83702972eebad"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/b40e0333065c60e919f2549e96948cb25260a6c5",
-                "reference": "b40e0333065c60e919f2549e96948cb25260a6c5",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/6045680bad78e146197b1ecd29f83702972eebad",
+                "reference": "6045680bad78e146197b1ecd29f83702972eebad",
                 "shasum": ""
             },
             "require": {
@@ -721,7 +721,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2024-02-01T14:35:32+00:00"
+            "time": "2024-02-16T11:11:48+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -14143,6 +14143,98 @@
                 }
             ],
             "time": "2024-01-23T14:51:35+00:00"
+        },
+        {
+            "name": "symfony/maker-bundle",
+            "version": "v1.52.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/maker-bundle.git",
+                "reference": "112f9466c94a46ca33dc441eee59a12cd1790757"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/maker-bundle/zipball/112f9466c94a46ca33dc441eee59a12cd1790757",
+                "reference": "112f9466c94a46ca33dc441eee59a12cd1790757",
+                "shasum": ""
+            },
+            "require": {
+                "doctrine/inflector": "^2.0",
+                "nikic/php-parser": "^4.11",
+                "php": ">=8.1",
+                "symfony/config": "^6.3|^7.0",
+                "symfony/console": "^6.3|^7.0",
+                "symfony/dependency-injection": "^6.3|^7.0",
+                "symfony/deprecation-contracts": "^2.2|^3",
+                "symfony/filesystem": "^6.3|^7.0",
+                "symfony/finder": "^6.3|^7.0",
+                "symfony/framework-bundle": "^6.3|^7.0",
+                "symfony/http-kernel": "^6.3|^7.0",
+                "symfony/process": "^6.3|^7.0"
+            },
+            "conflict": {
+                "doctrine/doctrine-bundle": "<2.4",
+                "doctrine/orm": "<2.10"
+            },
+            "require-dev": {
+                "composer/semver": "^3.0",
+                "doctrine/doctrine-bundle": "^2.5.0",
+                "doctrine/orm": "^2.10.0",
+                "symfony/http-client": "^6.3|^7.0",
+                "symfony/phpunit-bridge": "^6.3|^7.0",
+                "symfony/security-core": "^6.3|^7.0",
+                "symfony/yaml": "^6.3|^7.0",
+                "twig/twig": "^2.0|^3.0"
+            },
+            "type": "symfony-bundle",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Bundle\\MakerBundle\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony Maker helps you create empty commands, controllers, form classes, tests and more so you can forget about writing boilerplate code.",
+            "homepage": "https://symfony.com/doc/current/bundles/SymfonyMakerBundle/index.html",
+            "keywords": [
+                "code generator",
+                "dev",
+                "generator",
+                "scaffold",
+                "scaffolding"
+            ],
+            "support": {
+                "issues": "https://github.com/symfony/maker-bundle/issues",
+                "source": "https://github.com/symfony/maker-bundle/tree/v1.52.0"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2023-10-31T18:23:49+00:00"
         },
         {
             "name": "symfony/phpunit-bridge",

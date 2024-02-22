@@ -337,7 +337,7 @@ class FormIOService
      */
     public function createFormIOArray(Entity $entity, array $object = null): array
     {
-        isset($object['id']) && $objectEntity = $this->entityManager->getRepository('App:ObjectEntity')->find($object['id']);
+        isset($object['id']) && $objectEntity = $this->entityManager->getRepository(ObjectEntity::class)->find($object['id']);
 
         $formIOArray['components'] = [];
         $readOnlyArray = [];

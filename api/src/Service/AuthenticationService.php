@@ -118,7 +118,7 @@ class AuthenticationService
 
     public function refreshAccessToken(string $refreshToken, string $authenticator): array
     {
-        $authentication = $this->entityManager->getRepository('App:Authentication')->find($authenticator);
+        $authentication = $this->entityManager->getRepository(Authentication::class)->find($authenticator);
         if ($authentication instanceof Authentication === false) {
             return [];
         }

@@ -268,7 +268,7 @@ class AuthorizationService
         $scopes = [];
         $parameters = $this->session->get('parameters');
         if (!empty($parameters) && array_key_exists('headers', $parameters) && array_key_exists('contract', $parameters['headers']) && Uuid::isValid($parameters['headers']['contract'][0])) {
-            $contract = $this->entityManager->getRepository('App:Contract')->findOneBy(['id' => $parameters['headers']['contract'][0]]);
+            $contract = $this->entityManager->getRepository(Contract::class)->findOneBy(['id' => $parameters['headers']['contract'][0]]);
             if (!empty($contract) && !empty($contract->getGrants())) {
                 foreach ($contract->getGrants() as $grant) {
                     $scopes[] = strtolower($grant);
@@ -559,7 +559,7 @@ class AuthorizationService
             $attributeName = end($grantedScopeName);
 
             // Find the attribute with the $entity and $attributeName
-            $scopeAttribute = $this->entityManager->getRepository('App:Attribute')->findOneBy(['entity' => $info['entity'], 'name' => $attributeName]);
+            $scopeAttribute = $this->entityManager->getRepository(Attribute::class)->findOneBy(['entity' => $info['entity'], 'name' => $attributeName]);
             if (empty($scopeAttribute) ||
                 in_array($scopeAttribute->getType(), ['object', 'file', 'array']) ||
                 $scopeAttribute->getMultiple()

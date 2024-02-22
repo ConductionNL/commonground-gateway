@@ -19,6 +19,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Doctrine\UuidGenerator;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -81,8 +82,8 @@ class User implements PasswordAuthenticatedUserInterface
             type: 'uuid',
             unique: true
         ),
-        ORM\GeneratedValue,
-        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+        ORM\GeneratedValue(strategy: 'CUSTOM'),
+        ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
     private $id;
 
@@ -229,17 +230,17 @@ class User implements PasswordAuthenticatedUserInterface
     private $scopes = [];
 
     /**
-     * @var ArrayCollection The security groups the user belongs to.
+     * @var Collection The security groups the user belongs to.
      */
     #[
         Groups(['read', 'write']),
         MaxDepth(1),
         ORM\ManyToMany(
             targetEntity: SecurityGroup::class,
-            inversedBy: 'users'
+            mappedBy: 'users'
         )
     ]
-    private $securityGroups;
+    private Collection $securityGroups;
 
     /**
      * @var Datetime The moment this resource was created

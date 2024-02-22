@@ -63,7 +63,7 @@ class CertificateAuthenticator extends AbstractAuthenticator
         $certificate = urldecode($certificate);
         $certificate = str_replace(["\n", "\r", "\t"], '', $certificate, $count);
 
-        $qb = $this->entityManager->getRepository('App:Application')->createQueryBuilder('a');
+        $qb = $this->entityManager->getRepository(Application::class)->createQueryBuilder('a');
         $qb->select('a')
             ->where($qb->expr()->like('a.certificates', $qb->expr()->literal("%$certificate%")));
 

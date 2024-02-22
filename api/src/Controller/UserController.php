@@ -97,7 +97,7 @@ class UserController extends AbstractController
             return new Response(json_encode(["Message" => 'User not found.']), 401, ['Content-type' => 'application/json']);
         }
 
-        $user = $this->entityManager->getRepository('App:User')->find($user->getUserIdentifier());
+        $user = $this->entityManager->getRepository(User::class)->find($user->getUserIdentifier());
 
         // Set organization id and user id in session
         $session->set('user', $user->getId()->toString());
@@ -190,7 +190,7 @@ class UserController extends AbstractController
         $data = json_decode($request->getContent(), true);
 
 
-        $user = $doctrine->getRepository('App:User')->findOneBy(['email' => $data['username']]);
+        $user = $doctrine->getRepository(User::class)->findOneBy(['email' => $data['username']]);
         if ($user instanceof User === false || $hasher->isPasswordValid($user, $data['password']) === false) {
             $response = [
                 'message' => 'Invalid credentials',

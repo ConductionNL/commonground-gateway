@@ -99,7 +99,7 @@ class CronjobCommand extends Command
         // After makeActionEvent() is done, even if it returns an exception, currentCronJobUserId should be removed from cache (outside this function)
         $this->session->remove('currentCronjobUserId');
         if ($cronjob->getUserId() !== null && Uuid::isValid($cronjob->getUserId()) === true) {
-            $user = $this->entityManager->getRepository('App:User')->find($cronjob->getUserId());
+            $user = $this->entityManager->getRepository(User::class)->find($cronjob->getUserId());
             if ($user instanceof User === true) {
                 $this->session->set('currentCronjobUserId', $cronjob->getUserId());
             }
@@ -149,7 +149,7 @@ class CronjobCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $this->session->set('io', $io);
 
-        $cronjobs = $this->entityManager->getRepository('App:Cronjob')->getRunnableCronjobs();
+        $cronjobs = $this->entityManager->getRepository(Cronjob::class)->getRunnableCronjobs();
         $total = is_countable($cronjobs) ? count($cronjobs) : 0;
 
         $io->title('Run all Cronjobs');

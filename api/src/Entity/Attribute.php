@@ -21,6 +21,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Exception;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Ramsey\Uuid\Doctrine\UuidGenerator;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -87,8 +88,9 @@ class Attribute
             type: 'uuid',
             unique: true
         ),
-        ORM\GeneratedValue,
-        ORM\CustomIdGenerator(class: "Ramsey\Uuid\Doctrine\UuidGenerator")
+        ORM\GeneratedValue(strategy: 'CUSTOM'),
+
+        ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
     private $id;
 
@@ -1037,7 +1039,6 @@ class Attribute
         Groups(['read', 'write']),
         Assert\Type('bool'),
         ORM\Column(
-            name: 'allow_cascade',
             type: 'boolean',
             nullable: true,
             options: ['default' => false]

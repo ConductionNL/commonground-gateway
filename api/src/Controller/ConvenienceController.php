@@ -62,7 +62,7 @@ class ConvenienceController extends AbstractController
      */
     public function runAction(string $actionId, Request $request): Response
     {
-        $action = $this->entityManager->getRepository('App:Action')->find($actionId);
+        $action = $this->entityManager->getRepository(Action::class)->find($actionId);
 
         $contentType = $this->endpointService->getAcceptType($request);
         $data        = $this->endpointService->decodeBody($request);
@@ -90,7 +90,7 @@ class ConvenienceController extends AbstractController
     {
         $contentType = $this->endpointService->getAcceptType($request);
 
-        if (!$mappingObject = $this->entityManager->getRepository('App:Mapping')->find($id)) {
+        if (!$mappingObject = $this->entityManager->getRepository(Mapping::class)->find($id)) {
             return new GatewayException(
                 $this->serializer->serialize(['message' => 'There is no mapping found with id '.$id], $contentType),
                 Response::HTTP_BAD_REQUEST,

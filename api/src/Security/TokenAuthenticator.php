@@ -87,7 +87,7 @@ class TokenAuthenticator extends AbstractAuthenticator
         } elseif ($alg === 'RS256') {
             $payload = json_decode(base64_decode(array_shift($tokenArray)), true);
             $issuer = str_replace('127.0.0.1', 'localhost', $payload['iss']);
-            $authenticator = $this->entityManager->getRepository('App:Authentication')->findOneBy(['authenticateUrl' => $issuer.'/auth']);
+            $authenticator = $this->entityManager->getRepository(Authentication::class)->findOneBy(['authenticateUrl' => $issuer.'/auth']);
             if ($authenticator instanceof Authentication) {
                 $keyUrl = $authenticator->getKeysUrl();
                 $client = new Client();
@@ -167,7 +167,7 @@ class TokenAuthenticator extends AbstractAuthenticator
         if (isset($user['roles']) === false && isset($user['groups']) === true) {
             $user['roles'] = [];
             foreach ($user['groups'] as $group) {
-                $securityGroup = $this->entityManager->getRepository('App:SecurityGroup')->findOneBy(['name' => $group]);
+                $securityGroup = $this->entityManager->getRepository(SecurityGroup::class)->findOneBy(['name' => $group]);
                 if ($securityGroup instanceof SecurityGroup === true) {
                     $user['roles'] = array_merge($securityGroup->getScopes(), $user['roles']);
                 }
