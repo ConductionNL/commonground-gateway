@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7fea6053a03cf5e0d75d8c8180484df3",
+    "content-hash": "cfc58b90ddfad703c3e6d7f1ec53cb04",
     "packages": [
         {
             "name": "adbario/php-dot-notation",
@@ -660,16 +660,16 @@
         },
         {
             "name": "commongateway/corebundle",
-            "version": "1.2.30",
+            "version": "1.2.61",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "86fe52055235f37195e9eaa276f786a7f8f39ac8"
+                "reference": "1a9f06ca5de96602a00b7bc1f015e1a9b58277e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/86fe52055235f37195e9eaa276f786a7f8f39ac8",
-                "reference": "86fe52055235f37195e9eaa276f786a7f8f39ac8",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/1a9f06ca5de96602a00b7bc1f015e1a9b58277e5",
+                "reference": "1a9f06ca5de96602a00b7bc1f015e1a9b58277e5",
                 "shasum": ""
             },
             "require": {
@@ -783,7 +783,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2023-11-24T15:08:02+00:00"
+            "time": "2024-02-12T10:44:03+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -9113,16 +9113,16 @@
         },
         {
             "name": "symfony/flex",
-            "version": "v1.17.6",
+            "version": "v1.21.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/flex.git",
-                "reference": "7a79135e1dc66b30042b4d968ecba0908f9374bc"
+                "reference": "6b46a001639f810d01f4f1b39be1291192a711d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/flex/zipball/7a79135e1dc66b30042b4d968ecba0908f9374bc",
-                "reference": "7a79135e1dc66b30042b4d968ecba0908f9374bc",
+                "url": "https://api.github.com/repos/symfony/flex/zipball/6b46a001639f810d01f4f1b39be1291192a711d4",
+                "reference": "6b46a001639f810d01f4f1b39be1291192a711d4",
                 "shasum": ""
             },
             "require": {
@@ -9158,7 +9158,7 @@
             "description": "Composer plugin for Symfony",
             "support": {
                 "issues": "https://github.com/symfony/flex/issues",
-                "source": "https://github.com/symfony/flex/tree/v1.17.6"
+                "source": "https://github.com/symfony/flex/tree/v1.21.5"
             },
             "funding": [
                 {
@@ -9174,7 +9174,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-11-29T15:39:37+00:00"
+            "time": "2024-02-05T18:04:39+00:00"
         },
         {
             "name": "symfony/form",
