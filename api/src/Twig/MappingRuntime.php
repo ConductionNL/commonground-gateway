@@ -3,6 +3,7 @@
 namespace App\Twig;
 
 use Adbar\Dot;
+use App\Entity\Mapping;
 use CommonGateway\CoreBundle\Service\MappingService;
 use Doctrine\ORM\EntityManagerInterface;
 use Twig\Extension\RuntimeExtensionInterface;

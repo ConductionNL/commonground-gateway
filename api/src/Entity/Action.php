@@ -73,7 +73,7 @@ class Action
         ORM\GeneratedValue(strategy: 'CUSTOM'),
         ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
-    private $id;
+    private ?UuidInterface $id = null;
 
     /**
      * @var string|null The reference of the action.

@@ -75,7 +75,7 @@ class Translation
         ORM\GeneratedValue(strategy: 'CUSTOM'),
         ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
-    private UuidInterface $id;
+    private ?UuidInterface $id = null;
 
     /**
      * @var string The table of this Translation.

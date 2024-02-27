@@ -22,6 +22,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
+use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 
 /**
@@ -212,7 +213,7 @@ class UserController extends AbstractController
 
         // TODO: maybe do not just get the first Application here, but get application using ApplicationService->getApplication() and ...
         // todo... if this returns an application check if the user is part of this application or one of the organizations of this application?
-        $token = $authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session));
+        $token = $authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $request->getSession()));
 
         $user->setJwtToken($token);
 
@@ -228,9 +229,10 @@ class UserController extends AbstractController
             return $this->redirect($request->query->get('redirectUrl'));
         }
 
-        $serializedUser = $serializer->serialize($user, 'json');
+        $serializedUser = $serializer->serialize($user, 'json', [AbstractObjectNormalizer::ENABLE_MAX_DEPTH => true]);
         $userArray = json_decode($serializedUser, true);
-        $userArray = $this->cleanupLoginResponse($userArray);
+
+//        $userArray = $this->cleanupLoginResponse($userArray);
 
         return new Response(json_encode($userArray), $status, ['Content-type' => 'application/json']);
     }

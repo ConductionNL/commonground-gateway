@@ -62,7 +62,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Mapping
 {
     /**
-     * @var UuidInterface The UUID identifier of this resource
+     * @var UuidInterface|null The UUID identifier of this resource
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      */
@@ -77,7 +77,7 @@ class Mapping
         ORM\GeneratedValue(strategy: 'CUSTOM'),
         ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
-    private UuidInterface $id;
+    private ?UuidInterface $id = null;
 
     /**
      * @var string The name of this Mapping.
@@ -165,6 +165,7 @@ class Mapping
     #[
         Groups(['read', 'write']),
         ORM\Column(
+            name: 'cast_column',
             type: 'array',
             nullable: true
         )

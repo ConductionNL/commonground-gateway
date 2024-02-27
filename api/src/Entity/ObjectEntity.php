@@ -45,10 +45,10 @@ class ObjectEntity
         ORM\GeneratedValue(strategy: 'CUSTOM'),
         ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
-    private UuidInterface $id;
+    private ?UuidInterface $id = null;
 
     /**
-     * @var string|null The name of this Application.
+     * @var string The name of this Application.
      */
     #[
         Groups(['read', 'write']),
@@ -59,7 +59,7 @@ class ObjectEntity
             length: 255
         )
     ]
-    private ?string $name = null;
+    private string $name = 'No name can be determined for this object';
 
     /**
      * @var string The {at sign} id or self->href of this Object.

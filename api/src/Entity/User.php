@@ -14,6 +14,7 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
 use App\Repository\UserRepository;
+use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -85,7 +86,7 @@ class User implements PasswordAuthenticatedUserInterface
         ORM\GeneratedValue(strategy: 'CUSTOM'),
         ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
-    private $id;
+    private ?UuidInterface $id = null;
 
     /**
      * @var string The name of this User.
@@ -173,7 +174,7 @@ class User implements PasswordAuthenticatedUserInterface
      */
     #[
         Groups(['read', 'write']),
-        MaxDepth(1),
+        MaxDepth(2),
         ORM\ManyToOne(
             targetEntity: Organization::class,
             inversedBy: 'users'
@@ -187,7 +188,7 @@ class User implements PasswordAuthenticatedUserInterface
      */
     #[
         Groups(['read', 'write']),
-        MaxDepth(1),
+        MaxDepth(2),
         ORM\ManyToMany(
             targetEntity: Application::class,
             inversedBy: 'users'
@@ -234,7 +235,7 @@ class User implements PasswordAuthenticatedUserInterface
      */
     #[
         Groups(['read', 'write']),
-        MaxDepth(1),
+        MaxDepth(2),
         ORM\ManyToMany(
             targetEntity: SecurityGroup::class,
             mappedBy: 'users'

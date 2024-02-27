@@ -58,7 +58,7 @@ class ActionHandler
         ORM\GeneratedValue(strategy: 'CUSTOM'),
         ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
-    private $id;
+    private ?UuidInterface $id = null;
 
     /**
      * @var string The class of the actionHandler

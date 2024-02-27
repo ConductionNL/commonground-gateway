@@ -88,7 +88,7 @@ class Value
         ORM\GeneratedValue(strategy: 'CUSTOM'),
         ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
-    private UuidInterface $id;
+    private ?UuidInterface $id = null;
 
     /**
      * @var string|null An uri
@@ -228,7 +228,7 @@ class Value
     private Attribute $attribute;
 
     /**
-     * @var ObjectEntity The object the value belongs to, otherwise known as the parent object.
+     * @var ObjectEntity|null The object the value belongs to, otherwise known as the parent object.
      */
     #[
         Groups(['write']),
@@ -240,7 +240,7 @@ class Value
             inversedBy: 'objectValues'
         )
     ]
-    private ObjectEntity $objectEntity;
+    private ?ObjectEntity $objectEntity = null;
 
     /**
      * @var Collection The object the value refers to, otherwise known as the sub objects.

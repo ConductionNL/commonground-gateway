@@ -75,7 +75,7 @@ class CollectionEntity
         ORM\GeneratedValue(strategy: 'CUSTOM'),
         ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
-    private $id;
+    private ?UuidInterface $id = null;
 
     /**
      * @var string The Name of the Gateway which is used to authenticate.

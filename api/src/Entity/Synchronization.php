@@ -78,7 +78,7 @@ class Synchronization
         ORM\GeneratedValue(strategy: 'CUSTOM'),
         ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
-    private UuidInterface $id;
+    private ?UuidInterface $id = null;
 
     /**
      * @var Entity The entity of this resource
@@ -189,12 +189,13 @@ class Synchronization
     private ?string $hash = '';
 
     /**
-     * @var ?string The sha(256) used to check if a Sync should be triggered cause the object has changed
+     * @var string|null The sha(256) used to check if a Sync should be triggered cause the object has changed
      */
     #[
         Groups(['read', 'write']),
         ORM\Column(
-            type: 'text'
+            type: 'text',
+            nullable: true
         )
     ]
     private ?string $sha = null;

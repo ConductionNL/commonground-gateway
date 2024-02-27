@@ -92,7 +92,7 @@ class Attribute
 
         ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
-    private $id;
+    private ?UuidInterface $id = null;
 
     /**
      * @var string The name of the property as used in api calls
@@ -1431,18 +1431,6 @@ class Attribute
         $object->addUsedIn($this);
 
         $this->type = 'object';
-
-        return $this;
-    }
-
-    public function getExtend(): ?bool
-    {
-        return $this->extend;
-    }
-
-    public function setExtend(?bool $extend): self
-    {
-        $this->extend = $extend;
 
         return $this;
     }

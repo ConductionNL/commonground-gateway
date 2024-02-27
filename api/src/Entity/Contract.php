@@ -73,7 +73,7 @@ class Contract
 
         ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
-    private $id;
+    private ?UuidInterface $id = null;
 
     /**
      * @var Application The Application that has to sign this Contract

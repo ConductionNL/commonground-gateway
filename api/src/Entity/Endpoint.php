@@ -95,7 +95,7 @@ class Endpoint
 
         ORM\CustomIdGenerator(class: UuidGenerator::class)
     ]
-    private UuidInterface $id;
+    private ?UuidInterface $id = null;
 
     /**
      * @var string The name of this Application.
@@ -389,7 +389,7 @@ class Endpoint
     private Collection $entities;
 
     /**
-     * @var Gateway The gateway related to this Endpoint.
+     * @var Gateway|null The gateway related to this Endpoint.
      */
     #[
         Groups(['read', 'write']),
@@ -398,7 +398,7 @@ class Endpoint
             inversedBy: 'proxies'
         )
     ]
-    private Gateway $proxy;
+    private ?Gateway $proxy = null;
 
     /**
      * Constructor for creating an Endpoint. Use $entity to create an Endpoint for an Entity or
