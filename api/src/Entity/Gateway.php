@@ -768,6 +768,12 @@ class Gateway
     private $proxies;
 
     /**
+     * @Groups({"read", "write"})
+     * @ORM\ManyToMany(targetEntity=Endpoint::class, mappedBy="federationProxies")
+     */
+    private $federationEndpoints;
+
+    /**
      * Constructor for Gateway.
      *
      * @param array|null $configuration If not empty this array is used to call fromArray()
@@ -781,6 +787,7 @@ class Gateway
         if ($configuration) {
             $this->fromSchema($configuration);
         }
+        $this->federationEndpoints = new ArrayCollection();
     }
 
     /**
@@ -1407,6 +1414,33 @@ class Gateway
             if ($proxy->getProxy() === $this) {
                 $proxy->setProxy(null);
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Endpoint[]
+     */
+    public function getFederationEndpoints(): Collection
+    {
+        return $this->federationEndpoints;
+    }
+
+    public function addFederationEndpoint(Endpoint $federationEndpoint): self
+    {
+        if (!$this->federationEndpoints->contains($federationEndpoint)) {
+            $this->federationEndpoints[] = $federationEndpoint;
+            $federationEndpoint->addFederationProxy($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFederationEndpoint(Endpoint $federationEndpoint): self
+    {
+        if ($this->federationEndpoints->removeElement($federationEndpoint)) {
+            $federationEndpoint->removeFederationProxy($this);
         }
 
         return $this;
