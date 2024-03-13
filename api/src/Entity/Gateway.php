@@ -768,10 +768,13 @@ class Gateway
     private $proxies;
 
     /**
+     * @var Collection The endpoints for which this endpoint is a federated proxy.
+     *
+     * @MaxDepth(1)
      * @Groups({"read", "write"})
      * @ORM\ManyToMany(targetEntity=Endpoint::class, mappedBy="federationProxies")
      */
-    private $federationEndpoints;
+    private Collection $federationEndpoints;
 
     /**
      * Constructor for Gateway.

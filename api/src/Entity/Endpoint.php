@@ -341,10 +341,13 @@ class Endpoint
     private string $version = '0.0.0';
 
     /**
+     * @var Collection The proxies that can be used for federated calls.
+     *
+     * @MaxDepth(1)
      * @Groups({"read", "write"})
      * @ORM\ManyToMany(targetEntity=Gateway::class, inversedBy="federationEndpoints")
      */
-    private $federationProxies;
+    private Collection $federationProxies;
 
     /**
      * Constructor for creating an Endpoint. Use $entity to create an Endpoint for an Entity or
