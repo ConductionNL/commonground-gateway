@@ -1540,13 +1540,17 @@ class SynchronizationService
      * A function best used after resourceService->findSourceForUrl and/or before $this->findSyncBySource.
      * This function will get the uuid / int id from the end of an endpoint. This is the sourceId for a Synchronization.
      *
-     * @param string $endpoint The endpoint to get the SourceId from.
+     * @param string|null $endpoint The endpoint to get the SourceId from.
      * @param string|null $url The url used as back-up for SourceId if no proper SourceId can be found.
      *
-     * @return string|null The sourceId, will be equal to $url if end part of the endpoint isn't an uuid or integer.
+     * @return string|null The sourceId, will be equal to $url if end part of the endpoint isn't an uuid or integer. And will return null if $endpoint & $url ar both null.
      */
-    public function getSourceId(string &$endpoint, ?string $url = null): ?string
+    public function getSourceId(?string &$endpoint, ?string $url = null): ?string
     {
+        if ($endpoint === null) {
+            return $url;
+        }
+
         $explodedEndpoint = explode('/', $endpoint);
         $sourceId = end($explodedEndpoint);
         if (Uuid::isValid($sourceId) === true || is_int((int) $sourceId) === true) {

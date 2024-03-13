@@ -13,6 +13,7 @@ class MappingExtension extends AbstractExtension
             new TwigFunction('map', [MappingRuntime::class, 'map']),
             new TwigFunction('dotToObject', [MappingRuntime::class, 'dotToArray']),
             new TwigFunction('arrayValues', [MappingRuntime::class, 'arrayValues']),
+            new TwigFunction('getObject', [MappingRuntime::class, 'getObject']),
         ];
     }
 }

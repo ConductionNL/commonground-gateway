@@ -4,6 +4,7 @@ namespace App\Twig;
 
 use Adbar\Dot;
 use CommonGateway\CoreBundle\Service\MappingService;
+use CommonGateway\CoreBundle\Service\CacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Twig\Extension\RuntimeExtensionInterface;
 
@@ -11,11 +12,13 @@ class MappingRuntime implements RuntimeExtensionInterface
 {
     private MappingService $mappingService;
     private EntityManagerInterface $entityManager;
+    private CacheService $cacheService;
 
-    public function __construct(MappingService $mappingService, EntityManagerInterface $entityManager)
+    public function __construct(MappingService $mappingService, EntityManagerInterface $entityManager, CacheService $cacheService)
     {
         $this->entityManager = $entityManager;
         $this->mappingService = $mappingService;
+        $this->cacheService = $cacheService;
     }
 
     /**
@@ -65,5 +68,17 @@ class MappingRuntime implements RuntimeExtensionInterface
     public function arrayValues(array $array): array
     {
         return array_values($array);
+    }
+
+    /**
+     * Makes it possible to get a object with the cacheService in twig.
+     *
+     * @param string $id The id of the object to fetch.
+     *
+     * @return array The fetched object.
+     */
+    public function getObject(string $id): array
+    {
+        return $this->cacheService->getObject($id);
     }
 }
