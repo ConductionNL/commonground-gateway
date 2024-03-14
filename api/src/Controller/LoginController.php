@@ -48,8 +48,8 @@ class LoginController extends AbstractController
                 'last_name'  => $this->getUser()->getLastName(),
                 'name'       => $this->getUser()->getName(),
                 'email'      => $this->getUser()->getEmail(),
-                'person'        => $userService->getPersonForUser($this->getUser()), // Get person ObjectEntity (->Entity with function = person) by id
-                'organization'  => $userService->getOrganizationForUser($this->getUser()), // Get organization ObjectEntity (->Entity with function = organization) by id
+                'person'        => $this->getUser()->getPerson(), // Get person ObjectEntity (->Entity with function = person) by id
+                'organization'  => $this->getUser()->getOrganization(), // Get organization ObjectEntity (->Entity with function = organization) by id
             ];
             $result = json_encode($result);
         } else {
