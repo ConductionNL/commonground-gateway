@@ -139,7 +139,6 @@ class Database
     /**
      * @var string An uri used to connect to the database.
      *
-     * @Assert\Url
      * @Assert\NotNull
      *
      * @Groups({"read", "write"})
@@ -150,6 +149,8 @@ class Database
 
     /**
      * The organizations that use this Database.
+     *
+     * @Groups({"read", "write"})
      *
      * @MaxDepth(1)
      *
