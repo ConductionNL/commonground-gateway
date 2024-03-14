@@ -27,5 +27,3 @@ framework:
         routing:
             # Route your messages to the transports
             'App\Message\ActionMessage': async
-            'App\Message\NotificationMessage': async
-            'App\Message\SyncPageMessage': async
