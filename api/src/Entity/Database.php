@@ -3,12 +3,14 @@
 namespace App\Entity;
 
 use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\BooleanFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\DateFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\OrderFilter;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
-use App\Repository\OrganizationRepository;
+use App\Repository\DatabaseRepository;
+use DateTime;
 use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -20,28 +22,25 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\VarDumper\Cloner\Data;
 
 /**
- * This entity holds the information about an Organization.
+ * A schema that stores the information about a database the gateway can connect to, for storing data of one tenant.
  *
  * @ApiResource(
- *  normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
- *  denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
- *  itemOperations={
- *      "get"={"path"="/admin/organizations/{id}"},
- *      "put"={"path"="/admin/organizations/{id}"},
- *      "delete"={"path"="/admin/organizations/{id}"}
- *  },
- *  collectionOperations={
- *      "get"={"path"="/admin/organizations"},
- *      "post"={"path"="/admin/organizations"}
- *  }
- * )
+ *   normalizationContext={"groups"={"read"}, "enable_max_depth"=true},
+ *   denormalizationContext={"groups"={"write"}, "enable_max_depth"=true},
+ *   itemOperations={
+ *      "get"={"path"="/admin/databases/{id}"},
+ *      "put"={"path"="/admin/databases/{id}"},
+ *      "delete"={"path"="/admin/databases/{id}"}
+ *   },
+ *   collectionOperations={
+ *      "get"={"path"="/admin/databases"},
+ *      "post"={"path"="/admin/databases"}
+ *   }
+ *  )
  *
- * @ORM\HasLifecycleCallbacks
- *
- * @ORM\Entity(repositoryClass=OrganizationRepository::class)
+ * @ORM\Entity(repositoryClass=DatabaseRepository::class)
  *
  * @Gedmo\Loggable(logEntryClass="Conduction\CommonGroundBundle\Entity\ChangeLog")
  *
@@ -49,22 +48,22 @@ use Symfony\Component\VarDumper\Cloner\Data;
  * @ApiFilter(OrderFilter::class)
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class, properties={
- *     "name": "exact",
- *     "reference": "exact"
- * })
+ *      "name": "exact",
+ *      "reference": "exact"
+ *  })
  *
  * @UniqueEntity("reference")
  */
-class Organization
+class Database
 {
     /**
-     * @var UuidInterface The UUID identifier of this resource
+     * @var UuidInterface The UUID identifier of this object
      *
      * @example e2984465-190a-4562-829e-a8cca81aa35d
      *
-     * @Assert\Uuid
+     * @Groups({"read"})
      *
-     * @Groups({"read","read_secure"})
+     * @Assert\Uuid
      *
      * @ORM\Id
      *
@@ -77,7 +76,9 @@ class Organization
     private $id;
 
     /**
-     * @var string The name of this Organization.
+     * @var string The name of this Database.
+     *
+     * @example my_database
      *
      * @Gedmo\Versioned
      *
@@ -87,31 +88,46 @@ class Organization
      *
      * @Assert\NotNull
      *
-     * @Groups({"read","write"})
+     * @Groups({"read", "write"})
      *
      * @ORM\Column(type="string", length=255)
      */
     private string $name;
 
     /**
-     * @var string|null A description of this Organization.
+     * @var string|null The description of this Database.
+     *
+     * @ApiProperty(
+     *     attributes={
+     *         "openapi_context"={
+     *             "type"="string",
+     *             "example"="description"
+     *         }
+     *     }
+     * )
+     *
+     * @Assert\Type("string")
      *
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="text", nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, options={"default":null})
      */
     private ?string $description = null;
 
     /**
+     * The unique reference of this resource.
+     *
      * @Groups({"read", "write"})
      *
      * @Assert\NotNull
      *
-     * @ORM\Column(type="string", length=255, nullable=true, options={"default": null})
+     * @ORM\Column(type="string", length=255)
      */
-    private ?string $reference = null;
+    private string $reference;
 
     /**
+     * The version of this resource.
+     *
      * @Groups({"read", "write"})
      *
      * @Assert\NotNull
@@ -121,42 +137,25 @@ class Organization
     private string $version = '0.0.0';
 
     /**
-     * The database that this organization uses to store its objects.
+     * @var string An uri used to connect to the database.
+     *
+     * @Assert\Url
+     * @Assert\NotNull
      *
      * @Groups({"read", "write"})
      *
-     * @ORM\ManyToOne(targetEntity=Database::class, inversedBy="organizations")
-     *
-     * @MaxDepth(1)
+     * @ORM\Column(type="string", length=255)
      */
-    private ?Database $database = null;
+    private string $uri;
 
     /**
-     * @Groups({"read", "write"})
+     * The organizations that use this Database.
      *
      * @MaxDepth(1)
      *
-     * @ORM\OneToMany(targetEntity=User::class, mappedBy="organization", orphanRemoval=true)
+     * @ORM\OneToMany(targetEntity=Organization::class, mappedBy="database")
      */
-    private $users;
-
-    /**
-     * @Groups({"read", "write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\OneToMany(targetEntity=Application::class, mappedBy="organization", orphanRemoval=true)
-     */
-    private $applications;
-
-    /**
-     * @Groups({"read", "write"})
-     *
-     * @MaxDepth(1)
-     *
-     * @ORM\OneToMany(targetEntity=ObjectEntity::class, mappedBy="organization", orphanRemoval=true)
-     */
-    private $objectEntities;
+    private Collection $organizations;
 
     /**
      * @var Datetime The moment this resource was created
@@ -180,25 +179,24 @@ class Organization
      */
     private $dateModified;
 
-    /**
-     * @ORM\OneToMany(targetEntity=Template::class, mappedBy="organization", orphanRemoval=true)
-     */
-    private $templates;
-
     public function __construct()
     {
-        $this->users = new ArrayCollection();
-        $this->templates = new ArrayCollection();
+        $this->organizations = new ArrayCollection();
+    }
+
+    public function __toString()
+    {
+        return $this->getName();
     }
 
     /**
-     * Create or update this Organization from an external schema array.
+     * Create or update this Database from an external schema array.
      *
-     * This function is used to update and create organizations form organization.json objects.
+     * This function is used to update and create databases form database.json objects.
      *
      * @param array $schema The schema to load.
      *
-     * @return $this This Organization.
+     * @return $this This Database.
      */
     public function fromSchema(array $schema): self
     {
@@ -212,33 +210,31 @@ class Organization
 
         array_key_exists('title', $schema) ? $this->setName($schema['title']) : '';
         array_key_exists('description', $schema) ? $this->setDescription($schema['description']) : '';
+        array_key_exists('uri', $schema) ? $this->setUri($schema['uri']) : '';
 
         return $this;
     }
 
     /**
-     * Convert this Organization to a schema.
+     * Convert this Gateway to a schema.
      *
      * @return array Schema array.
      */
     public function toSchema(): array
     {
+        // Do not return jwt, secret, password or apikey this way!
         return [
             '$id'                            => $this->getReference(), //@todo dit zou een interne uri verwijzing moeten zijn maar hebben we nog niet
-            '$schema'                        => 'https://docs.commongateway.nl/schemas/Gateway.schema.json',
+            '$schema'                        => 'https://docs.commongateway.nl/schemas/Database.schema.json',
             'title'                          => $this->getName(),
             'description'                    => $this->getDescription(),
             'version'                        => $this->getVersion(),
             'name'                           => $this->getName(),
+            'uri'                            => $this->getUri(),
         ];
     }
 
-    public function __toString()
-    {
-        return $this->getName();
-    }
-
-    public function getId(): ?UuidInterface
+    public function getId()
     {
         return $this->id;
     }
@@ -279,7 +275,7 @@ class Organization
         return $this->reference;
     }
 
-    public function setReference(?string $reference): self
+    public function setReference(string $reference): self
     {
         $this->reference = $reference;
 
@@ -291,79 +287,49 @@ class Organization
         return $this->version;
     }
 
-    public function setVersion(?string $version): self
+    public function setVersion(string $version): self
     {
         $this->version = $version;
 
         return $this;
     }
 
-    public function getDatabase(): ?Database
+    public function getUri(): ?string
     {
-        return $this->database;
+        return $this->uri;
     }
 
-    public function setDatabase(?Database $database): self
+    public function setUri(?string $uri): self
     {
-        $this->database = $database;
+        $this->uri = $uri;
 
         return $this;
     }
 
     /**
-     * @return Collection|Application[]
+     * @return Collection|Organization[]
      */
-    public function getApplications(): Collection
+    public function getOrganizations(): Collection
     {
-        return $this->applications;
+        return $this->organizations;
     }
 
-    public function addApplication(Application $application): self
+    public function addOrganization(Organization $organization): self
     {
-        if (!$this->applications->contains($application)) {
-            $this->applications[] = $application;
-            $application->setOrganization($this);
+        if (!$this->organizations->contains($organization)) {
+            $this->organizations[] = $organization;
+            $organization->setDatabase($this);
         }
 
         return $this;
     }
 
-    public function removeApplication(Application $application): self
+    public function removeOrganization(Organization $organization): self
     {
-        if ($this->applications->removeElement($application)) {
+        if ($this->organizations->removeElement($organization)) {
             // set the owning side to null (unless already changed)
-            if ($application->getOrganization() === $this) {
-                $application->setOrganization(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|User[]
-     */
-    public function getUsers(): Collection
-    {
-        return $this->users;
-    }
-
-    public function addUser(User $user): self
-    {
-        if (!$this->users->contains($user)) {
-            $this->users[] = $user;
-            $user->setOrganization($this);
-        }
-
-        return $this;
-    }
-
-    public function removeUser(User $user): self
-    {
-        if ($this->users->removeElement($user)) {
-            // set the owning side to null (unless already changed)
-            if ($user->getOrganization() === $this) {
-                $user->setOrganization(null);
+            if ($organization->getDatabase() === $this) {
+                $organization->setDatabase(null);
             }
         }
 
@@ -390,36 +356,6 @@ class Organization
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Template[]
-     */
-    public function getTemplates(): Collection
-    {
-        return $this->templates;
-    }
-
-    public function addTemplate(Template $template): self
-    {
-        if (!$this->templates->contains($template)) {
-            $this->templates[] = $template;
-            $template->setOrganization($this);
-        }
-
-        return $this;
-    }
-
-    public function removeTemplate(Template $template): self
-    {
-        if ($this->templates->removeElement($template)) {
-            // set the owning side to null (unless already changed)
-            if ($template->getOrganization() === $this) {
-                $template->setOrganization(null);
-            }
-        }
 
         return $this;
     }
