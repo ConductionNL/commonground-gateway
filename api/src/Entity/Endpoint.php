@@ -341,6 +341,15 @@ class Endpoint
     private string $version = '0.0.0';
 
     /**
+     * @var Collection The proxies that can be used for federated calls.
+     *
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\ManyToMany(targetEntity=Gateway::class, inversedBy="federationEndpoints")
+     */
+    private Collection $federationProxies;
+
+    /**
      * Constructor for creating an Endpoint. Use $entity to create an Endpoint for an Entity or
      * use $source to create an Endpoint for a source, a proxy Endpoint.
      *
@@ -357,6 +366,7 @@ class Endpoint
         $this->collections = new ArrayCollection();
         $this->properties = new ArrayCollection();
         $this->entities = new ArrayCollection();
+        $this->federationProxies = new ArrayCollection();
 
         if (!$entity && !$source && isset($configuration['entities']) === false) {
             return;
@@ -959,6 +969,30 @@ class Endpoint
     public function setVersion(?string $version): self
     {
         $this->version = $version;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Gateway[]
+     */
+    public function getFederationProxies(): Collection
+    {
+        return $this->federationProxies;
+    }
+
+    public function addFederationProxy(Gateway $federationProxy): self
+    {
+        if (!$this->federationProxies->contains($federationProxy)) {
+            $this->federationProxies[] = $federationProxy;
+        }
+
+        return $this;
+    }
+
+    public function removeFederationProxy(Gateway $federationProxy): self
+    {
+        $this->federationProxies->removeElement($federationProxy);
 
         return $this;
     }
