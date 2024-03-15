@@ -52,60 +52,23 @@ use Twig\Environment;
 class ObjectEntityService
 {
     private Security $security;
-    private Request $request;
-    private AuthorizationService $authorizationService;
-    private ApplicationService $applicationService;
-//    private ValidatorService $validatorService;
     private SessionInterface $session;
-    private ?EavService $eavService;
     private EntityManagerInterface $entityManager;
-    private CommonGroundService $commonGroundService;
-    private ResponseService $responseService;
-    public FunctionService $functionService;
-    private MessageBusInterface $messageBus;
-    private GatewayService $gatewayService;
-    private LogService $logService;
     private EventDispatcherInterface $eventDispatcher;
     public array $notifications;
-    private Environment $twig;
     private SymfonyStyle $io;
-    private TranslationService $translationService;
 
     public function __construct(
         Security $security,
-        RequestStack $requestStack,
-        AuthorizationService $authorizationService,
-        ApplicationService $applicationService,
-//        ValidatorService $validatorService,
         SessionInterface $session,
         EntityManagerInterface $entityManager,
-        CommonGroundService $commonGroundService,
-        ResponseService $responseService,
-        CacheInterface $cache,
-        MessageBusInterface $messageBus,
-        GatewayService $gatewayService,
-        TranslationService $translationService,
-        LogService $logService,
-        EventDispatcherInterface $eventDispatcher,
-        Environment $twig
+        EventDispatcherInterface $eventDispatcher
     ) {
         $this->security = $security;
-        $this->request = $requestStack->getCurrentRequest() ?: new Request();
-        $this->authorizationService = $authorizationService;
-        $this->applicationService = $applicationService;
-//        $this->validatorService = $validatorService;
         $this->session = $session;
         $this->entityManager = $entityManager;
-        $this->commonGroundService = $commonGroundService;
-        $this->responseService = $responseService;
-        $this->functionService = new FunctionService($cache, $commonGroundService, $this);
-        $this->messageBus = $messageBus;
-        $this->gatewayService = $gatewayService;
-        $this->translationService = $translationService;
-        $this->logService = $logService;
         $this->notifications = [];
         $this->eventDispatcher = $eventDispatcher;
-        $this->twig = $twig;
     }
 
     /**
@@ -214,64 +177,6 @@ class ObjectEntityService
                 );
             }
         }
-    }
-
-    /**
-     * Add services for using the handleObject function todo: temp fix untill we no longer use these services here.
-     *
-     * @param EavService $eavService
-     *
-     * @return $this
-     * @deprecated
-     */
-    public function addServices(EavService $eavService): ObjectEntityService
-    {
-        // EavService uses the ObjectEntityService for the handleOwner and checkOwner function.
-        // The only reason we need this service in this ObjectEntityService is for the handleObject function,
-        // because we use an 'old' way to create, update and get ObjectEntities there.
-        $this->eavService = $eavService;
-
-        return $this;
-    }
-
-    /**
-     * A function we want to call when doing a post or put, to set the owner of an ObjectEntity, if it hasn't one already.
-     *
-     * @param ObjectEntity $result The object entity
-     * @param string|null  $owner  The owner of the object - defaulted to owner
-     *
-     * @return ObjectEntity|array
-     * @deprecated
-     */
-    public function handleOwner(ObjectEntity $result, ?string $owner = 'owner')
-    {
-        $user = $this->security->getUser();
-
-        if ($user && !$result->getOwner()) {
-            if ($owner == 'owner') {
-                $result->setOwner($user->getUserIdentifier());
-            } else {
-                // $owner is allowed to be null or a valid uuid of a UC user
-                if ($owner !== null) {
-                    if (!Uuid::isValid($owner)) {
-                        $errorMessage = '@owner ('.$owner.') is not a valid uuid.';
-                    } elseif (!$this->commonGroundService->isResource($this->commonGroundService->cleanUrl(['component' => 'uc', 'type' => 'users', 'id' => $owner]))) {
-                        $errorMessage = '@owner ('.$owner.') is not an existing user uuid.';
-                    }
-                    if (isset($errorMessage)) {
-                        return [
-                            'message' => $errorMessage,
-                            'type'    => 'Bad Request',
-                            'path'    => $result->getEntity()->getName(),
-                            'data'    => ['@owner' => $owner],
-                        ];
-                    }
-                }
-                $result->setOwner($owner);
-            }
-        }
-
-        return $result;
     }
 
     /**

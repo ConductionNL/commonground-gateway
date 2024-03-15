@@ -292,142 +292,10 @@ class UserController extends AbstractController
         return $userArray;
     }
 
-    private function getActiveOrganization(array $user, array $organizations): ?string
-    {
-        if ($user['organization']) {
-            return $user['organization'];
-        }
-        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has
-        if (count($organizations) > 0) {
-            return $organizations[0];
-        }
-        // If we still have no organization, get the organization from the application
-        if ($this->session->get('application')) {
-            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
-            if (!empty($application) && $application->getOrganization()) {
-                return $application->getOrganization();
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Get all the child organizations for an organization.
-     *
-     * @param array               $organizations
-     * @param string              $organization
-     * @param CommonGroundService $commonGroundService
-     * @param FunctionService     $functionService
-     *
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     *
-     * @return array
-     */
-    private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
-    {
-        if ($organization = $functionService->getOrganizationFromCache($organization)) {
-            if (!empty($organization['subOrganizations']) && count($organization['subOrganizations']) > 0) {
-                foreach ($organization['subOrganizations'] as $subOrganization) {
-                    if (!in_array($subOrganization['@id'], $organizations)) {
-                        $organizations[] = $subOrganization['@id'];
-                        $this->getSubOrganizations($organizations, $subOrganization['@id'], $commonGroundService, $functionService);
-                    }
-                }
-            }
-        }
-
-        return $organizations;
-    }
-
-    /**
-     * Get al the parent organizations for an organization.
-     *
-     * @param array               $organizations
-     * @param string              $organization
-     * @param CommonGroundService $commonGroundService
-     * @param FunctionService     $functionService
-     *
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     *
-     * @return array
-     */
-    private function getParentOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
-    {
-        if ($organization = $functionService->getOrganizationFromCache($organization)) {
-            if (array_key_exists('parentOrganization', $organization) && $organization['parentOrganization'] != null
-                && !in_array($organization['parentOrganization']['@id'], $organizations)) {
-                $organizations[] = $organization['parentOrganization']['@id'];
-                $organizations = $this->getParentOrganizations($organizations, $organization['parentOrganization']['@id'], $commonGroundService, $functionService);
-            }
-        }
-
-        return $organizations;
-    }
-
-    /**
-     * @Route("users/request_password_reset", methods={"POST"})
-     * @Route("api/users/request_password_reset", methods={"POST"})
-     */
-    public function requestResetAction(Request $request, CommonGroundService $commonGroundService)
-    {
-        $data = json_decode($request->getContent(), true);
-        $users = $commonGroundService->getResourceList(['component' => 'uc', 'type' => 'users'], ['username' => urlencode($data['username'])])['hydra:member'];
-        if (count($users) > 0) {
-            $user = $users[0];
-        } else {
-            return new Response(json_encode(['username' =>$data['username']]), 200, ['Content-type' => 'application/json']);
-        }
-        $this->authenticationService->sendTokenMail($user, 'Je wachtwoord herstellen', $request->headers->get('Referer', $request->headers->get('referer')));
-
-        return new Response(json_encode(['username' =>$data['username']]), 200, ['Content-type' => 'application/json']);
-    }
-
-    /**
-     * @Route("users/reset_password", methods={"POST"})
-     * @Route("api/users/reset_password", methods={"POST"})
-     */
-    public function resetAction(Request $request, CommonGroundService $commonGroundService)
-    {
-        $data = json_decode($request->getContent(), true);
-        if (!isset($data['username']) || !isset($data['password']) || !isset($data['token'])) {
-            $status = 400;
-            $user = [
-                'message' => 'Data missing',
-                'type'    => 'error',
-                'path'    => 'users/reset_password',
-                'data'    => [],
-            ];
-            isset($data['username']) ?? $user['data']['username'] = null;
-            isset($data['password']) ?? $user['data']['password'] = null;
-            isset($data['token']) ?? $user['data']['token'] = null;
-
-            return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
-        }
-
-        try {
-            $user = $commonGroundService->createResource(['username' => $data['username'], 'password' => $data['password'], 'token' => $data['token']], ['component' => 'uc', 'type' => 'users/token']);
-            $status = 200;
-            $user['username'] = $data['username'];
-        } catch (ClientException $exception) {
-            $status = 400;
-            $user = [
-                'message' => 'Invalid token, username or password',
-                'type'    => 'error',
-                'path'    => 'users/reset_password',
-                'data'    => ['username' => $data['username'], 'password' => $data['password'], 'token'=>$data['token']],
-            ];
-        }
-
-        return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
-    }
-
     /**
      * @Route("api/users/logout", methods={"POST", "GET"})
      */
-    public function ApiLogoutAction(Request $request, CommonGroundService $commonGroundService)
+    public function ApiLogoutAction(Request $request)
     {
         $request->getSession()->clear();
         $request->getSession()->invalidate();
@@ -450,7 +318,7 @@ class UserController extends AbstractController
         return $response;
     }
 
-    public function ApiMeAction(Request $request, CommonGroundService $commonGroundService)
+    public function ApiMeAction(Request $request)
     {
         $token = substr($request->headers->get('Authorization'), strlen('Bearer '));
         if (!$token) {
@@ -488,18 +356,6 @@ class UserController extends AbstractController
         }
 
         return new Response(json_encode($user), $status, ['Content-type' => 'application/json']);
-    }
-
-    /**
-     * @Route("login/digispoof")
-     */
-    public function DigispoofAction(Request $request, CommonGroundService $commonGroundService)
-    {
-        $redirect = $commonGroundService->cleanUrl(['component' => 'ds']);
-
-        $responseUrl = $request->getSchemeAndHttpHost().$this->generateUrl('app_user_digispoof');
-
-        return $this->redirect($redirect.'?responseUrl='.$responseUrl.'&backUrl='.$request->headers->get('referer'));
     }
 
     /**
