@@ -141,7 +141,7 @@ class Database
      *
      * @Assert\NotNull
      *
-     * @Groups({"read", "read_secure" , "write"})
+     * @Groups({"write"})
      *
      * @ORM\Column(type="string", length=255)
      */
