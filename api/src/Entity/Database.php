@@ -73,7 +73,7 @@ class Database
      *
      * @ORM\CustomIdGenerator(class="Ramsey\Uuid\Doctrine\UuidGenerator")
      */
-    private $id;
+    private UuidInterface $id;
 
     /**
      * @var string The name of this Database.
@@ -159,7 +159,7 @@ class Database
     private Collection $organizations;
 
     /**
-     * @var Datetime The moment this resource was created
+     * @var DateTimeInterface|null The moment this resource was created
      *
      * @Groups({"read"})
      *
@@ -167,10 +167,10 @@ class Database
      *
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private $dateCreated;
+    private ?DateTimeInterface $dateCreated;
 
     /**
-     * @var Datetime The moment this resource was last Modified
+     * @var DateTimeInterface|null The moment this resource was last Modified
      *
      * @Groups({"read"})
      *
@@ -178,7 +178,7 @@ class Database
      *
      * @ORM\Column(type="datetime", nullable=true)
      */
-    private $dateModified;
+    private ?DateTimeInterface $dateModified;
 
     public function __construct()
     {
