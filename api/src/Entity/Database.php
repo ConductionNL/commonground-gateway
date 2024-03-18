@@ -180,14 +180,19 @@ class Database
      */
     private ?DateTimeInterface $dateModified;
 
-    public function __construct()
-    {
-        $this->organizations = new ArrayCollection();
-    }
-
+    /**
+     * Return the name of this Database when cast to a string.
+     *
+     * @return string
+     */
     public function __toString(): string
     {
         return $this->getName();
+    }
+
+    public function __construct()
+    {
+        $this->organizations = new ArrayCollection();
     }
 
     /**
