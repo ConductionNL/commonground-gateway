@@ -185,7 +185,7 @@ class Database
         $this->organizations = new ArrayCollection();
     }
 
-    public function __toString()
+    public function __toString(): string
     {
         return $this->getName();
     }
