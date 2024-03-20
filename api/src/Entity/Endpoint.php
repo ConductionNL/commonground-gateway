@@ -136,17 +136,14 @@ class Endpoint
      */
     private ?string $tag = null;
 
-    // @TODO remove totally?
-    // /**
-    //  * @var string The type of this Endpoint.
-    //  *
-    //  * @Assert\NotNull
-    //  * @Assert\Choice({"gateway-endpoint", "entity-route", "entity-endpoint", "documentation-endpoint"})
-    //  *
-    //  * @Groups({"read", "write"})
-    //  * @ORM\Column(type="string")
-    //  */
-    // private string $type;
+     /**
+      * @var bool Whether or not the proxy should overrule the authentication from the request.
+      *
+      *
+      * @Groups({"read", "write"})
+      * @ORM\Column(type="bool", default=false)
+      */
+     private bool $proxyOverrulesAuthentication = false;
 
     /**
      * @var array|null The path of this Endpoint.
@@ -615,18 +612,6 @@ class Endpoint
         return $this;
     }
 
-    // public function getType(): ?string
-    // {
-    //     return $this->type;
-    // }
-
-    // public function setType(string $type): self
-    // {
-    //     $this->type = $type;
-
-    //     return $this;
-    // }
-
     public function getPath(): ?array
     {
         return $this->path;
@@ -993,6 +978,18 @@ class Endpoint
     public function removeFederationProxy(Gateway $federationProxy): self
     {
         $this->federationProxies->removeElement($federationProxy);
+
+        return $this;
+    }
+
+    public function getProxyOverrulesAuthentication(): bool
+    {
+        return $this->proxyOverrulesAuthentication;
+    }
+
+    public function setProxyOverrulesAuthentication(bool $proxyOverrulesAuthentication): self
+    {
+        $this->proxyOverrulesAuthentication = $proxyOverrulesAuthentication;
 
         return $this;
     }
