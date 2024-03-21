@@ -44,15 +44,6 @@ class ApplicationService
             }
         }
 
-        // If an api-key is used for authentication we already know which application is used
-        if ($this->session->has('apiKeyApplication')) {
-            $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('apiKeyApplication')]);
-            if ($application !== null) {
-                $this->session->set('application', $application->getId()->toString());
-                return $application;
-            }
-        }
-
         // Find application using the publicKey
         $public = ($this->request->headers->get('public') ?? $this->request->query->get('public'));
         if (empty($public) === false) {

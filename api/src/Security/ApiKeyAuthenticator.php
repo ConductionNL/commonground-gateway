@@ -101,7 +101,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
         }
 
         // Set apiKey Application id in session
-        $this->session->set('apiKeyApplication', $application->getId()->toString());
+        $this->session->set('application', $application->getId()->toString());
 
         // Set organization id and user id in session
         $this->session->set('user', $user->getId()->toString());
