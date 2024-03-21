@@ -3,6 +3,7 @@
 namespace App\Security;
 
 use App\Entity\Application;
+use App\Entity\Endpoint;
 use App\Entity\User;
 use App\Security\User\AuthenticationUser;
 use Doctrine\ORM\EntityManagerInterface;
@@ -37,8 +38,18 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
      */
     public function supports(Request $request): ?bool
     {
-        return $request->headers->has('Authorization') &&
-            strpos($request->headers->get('Authorization'), 'Bearer') === false;
+        if($request->headers->has('Authorization') === true &&
+            strpos($request->headers->get('Authorization'), 'Bearer') === false) {
+
+            $pathTemp = explode('/api/', $request->getPathInfo(), 2);
+            $endpoint = null;
+            if(count($pathTemp) > 1) {
+                $path = $pathTemp[1];
+                $endpoint = $this->entityManager->getRepository(Endpoint::class)->findByMethodRegex($request->getMethod(), $path);
+            }
+            return ($endpoint instanceof Endpoint === false || $endpoint->getProxyOverrulesAuthentication() == false);
+        }
+        return false;
     }
 
     private function prefixRoles(array $roles): array
@@ -129,6 +140,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
             'organization' => $user->getOrganization()->getId()->toString(),
             'roles'        => $roleArray['roles'],
         ];
+
 
         return new Passport(
             new UserBadge($userArray['id'], function ($userIdentifier) use ($userArray) {

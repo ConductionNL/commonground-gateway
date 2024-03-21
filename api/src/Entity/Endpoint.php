@@ -139,11 +139,10 @@ class Endpoint
      /**
       * @var bool Whether or not the proxy should overrule the authentication from the request.
       *
-      *
       * @Groups({"read", "write"})
-      * @ORM\Column(type="bool", default=false)
+      * @ORM\Column(type="boolean", options={"default":false}, nullable=true)
       */
-     private bool $proxyOverrulesAuthentication = false;
+     private ?bool $proxyOverrulesAuthentication = false;
 
     /**
      * @var array|null The path of this Endpoint.
@@ -982,7 +981,7 @@ class Endpoint
         return $this;
     }
 
-    public function getProxyOverrulesAuthentication(): bool
+    public function getProxyOverrulesAuthentication(): ?bool
     {
         return $this->proxyOverrulesAuthentication;
     }
