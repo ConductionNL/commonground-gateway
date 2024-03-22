@@ -974,4 +974,23 @@ class ObjectEntityRepository extends ServiceEntityRepository
         // todo, probably add more special characters to replace...
         return str_replace('-', 'Dash', $key);
     }
+
+    /**
+     * Finds all object entities with references.
+     * 
+     * @param array $references The entity references
+     * 
+     * @return mixed ObjectEntities
+     */
+    public function findByReferences(array $references)
+    {
+        $qb = $this->createQueryBuilder('o')
+            ->innerJoin('o.entity', 'e')
+            ->where('e.reference IN (:references)')
+            ->setParameter('references', $references);
+
+        $query = $qb->getQuery();
+
+        return $query->getResult();
+    }//end findByReferences()
 }
