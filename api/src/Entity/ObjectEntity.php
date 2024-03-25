@@ -1248,6 +1248,9 @@ class ObjectEntity
                     }
                 } elseif (count($valueObject->getObjects()) === 0) {
                     $array[$attribute->getName()] = [];
+                    if (empty($valueObject->getArrayValue()) === false) {
+                        $array[$attribute->getName()] = $valueObject->getArrayValue();
+                    }
                 } else {
                     $currentObjects[] = $valueObject->getObjects()->toArray();
                     foreach ($valueObject->getObjects() as $object) {
