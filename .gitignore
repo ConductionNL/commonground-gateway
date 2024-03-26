@@ -22,7 +22,6 @@ gatsby/npm-debug.log
 .cache/
 node_modules/
 public/
-!public/security.txt
 npm-debug.log
 .DS_Store
 .idea
