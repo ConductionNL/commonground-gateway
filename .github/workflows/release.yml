@@ -168,6 +168,10 @@ jobs:
               run: docker images
             - name: Up the images
               run: docker compose up -d
+            - name: Wait for the containers to run
+              run: sleep 20
+            - name: Dump logs
+              run: docker compose logs
             - name: Check images with Composer Audit
               run: docker compose exec php composer audit
     Unit:
@@ -333,6 +337,8 @@ jobs:
               run: docker compose up -d
             - name: Wait for the containers to run
               run: sleep 20
+            - name: Dump logs
+              run: docker compose logs
             - name: Database Update
               run: docker-compose exec -T php bin/console doctrine:schema:update --force
     Snyk:
