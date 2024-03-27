@@ -140,10 +140,11 @@ jobs:
                   export RELEASE=$VERSION.$(date --utc +%y%m%d);
                   echo "RELEASE=$RELEASE" >> $GITHUB_ENV;
                   echo "REGISTRY_BASE=$REGISTRY" >> $GITHUB_ENV;
-            -   name: Setting APP_NAME
+            -   name: Create vendor folder
                 run: |
-                    export NAME=$(grep APP_NAME= .env | cut -d '=' -f2)
-                    echo "APP_NAME=$NAME" >> $GITHUB_ENV
+                    mkdir api/vendor
+                    chmod +777 api/vendor
+                    chmod +777 -R api/public
             -   name: Print app name
                 run: echo "APP_NAME = $APP_NAME"
             -   name: Setting APP_ENV to dev
@@ -207,12 +208,11 @@ jobs:
                   export RELEASE=$VERSION.$(date --utc +%y%m%d);
                   echo "RELEASE=$RELEASE" >> $GITHUB_ENV;
                   echo "REGISTRY_BASE=$REGISTRY" >> $GITHUB_ENV;
-            -   name: Setting APP_NAME
+            -   name: Create vendor folder
                 run: |
-                    export NAME=$(grep APP_NAME= .env | cut -d '=' -f2)
-                    echo "APP_NAME=$NAME" >> $GITHUB_ENV
-            -   name: Print app name
-                run: echo "APP_NAME = $APP_NAME"
+                    mkdir api/vendor
+                    chmod +777 api/vendor
+                    chmod +777 -R api/public
             -   name: Setting APP_ENV to dev
                 run: |
                     echo "APP_ENV=dev">> $GITHUB_ENV
@@ -307,12 +307,11 @@ jobs:
                   export RELEASE=$VERSION.$(date --utc +%y%m%d);
                   echo "RELEASE=$RELEASE" >> $GITHUB_ENV;
                   echo "REGISTRY_BASE=$REGISTRY" >> $GITHUB_ENV;
-            -   name: Setting APP_NAME
+            -   name: Create vendor folder
                 run: |
-                    export NAME=$(grep APP_NAME= .env | cut -d '=' -f2)
-                    echo "APP_NAME=$NAME" >> $GITHUB_ENV
-            -   name: Print app name
-                run: echo "APP_NAME = $APP_NAME"
+                    mkdir api/vendor
+                    chmod +777 api/vendor
+                    chmod +777 -R api/public
             -   name: Setting APP_ENV to dev
                 run: |
                     echo "APP_ENV=dev">> $GITHUB_ENV
@@ -384,12 +383,11 @@ jobs:
                   export RELEASE=$VERSION.$(date --utc +%y%m%d);
                   echo "RELEASE=$RELEASE" >> $GITHUB_ENV;
                   echo "REGISTRY_BASE=$REGISTRY" >> $GITHUB_ENV;
-            -   name: Setting APP_NAME
+            -   name: Create vendor folder
                 run: |
-                    export NAME=$(grep APP_NAME= .env | cut -d '=' -f2)
-                    echo "APP_NAME=$NAME" >> $GITHUB_ENV
-            -   name: Print app name
-                run: echo "APP_NAME = $APP_NAME"
+                    mkdir api/vendor
+                    chmod +777 api/vendor
+                    chmod +777 -R api/public
             -   name: Setting APP_ENV to dev
                 run: |
                     echo "APP_ENV=dev">> $GITHUB_ENV
