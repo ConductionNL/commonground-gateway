@@ -7,7 +7,6 @@ on:
             - development
             - version-*
             - feature-*
-            - fix/security-fixes
     pull_request:
         branches:
             - main
