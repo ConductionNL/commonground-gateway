@@ -1176,7 +1176,7 @@ class Gateway
 
     public function setLoggingConfig(array $loggingConfig): self
     {
-        $this->loggingConfig = array_merge($loggingConfig);
+        $this->loggingConfig = array_merge($this->loggingConfig, $loggingConfig);
 
         return $this;
     }
