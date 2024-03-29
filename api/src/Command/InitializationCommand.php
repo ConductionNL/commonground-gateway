@@ -69,6 +69,7 @@ class InitializationCommand extends Command
             ->addOption('skip-schema', 'sa', InputOption::VALUE_OPTIONAL, 'Don\'t update schema\'s during upgrade', false)
             ->addOption('skip-script', 'sp', InputOption::VALUE_OPTIONAL, 'Don\'t execute installation scripts during upgrade', false)
             ->addOption('unsafe', 'u', InputOption::VALUE_OPTIONAL, 'Delete data that is not present in the test data', false)
+            ->addOption('cache-warmup', 'c', InputOption::VALUE_OPTIONAL, 'Include running a cache:warmup at the end', false)
             // the short description shown while running "php bin/console list"
             ->setDescription('Facilitates the initialization of the gateway and checks configuration')
 
@@ -89,6 +90,7 @@ class InitializationCommand extends Command
         $config['skip-schema'] = $input->getOption('skip-schema');
         $config['skip-script'] = $input->getOption('skip-script');
         $config['unsafe'] = $input->getOption('unsafe');
+        $config['cache-warmup'] = $input->getOption('cache-warmup');
 
         // Throw the event
         $io->info('Throwing commongateway.pre.initialization event');
