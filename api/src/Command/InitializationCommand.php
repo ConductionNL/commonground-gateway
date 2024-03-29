@@ -300,7 +300,6 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
         // In dev we also want to run the installer
         //if( getenv("APP_ENV") == "dev"){
         $io->section('Running installer');
-        echo json_encode($config);
         $this->installationService->update($config, $io);
         //}
 
