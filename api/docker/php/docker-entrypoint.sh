@@ -52,7 +52,7 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 
 	if [ "$APP_INIT" != 'false' ]; then
 		echo "Initializing the gateway"
-		bin/console commongateway:initialize
+		bin/console commongateway:initialize --cache-warmup
 	fi
 
 fi

@@ -66,10 +66,11 @@ class InitializationCommand extends Command
         $this
             ->addOption('bundle', 'b', InputOption::VALUE_OPTIONAL, 'The bundle that you want to install (install only that bundle)')
             ->addOption('data', 'd', InputOption::VALUE_OPTIONAL, 'Load (example) data set(s) from the bundle', false)
-            ->addOption('skip-schema', 'sa', InputOption::VALUE_OPTIONAL, 'Don\'t update schema\'s during upgrade', false)
-            ->addOption('skip-script', 'sp', InputOption::VALUE_OPTIONAL, 'Don\'t execute installation scripts during upgrade', false)
-            ->addOption('unsafe', 'u', InputOption::VALUE_OPTIONAL, 'Delete data that is not present in the test data', false)
+            ->addOption('skip-schema', 's', InputOption::VALUE_OPTIONAL, 'Don\'t update schema\'s during upgrade', false)
+            ->addOption('skip-script', 'x', InputOption::VALUE_OPTIONAL, 'Don\'t execute installation scripts during upgrade', false)
             ->addOption('cache-warmup', 'c', InputOption::VALUE_OPTIONAL, 'Include running a cache:warmup at the end', false)
+            //todo?
+//            ->addOption('unsafe', 'u', InputOption::VALUE_OPTIONAL, 'Delete data that is not present in the test data', false)
             // the short description shown while running "php bin/console list"
             ->setDescription('Facilitates the initialization of the gateway and checks configuration')
 
@@ -86,11 +87,21 @@ class InitializationCommand extends Command
 
         $config = [];
         $config['bundle'] = $input->getOption('bundle');
-        $config['data'] = $input->getOption('data');
-        $config['skip-schema'] = $input->getOption('skip-schema');
-        $config['skip-script'] = $input->getOption('skip-script');
-        $config['unsafe'] = $input->getOption('unsafe');
-        $config['cache-warmup'] = $input->getOption('cache-warmup');
+        if ($input->getOption('data') !== false) {
+            $config['data'] = true;
+        }
+        if ($input->getOption('skip-schema') !== false) {
+            $config['skip-schema'] = true;
+        }
+        if ($input->getOption('skip-script') !== false) {
+            $config['skip-script'] = true;
+        }
+        if ($input->getOption('cache-warmup') !== false) {
+            $config['cache-warmup'] = true;
+        }
+//        if ($input->getOption('unsafe') !== false) {
+//            $config['unsafe'] = true;
+//        }
 
         // Throw the event
         $io->info('Throwing commongateway.pre.initialization event');
@@ -289,6 +300,7 @@ f0FqX4PQ1dBOwwk49vVmza2HcTs=
         // In dev we also want to run the installer
         //if( getenv("APP_ENV") == "dev"){
         $io->section('Running installer');
+        echo json_encode($config);
         $this->installationService->update($config, $io);
         //}
 
