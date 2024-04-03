@@ -31,9 +31,6 @@
     "brick/reflection": {
         "version": "0.4.1"
     },
-    "common-gateway/woo-bundle": {
-        "version": "dev-feature/GW-1596/test-symfony54"
-    },
     "commongateway/corebundle": {
         "version": "dev-master"
     },
@@ -366,9 +363,6 @@
     "ralouphie/getallheaders": {
         "version": "3.0.3"
     },
-    "ramsey/collection": {
-        "version": "2.0.0"
-    },
     "ramsey/uuid": {
         "version": "4.7.5"
     },
@@ -446,6 +440,18 @@
     },
     "spomky-labs/aes-key-wrap": {
         "version": "v6.0.0"
+    },
+    "stof/doctrine-extensions-bundle": {
+        "version": "1.11",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "main",
+            "version": "1.2",
+            "ref": "e805aba9eff5372e2d149a9ff56566769e22819d"
+        },
+        "files": [
+            "config/packages/stof_doctrine_extensions.yaml"
+        ]
     },
     "symfony/amqp-messenger": {
         "version": "v5.3.14"
@@ -721,6 +727,19 @@
     },
     "symfony/string": {
         "version": "v5.3.3"
+    },
+    "symfony/translation": {
+        "version": "5.4",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "main",
+            "version": "5.3",
+            "ref": "e28e27f53663cc34f0be2837aba18e3a1bef8e7b"
+        },
+        "files": [
+            "config/packages/translation.yaml",
+            "translations/.gitignore"
+        ]
     },
     "symfony/twig-bridge": {
         "version": "v5.3.4"
