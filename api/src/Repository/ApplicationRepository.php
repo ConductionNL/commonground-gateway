@@ -21,24 +21,21 @@ class ApplicationRepository extends ServiceEntityRepository
     }
 
     /**
-     * @param string $domain
+     * Find all applications that have the given $domain in there list of domains.
      *
-     * @throws NonUniqueResultException
+     * @param string $domain A domain to search with.
      *
-     * @return Application|null
+     * @return array|null
      */
-    public function findByDomain(string $domain): ?Application
+    public function findByDomain(string $domain): ?array
     {
-        // TODO: something like this
         $query = $this->createQueryBuilder('a')
-            ->andWhere(':domain IN (a.domains)')
-            ->setParameters(['domain' => $domain]);
-
-//        var_dump($query->getDQL());
+            ->andWhere('a.domains LIKE :domain')
+            ->setParameters(['domain' => "%$domain%"]);
 
         return $query
             ->getQuery()
-            ->getOneOrNullResult();
+            ->getResult();
     }
 
     // /**

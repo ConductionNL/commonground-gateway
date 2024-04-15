@@ -27,7 +27,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *  collectionOperations={
  *     "get"={"path"="/admin/dashboardCards"},
  *     "post"={"path"="/admin/dashboardCards"}
- *  })
+ *  }
+ * )
  *
  * @ORM\Entity(repositoryClass=DashboardCardRepository::class)
  *

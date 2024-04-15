@@ -15,6 +15,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -32,7 +33,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/actions"},
  *      "post"={"path"="/admin/actions"}
- *  })
+ *  }
  * )
  *
  * @ORM\HasLifecycleCallbacks
@@ -48,6 +49,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "name": "exact",
  *     "reference": "exact"
  * })
+ *
+ * @UniqueEntity("reference")
  */
 class Action
 {
@@ -73,16 +76,20 @@ class Action
     /**
      * @Groups({"read", "write"})
      *
+     * @Assert\NotNull
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
-    private $reference;
+    private ?string $reference;
 
     /**
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @Assert\NotNull
+     *
+     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
      */
-    private $version;
+    private string $version = '0.0.0';
 
     /**
      * @var string The name of the action

@@ -99,6 +99,7 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
      * @param string $token The token provided by the user
      *
      * @return array The payload of the token
+     * @throws GatewayException
      */
     public function validateToken(string $token): array
     {
@@ -139,9 +140,7 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
      *
      * @param Request $request
      *
-     * @throws CacheException
      * @throws GatewayException
-     * @throws InvalidArgumentException
      *
      * @return PassportInterface
      */

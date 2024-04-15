@@ -13,6 +13,7 @@ use DateTime;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -30,7 +31,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/templates"},
  *      "post"={"path"="/admin/templates"}
- *  }))
+ *  }
+ * )
  *
  * @ORM\Entity(repositoryClass=TemplateRepository::class)
  *
@@ -41,8 +43,11 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ApiFilter(DateFilter::class, strategy=DateFilter::EXCLUDE_NULL)
  * @ApiFilter(SearchFilter::class, properties={
  *     "supportedSchemas": "exact",
- *     "name": "exact"
+ *     "name": "exact",
+ *     "reference": "exact"
  * })
+ *
+ * @UniqueEntity("reference")
  */
 class Template
 {
@@ -127,6 +132,8 @@ class Template
     /**
      * @Groups({"read", "write"})
      *
+     * @Assert\NotNull
+     *
      * @ORM\Column(type="string", length=255, nullable=true)
      */
     private ?string $reference = null;
@@ -134,9 +141,11 @@ class Template
     /**
      * @Groups({"read", "write"})
      *
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @Assert\NotNull
+     *
+     * @ORM\Column(type="string", length=255, options={"default": "0.0.0"})
      */
-    private ?string $version = null;
+    private string $version = '0.0.0';
 
     /**
      * @var Datetime|null The moment this resource was created

@@ -30,7 +30,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/unreads"},
  *      "post"={"path"="/admin/unreads"}
- *  })
+ *  }
  * )
  *
  * @ORM\Entity(repositoryClass="App\Repository\UnreadRepository")

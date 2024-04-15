@@ -33,7 +33,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/contracts"},
  *      "post"={"path"="/admin/contracts"}
- *  })
+ *  }
+ * )
  *
  * @ORM\Entity(repositoryClass=ContractRepository::class)
  *

@@ -231,8 +231,7 @@ class AuthorizationService
         $item = $this->cache->getItem('anonymousScopes');
         $itemOrg = $this->cache->getItem('anonymousOrg');
         if ($item->isHit() && $itemOrg->isHit()) {
-            $this->session->set('organizations', [$itemOrg->get()]);
-            $this->session->set('activeOrganization', $itemOrg->get());
+            $this->session->set('organization', $itemOrg->get());
 
             return $item->get();
         }
@@ -244,8 +243,7 @@ class AuthorizationService
             foreach ($groups[0]['scopes'] as $scope) {
                 $scopes[] = strtolower($scope['code']);
             }
-            $this->session->set('organizations', [$groups[0]['organization']]);
-            $this->session->set('activeOrganization', $groups[0]['organization']);
+            $this->session->set('organization', $groups[0]['organization']);
             $itemOrg->set($groups[0]['organization']);
             $itemOrg->tag('anonymousOrg');
             $this->cache->save($itemOrg);

@@ -31,7 +31,6 @@ final class Version20230228084820 extends AbstractMigration
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE SCHEMA public');
         $this->addSql('ALTER TABLE cronjob DROP reference');
         $this->addSql('ALTER TABLE cronjob DROP version');
         $this->addSql('ALTER TABLE collection_entity DROP reference');

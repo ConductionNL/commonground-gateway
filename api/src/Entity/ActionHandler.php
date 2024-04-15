@@ -28,7 +28,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/actionHandlers"},
  *      "post"={"path"="/admin/actionHandlers"}
- *  })
+ *  }
  * )
  *
  * @ORM\Entity(repositoryClass=ActionHandlerRepository::class)

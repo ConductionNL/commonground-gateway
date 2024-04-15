@@ -24,7 +24,7 @@ use Symfony\Component\Serializer\Annotation\MaxDepth;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * An possible attribute on an Entity.
+ * A possible attribute on an Entity.
  *
  * @category Entity
  *
@@ -39,7 +39,8 @@ use Symfony\Component\Validator\Constraints as Assert;
  *  collectionOperations={
  *      "get"={"path"="/admin/attributes"},
  *      "post"={"path"="/admin/attributes"}
- *  })
+ *  }
+ * )
  *
  * @ORM\Entity(repositoryClass=AttributeRepository::class)
  *

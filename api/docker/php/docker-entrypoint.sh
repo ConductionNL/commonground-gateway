@@ -34,6 +34,14 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	echo "Creating the database"
 	bin/console doctrine:database:create --if-not-exists --no-interaction
 
+	# Make sure we clear query,result & metadata doctrine cache before migrations during init
+	if [ "$APP_INIT" = 'true' ]; then
+		echo "Clearing query,result & metadata doctrine cache"
+		bin/console doctrine:cache:clear-query
+		bin/console doctrine:cache:clear-result
+		bin/console doctrine:cache:clear-metadata
+	fi
+
 	# Get the database inline with the newest version.
 	echo "Migrating the database to the currently used version"
 	bin/console doctrine:migrations:migrate --no-interaction

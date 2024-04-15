@@ -64,7 +64,7 @@ class UserController extends AbstractController
             $accessToken = $this->authenticationService->refreshAccessToken($session->get('refresh_token'), $session->get('authenticator'));
             $user = $this->getUser();
             if ($user instanceof AuthenticationUser === false) {
-                return new Response('User not found', 401);
+                return new Response(json_encode(["Message" => 'User not found.']), 401, ['Content-type' => 'application/json']);
             }
 
             $serializeUser = new User();
@@ -95,30 +95,28 @@ class UserController extends AbstractController
         $status = 200;
         $user = $this->getUser();
         if ($user instanceof AuthenticationUser === false) {
-            return new Response('User not found', 401);
+            return new Response(json_encode(["Message" => 'User not found.']), 401, ['Content-type' => 'application/json']);
         }
 
         $user = $this->entityManager->getRepository('App:User')->find($user->getUserIdentifier());
 
-        if ($user->getOrganization() !== null) {
-            $organizations[] = $user->getOrganization();
-        }
-        foreach ($user->getApplications() as $application) {
-            if ($application->getOrganization() !== null) {
-                $organizations[] = $application->getOrganization();
-            }
-        }
+        // Set organization id and user id in session
+        $this->session->set('user', $user->getId()->toString());
+        $this->session->set('organization', $user->getOrganization() !== null ? $user->getOrganization()->getId()->toString() : null);
 
-        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
-        $this->session->set('activeOrganization', $user->getOrganization()->getId()->toString());
+        $response = $this->validateUserApp($user);
+        if ($response !== null)
+            return $response;
 
+        // TODO: maybe do not just get the first Application here, but get application using ApplicationService->getApplication() and ...
+        // todo... if this returns an application check if the user is part of this application or one of the organizations of this application?
         $user->setJwtToken($authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session)));
 
         return new Response($serializer->serialize($user, 'json'), $status, ['Content-type' => 'application/json']);
     }
 
     /**
-     * Create an authentication user from a entity user.
+     * Create an authentication user from an entity user.
      *
      * @param User $user The user to log in.
      *
@@ -166,10 +164,11 @@ class UserController extends AbstractController
     }
 
     /**
-     * Add the logged in user to session.
+     * Add the logged-in user to session.
      *
-     * @param User                     $user            The user to log in.
+     * @param User $user                                The user to log in.
      * @param EventDispatcherInterface $eventDispatcher The event dispatcher.
+     * @param Request $request
      *
      * @return void
      */
@@ -203,18 +202,16 @@ class UserController extends AbstractController
             return new Response(json_encode($response), 401, ['Content-type' => 'application/json']);
         }
 
-        if ($user->getOrganization() !== null) {
-            $organizations[] = $user->getOrganization();
-        }
-        foreach ($user->getApplications() as $application) {
-            if ($application->getOrganization() !== null) {
-                $organizations[] = $application->getOrganization();
-            }
-        }
+        // Set organization id and user id in session
+        $this->session->set('user', $user->getId()->toString());
+        $this->session->set('organization', $user->getOrganization() !== null ? $user->getOrganization()->getId()->toString() : null);
 
-        // If user has no organization, we default activeOrganization to an organization of a userGroup this user has and else the application organization;
-        $this->session->set('activeOrganization', $user->getOrganization()->getId()->toString());
+        $response = $this->validateUserApp($user);
+        if ($response !== null)
+            return $response;
 
+        // TODO: maybe do not just get the first Application here, but get application using ApplicationService->getApplication() and ...
+        // todo... if this returns an application check if the user is part of this application or one of the organizations of this application?
         $token = $authenticationService->createJwtToken($user->getApplications()[0]->getPrivateKey(), $authenticationService->serializeUser($user, $this->session));
 
         $user->setJwtToken($token);
@@ -236,6 +233,34 @@ class UserController extends AbstractController
         $userArray = $this->cleanupLoginResponse($userArray);
 
         return new Response(json_encode($userArray), $status, ['Content-type' => 'application/json']);
+    }
+
+    /**
+     * Checks if $user has an application and if that application has a PrivateKey set. If not return error Response.
+     *
+     * @param User $user A user to check.
+     *
+     * @return Response|null Error Response or null.
+     */
+    private function validateUserApp(User $user): ?Response
+    {
+        if (empty($user->getApplications()) === true) {
+            return new Response(
+                json_encode(["Message" => 'This user is not yet connected to any application.']),
+                409,
+                ['Content-type' => 'application/json']
+            );
+        }
+
+        if (empty($user->getApplications()[0]->getPrivateKey()) === true) {
+            return new Response(
+                json_encode(["Message" => "Can't create a token because application ({$user->getApplications()[0]->getId()->toString()}) doesn't have a PrivateKey."]),
+                409,
+                ['Content-type' => 'application/json']
+            );
+        }
+
+        return null;
     }
 
     /**

@@ -29,7 +29,6 @@ final class Version20230504111926 extends AbstractMigration
     public function down(Schema $schema): void
     {
         // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE SCHEMA public');
         $this->addSql('DROP TABLE "gateway_audit_trail"');
         $this->addSql('ALTER TABLE audit_trail ALTER id TYPE UUID');
         $this->addSql('ALTER TABLE audit_trail ALTER id DROP DEFAULT');

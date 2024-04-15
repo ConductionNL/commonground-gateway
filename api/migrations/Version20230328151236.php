@@ -52,7 +52,6 @@ final class Version20230328151236 extends AbstractMigration
     public function down(Schema $schema): void
     {
         // This down() migration is auto-generated, please modify it to your needs.
-        $this->addSql('CREATE SCHEMA public');
         $this->addSql('ALTER TABLE security_group DROP reference');
         $this->addSql('ALTER TABLE security_group DROP version');
         $this->addSql('ALTER TABLE "user" DROP reference');
