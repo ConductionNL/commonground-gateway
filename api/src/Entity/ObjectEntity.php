@@ -1127,6 +1127,7 @@ class ObjectEntity
                 'level'            => $configuration['level'],
                 'dateCreated'      => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
                 'dateModified'     => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
+                'dateDeleted'      => null,
                 'database' => [
                     'id' => $this->getOrganization() && $this->getOrganization()->getDatabase() ? $this->getOrganization()->getDatabase()->getId()->toString() : null,
                     'name' => $this->getOrganization() && $this->getOrganization()->getDatabase() ? $this->getOrganization()->getDatabase()->getName() : null,
