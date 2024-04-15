@@ -23,96 +23,17 @@ use Symfony\Component\Security\Core\Security;
  */
 class GatewayService
 {
-    private CommonGroundService $commonGroundService;
     private EntityManagerInterface $entityManager;
     private Security $security;
-    private AuthenticationService $authenticationService;
     private RequestStack $requestStack;
     private TranslationService $translationService;
 
-    public function __construct(CommonGroundService $commonGroundService, EntityManagerInterface $entityManager, Security $security, AuthenticationService $authenticationService, RequestStack $requestStack, TranslationService $translationService)
+    public function __construct(EntityManagerInterface $entityManager, Security $security, AuthenticationService $authenticationService, RequestStack $requestStack, TranslationService $translationService)
     {
-        $this->commonGroundService = $commonGroundService;
         $this->entityManager = $entityManager;
         $this->security = $security;
-        $this->authenticationService = $authenticationService;
         $this->requestStack = $requestStack;
         $this->translationService = $translationService;
-    }
-
-    /**
-     * Processes the call to the Source and returns the response.
-     *
-     * @param string $name     Name of the Source.
-     * @param string $endpoint Endpoint of the Source to send the request to.
-     * @param string $method   Method to use against the Source.
-     * @param string $content  Content to send to the Source.
-     * @param array  $query    Query parameters to send to the Source.
-     *
-     * @return Response Created response received from Source or error received from Source.
-     */
-    public function processSource(string $name, string $endpoint, string $method, string $content, array $query, array $headers): Response
-    {
-//        $this->checkAuthentication();
-        $source = $this->retrieveSource($name);
-        if (!$source->getIsEnabled()) {
-            return new Response(
-                json_encode(['Message' => "This Source is not enabled: {$name}"]),
-                Response::HTTP_OK,
-                ['content-type' => 'application/json']
-            );
-        }
-        $this->checkSource($source);
-        $component = $this->sourceToArray($source);
-        $url = $source->getLocation().'/'.$endpoint;
-
-        $newHeaders = $source->getHeaders();
-        $newHeaders['accept'] = $headers['accept'][0];
-
-        //update query params
-        if (array_key_exists('query', $source->getTranslationConfig())) {
-            $query = array_merge($query, $source->getTranslationConfig()['query']);
-        }
-
-        //translate query params
-        foreach ($query as $key => &$value) {
-            if (!is_array($value)) {
-                $value = $this->translationService->parse($value);
-            }
-        }
-
-        $result = $this->commonGroundService->callService($component, $url, $content, $query, $newHeaders, false, $method);
-
-        if (is_array($result)) {
-            $result['error'] = json_decode($result['error'], true);
-
-            return new Response(
-                json_encode($result),
-                Response::HTTP_OK,
-                ['content-type' => 'application/json']
-            );
-        }
-
-        return $this->createResponse($result);
-    }
-
-    public function checkAuthentication(): void
-    {
-        $request = $this->requestStack->getCurrentRequest();
-        $authorized = true;
-        $user = $this->security->getUser();
-
-        $token = str_replace('Bearer ', '', $request->headers->get('Authorization'));
-
-        if (!$user) {
-            $authorized = $this->authenticationService->validateJWTAndGetPayload($token, $this->commonGroundService->getResourceList(['component' => 'uc', 'type' => 'public_key']));
-            $authorized = $this->authenticationService->checkJWTExpiration($token);
-            $authorized = $this->authenticationService->retrieveJWTUser($token);
-        }
-
-        if (!$authorized) {
-            throw new AccessDeniedHttpException('Access denied.');
-        }
     }
 
     /**

@@ -4,8 +4,6 @@ namespace App\Service;
 
 use App\Entity\Attribute;
 use App\Entity\Entity;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
-use Conduction\CommonGroundBundle\Service\SerializerService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Cache\CacheException;
@@ -29,7 +27,6 @@ use Symfony\Component\Security\Core\Security;
 class AuthorizationService
 {
     private ParameterBagInterface $parameterBag;
-    private CommonGroundService $commonGroundService;
     private Security $security;
     private SessionInterface $session;
     private CacheInterface $cache;
@@ -37,14 +34,12 @@ class AuthorizationService
 
     public function __construct(
         ParameterBagInterface $parameterBag,
-        CommonGroundService $commonGroundService,
         Security $security,
         SessionInterface $session,
         CacheInterface $cache,
         EntityManagerInterface $entityManager
     ) {
         $this->parameterBag = $parameterBag;
-        $this->commonGroundService = $commonGroundService;
         $this->security = $security;
         $this->session = $session;
         $this->cache = $cache;

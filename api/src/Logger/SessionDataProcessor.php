@@ -4,8 +4,8 @@ namespace App\Logger;
 
 use App\Event\ActionEvent;
 use Doctrine\ORM\EntityManagerInterface;
-use Exception;
-use Psr\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\HttpFoundation\Exception\JsonException;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 
@@ -140,7 +140,7 @@ class SessionDataProcessor
         if ($this->requestStack->getMainRequest() !== null && $levelName !== 'ERROR') {
             try {
                 $context['body'] = $this->requestStack->getMainRequest()->toArray();
-            } catch (Exception $exception) {
+            } catch (JsonException $exception) {
                 $context['body'] = '';
             }
             $context['crude_body'] = $this->requestStack->getMainRequest() ? $this->requestStack->getMainRequest()->getContent() : '';
@@ -183,10 +183,10 @@ class SessionDataProcessor
      *
      * @return array The updated log record.
      */
+
     public function __invoke(array $record): array
     {
         $record['context'] = $this->updateContext($record);
-
         return $this->dispatchLogCreateAction($record);
     }
 }

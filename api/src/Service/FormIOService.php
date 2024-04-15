@@ -121,7 +121,7 @@ class FormIOService
      *
      * @return string Extended key
      */
-    private function extendPreSetKey(?string $preSetKey = null, string $attrName): string
+    private function extendPreSetKey(string $attrName, ?string $preSetKey = null): string
     {
         return $preSetKey ? $preSetKey = $preSetKey.'['.$attrName.']' : $preSetKey = $attrName;
     }
@@ -172,7 +172,7 @@ class FormIOService
      */
     private function createEntityAsAttribute(Attribute $attr, string $preSetKey = null, $defaultValue = null): array
     {
-        $preSetKey = $this->extendPreSetKey($preSetKey, $attr->getName());
+        $preSetKey = $this->extendPreSetKey($attr->getName(), $preSetKey);
 
         // if ($preSetKey == 'taxonomies[openpubAudience]') {
         //     var_dump($preSetKey);
@@ -296,7 +296,7 @@ class FormIOService
      */
     private function createNormalAttribute(Attribute $attr, string $preSetKey = null, $defaultValue = null): array
     {
-        $preSetKey = $this->extendPreSetKey($preSetKey, $attr->getName());
+        $preSetKey = $this->extendPreSetKey($attr->getName(), $preSetKey);
 
         $component = $this->basicComponent;
         $component['label'] = $attr->getName().($attr->getRequired() ? '*' : '');

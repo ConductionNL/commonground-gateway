@@ -1128,6 +1128,11 @@ class ObjectEntity
                 'dateCreated'      => $this->getDateCreated() ? $this->getDateCreated()->format('c') : null,
                 'dateModified'     => $this->getDateModified() ? $this->getDateModified()->format('c') : null,
                 'dateDeleted'      => null,
+                'database' => [
+                    'id' => $this->getOrganization() && $this->getOrganization()->getDatabase() ? $this->getOrganization()->getDatabase()->getId()->toString() : null,
+                    'name' => $this->getOrganization() && $this->getOrganization()->getDatabase() ? $this->getOrganization()->getDatabase()->getName() : null,
+                    'ref' => $this->getOrganization() && $this->getOrganization()->getDatabase() ? $this->getOrganization()->getDatabase()->getReference() : null
+                ],
                 'owner'            => [
                     'id'    => $this->getOwner(),
                     'name'  => isset($configuration['user']) ? $configuration['user']->getName() : $this->getOwner(),
@@ -1244,6 +1249,9 @@ class ObjectEntity
                     }
                 } elseif (count($valueObject->getObjects()) === 0) {
                     $array[$attribute->getName()] = [];
+                    if (empty($valueObject->getArrayValue()) === false) {
+                        $array[$attribute->getName()] = $valueObject->getArrayValue();
+                    }
                 } else {
                     $currentObjects[] = $valueObject->getObjects()->toArray();
                     foreach ($valueObject->getObjects() as $object) {

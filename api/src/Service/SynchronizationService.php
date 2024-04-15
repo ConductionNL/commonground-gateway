@@ -80,7 +80,6 @@ class SynchronizationService
      * @param LogService               $logService
      * @param MessageBusInterface      $messageBus
      * @param TranslationService       $translationService
-     * @param ObjectEntityService      $objectEntityService
      * @param EavService               $eavService
      * @param Environment              $twig
      * @param EventDispatcherInterface $eventDispatcher
@@ -97,7 +96,6 @@ class SynchronizationService
         LogService $logService,
         MessageBusInterface $messageBus,
         TranslationService $translationService,
-        ObjectEntityService $objectEntityService,
         EavService $eavService,
         Environment $twig,
         EventDispatcherInterface $eventDispatcher,
@@ -113,8 +111,6 @@ class SynchronizationService
         $this->logService = $logService;
         $this->messageBus = $messageBus;
         $this->translationService = $translationService;
-        $this->objectEntityService = $objectEntityService;
-        $this->objectEntityService->addServices($eavService);
         $this->eavService = $eavService;
         $this->configuration = [];
         $this->data = [];
@@ -161,6 +157,34 @@ class SynchronizationService
         $this->logger->debug('SynchronizationService->SynchronizationItemHandler()');
 
         return $data;
+    }
+
+    /**
+     * Implodes a multidimensional array to a string.
+     *
+     * @param array  $array
+     * @param string $separator
+     * @param string $keyValueSeparator
+     *
+     * @return string
+     */
+    public function implodeMultiArray(array $array, string $separator = ', ', string $keyValueSeparator = '='): string
+    {
+        $str = '';
+
+        foreach ($array as $key => $value) {
+            $currentSeparator = $separator;
+            if ($key === array_key_first($array)) {
+                $currentSeparator = '';
+            }
+            if (is_array($value)) {
+                $str .= "$currentSeparator\"$key\"{$keyValueSeparator}[{$this->implodeMultiArray($value, $separator, $keyValueSeparator)}]";
+            } else {
+                $str .= "$currentSeparator\"$key\"$keyValueSeparator\"$value\"";
+            }
+        }
+
+        return $str;
     }
 
     /**
@@ -550,8 +574,8 @@ class SynchronizationService
                 new TableSeparator(),
                 ['Source'    => "Source \"{$source->getName()}\" ({$source->getId()->toString()})"],
                 ['Endpoint'  => $callServiceConfig['endpoint']],
-                ['Query'     => is_array($callServiceConfig['query']) ? "[{$this->objectEntityService->implodeMultiArray($callServiceConfig['query'])}]" : $callServiceConfig['query']],
-                ['Headers'   => is_array($callServiceConfig['headers']) ? "[{$this->objectEntityService->implodeMultiArray($callServiceConfig['headers'])}]" : $callServiceConfig['headers']],
+                ['Query'     => is_array($callServiceConfig['query']) ? "[{$this->implodeMultiArray($callServiceConfig['query'])}]" : $callServiceConfig['query']],
+                ['Headers'   => is_array($callServiceConfig['headers']) ? "[{$this->implodeMultiArray($callServiceConfig['headers'])}]" : $callServiceConfig['headers']],
                 ['Method'    => $callServiceConfig['method'] ?? 'GET'],
             );
         }

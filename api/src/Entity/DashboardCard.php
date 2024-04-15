@@ -110,7 +110,7 @@ class DashboardCard
      *
      * @ORM\Column(type="uuid")
      */
-    private Uuid $entityId;
+    private UuidInterface $entityId;
 
     /**
      * @Groups({"read","write"})
@@ -245,12 +245,12 @@ class DashboardCard
         return $this;
     }
 
-    public function getEntityId(): Uuid
+    public function getEntityId(): UuidInterface
     {
         return $this->entityId;
     }
 
-    public function setEntityId($entityId): self
+    public function setEntityId(UuidInterface $entityId): self
     {
         $this->entityId = $entityId;
 

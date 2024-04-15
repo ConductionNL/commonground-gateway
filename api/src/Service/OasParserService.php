@@ -30,6 +30,7 @@ class OasParserService
 
     private array $handlersToCreate;
     private array $oas;
+    private array $schemaRefs;
 
     /**
      * @param EntityManagerInterface $entityManager

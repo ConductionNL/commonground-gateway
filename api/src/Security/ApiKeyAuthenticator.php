@@ -3,11 +3,9 @@
 namespace App\Security;
 
 use App\Entity\Application;
+use App\Entity\Endpoint;
 use App\Entity\User;
-use App\Service\FunctionService;
-use Conduction\CommonGroundBundle\Service\AuthenticationService;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
-use Conduction\SamlBundle\Security\User\AuthenticationUser;
+use App\Security\User\AuthenticationUser;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -24,26 +22,14 @@ use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 
 class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator
 {
-    private CommonGroundService $commonGroundService;
-    private ParameterBagInterface $parameterBag;
-    private AuthenticationService $authenticationService;
     private SessionInterface $session;
-    private FunctionService $functionService;
     private EntityManagerInterface $entityManager;
 
     public function __construct(
-        CommonGroundService $commonGroundService,
-        AuthenticationService $authenticationService,
-        ParameterBagInterface $parameterBag,
         SessionInterface $session,
-        FunctionService $functionService,
         EntityManagerInterface $entityManager
     ) {
-        $this->commonGroundService = $commonGroundService;
-        $this->parameterBag = $parameterBag;
-        $this->authenticationService = $authenticationService;
         $this->session = $session;
-        $this->functionService = $functionService;
         $this->entityManager = $entityManager;
     }
 
@@ -52,63 +38,18 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
      */
     public function supports(Request $request): ?bool
     {
-        return $request->headers->has('Authorization') &&
-            strpos($request->headers->get('Authorization'), 'Bearer') === false;
-    }
+        if($request->headers->has('Authorization') === true &&
+            strpos($request->headers->get('Authorization'), 'Bearer') === false) {
 
-    /**
-     * Get all the child organizations for an organization.
-     *
-     * @param array               $organizations
-     * @param string              $organization
-     * @param CommonGroundService $commonGroundService
-     * @param FunctionService     $functionService
-     *
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     *
-     * @return array
-     */
-    private function getSubOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
-    {
-        if ($organization = $functionService->getOrganizationFromCache($organization)) {
-            if (!empty($organization['subOrganizations']) && count($organization['subOrganizations']) > 0) {
-                foreach ($organization['subOrganizations'] as $subOrganization) {
-                    if (!in_array($subOrganization['@id'], $organizations)) {
-                        $organizations[] = $subOrganization['@id'];
-                        $this->getSubOrganizations($organizations, $subOrganization['@id'], $commonGroundService, $functionService);
-                    }
-                }
+            $pathTemp = explode('/api/', $request->getPathInfo(), 2);
+            $endpoint = null;
+            if(count($pathTemp) > 1) {
+                $path = $pathTemp[1];
+                $endpoint = $this->entityManager->getRepository(Endpoint::class)->findByMethodRegex($request->getMethod(), $path);
             }
+            return ($endpoint instanceof Endpoint === false || $endpoint->getProxyOverrulesAuthentication() == false);
         }
-
-        return $organizations;
-    }
-
-    /**
-     * Get al the parent organizations for an organization.
-     *
-     * @param array               $organizations
-     * @param string              $organization
-     * @param CommonGroundService $commonGroundService
-     * @param FunctionService     $functionService
-     *
-     * @throws \Psr\Cache\CacheException
-     * @throws \Psr\Cache\InvalidArgumentException
-     *
-     * @return array
-     */
-    private function getParentOrganizations(array $organizations, string $organization, CommonGroundService $commonGroundService, FunctionService $functionService): array
-    {
-        if ($organization = $functionService->getOrganizationFromCache($organization)) {
-            if (array_key_exists('parentOrganization', $organization) && $organization['parentOrganization'] != null
-                && !in_array($organization['parentOrganization']['@id'], $organizations)) {
-                $organizations[] = $organization['parentOrganization']['@id'];
-                $organizations = $this->getParentOrganizations($organizations, $organization['parentOrganization']['@id'], $commonGroundService, $functionService);
-            }
-        }
-
-        return $organizations;
+        return false;
     }
 
     private function prefixRoles(array $roles): array
@@ -171,7 +112,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
         }
 
         // Set apiKey Application id in session
-        $this->session->set('apiKeyApplication', $application->getId()->toString());
+        $this->session->set('application', $application->getId()->toString());
 
         // Set organization id and user id in session
         $this->session->set('user', $user->getId()->toString());
@@ -199,6 +140,7 @@ class ApiKeyAuthenticator extends \Symfony\Component\Security\Http\Authenticator
             'organization' => $user->getOrganization()->getId()->toString(),
             'roles'        => $roleArray['roles'],
         ];
+
 
         return new Passport(
             new UserBadge($userArray['id'], function ($userIdentifier) use ($userArray) {

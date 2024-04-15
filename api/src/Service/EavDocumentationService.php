@@ -4,7 +4,6 @@ namespace App\Service;
 
 use App\Entity\Attribute;
 use App\Entity\Entity;
-use Conduction\CommonGroundBundle\Service\CommonGroundService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml\Yaml;
@@ -19,13 +18,11 @@ use Symfony\Component\Yaml\Yaml;
 class EavDocumentationService
 {
     private EntityManagerInterface $em;
-    private CommonGroundService $commonGroundService;
     private array $supportedValidators;
 
-    public function __construct(EntityManagerInterface $em, CommonGroundService $commonGroundService)
+    public function __construct(EntityManagerInterface $em)
     {
         $this->em = $em;
-        $this->commonGroundService = $commonGroundService;
 
         // Lets define the validator that we support for docummentation right now
         $this->supportedValidators = $this->supportedValidators();

@@ -3,6 +3,7 @@
 namespace App\Security;
 
 use App\Entity\Authentication;
+use App\Entity\Endpoint;
 use App\Entity\SecurityGroup;
 use App\Exception\GatewayException;
 use App\Security\User\AuthenticationUser;
@@ -52,8 +53,18 @@ class TokenAuthenticator extends \Symfony\Component\Security\Http\Authenticator\
      */
     public function supports(Request $request): ?bool
     {
-        return $request->headers->has('Authorization') &&
-            strpos($request->headers->get('Authorization'), 'Bearer') === 0;
+        if($request->headers->has('Authorization') === true &&
+            strpos($request->headers->get('Authorization'), 'Bearer') === 0) {
+
+            $pathTemp = explode('/api/', $request->getPathInfo(), 2);
+            $endpoint = null;
+            if(count($pathTemp) > 1) {
+                $path = $pathTemp[1];
+                $endpoint = $this->entityManager->getRepository(Endpoint::class)->findByMethodRegex($request->getMethod(), $path);
+            }
+            return ($endpoint instanceof Endpoint === false || $endpoint->getProxyOverrulesAuthentication() == false);
+        }
+        return false;
     }
 
     /**

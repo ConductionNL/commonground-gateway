@@ -1185,7 +1185,7 @@ class Entity
                 $attribute->getFormat() && $property['format'] = $attribute->getFormat();
             }
 
-            $stringReplace = str_replace('“', "'", $attribute->getDescription());
+            $stringReplace = str_replace('“', "'", $attribute->getDescription() ?? '');
             $decodedDescription = str_replace('”', "'", $stringReplace);
 
             $attribute->getDescription() && $property['description'] = $decodedDescription;

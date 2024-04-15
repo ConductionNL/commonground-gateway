@@ -105,7 +105,7 @@ class ZZController extends AbstractController
      *
      * @return array The parameter arrau
      */
-    private function getParametersFromRequest(?array $parameters = [], ?Request $request): array
+    private function getParametersFromRequest(?array $parameters = [], ?Request $request = null): array
     {
         // Lets make sure that we always have a path
         if (!isset($parameters['path'])) {

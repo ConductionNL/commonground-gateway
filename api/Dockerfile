@@ -1,4 +1,4 @@
-FROM php:7.4-fpm-alpine AS api_platform_php
+FROM php:8.2-fpm-alpine AS api_platform_php
 
 # Create a user
 RUN addgroup -S -g 101 commonground-gateway && adduser -S -D -u 101 commonground-gateway
@@ -18,7 +18,7 @@ RUN apk add --no-cache \
 		bash \
 	;
 
-ARG APCU_VERSION=5.1.17
+ARG APCU_VERSION=5.1.21
 ARG SQLSRV_VERSION=5.10.1
 
 RUN set -eux; \
@@ -48,6 +48,7 @@ RUN set -eux; \
 		pcntl \
 		gd \
 		gmp \
+    	ftp \
 	; \
 	pecl install \
 		apcu-${APCU_VERSION} \

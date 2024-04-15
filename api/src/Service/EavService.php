@@ -41,47 +41,21 @@ use function GuzzleHttp\json_decode;
 class EavService
 {
     private EntityManagerInterface $em;
-    private CommonGroundService $commonGroundService;
-    private SerializerService $serializerService;
-    private SerializerInterface $serializer;
-    private AuthorizationService $authorizationService;
     private SessionInterface $session;
-    private ObjectEntityService $objectEntityService;
-    private ResponseService $responseService;
-    private ParameterBagInterface $parameterBag;
-    private TranslationService $translationService;
-    private FunctionService $functionService;
-    private CacheInterface $cache;
     private Stopwatch $stopwatch;
+    private FunctionService $functionService;
 
     public function __construct(
         EntityManagerInterface $em,
-        CommonGroundService $commonGroundService,
-        SerializerService $serializerService,
-        SerializerInterface $serializer,
         AuthorizationService $authorizationService,
         SessionInterface $session,
-        ObjectEntityService $objectEntityService,
-        ResponseService $responseService,
-        ParameterBagInterface $parameterBag,
-        TranslationService $translationService,
-        FunctionService $functionService,
-        CacheInterface $cache,
-        Stopwatch $stopwatch
+        Stopwatch $stopwatch,
+        FunctionService $functionService
     ) {
         $this->em = $em;
-        $this->commonGroundService = $commonGroundService;
-        $this->serializerService = $serializerService;
-        $this->serializer = $serializer;
-        $this->authorizationService = $authorizationService;
         $this->session = $session;
-        $this->objectEntityService = $objectEntityService;
-        $this->responseService = $responseService;
-        $this->parameterBag = $parameterBag;
-        $this->translationService = $translationService;
-        $this->functionService = $functionService;
-        $this->cache = $cache;
         $this->stopwatch = $stopwatch;
+        $this->functionService = $functionService;
     }
 
     /**
@@ -1298,75 +1272,5 @@ class EavService
         $this->em->flush();
 
         return [];
-    }
-
-    /**
-     * @param ObjectEntity      $createdObject
-     * @param ObjectEntity|null $motherObject
-     *
-     * @return void
-     * @deprecated
-     */
-    private function handleDeleteObjectOnError(ObjectEntity $createdObject)
-    {
-        $this->em->clear();
-        //TODO: test and make sure extern objects are not created after an error, and if they are, maybe add this;
-        //        var_dump($createdObject->getUri());
-        //        if ($createdObject->getEntity()->getSource() && $createdObject->getEntity()->getSource()->getLocation() && $createdObject->getEntity()->getEndpoint() && $createdObject->getExternalId()) {
-        //            try {
-        //                $resource = $this->commonGroundService->getResource($createdObject->getUri(), [], false);
-        //                var_dump('Delete extern object for: '.$createdObject->getEntity()->getName());
-        //                $this->commonGroundService->deleteResource(null, $createdObject->getUri()); // could use $resource instead?
-        //            } catch (\Throwable $e) {
-        //                $resource = null;
-        //            }
-        //        }
-        //        var_dump('Delete: '.$createdObject->getEntity()->getName());
-        //        var_dump('Values on this^ object '.count($createdObject->getObjectValues()));
-        foreach ($createdObject->getObjectValues() as $value) {
-            if ($value->getAttribute()->getType() == 'object') {
-                foreach ($value->getObjects() as $object) {
-                    $object->removeSubresourceOf($value);
-                }
-            }
-
-            try {
-                $this->em->remove($value);
-                $this->em->flush();
-                //                var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName());
-            } catch (Exception $exception) {
-                //                var_dump($exception->getMessage());
-                //                var_dump($value->getId()->toString());
-                //                var_dump($value->getValue());
-                //                var_dump($value->getAttribute()->getEntity()->getName().' -> '.$value->getAttribute()->getName().' GAAT MIS');
-                continue;
-            }
-        }
-
-        try {
-            $this->em->remove($createdObject);
-            $this->em->flush();
-            //            var_dump('Deleted: '.$createdObject->getEntity()->getName());
-        } catch (Exception $exception) {
-            //            var_dump($createdObject->getEntity()->getName().' GAAT MIS');
-        }
-    }
-
-    /**
-     * Builds the error response for an objectEntity that contains errors.
-     *
-     * @param ObjectEntity $objectEntity
-     *
-     * @return array
-     * @deprecated
-     */
-    public function returnErrors(ObjectEntity $objectEntity): array
-    {
-        return [
-            'message' => 'The where errors',
-            'type'    => 'error',
-            'path'    => $objectEntity->getEntity()->getName(),
-            'data'    => $objectEntity->getAllErrors(),
-        ];
     }
 }

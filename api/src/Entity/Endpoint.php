@@ -136,17 +136,13 @@ class Endpoint
      */
     private ?string $tag = null;
 
-    // @TODO remove totally?
-    // /**
-    //  * @var string The type of this Endpoint.
-    //  *
-    //  * @Assert\NotNull
-    //  * @Assert\Choice({"gateway-endpoint", "entity-route", "entity-endpoint", "documentation-endpoint"})
-    //  *
-    //  * @Groups({"read", "write"})
-    //  * @ORM\Column(type="string")
-    //  */
-    // private string $type;
+     /**
+      * @var bool Whether or not the proxy should overrule the authentication from the request.
+      *
+      * @Groups({"read", "write"})
+      * @ORM\Column(type="boolean", options={"default":false}, nullable=true)
+      */
+     private ?bool $proxyOverrulesAuthentication = false;
 
     /**
      * @var array|null The path of this Endpoint.
@@ -341,6 +337,15 @@ class Endpoint
     private string $version = '0.0.0';
 
     /**
+     * @var Collection The proxies that can be used for federated calls.
+     *
+     * @MaxDepth(1)
+     * @Groups({"read", "write"})
+     * @ORM\ManyToMany(targetEntity=Gateway::class, inversedBy="federationEndpoints")
+     */
+    private Collection $federationProxies;
+
+    /**
      * Constructor for creating an Endpoint. Use $entity to create an Endpoint for an Entity or
      * use $source to create an Endpoint for a source, a proxy Endpoint.
      *
@@ -357,6 +362,7 @@ class Endpoint
         $this->collections = new ArrayCollection();
         $this->properties = new ArrayCollection();
         $this->entities = new ArrayCollection();
+        $this->federationProxies = new ArrayCollection();
 
         if (!$entity && !$source && isset($configuration['entities']) === false) {
             return;
@@ -604,18 +610,6 @@ class Endpoint
 
         return $this;
     }
-
-    // public function getType(): ?string
-    // {
-    //     return $this->type;
-    // }
-
-    // public function setType(string $type): self
-    // {
-    //     $this->type = $type;
-
-    //     return $this;
-    // }
 
     public function getPath(): ?array
     {
@@ -959,6 +953,42 @@ class Endpoint
     public function setVersion(?string $version): self
     {
         $this->version = $version;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Gateway[]
+     */
+    public function getFederationProxies(): Collection
+    {
+        return $this->federationProxies;
+    }
+
+    public function addFederationProxy(Gateway $federationProxy): self
+    {
+        if (!$this->federationProxies->contains($federationProxy)) {
+            $this->federationProxies[] = $federationProxy;
+        }
+
+        return $this;
+    }
+
+    public function removeFederationProxy(Gateway $federationProxy): self
+    {
+        $this->federationProxies->removeElement($federationProxy);
+
+        return $this;
+    }
+
+    public function getProxyOverrulesAuthentication(): ?bool
+    {
+        return $this->proxyOverrulesAuthentication;
+    }
+
+    public function setProxyOverrulesAuthentication(bool $proxyOverrulesAuthentication): self
+    {
+        $this->proxyOverrulesAuthentication = $proxyOverrulesAuthentication;
 
         return $this;
     }

@@ -18,22 +18,16 @@ use Symfony\Component\Serializer\SerializerInterface;
  */
 class DocumentService
 {
-    private CommonGroundService $commonGroundService;
     private EavService $eavService;
-    private ResponseService $responseService;
     private GatewayService $gatewayService;
-    private SerializerInterface $serializer;
     private ParameterBagInterface $parameterBag;
     private TranslationService $translationService;
     private TemplateService $templateService;
 
-    public function __construct(EavService $eavService, ResponseService $responseService, CommonGroundService $commonGroundService, GatewayService $gatewayService, SerializerInterface $serializer, ParameterBagInterface $parameterBag, TranslationService $translationService, TemplateService $templateService)
+    public function __construct(EavService $eavService, GatewayService $gatewayService, ParameterBagInterface $parameterBag, TranslationService $translationService, TemplateService $templateService)
     {
         $this->eavService = $eavService;
-        $this->responseService = $responseService;
-        $this->commonGroundService = $commonGroundService;
         $this->gatewayService = $gatewayService;
-        $this->serializer = $serializer;
         $this->parameterBag = $parameterBag;
         $this->translationService = $translationService;
         $this->templateService = $templateService;

@@ -6,7 +6,7 @@ doctrine:
         url: '%env(resolve:DATABASE_URL)%'
         types:
             uuid:  Ramsey\Uuid\Doctrine\UuidType
-            datetime:  Conduction\CommonGroundBundle\Types\UTCDateTimeType  #We override the default doctrine datetime with a UTC based version
+#            datetime:  Conduction\CommonGroundBundle\Types\UTCDateTimeType  #We override the default doctrine datetime with a UTC based version
     orm:
         auto_generate_proxy_classes: true
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
