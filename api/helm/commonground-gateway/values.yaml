@@ -21,6 +21,7 @@ config:
   debug: 0
   cache: true
   githubKey: ''
+  init: true
   samesiteCookie: lax
   readOnly: "true"
   # todo move cronRunner to its own 'tab' so it isn't a subtab under config?
