@@ -1504,7 +1504,7 @@ class ObjectEntityService
      *
      * @return Exception|float|int
      */
-    private function getBase64Size($base64)
+    public function getBase64Size($base64)
     { //return memory size in B, KB, MB
         try {
             $size_in_bytes = (int) (strlen(rtrim($base64, '=')) * 3 / 4);
