@@ -48,7 +48,8 @@ services:
       - APP_INIT='true'
       - CONTAINER_REGISTRY_BASE=${CONTAINER_REGISTRY_BASE}
       - CONTAINER_PROJECT_NAME=${CONTAINER_PROJECT_NAME}
-      - DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1
+      - DATABASE_ROOT_CERT=/var/certs/postgresql-test.crt
+      - DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1&sslmode=require
 #      - DATABASE_URL=mysql://api-platform:!ChangeMe!@db/api?serverVersion=10.1
       - CACHE_URL=mongodb://api-platform:!ChangeMe!@mongodb
       - APP_ENV=${APP_ENV}
@@ -87,6 +88,7 @@ services:
       - NOTIFICATION_ENABLED=${NOTIFICATION_ENABLED}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - REDIS_PROTOCOL=redis
       - APP_AUTH=${APP_AUTH}
       - GITHUB_KEY=${GITHUB_KEY}
       - PUBLICCODE=${PUBLICCODE}
@@ -170,6 +172,11 @@ services:
       - db-data:/var/lib/postgresql/data:rw
     ports:
       - "5432:5432"
+    command: >
+      -c ssl=on
+      -c ssl_cert_file=/etc/ssl/certs/ssl-cert-snakeoil.pem
+      -c ssl_key_file=/etc/ssl/private/ssl-cert-snakeoil.key
+      
 
   mongodb:
     image: mongo:4.4.14

@@ -82,6 +82,8 @@ security:
       CvVVrqBVqLHjva4erqYol6K/jbSfUtRCy8IlFU7LYu1KLehZKYvj3vekj3Cn08Aq
       ljr/Q8Pw+OfUZTzKg4PVDQVfFqKtyosv
       -----END CERTIFICATE-----
+  postgresCert: null
+  redisProtocol: redis
   authEnabled: true
   sessionDuration: 900
   certificate:
@@ -215,6 +217,9 @@ mongodb:
             memory: 6Gi
 
 gateway-ui:
+    pwa:
+        image:
+            tag: latest
     enabled: true
     resources:
         requests:
