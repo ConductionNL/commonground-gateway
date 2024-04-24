@@ -48,8 +48,8 @@ services:
       - APP_INIT='true'
       - CONTAINER_REGISTRY_BASE=${CONTAINER_REGISTRY_BASE}
       - CONTAINER_PROJECT_NAME=${CONTAINER_PROJECT_NAME}
-      - DATABASE_ROOT_CERT=/var/certs/postgresql-test.crt
-      - DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1&sslmode=require
+      - DATABASE_ROOT_CERT=/var/certs/postgresql.crt
+      - DATABASE_URL=postgres://api-platform:!ChangeMe!@db/api?serverVersion=10.1
 #      - DATABASE_URL=mysql://api-platform:!ChangeMe!@db/api?serverVersion=10.1
       - CACHE_URL=mongodb://api-platform:!ChangeMe!@mongodb
       - APP_ENV=${APP_ENV}
