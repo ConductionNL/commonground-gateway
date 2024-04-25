@@ -52,7 +52,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     "reference": "exact"
  * })
  *
- * @UniqueEntity("reference")
+ * @UniqueEntity("email")
  *
  * @ORM\Table(name="`user`")
  */
