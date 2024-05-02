@@ -1,10 +1,12 @@
 parameters:
-    cors_origins: []
+    env(CORS_ORIGIN_EXTRA): '["*","https://localhost","https://localhost:8000"]'
+    env(CORS_ORIGIN): '*'
+    cors_origins: '%env(json:CORS_ORIGIN_EXTRA)%'
 
 nelmio_cors:
     defaults:
         origin_regex: true
-        allow_origin: '%cors_origins%'
+        allow_origin: ['%env(CORS_ORIGIN)%']
         allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
         allow_headers: ['Content-Type', 'Authorization', 'x-method', 'x-endpoint']
         expose_headers: ['Link']
