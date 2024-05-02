@@ -1237,8 +1237,16 @@ class ObjectEntity
                                     $config['renderedObjects'][] = $object;
                                     if ($attribute->getObject()->getMaxDepth() + $config['level'] < $config['maxDepth']) {
                                         $config['maxDepth'] = $attribute->getObject()->getMaxDepth() + $config['level'];
+                                        if ($attribute->getInversedBy() !== null) {
+                                            $array[$attribute->getName()] = $object->toArray($config);
+                                        }
+                                    } elseif ($attribute->getInversedBy() !== null) {
+                                        $array[$attribute->getName()] = $object->getSelf();
                                     }
-                                    $array[$attribute->getName()] = $object->toArray($config);
+
+                                    if ($attribute->getInversedBy() === null) {
+                                        $array[$attribute->getName()] = $object->toArray($config);
+                                    }
                                     break;
                                 case 'iri':
                                 default:
@@ -1313,8 +1321,16 @@ class ObjectEntity
                                     $config['renderedObjects'][] = $object;
                                     if ($attribute->getObject()->getMaxDepth() + $config['level'] < $config['maxDepth']) {
                                         $config['maxDepth'] = $attribute->getObject()->getMaxDepth() + $config['level'];
+                                        if ($attribute->getInversedBy() !== null) {
+                                            $array[$attribute->getName()] = $object->toArray($config);
+                                        }
+                                    } elseif ($attribute->getInversedBy() !== null) {
+                                        $array[$attribute->getName()] = $object->getSelf();
                                     }
-                                    $array[$attribute->getName()][] = $object->toArray($config);
+
+                                    if ($attribute->getInversedBy() === null) {
+                                        $array[$attribute->getName()] = $object->toArray($config);
+                                    }
                                     break;
                                 case 'iri':
                                 default:
