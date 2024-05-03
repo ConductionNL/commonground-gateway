@@ -263,6 +263,15 @@ class Application
     private array $certificates = [];
 
     /**
+     * @var array Allowed CORS origins for this application.
+     *
+     * @Groups({"read", "write"})
+     *
+     * @ORM\Column(type="array", nullable=true)
+     */
+    private ?array $origins = [];
+
+    /**
      * @var array|null The configuration of this application.
      *
      * @Groups({"read", "write"})
@@ -305,6 +314,7 @@ class Application
         array_key_exists('domains', $schema) ? $this->setDomains($schema['domains']) : '';
         array_key_exists('configuration', $schema) ? $this->setConfiguration($schema['configuration']) : '';
         array_key_exists('organization', $schema) ? $this->setOrganization($schema['organization']) : '';
+        array_key_exists('origins', $schema) ? $this->setOrigins($schema['origins']) : '';
         // todo ? more ?
 
         return $this;
@@ -328,6 +338,7 @@ class Application
             'domains'                        => $this->getDomains(),
             'configuration'                  => $this->getConfiguration(),
             'organization'                   => $this->getOrganization() ? $this->getOrganization()->toSchema() : null,
+            'origins'                        => $this->getOrigins(),
         ];
     }
 
@@ -682,6 +693,31 @@ class Application
     public function setCertificates(?array $certificates): self
     {
         $this->certificates = $certificates;
+
+        return $this;
+    }
+
+    /**
+     * @return array
+     */
+    public function getOrigins(): array
+    {
+        $origins = $this->origins;
+        if($origins === null) {
+            return [];
+        }
+
+        return $origins;
+    }
+
+    /**
+     * @param array|null $certificates
+     *
+     * @return Application
+     */
+    public function setOrigins(?array $origins): self
+    {
+        $this->origins = $origins;
 
         return $this;
     }
