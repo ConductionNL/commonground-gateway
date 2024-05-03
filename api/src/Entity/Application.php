@@ -338,6 +338,7 @@ class Application
             'domains'                        => $this->getDomains(),
             'configuration'                  => $this->getConfiguration(),
             'organization'                   => $this->getOrganization() ? $this->getOrganization()->toSchema() : null,
+            'origins'                        => $this->getOrigins(),
         ];
     }
 
