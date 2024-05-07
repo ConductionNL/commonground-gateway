@@ -38,7 +38,7 @@ class ApplicationService
     public function getApplication(): Application
     {
         // If application is already in the session
-        if (empty($this->session) === false && $this->session->has('application')) {
+        if (empty($this->session) === false && $this->session->has('application') === true) {
             $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
             if ($application !== null) {
                 return $application;
