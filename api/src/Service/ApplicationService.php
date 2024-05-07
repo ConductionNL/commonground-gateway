@@ -6,6 +6,7 @@ use App\Entity\Application;
 use App\Exception\GatewayException;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\InputBag;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -37,7 +38,7 @@ class ApplicationService
     public function getApplication(): Application
     {
         // If application is already in the session
-        if ($this->session->has('application')) {
+        if (empty($this->session) === false && $this->session->has('application') === true) {
             $application = $this->entityManager->getRepository('App:Application')->findOneBy(['id' => $this->session->get('application')]);
             if ($application !== null) {
                 return $application;
@@ -45,7 +46,7 @@ class ApplicationService
         }
 
         // Find application using the publicKey
-        $public = ($this->request->headers->get('public') ?? $this->request->query->get('public'));
+        $public = $this->getHeaderOrQuery('public');
         if (empty($public) === false) {
             $application = $this->entityManager->getRepository('App:Application')->findOneBy(['public' => $public]);
             if ($application !== null) {
@@ -55,7 +56,7 @@ class ApplicationService
         }
 
         // Find application using the host/domain
-        $host = ($this->request->headers->get('host') ?? $this->request->query->get('host'));
+        $host = $this->getHeaderOrQuery('host');
         if (empty($host) === false) {
             $applications = $this->entityManager->getRepository('App:Application')->findByDomain($host);
             if (count($applications) > 0) {
@@ -80,5 +81,30 @@ class ApplicationService
         throw new GatewayException($message ?? null, null, null, [
             'data' => $data ?? null, 'path' => $public ?? $host ?? 'Header', 'responseType' => Response::HTTP_FORBIDDEN,
         ]);
+    }
+
+
+    /**
+     * Tries to get a given key from the headers of the current request, else from the query params of the current request.
+     *
+     * @param string $key The key to get.
+     *
+     * @return bool|float|int|string|InputBag|null The value of the header or query or null if none was found.
+     */
+    private function getHeaderOrQuery(string $key)
+    {
+        if (empty($this->request) === true) {
+            return null;
+        }
+
+        if (empty($this->request->headers) === false && $this->request->headers->has($key) === true) {
+            return $this->request->headers->get($key);
+        }
+
+        if (empty($this->request->query) === false && $this->request->query->has($key) === true) {
+            return $this->request->query->get($key);
+        }
+
+        return null;
     }
 }
