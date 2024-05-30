@@ -148,6 +148,26 @@ class Database
     private string $uri;
 
     /**
+     * @var string The type of database, choose from mongodb and elasticsearch
+     *
+     * @Assert\NotNull
+     * @Assert\Choice({"mongodb", "elasticsearch"})
+     * @Groups({"read","write"})
+     *
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $type = 'mongodb';
+
+    /**
+     * @var string Auth parameter that cannot be stored in the URL, like the API key for ElasticSearch
+     *
+     * @Groups({"write"})
+     *
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private ?string $auth = null;
+
+    /**
      * The organizations that use this Database.
      *
      * @Groups({"read", "write"})
@@ -362,6 +382,42 @@ class Database
     public function setDateModified(DateTimeInterface $dateModified): self
     {
         $this->dateModified = $dateModified;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getAuth(): ?string
+    {
+        return $this->auth;
+    }
+
+    /**
+     * @param string|null $auth
+     */
+    public function setAuth(?string $auth): self
+    {
+        $this->auth = $auth;
+
+        return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getType(): ?string
+    {
+        return $this->type;
+    }
+
+    /**
+     * @param string $type
+     */
+    public function setType(string $type = 'mongodb'): self
+    {
+        $this->type = $type;
 
         return $this;
     }

@@ -263,7 +263,7 @@ class Application
     private array $certificates = [];
 
     /**
-     * @var array Allowed CORS origins for this application.
+     * @var array|null Allowed CORS origins for this application.
      *
      * @Groups({"read", "write"})
      *
