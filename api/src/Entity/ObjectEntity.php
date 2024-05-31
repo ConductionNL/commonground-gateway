@@ -337,7 +337,7 @@ class ObjectEntity
 
             // Add path item to self uri
             foreach ($pathArray as $pathItem) {
-                if ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}') {
+                if ($this->getId() !== null &&  ($pathItem == 'id' || $pathItem == '{id}' || $pathItem == 'uuid' || $pathItem == '{uuid}')) {
                     $idSet = true;
                     $tempPath .= '/'.$this->getId()->toString();
                 } else {
