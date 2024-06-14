@@ -447,6 +447,15 @@ class Endpoint
         if (array_key_exists('loggingConfig', $schema) === true) {
             $this->setLoggingConfig($schema['loggingConfig']);
         }
+        if (array_key_exists('federationProxies', $schema) === true) {
+            $this->federationProxies->clear();
+            foreach ($schema['federationProxies'] as $federationProxy) {
+                if ($federationProxy instanceof Gateway === false) {
+                    continue;
+                }
+                $this->addFederationProxy($federationProxy);
+            }
+        }
 
         /*@depricated kept here for lagacy */
         $this->setMethod(array_key_exists('method', $schema) ? $schema['method'] : 'GET');
