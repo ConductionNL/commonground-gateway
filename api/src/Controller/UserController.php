@@ -275,14 +275,17 @@ class UserController extends AbstractController
         if (isset($userArray['organization']['users']) === true) {
             unset($userArray['organization']['users']);
         }
+
         if (isset($userArray['organization']['applications']) === true) {
             foreach ($userArray['organization']['applications'] as &$application) {
-                unset($application['organization']);
+                unset($application['secret'], $application['organization']);
             }
         }
+
         foreach ($userArray['applications'] as &$application) {
-            unset($application['organization']);
+            unset($application['secret'], $application['organization']);
         }
+
         foreach ($userArray['securityGroups'] as &$securityGroup) {
             unset($securityGroup['users']);
             unset($securityGroup['parent']);
