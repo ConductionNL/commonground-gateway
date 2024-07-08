@@ -76,6 +76,9 @@ class LogController extends AbstractController
             $this->handleFilterArray($key, $value);
         }
 
+        $limit = 30;
+        $start = 0;
+
         $completeFilter = $this->cacheService->setPagination($limit, $start, $completeFilter);
 
         $order = isset($completeFilter['_order']) === true ? str_replace(['ASC', 'asc', 'DESC', 'desc'], [1, 1, -1, -1], $completeFilter['_order']) : [];
