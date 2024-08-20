@@ -361,7 +361,7 @@ class Gateway
      *      max = 255
      * )
      *
-     * @Assert\Choice({"header", "query", "form_params", "json"})
+     * @Assert\Choice({"header", "query", "form_params", "json", "base_auth"})
      *
      * @ApiProperty(
      *     attributes={
@@ -819,6 +819,7 @@ class Gateway
         array_key_exists('authorizationHeader', $schema) ? $this->setAuthorizationHeader($schema['authorizationHeader']) : '';
         array_key_exists('auth', $schema) ? $this->setAuth($schema['auth']) : '';
         array_key_exists('authorizationPassthroughMethod', $schema) ? $this->setAuthorizationPassthroughMethod($schema['authorizationPassthroughMethod']) : '';
+        array_key_exists('authenticationConfig', $schema) ? $this->setAuthenticationConfig($schema['authenticationConfig']) : '';
         array_key_exists('locale', $schema) ? $this->setLocale($schema['locale']) : '';
         array_key_exists('accept', $schema) ? $this->setAccept($schema['accept']) : '';
         array_key_exists('jwtId', $schema) ? $this->setJwtId($schema['jwtId']) : '';
