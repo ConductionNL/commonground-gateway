@@ -59,21 +59,21 @@ jobs:
             - name: Print definitive APP_ENV
               run: echo "APP_ENV is now $APP_ENV"
             - name: Build the Docker image
-              run: docker-compose build --build-arg APP_ENV=$APP_ENV --build-arg APP_BUILD_ALL_FIXTURES=true
+              run: docker compose build --build-arg APP_ENV=$APP_ENV --build-arg APP_BUILD_ALL_FIXTURES=true
             - name: Run the docker image
-              run: docker-compose up -d
+              run: docker compose up -d
             - name: Taking some sleep (for containers to come up)
               run: sleep 120
             - name: Check if all containers are running
               run: docker ps
             - name: Dumping the logs
-              run: docker-compose logs
+              run: docker compose logs
             - name: Database Update
-              run: docker-compose exec -T php bin/console doctrine:schema:update --force
+              run: docker compose exec -T php bin/console doctrine:schema:update --force
             - if: (github.ref == 'refs/heads/main')
               name: Add docker tag latest
               run: |
-                  images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
+                  images=$(docker compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
                   for image in $images
                   do
                     docker tag "${image}":${APP_ENV} "${image}":"latest"
@@ -81,7 +81,7 @@ jobs:
                   echo 'IMAGES=$images' >> $GITHUB_ENV
             - name: Add docker tags
               run: |
-                  images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
+                  images=$(docker compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
                   for image in $images
                   do
                     docker tag "${image}":${APP_ENV} "${image}":"$GITHUB_REF_NAME.$RELEASE"
@@ -100,12 +100,12 @@ jobs:
                   fi
             - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development' || contains(github.ref, 'version-' ) || contains( github.ref, 'feature-'))
               name: Push to Container Registry
-              run: docker-compose push
+              run: docker compose push
 
             - if: steps.containerregistry-login.outputs.success == 'true' && (github.ref == 'refs/heads/main')
               name: Push latest container to Container Registry
               run: |
-                  images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
+                  images=$(docker compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
                   for image in $images
                   do
                     docker push "${image}":"latest"
@@ -113,7 +113,7 @@ jobs:
             - if: steps.containerregistry-login.outputs.success == 'true' && (contains(github.ref, 'version-' ) || contains( github.ref, 'feature-') || (github.ref == 'refs/heads/main'))
               name: Push versioned containers to Container Registry
               run: |
-                  images=$(docker-compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
+                  images=$(docker compose images -q | xargs docker inspect --format='{{ index .RepoTags 0}}' | cut -d':' -f1 | grep $APP_NAME)
                   for image in $images
                   do
                     docker push "${image}":"$GITHUB_REF_NAME.$RELEASE"
@@ -130,4 +130,4 @@ jobs:
                   fi
             - name: Chores
               if: (success() || failure())
-              run: docker-compose down
+              run: docker compose down
