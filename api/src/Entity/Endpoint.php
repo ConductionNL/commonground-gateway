@@ -137,12 +137,21 @@ class Endpoint
     private ?string $tag = null;
 
      /**
-      * @var bool Whether or not the proxy should overrule the authentication from the request.
+      * @var bool Whether the proxy should override the authentication in the request.
       *
       * @Groups({"read", "write"})
       * @ORM\Column(type="boolean", options={"default":false}, nullable=true)
       */
      private ?bool $proxyOverrulesAuthentication = false;
+
+    /**
+     * @var bool Whether this endpoint should show paginated results for GET collection API Requests.
+     * If set to false the response will only contain an array of results without "results":[] with a maximum of 500 items.
+     *
+     * @Groups({"read", "write"})
+     * @ORM\Column(type="boolean", options={"default":true}, nullable=true)
+     */
+    private ?bool $enablePagination = true;
 
     /**
      * @var array|null The path of this Endpoint.
@@ -444,6 +453,9 @@ class Endpoint
         array_key_exists('tags', $schema) ? $this->setTags($schema['tags']) : '';
         array_key_exists('entities', $schema) ? $this->setEntities($schema['entities']) : '';
 
+        if (array_key_exists('enablePagination', $schema) === true) {
+            $this->setEnablePagination($schema['enablePagination']);
+        }
         if (array_key_exists('loggingConfig', $schema) === true) {
             $this->setLoggingConfig($schema['loggingConfig']);
         }
@@ -493,6 +505,7 @@ class Endpoint
             'method'                         => $this->getMethod(),
             'throws'                         => $this->getThrows(),
             'defaultContentType'             => $this->getDefaultContentType(),
+            'enablePagination'               => $this->getEnablePagination(),
             'tag'                            => $this->getTag(),
             'tags'                           => $this->getTags(),
             'proxy'                          => $this->getProxy() !== null ? $this->getProxy()->toSchema() : null,
@@ -572,18 +585,6 @@ class Endpoint
         return $this;
     }
 
-    public function getMethod(): ?string
-    {
-        return $this->method;
-    }
-
-    public function setMethod(?string $method): self
-    {
-        $this->method = $method;
-
-        return $this;
-    }
-
     public function getDescription(): ?string
     {
         return $this->description;
@@ -608,6 +609,18 @@ class Endpoint
         return $this;
     }
 
+    public function getMethod(): ?string
+    {
+        return $this->method;
+    }
+
+    public function setMethod(?string $method): self
+    {
+        $this->method = $method;
+
+        return $this;
+    }
+
     public function getTag(): ?string
     {
         return $this->tag;
@@ -620,6 +633,30 @@ class Endpoint
         return $this;
     }
 
+    public function getProxyOverrulesAuthentication(): ?bool
+    {
+        return $this->proxyOverrulesAuthentication;
+    }
+
+    public function setProxyOverrulesAuthentication(bool $proxyOverrulesAuthentication): self
+    {
+        $this->proxyOverrulesAuthentication = $proxyOverrulesAuthentication;
+
+        return $this;
+    }
+
+    public function getEnablePagination(): ?bool
+    {
+        return $this->enablePagination;
+    }
+
+    public function setEnablePagination(bool $enablePagination): self
+    {
+        $this->enablePagination = $enablePagination;
+
+        return $this;
+    }
+
     public function getPath(): ?array
     {
         return $this->path;
@@ -628,54 +665,6 @@ class Endpoint
     public function setPath(array $path): self
     {
         $this->path = $path;
-
-        return $this;
-    }
-
-    public function getParameters(): ?array
-    {
-        return $this->parameters;
-    }
-
-    public function setParameters(array $parameters): self
-    {
-        $this->parameters = $parameters;
-
-        return $this;
-    }
-
-    public function getMethods(): ?array
-    {
-        return $this->methods;
-    }
-
-    public function setMethods(?array $methods): self
-    {
-        $this->methods = $methods;
-
-        return $this;
-    }
-
-    public function getThrows(): ?array
-    {
-        return $this->throws;
-    }
-
-    public function setThrows(?array $throws): self
-    {
-        $this->throws = $throws;
-
-        return $this;
-    }
-
-    public function getStatus(): ?bool
-    {
-        return $this->status;
-    }
-
-    public function setStatus(?bool $status): self
-    {
-        $this->status = $status;
 
         return $this;
     }
@@ -778,6 +767,42 @@ class Endpoint
     public function setPathArray(?array $pathArray): self
     {
         $this->pathArray = $pathArray;
+
+        return $this;
+    }
+
+    public function getMethods(): ?array
+    {
+        return $this->methods;
+    }
+
+    public function setMethods(?array $methods): self
+    {
+        $this->methods = $methods;
+
+        return $this;
+    }
+
+    public function getThrows(): ?array
+    {
+        return $this->throws;
+    }
+
+    public function setThrows(?array $throws): self
+    {
+        $this->throws = $throws;
+
+        return $this;
+    }
+
+    public function getStatus(): ?bool
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?bool $status): self
+    {
+        $this->status = $status;
 
         return $this;
     }
@@ -986,18 +1011,6 @@ class Endpoint
     public function removeFederationProxy(Gateway $federationProxy): self
     {
         $this->federationProxies->removeElement($federationProxy);
-
-        return $this;
-    }
-
-    public function getProxyOverrulesAuthentication(): ?bool
-    {
-        return $this->proxyOverrulesAuthentication;
-    }
-
-    public function setProxyOverrulesAuthentication(bool $proxyOverrulesAuthentication): self
-    {
-        $this->proxyOverrulesAuthentication = $proxyOverrulesAuthentication;
 
         return $this;
     }
