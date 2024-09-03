@@ -146,7 +146,7 @@ class Endpoint
 
     /**
      * @var bool Whether this endpoint should show paginated results for GET collection API Requests.
-     * If set to false the response will only contain an array of results without "results":[].
+     * If set to false the response will only contain an array of results without "results":[] with a maximum of 500 items.
      *
      * @Groups({"read", "write"})
      * @ORM\Column(type="boolean", options={"default":true}, nullable=true)
