@@ -115,17 +115,28 @@ class ObjectEntityRepository extends ServiceEntityRepository
      * Finds object entities on their id or a sourceId of a synchronization this ObjectEntity has.
      *
      * @param string $identifier
-     *
-     * @throws NonUniqueResultException
+     * @param string|null $gatewayId The gateway (/source) id to use when searching for Synchronizations.
+     * @param string|null $entityId The entity id to use when searching for Synchronizations.
      *
      * @return ObjectEntity The found object entity
+     * @throws NonUniqueResultException
      */
-    public function findByAnyId(string $identifier): ?ObjectEntity
+    public function findByAnyId(string $identifier, ?string $gatewayId = null, ?string $entityId = null): ?ObjectEntity
     {
         $query = $this->createQueryBuilder('o')
             ->leftJoin('o.synchronizations', 's')
             ->where('s.sourceId = :identifier')
             ->setParameter('identifier', $identifier);
+
+        if ($gatewayId !== null) {
+            $query->andWhere('s.gateway = :gatewayId')
+                ->setParameter('gatewayId', $gatewayId);
+        }
+
+        if ($entityId !== null) {
+            $query->andWhere('s.entity = :entityId')
+                ->setParameter('entityId', $entityId);
+        }
 
         if (Uuid::isValid($identifier)) {
             $query->orWhere('o.id = :identifier');
@@ -977,9 +988,9 @@ class ObjectEntityRepository extends ServiceEntityRepository
 
     /**
      * Finds all object entities with references.
-     * 
+     *
      * @param array $references The entity references
-     * 
+     *
      * @return mixed ObjectEntities
      */
     public function findByReferences(array $references)
