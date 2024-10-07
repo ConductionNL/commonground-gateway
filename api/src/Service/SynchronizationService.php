@@ -8,6 +8,7 @@ use App\Entity\Entity;
 use App\Entity\Gateway as Source;
 use App\Entity\ObjectEntity;
 use App\Entity\Synchronization;
+use App\Entity\Mapping;
 use App\Entity\User;
 use App\Event\ActionEvent;
 use App\Exception\AsynchronousException;
@@ -992,6 +993,7 @@ class SynchronizationService
      * @param Synchronization $synchronization The synchronization to update
      * @param array           $sourceObject    The object in the source
      * @param bool            $unsafe          Unset attributes that are not included in the hydrator array when calling the hydrate function
+     * @param Mapping         $mapping         Pass a optional mapping to add to the synchronization.
      *
      * @throws GuzzleException
      * @throws LoaderError
@@ -999,12 +1001,16 @@ class SynchronizationService
      *
      * @return Synchronization The updated synchronization
      */
-    public function synchronize(Synchronization $synchronization, array $sourceObject = [], bool $unsafe = false): Synchronization
+    public function synchronize(Synchronization $synchronization, array $sourceObject = [], bool $unsafe = false, ?Mapping $mapping = null): Synchronization
     {
         if (isset($this->io)) {
             $this->io->text("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
         }
         $this->logger->info("handleSync for Synchronization with id = {$synchronization->getId()->toString()}");
+
+        if ($mapping !== null) {
+            $synchronization->setMapping($mapping);
+        }
 
         //create new object if no object exists
         if (!$synchronization->getObject()) {
@@ -1517,24 +1523,25 @@ class SynchronizationService
     /**
      * Find an object by URL, and synchronize it if it does not exist in the gateway.
      *
-     * @param string $url The URL of the object
-     * @param Entity $entity The schema the object should fit into
+     * @param string  $url The URL of the object.
+     * @param Entity  $entity The schema the object should fit into.
+     * @param Mapping $mappping The mapping the object will be changed to.
      *
      * @throws GuzzleException|LoaderError|SyntaxError|UrlException
      *
      * @return ObjectEntity|null
      */
-    public function aquireObject(string $url, Entity $entity): ?ObjectEntity
+    public function aquireObject(string $url, Entity $entity, ?Mapping $mapping = null): ?ObjectEntity
     {
-        $source = $this->resourceService->findSourceForUrl($url, 'conduction-nl/commonground-gateway', $endpoint);
-        $sourceId = $this->getSourceId($endpoint, $url);
+        $source = $this->resourceService->findSourceForUrl(url: $url, pluginName: 'conduction-nl/commonground-gateway', endpoint: $endpoint);
+        $sourceId = $this->getSourceId(endpoint: $endpoint, url: $url);
 
-        $synchronization = $this->findSyncBySource($source, $entity, $sourceId, $endpoint);
+        $synchronization = $this->findSyncBySource(source: $source, entity: $entity, sourceId: $sourceId, endpoint: $endpoint);
 
-        $this->synchronize($synchronization);
+        $this->synchronize(synchronization: $synchronization, sourceObject: [], unsafe: false, mapping: $mapping);
 
         return $synchronization->getObject();
-    }
+    }//end aquireObject()
 
     /**
      * A function best used after resourceService->findSourceForUrl and/or before $this->findSyncBySource.
@@ -1560,5 +1567,5 @@ class SynchronizationService
         }
 
         return $sourceId;
-    }
+    }//end getSourceId
 }
