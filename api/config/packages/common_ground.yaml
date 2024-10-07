@@ -9,6 +9,10 @@ parameters:
   env(APP_COMMONGROUND_KEY): "d4bb1810-8358-4372-98db-6c7bd2fb370c"
   env(APP_COMMONGROUND_SECRET): ""
   env(CACHE_URL): ''
+    
+  env(DATABASE_ROOT_CERT): /var/certs/postgresql.crt
+  env(REDIS_PROTOCOL): redis
+  
 
   common_ground.app.id: "%env(APP_COMMONGROUND_ID)%"
   app_commonground_id: "%env(APP_COMMONGROUND_ID)%"
