@@ -309,7 +309,7 @@ class Endpoint
      *
      * @ORM\ManyToOne(targetEntity=Entity::class)
      */
-    private $entity;
+    private $entity = null;
 
     /**
      * The Entities of this Endpoint.
