@@ -10,6 +10,7 @@ use CommonGateway\CoreBundle\Service\Cache\PostgresqlClient;
 use CommonGateway\CoreBundle\Service\CacheService;
 use CommonGateway\CoreBundle\Service\RequestService;
 use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
@@ -41,6 +42,7 @@ class LogController extends AbstractController
         private readonly CacheService $cacheService,
         private readonly RequestService $requestService,
         private readonly ParameterBagInterface $parameterBag,
+        private readonly EntityManagerInterface $entityManager,
 
     )
     {
