@@ -68,6 +68,12 @@ spec:
             name: {{ include "commonground-gateway.fullname" . }}-doctrineconfig
             defaultMode: 420
         {{- end }}
+        {{- if eq .Values.cacheType "postgresql" }}
+        - name: monolog
+          configMap:
+            name: {{ include "commonground-gateway.fullname" . }}-monolog
+            defaultMode: 420
+        {{- end }}
         - name: vendor
           persistentVolumeClaim:
               claimName: {{ include "commonground-gateway.fullname" . }}-vendor
@@ -138,6 +144,12 @@ spec:
             - mountPath: /srv/api/config/packages/prod/doctrine.yaml
               subPath: doctrine.yaml
               name: doctrine
+              readOnly: true
+            {{- end }}
+            {{- if eq .Values.cacheType "postgresql" }}
+            - mountPath: /srv/api/config/packages/monolog.yaml
+              subPath: monolog.yaml
+              name: monolog
               readOnly: true
             {{- end }}
             - mountPath: /srv/api/vendor

@@ -46,9 +46,9 @@ jobs:
       - name: Print definitive APP_ENV
         run: echo "APP_ENV is now $APP_ENV and APP_BUILD is now $APP_BUILD"
       - name: Build the Docker image
-        run: docker-compose build --build-arg APP_ENV=$APP_ENV --build-arg APP_BUILD=$APP_BUILD --build-arg APP_BUILD_ALL_FIXTURES=true
+        run: docker compose build --build-arg APP_ENV=$APP_ENV --build-arg APP_BUILD=$APP_BUILD --build-arg APP_BUILD_ALL_FIXTURES=true
       - name: Run the docker image
-        run: docker-compose up -d
+        run: docker compose up -d
       - name: Taking some sleep (for containers to come up)
         run: sleep 120
       - name: Check if all containers are running

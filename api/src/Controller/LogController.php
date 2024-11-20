@@ -4,15 +4,20 @@
 
 namespace App\Controller;
 
+use CommonGateway\CoreBundle\Service\Cache\MongoDbClient;
+use CommonGateway\CoreBundle\Service\Cache\MongoDbCollection;
+use CommonGateway\CoreBundle\Service\Cache\PostgresqlClient;
 use CommonGateway\CoreBundle\Service\CacheService;
 use CommonGateway\CoreBundle\Service\RequestService;
 use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
 use MongoDB\Driver\Exception\InvalidArgumentException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -30,13 +35,17 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class LogController extends AbstractController
 {
-    private CacheService $cacheService;
-    private RequestService $requestService;
 
-    public function __construct(CacheService $cacheService, RequestService $requestService)
+    private string $databaseType = 'mongodb';
+
+    public function __construct(
+        private readonly CacheService $cacheService,
+        private readonly RequestService $requestService,
+        private readonly ParameterBagInterface $parameterBag,
+        private readonly EntityManagerInterface $entityManager,
+
+    )
     {
-        $this->cacheService = $cacheService;
-        $this->requestService = $requestService;
     }
 
     /**
@@ -47,12 +56,20 @@ class LogController extends AbstractController
     public function logAction(Request $request): Response
     {
         $status = 200;
-        $client = new Client($this->getParameter('cache_url'));
+
+        if (substr($this->parameterBag->get('cache_url', false), offset: 0, length: 5) === 'mongo') {
+            $client = new MongoDbClient($this->parameterBag->get('cache_url'), entityManager: $this->entityManager, objectEntityService: $this->objectEntityService, cacheLogger: $this->logger);
+            $this->databaseType = 'mongodb';
+        }
+        if (substr($this->parameterBag->get('cache_url', false), offset: 4, length: 5) === 'pgsql' || substr($this->parameters->get('cache_url', false), offset: 4, length: 4) === 'psql') {
+            $client = new PostgresqlClient($this->parameterBag->get('cache_url'));
+            $this->databaseType = 'postgresql';
+        }
         $filter = $this->requestService->realRequestQueryAll($request->getQueryString());
 
         $completeFilter = $filter;
 
-        if (isset($filter['_id'])) {
+        if (isset($filter['_id']) && $this->databaseType === 'mongodb') {
             try {
                 $filter['_id'] = new ObjectId($filter['_id']);
             } catch (InvalidArgumentException $exception) {
@@ -86,8 +103,22 @@ class LogController extends AbstractController
 
         $collection = $client->logs->logs;
 
-        $results = $collection->find($filter, ['limit' => $limit, 'skip' => $start, 'sort' => $order])->toArray();
-        $total = $collection->countDocuments($filter);
+        if($collection instanceof MongoDbCollection === true) {
+            $results = $collection->find($filter, ['limit' => $limit, 'skip' => $start, 'sort' => $order])->toArray();
+            $total = $collection->count($filter);
+        } else {
+            $results = $collection->find(filter: $completeFilter);
+            $total = $collection->count(filter: $filter);
+
+            $results = array_map(
+                function ($value) {
+                    $value['datetime'] = ['$date' => ['$numberLong' => (new DateTime($value['datetime']))->format('Uv')]];
+                    $value['_id'] = ['$oid' => $value['_id']];
+                    return $value;
+                },
+                iterator_to_array($results)
+            );
+        }
 
         $content = json_encode($this->cacheService->handleResultPagination($completeFilter, $results, $total));
 
