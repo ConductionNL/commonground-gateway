@@ -10,11 +10,14 @@ class ActionMessage
     private array $data;
     private ?string $currentThrow;
 
-    public function __construct(UuidInterface $actionId, array $data, ?string $currentThrow)
+    public function __construct(UuidInterface $actionId, array $data, ?string $currentThrow,
+    private readonly string $application
+    )
     {
         $this->objectEntityId = $actionId;
         $this->data = $data;
         $this->currentThrow = $currentThrow;
+
     }
 
     public function getObjectEntityId(): UuidInterface
@@ -30,5 +33,10 @@ class ActionMessage
     public function getCurrentThrow(): ?string
     {
         return $this->currentThrow;
+    }
+
+    public function getApplication(): ?string
+    {
+        return $this->application;
     }
 }
