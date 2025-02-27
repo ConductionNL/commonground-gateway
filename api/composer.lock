@@ -518,16 +518,16 @@
         },
         {
             "name": "commongateway/corebundle",
-            "version": "1.4.28",
+            "version": "1.4.31",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CommonGateway/CoreBundle.git",
-                "reference": "47ec4043a4a1fa6f869ec1d6178771fc9db77162"
+                "reference": "d3a833da1cba060b3f110d215f6558768bc95159"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/47ec4043a4a1fa6f869ec1d6178771fc9db77162",
-                "reference": "47ec4043a4a1fa6f869ec1d6178771fc9db77162",
+                "url": "https://api.github.com/repos/CommonGateway/CoreBundle/zipball/d3a833da1cba060b3f110d215f6558768bc95159",
+                "reference": "d3a833da1cba060b3f110d215f6558768bc95159",
                 "shasum": ""
             },
             "require": {
@@ -646,7 +646,7 @@
                 "issues": "https://github.com/CommonGateway/CoreBundle/issues",
                 "source": "https://github.com/CommonGateway/CoreBundle"
             },
-            "time": "2024-11-20T10:52:42+00:00"
+            "time": "2025-02-27T08:31:10+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
