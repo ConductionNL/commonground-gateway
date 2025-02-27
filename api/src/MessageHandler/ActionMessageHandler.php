@@ -8,6 +8,7 @@ use App\Repository\ActionRepository;
 use CommonGateway\CoreBundle\Subscriber\ActionSubscriber;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Messenger\Handler\MessageHandlerInterface;
 
 class ActionMessageHandler implements MessageHandlerInterface
@@ -16,7 +17,7 @@ class ActionMessageHandler implements MessageHandlerInterface
     private ActionRepository $repository;
     private EntityManagerInterface $entityManager;
 
-    public function __construct(ActionSubscriber $actionSubscriber, ActionRepository $repository, EntityManagerInterface $entityManager)
+    public function __construct(ActionSubscriber $actionSubscriber, ActionRepository $repository, EntityManagerInterface $entityManager, private readonly SessionInterface $session)
     {
         $this->actionSubscriber = $actionSubscriber;
         $this->repository = $repository;
@@ -26,6 +27,10 @@ class ActionMessageHandler implements MessageHandlerInterface
     public function __invoke(ActionMessage $message): void
     {
         $object = $this->repository->find($message->getObjectEntityId());
+
+        if ($message->getApplication() !== null) {
+            $this->session->set('application', $message->getApplication());
+        }
 
         try {
             if ($object instanceof Action) {
