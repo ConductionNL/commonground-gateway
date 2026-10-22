@@ -46,17 +46,17 @@ jobs:
       - name: Print definitive APP_ENV
         run: echo "APP_ENV is now $APP_ENV and APP_BUILD is now $APP_BUILD"
       - name: Build the Docker image
-        run: docker-compose build --build-arg APP_ENV=$APP_ENV --build-arg APP_BUILD=$APP_BUILD --build-arg APP_BUILD_ALL_FIXTURES=true
+        run: docker compose build --build-arg APP_ENV=$APP_ENV --build-arg APP_BUILD=$APP_BUILD --build-arg APP_BUILD_ALL_FIXTURES=true
       - name: Run the docker image
-        run: docker-compose up -d
+        run: docker compose up -d
       - name: Taking some sleep (for containers to come up)
         run: sleep 120
       - name: Check if all containers are running
         run: docker ps
       - name: Dumping the logs
-        run: docker-compose logs
+        run: docker compose logs
       - name: Database Update
-        run: docker-compose exec -T php bin/console doctrine:schema:update --force
+        run: docker compose exec -T php bin/console doctrine:schema:update --force
       - name: Create kube config
         id: kubeconfig
         if: contains( github.ref, 'development' )
@@ -69,4 +69,4 @@ jobs:
           fi
       - name: Chores
         if: (success() || failure())
-        run: docker-compose down
+        run: docker compose down
