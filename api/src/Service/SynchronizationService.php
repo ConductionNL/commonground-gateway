@@ -725,6 +725,9 @@ class SynchronizationService
                     ]
                 );
             } catch (Exception|GuzzleException $exception) {
+                var_dump($exception->getMessage());
+
+
                 $this->ioCatchException($exception, ['line', 'file', 'message' => [
                     'preMessage' => 'Error while doing getSingleFromSource: ',
                 ]]);
@@ -1039,6 +1042,12 @@ class SynchronizationService
         $now = new DateTime();
         $synchronization->setLastChecked($now);
 
+        $sha = hash('sha256', json_encode($sourceObject));
+
+        if($synchronization->getSha() === $sha) {
+            return $synchronization;
+        }
+
         // Todo: we never check if we actually have to sync anything... see handleSync functie for an example:
         // if (!$synchronization->getLastSynced() || ($synchronization->getLastSynced() < $synchronization->getSourceLastChanged() && $synchronization->getSourceLastChanged() >= $synchronization->getObject()->getDateModified())) {
         // Todo: @ruben i heard from @robert we wanted to do this check somewhere else?
@@ -1064,10 +1073,7 @@ class SynchronizationService
         }
         $synchronization->getObject()->hydrate($sourceObject, $unsafe);
 
-        if ($this->sha !== null) {
-            $synchronization->setSha($this->sha);
-            $this->sha = null;
-        }
+        $synchronization->setSha($sha);
 
         $this->entityManager->persist($synchronization->getObject());
         $this->entityManager->persist($synchronization);
