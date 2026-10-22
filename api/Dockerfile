@@ -1,4 +1,4 @@
-FROM php:8.2-fpm-alpine AS api_platform_php
+FROM php:8.2.35-fpm-alpine AS api_platform_php
 
 # Create a user
 RUN addgroup -S -g 101 commonground-gateway && adduser -S -D -u 101 commonground-gateway
@@ -20,6 +20,8 @@ RUN apk add --no-cache \
 
 ARG APCU_VERSION=5.1.21
 ARG SQLSRV_VERSION=5.10.1
+ARG REDIS_VERSION=6.1.0
+ARG MONGODB_VERSION=1.20.0
 
 RUN set -eux; \
 	apk add --no-cache --virtual .build-deps \
@@ -52,10 +54,10 @@ RUN set -eux; \
 	; \
 	pecl install \
 		apcu-${APCU_VERSION} \
-		redis \
+		redis-${REDIS_VERSION} \
     	amqp-1.11.0 \
     	sqlsrv-${SQLSRV_VERSION} \
-    	mongodb \
+    	mongodb-${MONGODB_VERSION} \
 	; \
 	rm -rf /tmp/pear \
 	pecl clear-cache; \
