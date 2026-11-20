@@ -60,7 +60,14 @@ spec:
                   - name: vendor
                     persistentVolumeClaim:
                         claimName: {{ include "commonground-gateway.fullname" . }}-vendor
-                  
+
+                {{-  if .Values.security.postgresCert }}
+                  -   name: postgres-certificate
+                      projected:
+                          sources:
+                              -   secret:
+                                      name: {{ include "commonground-gateway.fullname" . }}-postgresCert
+                  {{- end }}
               initContainers:
                   - name: {{ include "commonground-gateway.fullname" . }}-init
                     securityContext:
@@ -120,6 +127,12 @@ spec:
                           subPath: bundles.php
                           name: vendor
                           readOnly: false
+                        {{- if .Values.security.postgresCert }}
+                        - mountPath: /srv/api/var/certs/postgres.crt
+                          subPath: certificate.crt
+                          name: postgres-certificate
+                          readOnly: true
+                        {{- end }}
                     args:
                         - bin/console
                         - cronjob:command
@@ -169,6 +182,8 @@ spec:
                               secretKeyRef:
                                   key: database-url
                                   name: {{ include "commonground-gateway.fullname" . }}
+                        - name: DATABASE_ROOT_CERT
+                          value: /srv/api/var/certs/postgres.crt
                         - name: CACHE_URL
                           valueFrom:
                               secretKeyRef:
@@ -257,6 +272,8 @@ spec:
                               configMapKeyRef:
                                   key: redis-port
                                   name: {{ include "commonground-gateway.fullname" . }}
+                        - name: REDIS_PROTOCOL
+                          value: {{ .Values.security.redisProtocol }}
                         {{- end }}
                         - name: SAML_ENABLED
                           valueFrom:
